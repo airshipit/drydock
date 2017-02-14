@@ -30,9 +30,9 @@ host_profiles:
     credential: admin
   storage:
     boot_drive:
-      device:
-      bootsize:
-      rootsize:
+      device: primary_boot
+      bootsize: 2g
+      rootsize: 50g
   platform:
     image: ubuntu_16.04_hwe
     kernel_params: default
