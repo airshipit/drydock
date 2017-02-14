@@ -1,0 +1,171 @@
+---
+webvirt: 192.168.1.1
+site_name: sitename
+maas_api_key: consumerkey:tokenkey:tokensecret
+maas_uuid: nonce
+host_profiles:
+- name: k8-node
+  hardware_profile: HPGen9v3
+  interfaces:
+  # Keyed on device_name
+  # pxe is a special marker indicating which device should be used for pxe boot
+  - device_name: pxe
+    network_link: pxe
+    slaves:
+    - prim_nic01
+    networks: 
+    - name: pxe
+  - device_name: bond0
+    network_link: gp
+    slaves:
+    - prim_nic01
+    - prim_nic02
+    networks:
+    - name: mgmt
+    - name: private
+  oob:
+    type: ipmi
+    network: oob
+    account: admin
+    credential: admin
+  storage:
+    boot_drive:
+      device:
+      bootsize:
+      rootsize:
+  platform:
+    image: ubuntu_16.04_hwe
+    kernel_params: default
+  metadata:
+    introspection_url: http://172.16.1.10:9090
+- name: k8-node-public
+  host_profile: k8-node
+  interfaces:
+    - device_name: bond0
+      networks:
+        # This is additive, so adds a network to those defined in the inherited host_profile
+      - name: public
+network:
+  # Describe layer 1 attributes
+  links:
+  - name: pxe
+    bonding:
+      mode: none
+    mtu: 1500
+    linkspeed: auto
+      # Is this link supporting multiple layer 2 networks?
+    trunking:
+      mode: none
+        # use name, will translate to VLAN ID
+      default_network: pxe
+  - name: gp
+    bonding:
+      mode: 802.3ad
+      hash: layer3+4
+      peer_rate: slow
+      mon_rate: default
+      up_delay: default
+      down_delay: default
+    mtu: 9000
+    linkspeed: auto
+      # Is this link supporting multiple layer 2 networks?
+    trunking:
+      mode: tagged
+  networks:
+  - name: pxe
+    vlan_id: 99
+      # How are addresses assigned?
+    allocation: dhcp
+      # Allow MTU to be inherited from link the network rides on
+    mtu: 1500
+    cidr: 172.16.0.0/24
+      # Desribe IP address ranges
+    ranges: 
+      - type: dhcp
+        start: 172.16.0.5
+        end: 172.16.0.254
+    dns:
+      domain:
+      servers:
+  - name: mgmt
+    vlan_id: 100
+      # How are addresses assigned?
+    allocation: static
+      # Allow MTU to be inherited from link the network rides on
+    mtu: 1500
+    cidr: 172.16.1.0/24
+      # Desribe IP address ranges
+    ranges: 
+      - type: static
+        start: 172.16.1.15
+        end: 172.16.1.254
+    routes:
+      - subnet: 0.0.0.0/0
+        gateway: 172.16.1.1
+        weight: 10
+    dns:
+      domain: mgmt.sitename.example.com
+      servers: 172.16.1.9,172.16.1.10
+  - name: private
+    vlan_id: 101
+      # How are addresses assigned?
+    allocation: static
+      # Allow MTU to be inherited from link the network rides on
+    mtu: 9000
+    cidr: 172.16.2.0/24
+      # Desribe IP address ranges
+    ranges: 
+      - type: static
+        start: 172.16.2.15
+        end: 172.16.2.254
+    dns:
+      domain: priv.sitename.example.com
+      servers: 172.16.2.9,172.16.2.10
+  - name: public
+    vlan_id: 102
+      # How are addresses assigned?
+    allocation: static
+      # Allow MTU to be inherited from link the network rides on
+    mtu: 1500
+    cidr: 172.16.3.0/24
+      # Desribe IP address ranges
+    ranges: 
+      - type: static
+        start: 172.16.3.15
+        end: 172.16.3.254
+    routes:
+      - subnet: 0.0.0.0/0
+      - gateway: 172.16.3.1
+      - weight: 9
+    dns:
+      domain: sitename.example.com
+      servers: 8.8.8.8
+storage:
+  backend: ceph
+nodes:
+- host_profile: k8-node-public
+  name: controller01
+  interfaces:
+  - device_name: bond0
+    networks:
+    # Remove network from interface
+    - name: '!private'
+  addressing:
+  - network: pxe
+    address: dhcp
+  - network: mgmt
+    address: 172.16.1.20
+  - network: public
+    address: 172.16.3.20
+  metadata:
+    roles: os_ctl
+    rack: rack01
+- host_profile: k8-node
+  name: compute01
+  addressing:
+  - network: pxe
+    address: dhcp
+  - network: mgmt
+    address: 172.16.1.21
+  - network: private
+    address: 172.16.2.21
