@@ -1,0 +1,318 @@
+---
+# BSD License
+#
+# Copyright (c) 2017, AT&T Intellectual Property.  All other rights reserved.
+#
+# Redistribution and use in source and binary forms, with or
+# without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following
+# disclaimer in the documentation and/or other materials provided
+# with the distribution.
+# 3. All advertising materials mentioning features or use of this
+# software must display the following acknowledgement:  This
+# product includes software developed by the AT&T.
+# 4. Neither the name of AT&T nor the names of its contributors
+# may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY AT&T INTELLECTUAL PROPERTY ''AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL AT&T INTELLECTUAL PROPERTY
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES;  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+####################
+#
+# bootstrap_seed.yaml - Site server design definition for physical layer
+#
+####################
+site_name: sitename
+network:
+  # Describe layer 1 attributes. Primary key is 'name'. These settings will
+  # generally be things the switch and server have to agree on
+  links:
+  - name: oob
+    bonding:
+      mode: none
+    mtu: 1500
+    linkspeed: 100full
+    trunking:
+      mode: none
+      default_network: oob
+  # pxe is a bit of 'magic' indicating the link config used when PXE booting
+  # a node. All other links indicate network configs applied when the node
+  # is deployed.
+  - name: pxe
+    bonding:
+      mode: none
+    mtu: 1500
+    linkspeed: auto
+    # Is this link supporting multiple layer 2 networks?
+    # none is a port-based VLAN identified by default_network
+    # tagged is is using 802.1q VLAN tagging. Untagged packets will default to default_netwokr
+    trunking:
+      mode: none
+      # use name, will translate to VLAN ID
+      default_network: pxe
+  - name: gp
+    # If this link is a bond of physical links, how is it configured
+    # 802.3ad
+    # active-backup
+    # balance-rr 
+    # Can add support for others down the road
+    bonding:
+      mode: 802.3ad
+      # For LACP (802.3ad) xmit hashing policy: layer2, layer2+3, layer3+4, encap3+4
+      hash: layer3+4
+      # 802.3ad specific options
+      peer_rate: slow
+      mon_rate: default
+      up_delay: default
+      down_delay: default
+    mtu: 9000
+    linkspeed: auto
+    # Is this link supporting multiple layer 2 networks?
+    trunking:
+      mode: tagged
+      default_network: mgmt
+  # Describe layer 2/3 attributes. Primary key is 'name'
+  networks:
+  - name: oob
+    allocation: static
+    cidr: 172.16.100.0/24
+    ranges:
+    - type: static
+       start: 172.16.100.15
+       end: 172.16.100.254
+    dns:
+      domain: ilo.sitename.att.com
+      servers: 
+  - name: pxe
+    # Layer 2 VLAN segment id, could support other segmentations. Optional
+    vlan_id: 99
+    # How are addresses assigned?
+    allocation: dhcp
+    # MTU for this VLAN interface, if not specified it will be inherited from the link
+    mtu: 1500
+    # Network address
+    cidr: 172.16.0.0/24
+    # Desribe IP address ranges
+    ranges: 
+     - type: dhcp
+       start: 172.16.0.5
+       end: 172.16.0.254
+    # DNS settings for this network
+    dns:
+      # Domain addresses on this network will be registered under
+      domain:
+      # DNS servers that a server using this network as its default gateway should use
+      servers:
+  - name: mgmt
+    vlan_id: 100
+    # How are addresses assigned?
+    allocation: static
+    # Allow MTU to be inherited from link the network rides on
+    mtu: 1500
+    # Network address
+    cidr: 172.16.1.0/24
+    # Desribe IP address ranges
+    ranges: 
+      - type: static
+        start: 172.16.1.15
+        end: 172.16.1.254
+    # Static routes to be added for this network
+    routes:
+      - subnet: 0.0.0.0/0
+        # A blank gateway would leave to a static route specifying
+        # only the interface as a source
+        gateway: 172.16.1.1
+        weight: 10
+    # DNS settings for this network
+    dns:
+      # Domain addresses on this network will be registered under
+      domain: mgmt.sitename.example.com
+      # DNS servers that a server using this network as its default gateway should use
+      servers: 172.16.1.9,172.16.1.10
+  - name: private
+    vlan_id: 101
+    allocation: static
+    mtu: 9000
+    cidr: 172.16.2.0/24
+    # Desribe IP address ranges
+    ranges: 
+      # Type can be reserved (not used for baremetal), static (all explicit
+      # assignments should fall here), dhcp (will be used by a DHCP server on this network)
+      - type: static
+        start: 172.16.2.15
+        end: 172.16.2.254
+    dns:
+      domain: priv.sitename.example.com
+      servers: 172.16.2.9,172.16.2.10
+  - name: public
+    vlan_id: 102
+    # How are addresses assigned?
+    allocation: static
+    # MTU size for the VLAN interface
+    mtu: 1500
+    cidr: 172.16.3.0/24
+    # Desribe IP address ranges
+    ranges: 
+      - type: static
+        start: 172.16.3.15
+        end: 172.16.3.254
+    routes:
+      - subnet: 0.0.0.0/0
+      - gateway: 172.16.3.1
+      - weight: 9
+    dns:
+      domain: sitename.example.com
+      servers: 8.8.8.8
+host_profiles:
+  # No magic to this host_profile, it just provides a way to specify
+  # sitewide settings. If it is absent from a node's inheritance chain
+  # then these values will NOT be applied
+- name: defaults
+  # OOB (iLO, iDRAC, etc...) settings. Should prefer open standards such
+  # as IPMI over vender-specific when possible.
+  oob:
+    type: ipmi
+    # OOB networking should be preconfigured, but we can include a network
+    # definition for validation or enhancement (DNS registration)
+    network: oob
+    account: admin
+    credential: admin
+  # Specify storage layout of base OS. Ceph out of scope
+  storage:
+    # How storage should be carved up: lvm (logical volumes), flat 
+    # (single partition)
+    layout: lvm
+    # Info specific to the boot and root disk/partitions
+    bootdisk:
+      # Device will specify an alias defined in hwdefinition.yaml
+      device: primary_boot
+      # For LVM, the size of the partition added to VG as a PV
+      # For flat, the size of the partition formatted as ext4
+      root_size: 50g
+      # The /boot partition. If not specified, /boot will in root
+      boot_size: 2g
+    # Info for additional partitions. Need to balance between
+    # flexibility and complexity
+    partitions:
+    - name: logs
+      device: primary_boot
+      # Partition uuid if needed
+      part_uuid: 84db9664-f45e-11e6-823d-080027ef795a
+      size: 10g
+      # Optional, can carve up unformatted block devices
+      mountpoint: /var/log
+      fstype: ext4
+      mount_options: defaults
+      # Filesystem UUID or label can be specified. UUID recommended
+      fs_uuid: cdb74f1c-9e50-4e51-be1d-068b0e9ff69e
+      fs_label: logs
+  # Platform (Operating System) settings
+  platform:
+    image: ubuntu_16.04_hwe
+    kernel_params: default
+  # Additional metadata to apply to a node
+  metadata:
+    # Base URL of the introspection service - may go in curtin data
+    introspection_url: http://172.16.1.10:9090
+- name: k8-node
+  # host_profile inheritance allows for deduplication of common CIs
+  # Inheritance is additive for CIs that are lists of multiple items
+  # To remove an inherited list member, prefix the primary key value
+  # with '!'. 
+  host_profile: defaults
+  # Hardware profile will map hardware specific details to the abstract
+  # names uses in the host profile as well as specify hardware specific
+  # configs. A viable model should be to build a host profile without a
+  # hardware_profile and then for each node inherit the host profile and
+  # specify a hardware_profile to map that node's hardware to the abstract
+  # settings of the host_profile
+  hardware_profile: HPGen9v3
+  # Network interfaces.
+  interfaces:
+  # Keyed on device_name
+  # pxe is a special marker indicating which device should be used for pxe boot
+  - device_name: pxe
+    # The network link attached to this 
+    network_link: pxe
+    # Slaves will specify aliases from hwdefinition.yaml
+    slaves:
+    - prim_nic01
+    # Which networks will be configured on this interface
+    networks: 
+    - name: pxe
+  - device_name: bond0
+    network_link: gp
+    # If multiple slaves are specified, but no bonding config
+    # is applied to the link, design validation will fail
+    slaves:
+    - prim_nic01
+    - prim_nic02
+    # If multiple networks are specified, but no trunking
+    # config is applied to the link, design validation will fail
+    networks:
+    - name: mgmt
+    - name: private
+  metadata:
+    # Explicit tag assignment
+    tags:
+    - 'test'
+    # MaaS supports key/value pairs. Not sure of the use yet
+    owner_data:
+      foo: bar
+- name: k8-node-public
+  host_profile: k8-node
+  interfaces:
+    - device_name: bond0
+      networks:
+        # This is additive, so adds a network to those defined in the host_profile
+        # inheritance chain
+      - name: public
+# Nodes represent actual servers, not just config profiles
+nodes:
+- host_profile: k8-node-public
+  # the hostname for a server, could be used in multiple DNS domains to
+  # represent different interfaces
+  name: controller01
+  interfaces:
+  - device_name: bond0
+    networks:
+    # '!' prefix for the value of the primary key indicates a record should be removed
+    - name: '!private'
+  # Addresses assigned to network interfaces
+  addressing:
+    # Which network the address applies to. If a network appears in addressing
+    # that isn't assigned to an interface, design validation will fail
+  - network: pxe
+    # The address assigned. Either a explicit IPv4 or IPv6 address
+    # or dhcp or slaac
+    address: dhcp
+  - network: mgmt
+    address: 172.16.1.20
+  - network: public
+    address: 172.16.3.20
+  metadata:
+    roles: os_ctl
+    rack: rack01
+- host_profile: k8-node
+  name: compute01
+  addressing:
+  - network: pxe
+    address: dhcp
+  - network: mgmt
+    address: 172.16.1.21
+  - network: private
+    address: 172.16.2.21
