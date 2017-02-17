@@ -1,4 +1,3 @@
----
 # Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,15 +17,15 @@
 #
 #############################################################################
 # version the schema in this file so consumers can rationally parse it
+---
 apiVersion: v1
-kind: hardware_profile
+kind: HardwareProfile
 metadata:
+  name: HPGen8v3
   date: 17-FEB-2017
   name: Sample hardware definition
   author: Scott Hussey
-hardware_definition:
-  # Name of the hardware type. This name will be used in bootstrap.yaml to refer back
-- name: HPGen8v3
+spec:
   # Vendor of the server chassis
   vendor: HP
   # Generation of the chassis model
