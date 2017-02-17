@@ -17,6 +17,13 @@
 # bootstrap_hwdefinition.yaml - Definitions of server hardware layout
 #
 #############################################################################
+# version the schema in this file so consumers can rationally parse it
+apiVersion: v1
+kind: hardware_profile
+metadata:
+  date: 17-FEB-2017
+  name: Sample hardware definition
+  author: Scott Hussey
 hardware_definition:
   # Name of the hardware type. This name will be used in bootstrap.yaml to refer back
 - name: HPGen8v3

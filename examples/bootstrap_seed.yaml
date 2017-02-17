@@ -17,6 +17,13 @@
 # bootstrap_seed.yaml - Site server design definition for physical layer
 #
 ####################
+# version the schema in this file so consumers can rationally parse it
+apiVersion: v1
+kind: site_design
+metadata:
+  date: 17-FEB-2017
+  name: Sample site design
+  author: Scott Hussey
 site_name: sitename
 network:
   # Describe layer 1 attributes. Primary key is 'name'. These settings will

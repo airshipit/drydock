@@ -5,26 +5,36 @@ A python REST orchestrator to translate a YAML host topology to a provisioned se
 
 ### Design Consumer ###
 
+aka smelter
+
 Pluggable service to ingest a inventory/design specification, convert it to a standard
 internal representaion, and persist it to the Design State API. Initial implementation
 is the consumer of AIC YAML schema.
 
 ### Design State API ###
 
+aka tarot
+
 API for querying and updating the current design specification and persisted orchestration status.
 CRUD support of CIs that are not bootstrap-related, but can be used by other automation.
 
 ### Control API ###
+
+aka cockpit
 
 User-approachable API for initiating orchestration actions or accessing other internal
 APIs
 
 ### Infrastructure Orchestrator ###
 
+aka alchemist
+
 Handle validation of complete design, ordering and managing downstream API calls for hardware
 provisioning/bootstrapping
 
-### Server Driver ###
+### Server Driver ### 
+
+aka maasdriver
 
 Pluggable provisioner for server bootstrapping. Initial implementation is MaaS client.
 
@@ -33,6 +43,8 @@ Pluggable provisioner for server bootstrapping. Initial implementation is MaaS c
 Pluggable provisioner for network provisioning. Initial implementation is Noop.
 
 ### Introspection API ###
+
+aka jabberwocky
 
 API for bootstrapping nodes to load self data. Possibly pluggable as this is basically an
 authenticated bridge to the Design State API
