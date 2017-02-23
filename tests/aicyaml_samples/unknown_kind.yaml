@@ -1,0 +1,60 @@
+---
+apiVersion: '1.0'
+kind: FooBar
+metadata:
+  name: default
+  region: sitename
+  date: 17-FEB-2017
+  name: Sample network definition
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+  # No magic to this host_profile, it just provides a way to specify
+  # sitewide settings. If it is absent from a node's inheritance chain
+  # then these values will NOT be applied
+spec:
+  # OOB (iLO, iDRAC, etc...) settings. Should prefer open standards such
+  # as IPMI over vender-specific when possible.
+  oob:
+    type: ipmi
+    # OOB networking should be preconfigured, but we can include a network
+    # definition for validation or enhancement (DNS registration)
+    network: oob
+    account: admin
+    credential: admin
+  # Specify storage layout of base OS. Ceph out of scope
+  storage:
+    # How storage should be carved up: lvm (logical volumes), flat 
+    # (single partition)
+    layout: lvm
+    # Info specific to the boot and root disk/partitions
+    bootdisk:
+      # Device will specify an alias defined in hwdefinition.yaml
+      device: primary_boot
+      # For LVM, the size of the partition added to VG as a PV
+      # For flat, the size of the partition formatted as ext4
+      root_size: 50g
+      # The /boot partition. If not specified, /boot will in root
+      boot_size: 2g
+    # Info for additional partitions. Need to balance between
+    # flexibility and complexity
+    partitions:
+    - name: logs
+      device: primary_boot
+      # Partition uuid if needed
+      part_uuid: 84db9664-f45e-11e6-823d-080027ef795a
+      size: 10g
+      # Optional, can carve up unformatted block devices
+      mountpoint: /var/log
+      fstype: ext4
+      mount_options: defaults
+      # Filesystem UUID or label can be specified. UUID recommended
+      fs_uuid: cdb74f1c-9e50-4e51-be1d-068b0e9ff69e
+      fs_label: logs
+  # Platform (Operating System) settings
+  platform:
+    image: ubuntu_16.04_hwe
+    kernel_params: default
+  # Additional metadata to apply to a node
+  metadata:
+    # Base URL of the introspection service - may go in curtin data
+    introspection_url: http://172.16.1.10:9090

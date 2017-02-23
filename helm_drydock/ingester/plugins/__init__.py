@@ -19,12 +19,12 @@ import logging
 
 class IngesterPlugin(object):
 
-	def __init__(self):
-		self.log = logging.Logger('ingester')
-	 	return
+    def __init__(self):
+        self.log = logging.Logger('ingester')
+        return
 
-	def get_data(self):
-		return "ingester_skeleton"
+    def get_data(self):
+        return "ingester_skeleton"
 
-	def ingest_data(self, **kwargs):
-		return {}
+    def ingest_data(self, **kwargs):
+        return {}
