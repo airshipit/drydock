@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # Plugins to parse incoming topology and translate it to helm-drydock's
-# intermediate representation
+# model representation
 
 import logging
 

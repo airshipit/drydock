@@ -18,6 +18,7 @@ from helm_drydock.statemgmt import DesignState
 import pytest
 import shutil
 import os
+import helm_drydock.ingester.plugins.aicyaml
 
 class TestClass(object):
 
@@ -28,8 +29,10 @@ class TestClass(object):
         input_file = input_files.join("fullsite.yaml")
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.aicyaml.AicYamlPlugin])
-        ingester.ingest_data('aic_yaml', design_state=design_state, filenames=)
+        ingester.enable_plugins([helm_drydock.ingester.plugins.aicyaml.AicYamlIngester])
+        ingester.ingest_data(plugin_name='aic_yaml', design_state=design_state, filenames=[str(input_file)])
+
+        assert len(design_state.host_profiles) == 3
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

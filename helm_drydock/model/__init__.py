@@ -28,7 +28,7 @@ class HardwareProfile(object):
             # Need to add validation logic, we'll assume the input is
             # valid for now
             self.name = metadata.get('name', '')
-            self.region = metadata.get('region', '')
+            self.site = metadata.get('region', '')
             self.vendor = spec.get('vendor', '')
             self.generation = spec.get('generation', '')
             self.hw_version = spec.get('hw_version', '')
@@ -106,7 +106,7 @@ class NetworkLink(object):
             spec = kwargs.get('spec', {})
 
             self.name = metadata.get('name', '')
-            self.region = metadata.get('region', '')
+            self.site = metadata.get('region', '')
 
             bonding = spec.get('bonding', {})
             self.bonding_mode = bonding.get('mode', 'none')
@@ -140,7 +140,7 @@ class Network(object):
             spec = kwargs.get('spec', {})
 
             self.name = metadata.get('name', '')
-            self.region = metadata.get('region', '')
+            self.site = metadata.get('region', '')
             self.cidr = spec.get('cidr', '')
             self.allocation_strategy = spec.get('allocation', 'static')
             self.vlan_id = spec.get('vlan_id', 1)
@@ -201,7 +201,7 @@ class HostProfile(object):
             spec = kwargs.get('spec', {})
 
             self.name = metadata.get('name', '')
-            self.region = metadata.get('region', '')
+            self.site = metadata.get('region', '')
 
             oob = spec.get('oob', {})
             self.oob_type = oob.get('type', 'ipmi')
@@ -229,9 +229,28 @@ class HostProfile(object):
             for i in interfaces:
                 self.interfaces.append(HostInterface(self.api_version, **i))
 
+            metadata = spec.get('metadata', {})
+
+            metadata_tags = metadata.get('tags', [])
+            self.tags = []
+
+            for t in metadata_tags:
+                self.tags.append(t)
+
+            owner_data = metadata.get('owner_data', {})
+            self.owner_data = {}
+
+            for k, v in owner_data.items():
+                self.owner_data[k] = v
+
+            self.rack = metadata.get('rack', '')
+
         else:
             raise ValueError('Unknown API version of object')
 
+    def inherit_parent(self, site):
+
+    def apply_hardware_profile(self, site):
 
 class HostInterface(object):
 

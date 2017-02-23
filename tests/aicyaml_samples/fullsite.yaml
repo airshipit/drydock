@@ -118,12 +118,12 @@ spec:
   allocation: static
   cidr: 172.16.100.0/24
   ranges:
-    - type: static
-       start: 172.16.100.15
-       end: 172.16.100.254
-    dns:
-      domain: ilo.sitename.att.com
-      servers: 172.16.100.10
+  - type: static
+    start: 172.16.100.15
+    end: 172.16.100.254
+  dns:
+     domain: ilo.sitename.att.com
+     servers: 172.16.100.10
 ---
 apiVersion: '1.0'
 kind: Network
