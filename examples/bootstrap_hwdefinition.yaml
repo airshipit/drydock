@@ -18,7 +18,7 @@
 #############################################################################
 # version the schema in this file so consumers can rationally parse it
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HardwareProfile
 metadata:
   name: HPGen8v3

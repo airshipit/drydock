@@ -18,7 +18,7 @@
 ####################
 # version the schema in this file so consumers can rationally parse it
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Region
 metadata:
   name: sitename
@@ -28,7 +28,7 @@ metadata:
 spec:
   # Not sure if we have site wide data that doesn't fall into another 'Kind'
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: oob
@@ -49,7 +49,7 @@ spec:
 # pxe is a bit of 'magic' indicating the link config used when PXE booting
 # a node. All other links indicate network configs applied when the node
 # is deployed.
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: pxe
@@ -71,7 +71,7 @@ spec:
     # use name, will translate to VLAN ID
     default_network: pxe
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: gp
@@ -105,7 +105,7 @@ spec:
     mode: tagged
     default_network: mgmt
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: oob
@@ -125,7 +125,7 @@ spec:
       domain: ilo.sitename.att.com
       servers: 172.16.100.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: pxe
@@ -155,7 +155,7 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.0.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: mgmt
@@ -191,7 +191,7 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.1.9,172.16.1.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: private
@@ -216,7 +216,7 @@ spec:
     domain: priv.sitename.example.com
     servers: 172.16.2.9,172.16.2.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: public
@@ -245,7 +245,7 @@ spec:
     domain: sitename.example.com
     servers: 8.8.8.8
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
   name: default
@@ -305,7 +305,7 @@ spec:
     # Base URL of the introspection service - may go in curtin data
     introspection_url: http://172.16.1.10:9090
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
   name: k8-node
@@ -360,7 +360,7 @@ spec:
     owner_data:
       foo: bar
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
   name: k8-node-public
@@ -378,7 +378,7 @@ spec:
         # inheritance chain
       - name: public
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: BaremetalNode
 metadata:
   name: controller01
@@ -412,7 +412,7 @@ spec:
     roles: os_ctl
     rack: rack01
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: BaremetalNode
 metadata:
   name: compute01
