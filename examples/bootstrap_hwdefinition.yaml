@@ -24,7 +24,7 @@ metadata:
   name: HPGen8v3
   region: sitename
   date: 17-FEB-2017
-  name: Sample hardware definition
+  description: Sample hardware definition
   author: Scott Hussey
 spec:
   # Vendor of the server chassis

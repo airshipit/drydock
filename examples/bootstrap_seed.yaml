@@ -23,7 +23,7 @@ kind: Region
 metadata:
   name: sitename
   date: 17-FEB-2017
-  name: Sample site design
+  description: Sample site design
   author: sh8121@att.com
 spec:
   # Not sure if we have site wide data that doesn't fall into another 'Kind'
@@ -34,7 +34,6 @@ metadata:
   name: oob
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
@@ -55,7 +54,6 @@ metadata:
   name: pxe
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
@@ -77,7 +75,6 @@ metadata:
   name: gp
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. These CIs will generally be things the switch and server have to agree on
   # pxe is a bit of 'magic' indicating the link config used when PXE booting
@@ -111,7 +108,6 @@ metadata:
   name: oob
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -131,7 +127,6 @@ metadata:
   name: pxe
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces  
 spec:
@@ -161,7 +156,6 @@ metadata:
   name: mgmt
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -197,7 +191,6 @@ metadata:
   name: private
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -222,7 +215,6 @@ metadata:
   name: public
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -251,7 +243,6 @@ metadata:
   name: default
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
   # No magic to this host_profile, it just provides a way to specify
@@ -311,7 +302,6 @@ metadata:
   name: k8-node
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -366,7 +356,6 @@ metadata:
   name: k8-node-public
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -384,7 +373,6 @@ metadata:
   name: controller01
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -418,7 +406,6 @@ metadata:
   name: compute01
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
