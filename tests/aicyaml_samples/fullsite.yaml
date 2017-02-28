@@ -18,23 +18,22 @@
 ####################
 # version the schema in this file so consumers can rationally parse it
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Region
 metadata:
   name: sitename
   date: 17-FEB-2017
-  name: Sample site design
+  description: Sample site design
   author: sh8121@att.com
 spec:
   # Not sure if we have site wide data that doesn't fall into another 'Kind'
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: oob
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
@@ -49,13 +48,12 @@ spec:
 # pxe is a bit of 'magic' indicating the link config used when PXE booting
 # a node. All other links indicate network configs applied when the node
 # is deployed.
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: pxe
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
@@ -71,13 +69,12 @@ spec:
     # use name, will translate to VLAN ID
     default_network: pxe
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: NetworkLink
 metadata:
   name: gp
   region: sitename
   date: 17-FEB-2017
-  name: Sample network link
   author: sh8121@att.com
   description: Describe layer 1 attributes. These CIs will generally be things the switch and server have to agree on
   # pxe is a bit of 'magic' indicating the link config used when PXE booting
@@ -105,13 +102,12 @@ spec:
     mode: tagged
     default_network: mgmt
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: oob
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -125,13 +121,12 @@ spec:
      domain: ilo.sitename.att.com
      servers: 172.16.100.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: pxe
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces  
 spec:
@@ -155,13 +150,12 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.0.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: mgmt
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -191,13 +185,12 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.1.9,172.16.1.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: private
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -216,13 +209,12 @@ spec:
     domain: priv.sitename.example.com
     servers: 172.16.2.9,172.16.2.10
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: Network
 metadata:
   name: public
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -245,13 +237,12 @@ spec:
     domain: sitename.example.com
     servers: 8.8.8.8
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
-  name: default
+  name: defaults
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
   # No magic to this host_profile, it just provides a way to specify
@@ -305,13 +296,12 @@ spec:
     # Base URL of the introspection service - may go in curtin data
     introspection_url: http://172.16.1.10:9090
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
   name: k8-node
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -339,7 +329,7 @@ spec:
     - prim_nic01
     # Which networks will be configured on this interface
     networks: 
-    - name: pxe
+    - pxe
   - device_name: bond0
     network_link: gp
     # If multiple slaves are specified, but no bonding config
@@ -350,8 +340,8 @@ spec:
     # If multiple networks are specified, but no trunking
     # config is applied to the link, design validation will fail
     networks:
-    - name: mgmt
-    - name: private
+    - mgmt
+    - private
   metadata:
     # Explicit tag assignment
     tags:
@@ -360,13 +350,12 @@ spec:
     owner_data:
       foo: bar
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
   name: k8-node-public
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -376,15 +365,14 @@ spec:
       networks:
         # This is additive, so adds a network to those defined in the host_profile
         # inheritance chain
-      - name: public
+      - public
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: BaremetalNode
 metadata:
   name: controller01
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -395,7 +383,7 @@ spec:
   - device_name: bond0
     networks:
     # '!' prefix for the value of the primary key indicates a record should be removed
-    - name: '!private'
+    - '!private'
   # Addresses assigned to network interfaces
   addressing:
     # Which network the address applies to. If a network appears in addressing
@@ -412,13 +400,12 @@ spec:
     roles: os_ctl
     rack: rack01
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: BaremetalNode
 metadata:
   name: compute01
   region: sitename
   date: 17-FEB-2017
-  name: Sample network definition
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
@@ -431,13 +418,12 @@ spec:
   - network: private
     address: 172.16.2.21
 ---
-apiVersion: '1.0'
+apiVersion: 'v1.0'
 kind: HardwareProfile
 metadata:
-  name: HPGen8v3
+  name: HPGen9v3
   region: sitename
   date: 17-FEB-2017
-  name: Sample hardware definition
   author: Scott Hussey
 spec:
   # Vendor of the server chassis

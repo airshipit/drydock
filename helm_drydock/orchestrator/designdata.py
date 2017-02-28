@@ -14,6 +14,8 @@
 
 import logging
 
+from copy import deepcopy
+
 class DesignStateClient(object):
 
     def __init__(self):
@@ -67,7 +69,6 @@ class DesignStateClient(object):
             if n.site == site_name:
                 site.baremetal_nodes.append(n)
 
-
         return site
 
     """
@@ -78,3 +79,22 @@ class DesignStateClient(object):
     """
     def compute_model_inheritance(self, site_root):
         
+        # For now the only thing that really incorporates inheritance is
+        # host profiles and baremetal nodes. So we'll just resolve it for
+        # the baremetal nodes which recursively resolves it for host profiles
+        # assigned to those nodes
+
+        site_copy = deepcopy(site_root)
+
+        effective_nodes = []
+
+        for n in site_copy.baremetal_nodes:
+            resolved = n.apply_host_profile(site_copy)
+            resolved = resolved.apply_hardware_profile(site_copy)
+            effective_nodes.append(resolved)
+
+        site_copy.baremetal_nodes = effective_nodes
+        
+        return site_copy
+
+

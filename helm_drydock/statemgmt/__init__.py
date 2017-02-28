@@ -16,20 +16,20 @@ import helm_drydock.model as model
 
 class DesignState(object):
 
-	def __init__(self):
-		self.sites = []
-		self.networks = []
-		self.network_links = []
-		self.host_profiles = []
-		self.hardware_profiles = []
-		self.baremetal_nodes = []
-		return
+    def __init__(self):
+        self.sites = []
+        self.networks = []
+        self.network_links = []
+        self.host_profiles = []
+        self.hardware_profiles = []
+        self.baremetal_nodes = []
+        return
 
-	def add_site(self, new_site):
-		if new_site is None or not isinstance(new_site, model.Site):
-			raise Exception("Invalid Site model")
+    def add_site(self, new_site):
+        if new_site is None or not isinstance(new_site, model.Site):
+            raise Exception("Invalid Site model")
 
-		self.sites.append(new_site)
+        self.sites.append(new_site)
 
     def get_sites(self):
         return self.sites
@@ -41,11 +41,11 @@ class DesignState(object):
 
         raise NameError("Site %s not found in design state" % site_name)
 
-	def add_network(self, new_network):
-		if new_network is None or not isinstance(new_network, model.Network):
-			raise Exception("Invalid Network model")
+    def add_network(self, new_network):
+        if new_network is None or not isinstance(new_network, model.Network):
+            raise Exception("Invalid Network model")
 
-		self.networks.append(new_network)
+        self.networks.append(new_network)
 
     def get_networks(self):
         return self.networks
@@ -57,11 +57,11 @@ class DesignState(object):
 
         raise NameError("Network %s not found in design state" % network_name)
 
-	def add_network_link(self, new_network_link):
-		if new_network_link is None or not isinstance(new_network_link, model.NetworkLink):
-			raise Exception("Invalid NetworkLink model")
+    def add_network_link(self, new_network_link):
+        if new_network_link is None or not isinstance(new_network_link, model.NetworkLink):
+            raise Exception("Invalid NetworkLink model")
 
-		self.network_links.append(new_network_link)
+        self.network_links.append(new_network_link)
 
     def get_network_links(self):
         return self.network_links
@@ -73,11 +73,11 @@ class DesignState(object):
 
         raise NameError("NetworkLink %s not found in design state" % link_name)
 
-	def add_host_profile(self, new_host_profile):
-		if new_host_profile is None or not isinstance(new_host_profile, model.HostProfile):
-			raise Exception("Invalid HostProfile model")
+    def add_host_profile(self, new_host_profile):
+        if new_host_profile is None or not isinstance(new_host_profile, model.HostProfile):
+            raise Exception("Invalid HostProfile model")
 
-		self.host_profiles.append(new_host_profile)
+        self.host_profiles.append(new_host_profile)
 
     def get_host_profiles(self):
         return self.host_profiles
@@ -89,11 +89,11 @@ class DesignState(object):
 
         raise NameError("HostProfile %s not found in design state" % profile_name)
 
-	def add_hardware_profile(self, new_hardware_profile):
-		if new_hardware_profile is None or not isinstance(new_hardware_profile, model.HardwareProfile):
-			raise Exception("Invalid HardwareProfile model")
+    def add_hardware_profile(self, new_hardware_profile):
+        if new_hardware_profile is None or not isinstance(new_hardware_profile, model.HardwareProfile):
+            raise Exception("Invalid HardwareProfile model")
 
-		self.hardware_profiles.append(new_hardware_profile)
+        self.hardware_profiles.append(new_hardware_profile)
 
     def get_hardware_profiles(self):
         return self.hardware_profiles
@@ -105,11 +105,11 @@ class DesignState(object):
 
         raise NameError("HardwareProfile %s not found in design state" % profile_name)
 
-	def add_baremetal_node(self, new_baremetal_node):
-		if new_baremetal_node is None or not isinstance(new_baremetal_node, model.BaremetalNode):
-			raise Exception("Invalid BaremetalNode model")
+    def add_baremetal_node(self, new_baremetal_node):
+        if new_baremetal_node is None or not isinstance(new_baremetal_node, model.BaremetalNode):
+            raise Exception("Invalid BaremetalNode model")
 
-		self.baremetal_nodes.append(new_baremetal_node)
+        self.baremetal_nodes.append(new_baremetal_node)
 
     def get_baremetal_nodes(self):
         return self.baremetal_nodes

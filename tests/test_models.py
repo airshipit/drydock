@@ -23,7 +23,7 @@ class TestClass(object):
 
     def test_hardwareprofile(self):
         yaml_snippet = ("---\n"
-                        "apiVersion: '1.0'\n"
+                        "apiVersion: 'v1.0'\n"
                         "kind: HardwareProfile\n"
                         "metadata:\n"
                         "  name: HPGen8v3\n"
