@@ -1,4 +1,4 @@
-# drydock
+# helm_drydock
 A python REST orchestrator to translate a YAML host topology to a provisioned set of hosts and provide a set of cloud-init post-provisioning instructions.
 
 ## Modular service
@@ -9,7 +9,7 @@ aka ingester
 
 Pluggable service to ingest a inventory/design specification, convert it to a standard
 internal representaion, and persist it to the Design State API. Initial implementation
-is the consumer of AIC YAML schema.
+is the consumer of YAML schema.
 
 ### Design State API ###
 
@@ -37,10 +37,6 @@ provisioning/bootstrapping
 aka maasdriver
 
 Pluggable provisioner for server bootstrapping. Initial implementation is MaaS client.
-
-### Network Driver ###
-
-Pluggable provisioner for network provisioning. Initial implementation is Noop.
 
 ### Introspection API ###
 

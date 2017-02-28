@@ -44,14 +44,16 @@ setup(name='helm_drydock',
                 'helm_drydock.ingester',
                 'helm_drydock.ingester.plugins',
                 'helm_drydock.statemgmt',
-                'helm_drydock.orchestrator'],
+                'helm_drydock.orchestrator',
+                'helm_drydock.control'],
       install_requires=[
         'PyYAML',
         'oauth',
         'requests-oauthlib',
         'pyipmi',
         'netaddr',
-        'pecan'
+        'pecan',
+        'webob'
       ],
       dependency_link=[
         'git+https://github.com/maas/python-libmaas.git'
