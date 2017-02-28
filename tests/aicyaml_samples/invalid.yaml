@@ -1,0 +1,29 @@
+---
+apiVersion: 
+: Network
+metadata:
+  name: public
+  region: sitename
+  date: 17-FEB-2017
+  name: Sample network definition
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  vlan_id: '102'
+    # How are addresses assigned?
+  allocation: static
+    # MTU size for the VLAN interface
+  mtu: 1500
+  cidr: 172.16.3.0/24
+    # Desribe IP address ranges
+  ranges: 
+  - type: static
+    start: 172.16.3.15
+    end: 172.16.3.254
+  routes:
+  - subnet: 0.0.0.0/0
+    gateway: 172.16.3.1
+    metric: 9
+  dns:
+    domain: sitename.example.com
+    servers: 8.8.8.8

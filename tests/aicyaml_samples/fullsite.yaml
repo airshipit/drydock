@@ -114,12 +114,12 @@ spec:
   allocation: static
   cidr: 172.16.100.0/24
   ranges:
-    - type: static
-       start: 172.16.100.15
-       end: 172.16.100.254
-    dns:
-      domain: ilo.sitename.att.com
-      servers: 172.16.100.10
+  - type: static
+    start: 172.16.100.15
+    end: 172.16.100.254
+  dns:
+     domain: ilo.sitename.att.com
+     servers: 172.16.100.10
 ---
 apiVersion: 'v1.0'
 kind: Network
@@ -240,7 +240,7 @@ spec:
 apiVersion: 'v1.0'
 kind: HostProfile
 metadata:
-  name: default
+  name: defaults
   region: sitename
   date: 17-FEB-2017
   author: sh8121@att.com
@@ -329,7 +329,7 @@ spec:
     - prim_nic01
     # Which networks will be configured on this interface
     networks: 
-    - name: pxe
+    - pxe
   - device_name: bond0
     network_link: gp
     # If multiple slaves are specified, but no bonding config
@@ -340,8 +340,8 @@ spec:
     # If multiple networks are specified, but no trunking
     # config is applied to the link, design validation will fail
     networks:
-    - name: mgmt
-    - name: private
+    - mgmt
+    - private
   metadata:
     # Explicit tag assignment
     tags:
@@ -365,7 +365,7 @@ spec:
       networks:
         # This is additive, so adds a network to those defined in the host_profile
         # inheritance chain
-      - name: public
+      - public
 ---
 apiVersion: 'v1.0'
 kind: BaremetalNode
@@ -383,7 +383,7 @@ spec:
   - device_name: bond0
     networks:
     # '!' prefix for the value of the primary key indicates a record should be removed
-    - name: '!private'
+    - '!private'
   # Addresses assigned to network interfaces
   addressing:
     # Which network the address applies to. If a network appears in addressing
@@ -397,8 +397,7 @@ spec:
   - network: public
     address: 172.16.3.20
   metadata:
-    tags:
-    - os_ctl
+    roles: os_ctl
     rack: rack01
 ---
 apiVersion: 'v1.0'
@@ -418,3 +417,41 @@ spec:
     address: 172.16.1.21
   - network: private
     address: 172.16.2.21
+---
+apiVersion: 'v1.0'
+kind: HardwareProfile
+metadata:
+  name: HPGen9v3
+  region: sitename
+  date: 17-FEB-2017
+  author: Scott Hussey
+spec:
+  # Vendor of the server chassis
+  vendor: HP
+  # Generation of the chassis model
+  generation: '8'
+  # Version of the chassis model within its generation - not version of the hardware definition
+  hw_version: '3'
+  # The certified version of the chassis BIOS
+  bios_version: '2.2.3'
+  # Mode of the default boot of hardware - bios, uefi
+  boot_mode: bios
+  # Protocol of boot of the hardware - pxe, usb, hdd
+  bootstrap_protocol: pxe
+  # Which interface to use for network booting within the OOB manager, not OS device
+  pxe_interface: 0
+  # Map hardware addresses to aliases/roles to allow a mix of hardware configs
+  # in a site to result in a consistent configuration
+  device_aliases:
+    pci:
+    - address: pci@0000:00:03.0
+      alias: prim_nic01
+      # type could identify expected hardware - used for hardware manifest validation
+      type: '82540EM Gigabit Ethernet Controller'
+    - address: pci@0000:00:04.0
+      alias: prim_nic02
+      type: '82540EM Gigabit Ethernet Controller'
+    scsi:
+    - address: scsi@2:0.0.0
+      alias: primary_boot
+      type: 'VBOX HARDDISK'

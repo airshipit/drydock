@@ -1,0 +1,7 @@
+PyYAML
+oauth
+requests-oauthlib
+pyipmi
+netaddr
+pecan
+python-libmaas
