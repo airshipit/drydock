@@ -31,13 +31,8 @@ class DesignStateClient(object):
     return a Site model populated with all components from the design state
     """
 
-    def load_design_data(self, design_state=None):
-        if len(design_state.get_sites()) != 1:
-            self.log.error("Invalid design state, should only have 1 Site model")
-            raise Exception("Invalid design state, should only have 1 Site model")
-
-        site = design_state.get_sites()[0]
-        site_name = site.name
+    def load_design_data(self, site_name, design_state=None):
+        site = design_state.get_site(site_name)
 
         networks = design_state.get_networks()
 
@@ -96,5 +91,3 @@ class DesignStateClient(object):
         site_copy.baremetal_nodes = effective_nodes
         
         return site_copy
-
-

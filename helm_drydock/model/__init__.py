@@ -14,12 +14,16 @@
 #
 # Models for helm_drydock
 #
+import logging
+
 from copy import deepcopy
 
 
 class HardwareProfile(object):
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = kwargs.get('apiVersion', '')
 
         if self.api_version == "v1.0":
@@ -55,14 +59,19 @@ class HardwareProfile(object):
                 self.devices.append(
                     HardwareDeviceAlias(self.api_version, **d))
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
         return
 
     def resolve_alias(self, alias_type, alias):
+        selector = {}
         for d in self.devices:
             if d.alias == alias and d.bus_type == alias_type:
-                return deepcopy(d)
+                selector['address'] = d.address
+                selector['device_type'] = d.type
+                return selector
 
         return None
 
@@ -70,6 +79,8 @@ class HardwareProfile(object):
 class HardwareDeviceAlias(object):
 
     def __init__(self, api_version, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = api_version
 
         if self.api_version == "v1.0":
@@ -78,12 +89,16 @@ class HardwareDeviceAlias(object):
             self.alias = kwargs.get('alias', None)
             self.type = kwargs.get('type', None)
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
 
 class Site(object):
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = kwargs.get('apiVersion', '')
 
         if self.api_version == "v1.0":
@@ -100,6 +115,8 @@ class Site(object):
             self.baremetal_nodes = []
 
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
     def get_network(self, network_name):
@@ -140,6 +157,8 @@ class Site(object):
 class NetworkLink(object):
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = kwargs.get('apiVersion', '')
 
         if self.api_version == "v1.0":
@@ -152,13 +171,13 @@ class NetworkLink(object):
             bonding = spec.get('bonding', {})
             self.bonding_mode = bonding.get('mode', 'none')
 
-            # TODO How should we define defaults for CIs not in the input?
+            # How should we define defaults for CIs not in the input?
             if self.bonding_mode == '802.3ad':
                 self.bonding_xmit_hash = bonding.get('hash', 'layer3+4')
                 self.bonding_peer_rate = bonding.get('peer_rate', 'fast')
-                self.bonding_mon_rate = bonding.get('mon_rate', '')
-                self.bonding_up_delay = bonding.get('up_delay', '')
-                self.bonding_down_delay = bonding.get('down_delay', '')
+                self.bonding_mon_rate = bonding.get('mon_rate', '100')
+                self.bonding_up_delay = bonding.get('up_delay', '200')
+                self.bonding_down_delay = bonding.get('down_delay', '200')
 
             self.mtu = spec.get('mtu', 1500)
             self.linkspeed = spec.get('linkspeed', 'auto')
@@ -168,12 +187,16 @@ class NetworkLink(object):
 
             self.native_network = spec.get('default_network', '')
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
 
 class Network(object):
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = kwargs.get('apiVersion', '')
 
         if self.api_version == "v1.0":
@@ -204,12 +227,16 @@ class Network(object):
             for r in routes:
                 self.routes.append(NetworkRoute(self.api_version, **r))
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
 
 class NetworkAddressRange(object):
 
     def __init__(self, api_version, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = api_version
 
         if self.api_version == "v1.0":
@@ -217,12 +244,16 @@ class NetworkAddressRange(object):
             self.start = kwargs.get('start', None)
             self.end = kwargs.get('end', None)
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
 
 class NetworkRoute(object):
 
     def __init__(self, api_version, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = api_version
 
         if self.api_version == "v1.0":
@@ -230,12 +261,16 @@ class NetworkRoute(object):
             self.start = kwargs.get('gateway', None)
             self.end = kwargs.get('metric', 100)
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
 
 class HostProfile(object):
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = kwargs.get('apiVersion', '')
 
         if self.api_version == "v1.0":
@@ -291,6 +326,8 @@ class HostProfile(object):
             self.rack = metadata.get('rack', None)
 
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
     def apply_inheritance(self, site):
@@ -304,7 +341,8 @@ class HostProfile(object):
         parent = site.get_host_profile(self.parent_profile)
 
         if parent is None:
-            return self_copy
+            raise NameError("Cannot find parent profile %s for %s"
+                            % (self.parent_profile, self.name))
 
         parent = parent.apply_inheritance(site)
 
@@ -338,6 +376,8 @@ class HostProfile(object):
 class HostInterface(object):
 
     def __init__(self, api_version, **kwargs):
+        self.log = logging.Logger('model')
+
         self.api_version = api_version
 
         if self.api_version == "v1.0":
@@ -355,8 +395,9 @@ class HostInterface(object):
 
             for n in networks:
                 self.networks.append(n)
-
         else:
+            self.log.error("Unknown API version %s of %s" %
+                (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
     # The device attribute may be hardware alias that translates to a
@@ -365,15 +406,23 @@ class HostInterface(object):
     # apply_hardware_profile method is called on the parent Node of this
     # device, the selector will be decided and applied
 
-    def add_selector(self, sel_type, selector):
+    def add_selector(self, sel_type, address='', dev_type=''):
         if getattr(self, 'selectors', None) is None:
             self.selectors = []
 
         new_selector = {}
         new_selector['selector_type'] = sel_type
-        new_selector['selector'] = selector
+        new_selector['address'] = address
+        new_selector['device_type'] = dev_type
 
         self.selectors.append(new_selector)
+
+    def get_slave_selectors(self):
+        return self.selectors
+
+    # Return number of slaves for this interface
+    def get_slave_count(self):
+        return len(self.hardware_slaves)
 
     """
     Merge two lists of HostInterface models with child_list taking
@@ -394,13 +443,16 @@ class HostInterface(object):
                     continue
                 else:
                     effective_list.append(deepcopy(i))
+            return effective_list
 
         parent_interfaces = []
         for i in parent_list:
             parent_name = i.device_name
             parent_interfaces.append(parent_name)
+            add = True
             for j in child_list:
                 if j.device_name == ("!" + parent_name):
+                    add = False
                     break
                 elif j.device_name == parent_name:
                     m = HostInterface(j.api_version)
@@ -425,9 +477,15 @@ class HostInterface(object):
                     m.networks = n
 
                     effective_list.append(m)
+                    add = False
+                    break
+
+            if add:
+                effective_list.append(deepcopy(i))
 
         for j in child_list:
-            if j.device_name not in parent_list:
+            if (j.device_name not in parent_interfaces
+                and not j.device_name.startswith("!")):
                 effective_list.append(deepcopy(j))
 
         return effective_list
@@ -457,9 +515,16 @@ class HostPartition(object):
     # apply_hardware_profile method is called on the parent Node of this
     # device, the selector will be decided and applied
 
-    def set_selector(self, sel_type, selector):
-        self.selector_type = sel_type
+    def set_selector(self, sel_type, address='', dev_type=''):
+        selector = {}
+        selector['type'] = sel_type
+        selector['address'] = address
+        selector['device_type'] = dev_type
+
         self.selector = selector
+
+    def get_selector(self):
+        return self.selector
 
     """
     Merge two lists of HostPartition models with child_list taking
@@ -489,8 +554,10 @@ class HostPartition(object):
         for i in parent_list:
             parent_name = i.name
             parent_partitions.append(parent_name)
+            add = True
             for j in child_list:
                 if j.name == ("!" + parent_name):
+                    add = False
                     break
                 elif j.name == parent_name:
                     p = HostPartition(j.api_version)
@@ -500,8 +567,10 @@ class HostPartition(object):
                         setattr(p, Utils.apply_field_inheritance(getattr(j, f),
                                                                  getattr(i, f))
                                 )
-
+                    add = False
                     effective_list.append(p)
+            if add:
+                effective_list.append(deepcopy(i))
 
         for j in child_list:
             if j.name not in parent_list:
@@ -534,16 +603,18 @@ class BaremetalNode(HostProfile):
             for s in i.hardware_slaves:
                 selector = hw_profile.resolve_alias("pci", s)
                 if selector is None:
-                    i.add_selector("name", s)
+                    i.add_selector("name", address=p.device)
                 else:
-                    i.add_selector("address", selector)
+                    i.add_selector("address", address=selector['address'],
+                                   dev_type=selector['device_type'])
 
         for p in self_copy.partitions:
             selector = hw_profile.resolve_alias("scsi", p.device)
             if selector is None:
-                p.set_selector("name", p.device)
+                p.set_selector("name", address=p.device)
             else:
-                p.set_selector("address", selector)
+                p.set_selector("address", address=selector['address'],
+                               dev_type=selector['device_type'])
 
 
         hardware = {"vendor": getattr(hw_profile, 'vendor', None),
@@ -561,6 +632,11 @@ class BaremetalNode(HostProfile):
 
         return self_copy
 
+    def get_interface(self, iface_name):
+        for i in self.interfaces:
+            if i.device_name == iface_name:
+                return i
+        return None
 
 # Utility class for calculating inheritance
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from helm_drydock.ingester.plugins.aicyaml import AicYamlIngester
+from helm_drydock.ingester.plugins.yaml import YamlIngester
 import pytest
 import shutil
 import os
@@ -25,7 +25,7 @@ class TestClass(object):
     def test_ingest_singledoc(self, input_files):
         input_file = input_files.join("singledoc.yaml")
 
-        ingester = AicYamlIngester()
+        ingester = YamlIngester()
 
         models = ingester.ingest_data(filenames=[str(input_file)])
 
@@ -34,7 +34,7 @@ class TestClass(object):
     def test_ingest_multidoc(self, input_files):
         input_file = input_files.join("multidoc.yaml")
  
-        ingester = AicYamlIngester()
+        ingester = YamlIngester()
 
         models = ingester.ingest_data(filenames=[str(input_file)])
 
@@ -43,7 +43,7 @@ class TestClass(object):
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "/aicyaml_samples"
+        samples_dir = os.path.dirname(str(request.fspath)) + "/yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

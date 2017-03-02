@@ -22,7 +22,7 @@ import logging
 import helm_drydock.model as model
 from helm_drydock.ingester.plugins import IngesterPlugin
 
-class AicYamlIngester(IngesterPlugin):
+class YamlIngester(IngesterPlugin):
 
     kind_map = {
         "Region": model.Site,
@@ -34,10 +34,10 @@ class AicYamlIngester(IngesterPlugin):
     }
 
     def __init__(self):
-        super(AicYamlIngester, self).__init__()
+        super(YamlIngester, self).__init__()
 
     def get_name(self):
-        return "aic_yaml"
+        return "yaml"
 
     """
     AIC YAML ingester params
@@ -48,6 +48,8 @@ class AicYamlIngester(IngesterPlugin):
 
     """
     def ingest_data(self, **kwargs):
+        models = []
+
         if 'filenames' in kwargs:
             # TODO validate filenames is array
             for f in kwargs.get('filenames'):
@@ -55,45 +57,52 @@ class AicYamlIngester(IngesterPlugin):
                     file = open(f,'rt')
                     contents = file.read()
                     file.close()
+                    models.extend(self.parse_docs(contents))
                 except OSError as err:
                     self.log.error(
                         "Error opening input file %s for ingestion: %s" 
                         % (filename, err))
                     continue
         
-                try:
-                    parsed_data = yaml.load_all(contents)
-                except yaml.YAMLError as err:
-                    self.log.error("Error parsing YAML in %s: %s" % (f, err))
-                    continue
-
-                models = []
-                for d in parsed_data:
-                    kind = d.get('kind', '')
-                    if kind != '':
-                        if kind in AicYamlIngester.kind_map:
-                            try:
-                                model = AicYamlIngester.kind_map[kind](**d)
-                                models.append(model)
-                            except Exception as err:
-                                self.log.error("Error building model %s: %s" 
-                                    % (kind, str(err)))
-                        else:
-                            self.log.error(
-                                "Error processing document, unknown kind %s" 
-                                % (kind))
-                            continue
-                    else:
-                        self.log.error(
-                            "Error processing document in %s, no kind field"
-                            % (f))
-                        continue
-
-                return models
+                
+        elif 'content' in kwargs:
+            models.extend(self.parse_docs(kwargs.get('content')))
         else:
             raise ValueError('Missing parameter "filename"')
         
-        return processed_data
-        
+        return models
 
+    """
+    Translate a YAML string into the internal Drydock model
+    """
+    def parse_docs(self, yaml_string):
+        models = []
 
+        try:
+            parsed_data = yaml.load_all(yaml_string)
+        except yaml.YAMLError as err:
+            raise ValueError("Error parsing YAML in %s: %s" % (f,err))
+
+        for d in parsed_data:
+            kind = d.get('kind', '')
+            if kind != '':
+                if kind in YamlIngester.kind_map:
+                    try:
+                        model = YamlIngester.kind_map[kind](**d)
+                        models.append(model)
+                    except Exception as err:
+                        self.log.error("Error building model %s: %s" 
+                                       % (kind, str(err)))
+                        continue
+                else:
+                    self.log.error(
+                        "Error processing document, unknown kind %s" 
+                        % (kind))
+                    continue
+            else:
+                self.log.error(
+                    "Error processing document in %s, no kind field"
+                    % (f))
+                continue
+
+        return models

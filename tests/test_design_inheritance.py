@@ -21,7 +21,7 @@ from copy import deepcopy
 import pytest
 import shutil
 import os
-import helm_drydock.ingester.plugins.aicyaml
+import helm_drydock.ingester.plugins.yaml
 import yaml
 
 class TestClass(object):
@@ -33,14 +33,22 @@ class TestClass(object):
     def test_design_inheritance(self, loaded_design):
         client = DesignStateClient()
 
-        design_data = client.load_design_data(design_state=loaded_design)
+        design_data = client.load_design_data("sitename", design_state=loaded_design)
         design_data = client.compute_model_inheritance(design_data)
-
-        print(yaml.dump(design_data, default_flow_style=False))
 
         node = design_data.get_baremetal_node("controller01")
 
+        print(yaml.dump(node, default_flow_style=False))
+        
         assert node.hardware_profile == 'HPGen9v3'
+
+        iface = node.get_interface('bond0')
+
+        assert iface.get_slave_count() == 2
+
+        iface = node.get_interface('pxe')
+
+        assert iface.get_slave_count() == 1
 
     @pytest.fixture(scope='module')
     def loaded_design(self, input_files):
@@ -49,8 +57,8 @@ class TestClass(object):
         module_design_state = DesignState()
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.aicyaml.AicYamlIngester])
-        ingester.ingest_data(plugin_name='aic_yaml', design_state=module_design_state, filenames=[str(input_file)])
+        ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
+        ingester.ingest_data(plugin_name='yaml', design_state=module_design_state, filenames=[str(input_file)])
 
         return module_design_state
 
@@ -59,7 +67,7 @@ class TestClass(object):
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "/aicyaml_samples"
+        samples_dir = os.path.dirname(str(request.fspath)) + "/yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:
