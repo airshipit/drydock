@@ -50,7 +50,7 @@ setup(name='helm_drydock',
         'PyYAML',
         'oauth',
         'requests-oauthlib',
-        'pyipmi',
+        'pyghmi',
         'netaddr',
         'pecan',
         'webob'

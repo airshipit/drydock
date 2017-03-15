@@ -14,7 +14,7 @@
 
 import pytest
 import yaml
-from helm_drydock.model import HardwareProfile
+from helm_drydock.model.hwprofile import HardwareProfile
 
 class TestClass(object):
 

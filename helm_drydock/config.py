@@ -21,7 +21,7 @@
 
 class DrydockConfig(object):
 
-	def __init__(self):
+    def __init__(self):
         self.server_driver_config = {
             selected_driver = helm_drydock.drivers.server.maasdriver,
             params = {
@@ -29,13 +29,13 @@ class DrydockConfig(object):
                 maas_api_url = ""
             }
         }
-		self.selected_network_driver = helm_drydock.drivers.network.noopdriver
-		self.control_config = {}
-		self.ingester_config = {
-			plugins = [helm_drydock.ingester.plugins.aicyaml.AicYamlIngester]
-		}
-		self.introspection_config = {}
-		self.orchestrator_config = {}
-		self.statemgmt_config = {
-			backend_driver = helm_drydock.drivers.statemgmt.etcd,
-		}
+        self.selected_network_driver = helm_drydock.drivers.network.noopdriver
+        self.control_config = {}
+        self.ingester_config = {
+            plugins = [helm_drydock.ingester.plugins.aicyaml.AicYamlIngester]
+        }
+        self.introspection_config = {}
+        self.orchestrator_config = {}
+        self.statemgmt_config = {
+            backend_driver = helm_drydock.drivers.statemgmt.etcd,
+        }

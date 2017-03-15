@@ -1,7 +1,5 @@
-PyYAML
-oauth
-requests-oauthlib
-pyipmi
-netaddr
-pecan
-python-libmaas
+PyYAML==3.12
+oauth==1.0.1
+requests-oauthlib==0.8.0
+netaddr==0.7.19
+python-libmaas==0.4.1

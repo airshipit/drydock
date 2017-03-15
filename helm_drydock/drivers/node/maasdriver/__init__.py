@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import helm_drydock.drivers.server.ServerDriver
+from helm_drydock.drivers.node import NodeDriver
 
-class MaasServerDriver(object):
+class MaasNodeDriver(NodeDriver):
+
+    def __init__(self, kwargs):
+        super(MaasNodeDriver, self).__init__(**kwargs)
 	

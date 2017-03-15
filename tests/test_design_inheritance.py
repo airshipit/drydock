@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState
+from helm_drydock.statemgmt import DesignState, SiteDesign
 from helm_drydock.orchestrator.designdata import DesignStateClient
 
 from copy import deepcopy
@@ -34,6 +34,11 @@ class TestClass(object):
         client = DesignStateClient()
 
         design_data = client.load_design_data("sitename", design_state=loaded_design)
+
+        assert len(design_data.baremetal_nodes) == 2
+
+        print(yaml.dump(design_data, default_flow_style=False))
+
         design_data = client.compute_model_inheritance(design_data)
 
         node = design_data.get_baremetal_node("controller01")
@@ -54,13 +59,15 @@ class TestClass(object):
     def loaded_design(self, input_files):
         input_file = input_files.join("fullsite.yaml")
 
-        module_design_state = DesignState()
+        design_state = DesignState()
+        design_data = SiteDesign()
+        design_state.post_design_base(design_data)
 
         ingester = Ingester()
         ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=module_design_state, filenames=[str(input_file)])
+        ingester.ingest_data(plugin_name='yaml', design_state=design_state, filenames=[str(input_file)])
 
-        return module_design_state
+        return design_state
 
         
 

@@ -16,6 +16,8 @@ import logging
 
 from copy import deepcopy
 
+from helm_drydock.error import DesignError
+
 class DesignStateClient(object):
 
     def __init__(self):
@@ -31,34 +33,47 @@ class DesignStateClient(object):
     return a Site model populated with all components from the design state
     """
 
-    def load_design_data(self, site_name, design_state=None):
-        site = design_state.get_site(site_name)
+    def load_design_data(self, site_name, design_state=None, change_id=None):
+        if design_state is None:
+            raise ValueError("Design state is None")
 
-        networks = design_state.get_networks()
+        design_data = None
+
+        if change_id is None:
+            try:
+                design_data = design_state.get_design_base()
+            except DesignError(e):
+                raise e
+        else:
+            design_data = design_state.get_design_change(change_id)
+
+        site = design_data.get_site(site_name)
+
+        networks = design_data.get_networks()
 
         for n in networks:
             if n.site == site_name:
                 site.networks.append(n)
 
-        network_links = design_state.get_network_links()
+        network_links = design_data.get_network_links()
 
         for l in network_links:
             if l.site == site_name:
                 site.network_links.append(l)
 
-        host_profiles = design_state.get_host_profiles()
+        host_profiles = design_data.get_host_profiles()
 
         for p in host_profiles:
             if p.site == site_name:
                 site.host_profiles.append(p)
 
-        hardware_profiles = design_state.get_hardware_profiles()
+        hardware_profiles = design_data.get_hardware_profiles()
 
         for p in hardware_profiles:
             if p.site == site_name:
                 site.hardware_profiles.append(p)
 
-        baremetal_nodes = design_state.get_baremetal_nodes()
+        baremetal_nodes = design_data.get_baremetal_nodes()
 
         for n in baremetal_nodes:
             if n.site == site_name:
@@ -66,12 +81,6 @@ class DesignStateClient(object):
 
         return site
 
-    """
-    compute_model_inheritance - given a fully populated Site model, compute the effecitve
-    design by applying inheritance and references
-
-    return a Site model reflecting the effective design for the site
-    """
     def compute_model_inheritance(self, site_root):
         
         # For now the only thing that really incorporates inheritance is
@@ -86,8 +95,15 @@ class DesignStateClient(object):
         for n in site_copy.baremetal_nodes:
             resolved = n.apply_host_profile(site_copy)
             resolved = resolved.apply_hardware_profile(site_copy)
+            resolved = resolved.apply_network_connections(site_copy)
             effective_nodes.append(resolved)
 
         site_copy.baremetal_nodes = effective_nodes
         
         return site_copy
+    """
+    compute_model_inheritance - given a fully populated Site model,
+    compute the effecitve design by applying inheritance and references
+
+    return a Site model reflecting the effective design for the site
+    """

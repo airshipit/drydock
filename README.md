@@ -32,9 +32,15 @@ aka orchestrator
 Handle validation of complete design, ordering and managing downstream API calls for hardware
 provisioning/bootstrapping
 
-### Server Driver ### 
+### OOB Driver ###
 
-aka maasdriver
+Pluggable provider for server OOB (ILO) management
+
+aka driver/oob
+
+### Node Driver ###
+
+aka driver/node
 
 Pluggable provisioner for server bootstrapping. Initial implementation is MaaS client.
 

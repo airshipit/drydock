@@ -25,8 +25,7 @@ metadata:
   date: 17-FEB-2017
   description: Sample site design
   author: sh8121@att.com
-spec:
-  # Not sure if we have site wide data that doesn't fall into another 'Kind'
+# Not sure if we have site wide data that doesn't fall into another 'Kind'
 ---
 apiVersion: 'v1.0'
 kind: HostProfile

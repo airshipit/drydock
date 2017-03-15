@@ -12,7 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import helm_drydock.drivers.ProviderDriver
+# OOB:
+# sync_hardware_clock
+# collect_chassis_sysinfo
+# enable_netboot
+# initiate_reboot
+# set_power_off
+# set_power_on
 
-class ServerDriver(ProviderDriver):
-	
+from helm_drydock.drivers import ProviderDriver
+
+class OobDriver(ProviderDriver):
+
+    def __init__(self):
+        pass
+
+    def execute_action(self, action, **kwargs):
+        if action == 
+
+
+
+class OobAction(Enum):
+    ConfigNodePxe = 'config_node_pxe'
+    SetNodeBoot = 'set_node_boot'
+    PowerOffNode = 'power_off_node'
+    PowerOnNode = 'power_on_node'
+    PowerCycleNode = 'power_cycle_node'
+    InterrogateNode = 'interrogate_node'
+

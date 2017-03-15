@@ -19,18 +19,23 @@
 import yaml
 import logging
 
-import helm_drydock.model as model
+import helm_drydock.model.hwprofile as hwprofile
+import helm_drydock.model.node as node
+import helm_drydock.model.site as site
+import helm_drydock.model.hostprofile as hostprofile
+import helm_drydock.model.network as network
+
 from helm_drydock.ingester.plugins import IngesterPlugin
 
 class YamlIngester(IngesterPlugin):
 
     kind_map = {
-        "Region": model.Site,
-        "NetworkLink": model.NetworkLink,
-        "HardwareProfile": model.HardwareProfile,
-        "Network": model.Network,
-        "HostProfile": model.HostProfile,
-        "BaremetalNode": model.BaremetalNode,
+        "Region": site.Site,
+        "NetworkLink": network.NetworkLink,
+        "HardwareProfile": hwprofile.HardwareProfile,
+        "Network": network.Network,
+        "HostProfile": hostprofile.HostProfile,
+        "BaremetalNode": node.BaremetalNode,
     }
 
     def __init__(self):

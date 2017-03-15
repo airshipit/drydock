@@ -17,9 +17,14 @@
 
 import logging
 import yaml
-import helm_drydock.model as model
 
-from helm_drydock.statemgmt import DesignState
+import helm_drydock.model.site as site
+import helm_drydock.model.network as network
+import helm_drydock.model.hwprofile as hwprofile
+import helm_drydock.model.node as node
+import helm_drydock.model.hostprofile as hostprofile
+
+from helm_drydock.statemgmt import DesignState, SiteDesign, DesignError
 
 class Ingester(object):
 
@@ -28,16 +33,6 @@ class Ingester(object):
         self.log = logging.Logger("ingester")
         self.registered_plugins = {}
 
-    """
-      enable_plugins
-
-      params: plugins - A list of class objects denoting the ingester plugins to be enabled
-
-      Enable plugins that can be used for ingest_data calls. Each plugin should use
-      helm_drydock.ingester.plugins.IngesterPlugin as its base class. As long as one
-      enabled plugin successfully initializes, the call is considered successful. Otherwise
-      it will throw an exception
-    """
     def enable_plugins(self, plugins=[]):
         if len(plugins) == 0:
             self.log.error("Cannot have an empty plugin list.")
@@ -53,7 +48,51 @@ class Ingester(object):
         if len(self.registered_plugins) == 0:
             self.log.error("Could not enable at least one plugin")
             raise Exception("Could not enable at least one plugin")
+    """
+      enable_plugins
 
+      params: plugins - A list of class objects denoting the ingester plugins to be enabled
+
+      Enable plugins that can be used for ingest_data calls. Each plugin should use
+      helm_drydock.ingester.plugins.IngesterPlugin as its base class. As long as one
+      enabled plugin successfully initializes, the call is considered successful. Otherwise
+      it will throw an exception
+    """
+    
+    def ingest_data(self, plugin_name='', design_state=None, **kwargs):
+        if design_state is None:
+            self.log.error("ingest_data called without valid DesignState handler")
+            raise Exception("Invalid design_state handler")
+
+        # TODO this method needs refactored to handle design base vs change
+
+        design_data = None
+
+        try:
+            design_data = design_state.get_design_base()
+        except DesignError:
+            design_data = SiteDesign()
+
+        if plugin_name in self.registered_plugins:
+            design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)
+            # Need to persist data here, but we don't yet have the statemgmt service working
+            for m in design_items:
+                if type(m) is site.Site:
+                    design_data.add_site(m)
+                elif type(m) is network.Network:
+                    design_data.add_network(m)
+                elif type(m) is network.NetworkLink:
+                    design_data.add_network_link(m)
+                elif type(m) is hostprofile.HostProfile:
+                    design_data.add_host_profile(m)
+                elif type(m) is hwprofile.HardwareProfile:
+                    design_data.add_hardware_profile(m)
+                elif type(m) is node.BaremetalNode:
+                    design_data.add_baremetal_node(m)
+            design_state.put_design_base(design_data)
+        else:
+            self.log.error("Could not find plugin %s to ingest data." % (plugin_name))
+            raise LookupError("Could not find plugin %s" % plugin_name)
     """
       ingest_data
 
@@ -62,29 +101,4 @@ class Ingester(object):
 
       Execute a data ingestion using the named plugin (assuming it is enabled) 
     """
-    def ingest_data(self, plugin_name='', design_state=None, **kwargs):
-        if design_state is None:
-            self.log.error("ingest_data called without valid DesignState handler")
-            raise Exception("Invalid design_state handler")
-
-        if plugin_name in self.registered_plugins:
-            design_data = self.registered_plugins[plugin_name].ingest_data(**kwargs)
-            # Need to persist data here, but we don't yet have the statemgmt service working
-            for m in design_data:
-                if type(m) is model.Site:
-                    design_state.add_site(m)
-                elif type(m) is model.Network:
-                    design_state.add_network(m)
-                elif type(m) is model.NetworkLink:
-                    design_state.add_network_link(m)
-                elif type(m) is model.HostProfile:
-                    design_state.add_host_profile(m)
-                elif type(m) is model.HardwareProfile:
-                    design_state.add_hardware_profile(m)
-                elif type(m) is model.BaremetalNode:
-                    design_state.add_baremetal_node(m)
-        else:
-            self.log.error("Could not find plugin %s to ingest data." % (plugin_name))
-            raise LookupError("Could not find plugin %s" % plugin_name)
-
 

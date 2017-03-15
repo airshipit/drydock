@@ -11,11 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-class ProviderDriver(object):
+from helm_drydock.drivers import ProviderDriver
 
-	__init__(self):
-        pass
-		
+class NodeDriver(ProviderDriver):
 
-class DriverTask(object):
+class NodeAction(Enum):
+    PrepareNode = 'prepare_node'
+    ApplyNetworkConfig = 'apply_network_config'
+    ApplyStorageConfig = 'apply_storage_config'
+    InterrogateNode = 'interrogate_node'
+    DeployNode = 'deploy_node'
+
+
+
+	
