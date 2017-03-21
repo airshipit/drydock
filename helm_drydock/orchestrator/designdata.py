@@ -91,9 +91,7 @@ class DesignStateClient(object):
         site_copy = deepcopy(site_root)
 
         for n in site_copy.baremetal_nodes:
-            n.apply_host_profile(site_copy)
-            n.apply_hardware_profile(site_copy)
-            n.apply_network_connections(site_copy)
+            n.compile_applied_model(site_copy)
         
         return site_copy
     """

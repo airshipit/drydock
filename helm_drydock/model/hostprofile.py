@@ -146,13 +146,9 @@ class HostProfile(object):
 
         self.applied['interfaces'] = HostInterface.merge_lists(
             self.design['interfaces'], parent.applied['interfaces'])
-        for i in self.applied.get('interfaces', []):
-            i.ensure_applied_data()
 
         self.applied['partitions'] = HostPartition.merge_lists(
             self.design['partitions'], parent.applied['partitions'])
-        for p in self.applied.get('partitions', []):
-            p. ensure_applied_data()
 
         return
 
@@ -215,7 +211,7 @@ class HostInterface(object):
     def get_network_configs(self):
         self.ensure_applied_data()
         return self.applied.get('attached_networks', [])
-        
+
     # The device attribute may be hardware alias that translates to a
     # physical device address. If the device attribute does not match an
     # alias, we assume it directly identifies a OS device name. When the
@@ -293,11 +289,11 @@ class HostInterface(object):
         elif len(parent_list) > 0 and len(child_list) > 0:
             parent_interfaces = []
             for i in parent_list:
-                parent_name = i.device_name
+                parent_name = i.get_name()
                 parent_interfaces.append(parent_name)
                 add = True
                 for j in child_list:
-                    if j.device_name == ("!" + parent_name):
+                    if j.get_name() == ("!" + parent_name):
                         add = False
                         break
                     elif j.device_name == parent_name:
@@ -312,7 +308,6 @@ class HostInterface(object):
                              in i.applied.get('hardware_slaves', [])
                              if ("!" + x) not in j.design.get(
                                 'hardware_slaves', [])]
-                        s = list(s)
 
                         s.extend(
                             [x for x
@@ -325,7 +320,6 @@ class HostInterface(object):
                              in i.applied.get('networks',[])
                              if ("!" + x) not in j.design.get(
                                 'networks', [])]
-                        n = list(n)
 
                         n.extend(
                             [x for x
