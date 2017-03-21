@@ -38,50 +38,55 @@ class HostProfile(object):
             self.name = metadata.get('name', '')
             self.site = metadata.get('region', '')
 
-            self.parent_profile = spec.get('host_profile', None)
-            self.hardware_profile = spec.get('hardware_profile', None)
+            # Design Data
+            self.design = {}
+
+            self.design['parent_profile'] = spec.get('host_profile', None)
+            self.design['hardware_profile'] = spec.get('hardware_profile', None)
+
 
             oob = spec.get('oob', {})
-            self.oob_type = oob.get('type', None)
-            self.oob_network = oob.get('network', None)
-            self.oob_account = oob.get('account', None)
-            self.oob_credential = oob.get('credential', None)
+
+            self.design['oob_type'] = oob.get('type', None)
+            self.design['oob_network'] = oob.get('network', None)
+            self.design['oob_account'] = oob.get('account', None)
+            self.design['oob_credential'] = oob.get('credential', None)
 
             storage = spec.get('storage', {})
-            self.storage_layout = storage.get('layout', 'lvm')
+            self.design['storage_layout'] = storage.get('layout', 'lvm')
 
             bootdisk = storage.get('bootdisk', {})
-            self.bootdisk_device = bootdisk.get('device', None)
-            self.bootdisk_root_size = bootdisk.get('root_size', None)
-            self.bootdisk_boot_size = bootdisk.get('boot_size', None)
+            self.design['bootdisk_device'] = bootdisk.get('device', None)
+            self.design['bootdisk_root_size'] = bootdisk.get('root_size', None)
+            self.design['bootdisk_boot_size'] = bootdisk.get('boot_size', None)
 
             partitions = storage.get('partitions', [])
-            self.partitions = []
+            self.design['partitions'] = []
 
             for p in partitions:
-                self.partitions.append(HostPartition(self.api_version, **p))
+                self.design['partitions'].append(HostPartition(self.api_version, **p))
 
             interfaces = spec.get('interfaces', [])
-            self.interfaces = []
+            self.design['interfaces'] = []
 
             for i in interfaces:
-                self.interfaces.append(HostInterface(self.api_version, **i))
+                self.design['interfaces'].append(HostInterface(self.api_version, **i))
 
             node_metadata = spec.get('metadata', {})
 
             metadata_tags = node_metadata.get('tags', [])
-            self.tags = []
+            self.design['tags'] = []
 
             for t in metadata_tags:
-                self.tags.append(t)
+                self.design['tags'].append(t)
 
             owner_data = node_metadata.get('owner_data', {})
-            self.owner_data = {}
+            self.design['owner_data'] = {}
 
             for k, v in owner_data.items():
-                self.owner_data[k] = v
+                self.design['owner_data'][k] = v
 
-            self.rack = node_metadata.get('rack', None)
+            self.design['rack'] = node_metadata.get('rack', None)
 
         else:
             self.log.error("Unknown API version %s of %s" %
@@ -89,32 +94,31 @@ class HostProfile(object):
             raise ValueError('Unknown API version of object')
 
     def get_rack(self):
-        return self.rack
+        return self.design['rack']
 
     def get_name(self):
         return self.name
 
     def has_tag(self, tag):
-        if tag in self.tags:
+        if tag in self.design['tags']:
             return True
 
         return False
 
     def apply_inheritance(self, site):
-        # We return a deep copy of the profile so as not to corrupt
-        # the original model
-        self_copy = deepcopy(self)
+        # No parent to inherit from, just apply design values
+        # and return
+        if self.design['parent_profile'] is None:
+            self.applied = deepcopy(self.design)
+            return
 
-        if self.parent_profile is None:
-            return self_copy
-
-        parent = site.get_host_profile(self.parent_profile)
+        parent = site.get_host_profile(self.design['parent_profile'])
 
         if parent is None:
             raise NameError("Cannot find parent profile %s for %s"
-                            % (self.parent_profile, self.name))
+                            % (self.design['parent_profile'], self.name))
 
-        parent = parent.apply_inheritance(site)
+        parent.apply_inheritance(site)
 
         # First compute inheritance for simple fields
         inheritable_field_list = [
@@ -123,24 +127,34 @@ class HostProfile(object):
             "bootdisk_device", "bootdisk_root_size", "bootdisk_boot_size",
             "rack"]
 
+        # Create applied data from self design values and parent
+        # applied values
+
+        self.applied = {}
+
         for f in inheritable_field_list:
-            setattr(self_copy, f,
-                    Utils.apply_field_inheritance(getattr(self, f, None),
-                                                  getattr(parent, f, None)))
+            self.applied[f] = Utils.apply_field_inheritance(
+                                self.design.get(f, None),
+                                parent.applied.get(f, None))
 
         # Now compute inheritance for complex types
-        self_copy.tags = Utils.merge_lists(self.tags, parent.tags)
+        self.applied['tags'] = Utils.merge_lists(self.design['tags'],
+                                                 parent.applied['tags'])
 
-        self_copy.owner_data = Utils.merge_dicts(
-            self.owner_data, parent.owner_data)
+        self.applied['owner_data'] = Utils.merge_dicts(
+            self.design['owner_data'], parent.applied['owner_data'])
 
-        self_copy.interfaces = HostInterface.merge_lists(
-            self.interfaces, parent.interfaces)
+        self.applied['interfaces'] = HostInterface.merge_lists(
+            self.design['interfaces'], parent.applied['interfaces'])
+        for i in self.applied.get('interfaces', []):
+            i.ensure_applied_data()
 
-        self_copy.partitions = HostPartition.merge_lists(
-            self.partitions, parent.partitions)
+        self.applied['partitions'] = HostPartition.merge_lists(
+            self.design['partitions'], parent.applied['partitions'])
+        for p in self.applied.get('partitions', []):
+            p. ensure_applied_data()
 
-        return self_copy
+        return
 
 
 class HostInterface(object):
@@ -152,24 +166,56 @@ class HostInterface(object):
 
         if self.api_version == "v1.0":
             self.device_name = kwargs.get('device_name', None)
-            self.network_link = kwargs.get('device_link', None)
 
-            self.hardware_slaves = []
+            self.design = {}
+            self.design['network_link'] = kwargs.get('device_link', None)
+
+            self.design['hardware_slaves'] = []
             slaves = kwargs.get('slaves', [])
 
             for s in slaves:
-                self.hardware_slaves.append(s)
+                self.design['hardware_slaves'].append(s)
 
-            self.networks = []
+            self.design['networks'] = []
             networks = kwargs.get('networks', [])
 
             for n in networks:
-                self.networks.append(n)
+                self.design['networks'].append(n)
         else:
             self.log.error("Unknown API version %s of %s" %
                 (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
+    # Ensure applied_data exists 
+    def ensure_applied_data(self):
+        if getattr(self, 'applied', None) is None:
+            self.applied = deepcopy(self.design)
+
+        return
+
+    def get_name(self):
+        return self.device_name
+
+    def get_applied_hw_slaves(self):
+        self.ensure_applied_data()
+
+        return self.applied.get('hardware_slaves', [])
+
+    def get_applied_slave_selectors(self):
+        self.ensure_applied_data()
+
+        return self.applied.get('selectors', None)
+
+    # Return number of slaves for this interface
+    def get_applied_slave_count(self):
+        self.ensure_applied_data()
+        
+        return len(self.applied.get('hardware_slaves', []))
+
+    def get_network_configs(self):
+        self.ensure_applied_data()
+        return self.applied.get('attached_networks', [])
+        
     # The device attribute may be hardware alias that translates to a
     # physical device address. If the device attribute does not match an
     # alias, we assume it directly identifies a OS device name. When the
@@ -177,51 +223,48 @@ class HostInterface(object):
     # device, the selector will be decided and applied
 
     def add_selector(self, sel_type, address='', dev_type=''):
-        if getattr(self, 'selectors', None) is None:
-            self.selectors = []
+        self.ensure_applied_data()
+
+        if self.applied.get('selectors', None) is None:
+            self.applied['selectors'] = []
 
         new_selector = {}
         new_selector['selector_type'] = sel_type
         new_selector['address'] = address
         new_selector['device_type'] = dev_type
 
-        self.selectors.append(new_selector)
-
-    def get_slave_selectors(self):
-        return self.selectors
-
-    # Return number of slaves for this interface
-    def get_slave_count(self):
-        return len(self.hardware_slaves)
+        self.applied['selectors'].append(new_selector)
 
     def apply_link_config(self, net_link):
         if (net_link is not None and
             isinstance(net_link, NetworkLink) and 
-            net_link.name == self.network_link):
+            net_link.name == self.design.get('network_link', '')):
 
-            self.attached_link = deepcopy(net_link)
+            self.ensure_applied_data()
+
+            self.applied['attached_link'] = deepcopy(net_link)
             return True
         return False
 
     def apply_network_config(self, network):
-        if network in self.networks:
-            if getattr(self, 'attached_networks', None) is None:
-                self.attached_networks = []
-            self.attached_networks.append(deepcopy(network))
+        if network.name in self.design['networks']:
+            self.ensure_applied_data()
+            if self.applied.get('attached_networks', None) is None:
+                self.applied['attached_networks'] = []
+            self.applied['attached_networks'].append(deepcopy(network))
             return True
         else:
             return False
 
     def set_network_address(self, network_name, address):
-        if getattr(self, 'attached_networks', None) is None:
+        self.ensure_applied_data()
+
+        if self.applied.get('attached_networks', None) is None:
             return False
 
-        for n in self.attached_neteworks:
+        for n in self.applied.get('attached_networks', []):
             if n.name == network_name:
-                n.assigned_address = address
-
-    def get_network_configs(self):
-        return self.attached_networks
+                setattr(n, 'assigned_address', address)
 
     """
     Merge two lists of HostInterface models with child_list taking
@@ -232,60 +275,81 @@ class HostInterface(object):
 
     @staticmethod
     def merge_lists(child_list, parent_list):
-        if len(child_list) == 0:
-            return deepcopy(parent_list)
-
         effective_list = []
-        if len(parent_list) == 0:
+
+        if len(child_list) == 0 and len(parent_list) > 0:
+            for p in parent_list:
+                pp = deepcopy(p)
+                pp.ensure_applied_data()
+                effective_list.append(pp)
+        elif len(parent_list) == 0 and len(child_list) > 0:
             for i in child_list:
-                if i.device_name.startswith('!'):
+                if i.get_name().startswith('!'):
                     continue
                 else:
-                    effective_list.append(deepcopy(i))
-            return effective_list
+                    ii = deepcopy(i)
+                    ii.ensure_applied_data()
+                    effective_list.append(ii)
+        elif len(parent_list) > 0 and len(child_list) > 0:
+            parent_interfaces = []
+            for i in parent_list:
+                parent_name = i.device_name
+                parent_interfaces.append(parent_name)
+                add = True
+                for j in child_list:
+                    if j.device_name == ("!" + parent_name):
+                        add = False
+                        break
+                    elif j.device_name == parent_name:
+                        m = HostInterface(j.api_version)
+                        m.device_name = j.get_name()
+                        m.design['network_link'] = \
+                            Utils.apply_field_inheritance(
+                                j.design.get('network_link', None),
+                                i.applied.get('network_link', None))
 
-        parent_interfaces = []
-        for i in parent_list:
-            parent_name = i.device_name
-            parent_interfaces.append(parent_name)
-            add = True
+                        s = [x for x 
+                             in i.applied.get('hardware_slaves', [])
+                             if ("!" + x) not in j.design.get(
+                                'hardware_slaves', [])]
+                        s = list(s)
+
+                        s.extend(
+                            [x for x
+                             in j.design.get('hardware_slaves', [])
+                             if not x.startswith("!")])
+
+                        m.design['hardware_slaves'] = s
+
+                        n = [x for x
+                             in i.applied.get('networks',[])
+                             if ("!" + x) not in j.design.get(
+                                'networks', [])]
+                        n = list(n)
+
+                        n.extend(
+                            [x for x
+                             in j.design.get('networks', [])
+                             if not x.startswith("!")])
+
+                        m.design['networks'] = n
+                        m.ensure_applied_data()
+
+                        effective_list.append(m)
+                        add = False
+                        break
+
+                if add:
+                    ii = deepcopy(i)
+                    ii.ensure_applied_data()
+                    effective_list.append(ii)
+
             for j in child_list:
-                if j.device_name == ("!" + parent_name):
-                    add = False
-                    break
-                elif j.device_name == parent_name:
-                    m = HostInterface(j.api_version)
-                    m.device_name = j.device_name
-                    m.network_link = \
-                        Utils.apply_field_inheritance(j.network_link,
-                                                      i.network_link)
-                    s = filter(lambda x: ("!" + x) not in j.hardware_slaves,
-                               i.hardware_slaves)
-                    s = list(s)
-
-                    s.extend(filter(lambda x: not x.startswith("!"),
-                                    j.hardware_slaves))
-                    m.hardware_slaves = s
-
-                    n = filter(lambda x: ("!" + x) not in j.networks,
-                               i.networks)
-                    n = list(n)
-
-                    n.extend(filter(lambda x: not x.startswith("!"),
-                                    j.networks))
-                    m.networks = n
-
-                    effective_list.append(m)
-                    add = False
-                    break
-
-            if add:
-                effective_list.append(deepcopy(i))
-
-        for j in child_list:
-            if (j.device_name not in parent_interfaces
-                and not j.device_name.startswith("!")):
-                effective_list.append(deepcopy(j))
+                if (j.device_name not in parent_interfaces
+                    and not j.device_name.startswith("!")):
+                    jj = deepcopy(j)
+                    jj.ensure_applied_data()
+                    effective_list.append(jj)
 
         return effective_list
 
@@ -297,16 +361,36 @@ class HostPartition(object):
 
         if self.api_version == "v1.0":
             self.name = kwargs.get('name', None)
-            self.device = kwargs.get('device', None)
-            self.part_uuid = kwargs.get('part_uuid', None)
-            self.size = kwargs.get('size', None)
-            self.mountpoint = kwargs.get('mountpoint', None)
-            self.fstype = kwargs.get('fstype', 'ext4')
-            self.mount_options = kwargs.get('mount_options', 'defaults')
-            self.fs_uuid = kwargs.get('fs_uuid', None)
-            self.fs_label = kwargs.get('fs_label', None)
+
+            self.design = {}
+            self.design['device'] = kwargs.get('device', None)
+            self.design['part_uuid'] = kwargs.get('part_uuid', None)
+            self.design['size'] = kwargs.get('size', None)
+            self.design['mountpoint'] = kwargs.get('mountpoint', None)
+            self.design['fstype'] = kwargs.get('fstype', 'ext4')
+            self.design['mount_options'] = kwargs.get('mount_options', 'defaults')
+            self.design['fs_uuid'] = kwargs.get('fs_uuid', None)
+            self.design['fs_label'] = kwargs.get('fs_label', None)
+
+            self.applied = kwargs.get('applied', None)
+            self.build = kwargs.get('build', None)
         else:
             raise ValueError('Unknown API version of object')
+
+    # Ensure applied_data exists 
+    def ensure_applied_data(self):
+        if getattr(self, 'applied', None) is None:
+            self.applied = deepcopy(self.design)
+
+        return
+
+    def get_applied_device(self):
+        self.ensure_applied_data()
+
+        return self.applied.get('device', '')
+
+    def get_name(self):
+        return self.name
 
     # The device attribute may be hardware alias that translates to a
     # physical device address. If the device attribute does not match an
@@ -315,15 +399,18 @@ class HostPartition(object):
     # device, the selector will be decided and applied
 
     def set_selector(self, sel_type, address='', dev_type=''):
+        self.ensure_applied_data()
+
         selector = {}
         selector['type'] = sel_type
         selector['address'] = address
         selector['device_type'] = dev_type
 
-        self.selector = selector
+        self.applied['selector'] = selector
 
     def get_selector(self):
-        return self.selector
+        self.ensure_applied_data()
+        return self.applied.get('selector', None)
 
     """
     Merge two lists of HostPartition models with child_list taking
@@ -334,45 +421,56 @@ class HostPartition(object):
 
     @staticmethod
     def merge_lists(child_list, parent_list):
-        if len(child_list) == 0:
-            return deepcopy(parent_list)
-
         effective_list = []
-        if len(parent_list) == 0:
+
+        if len(child_list) == 0 and len(parent_list) > 0:
+            for p in parent_list:
+                pp = deepcopy(p)
+                pp.ensure_applied_data()
+                effective_list.append(pp)
+        elif len(parent_list) == 0 and len(child_list) > 0:
             for i in child_list:
-                if i.name.startswith('!'):
+                if i.get_name().startswith('!'):
                     continue
                 else:
-                    effective_list.append(deepcopy(i))
+                    ii = deepcopy(i)
+                    ii.ensure_applied_data()
+                    effective_list.append(ii)
+        elif len(parent_list) > 0 and len(child_list) > 0:
+            inherit_field_list = ["device", "part_uuid", "size",
+                                  "mountpoint", "fstype", "mount_options",
+                                  "fs_uuid", "fs_label"]
+            parent_partitions = []
+            for i in parent_list:
+                parent_name = i.get_name()
+                parent_partitions.append(parent_name)
+                add = True
+                for j in child_list:
+                    if j.get_name() == ("!" + parent_name):
+                        add = False
+                        break
+                    elif j.get_name() == parent_name:
+                        p = HostPartition(j.api_version)
+                        p.name = j.get_name()
 
-        inherit_field_list = ["device", "part_uuid", "size",
-                              "mountpoint", "fstype", "mount_options",
-                              "fs_uuid", "fs_label"]
-
-        parent_partitions = []
-        for i in parent_list:
-            parent_name = i.name
-            parent_partitions.append(parent_name)
-            add = True
-            for j in child_list:
-                if j.name == ("!" + parent_name):
-                    add = False
-                    break
-                elif j.name == parent_name:
-                    p = HostPartition(j.api_version)
-                    p.name = j.name
-
-                    for f in inherit_field_list:
-                        setattr(p, Utils.apply_field_inheritance(getattr(j, f),
-                                                                 getattr(i, f))
-                                )
-                    add = False
-                    effective_list.append(p)
+                        for f in inherit_field_list:
+                            j_f = j.design.get(f, None)
+                            i_f = i.applied.get(f, None)
+                            p.design.set(p,
+                                Utils.apply_field_inheritance(j_f, i_f))
+                        add = False
+                        p.ensure_applied_data()
+                        effective_list.append(p)
             if add:
-                effective_list.append(deepcopy(i))
+                ii = deepcopy(i)
+                ii.ensure_applied_data()
+                effective_list.append(ii)
 
         for j in child_list:
-            if j.name not in parent_list:
-                effective_list.append(deepcopy(j))
+            if (j.get_name() not in parent_list and
+                not j.get_name().startswith("!")):
+                jj = deepcopy(j)
+                jj.ensure_applied_data
+                effective_list.append(jj)
 
         return effective_list

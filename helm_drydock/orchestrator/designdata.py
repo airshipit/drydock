@@ -90,15 +90,10 @@ class DesignStateClient(object):
 
         site_copy = deepcopy(site_root)
 
-        effective_nodes = []
-
         for n in site_copy.baremetal_nodes:
-            resolved = n.apply_host_profile(site_copy)
-            resolved = resolved.apply_hardware_profile(site_copy)
-            resolved = resolved.apply_network_connections(site_copy)
-            effective_nodes.append(resolved)
-
-        site_copy.baremetal_nodes = effective_nodes
+            n.apply_host_profile(site_copy)
+            n.apply_hardware_profile(site_copy)
+            n.apply_network_connections(site_copy)
         
         return site_copy
     """

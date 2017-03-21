@@ -37,23 +37,21 @@ class TestClass(object):
 
         assert len(design_data.baremetal_nodes) == 2
 
-        print(yaml.dump(design_data, default_flow_style=False))
-
         design_data = client.compute_model_inheritance(design_data)
 
         node = design_data.get_baremetal_node("controller01")
-
-        print(yaml.dump(node, default_flow_style=False))
         
-        assert node.hardware_profile == 'HPGen9v3'
+        assert node.applied.get('hardware_profile') == 'HPGen9v3'
 
-        iface = node.get_interface('bond0')
+        iface = node.get_applied_interface('bond0')
 
-        assert iface.get_slave_count() == 2
+        print(yaml.dump(iface, default_flow_style=False))
+        
+        assert iface.get_applied_slave_count() == 2
 
-        iface = node.get_interface('pxe')
+        iface = node.get_applied_interface('pxe')
 
-        assert iface.get_slave_count() == 1
+        assert iface.get_applied_slave_count() == 1
 
     @pytest.fixture(scope='module')
     def loaded_design(self, input_files):
