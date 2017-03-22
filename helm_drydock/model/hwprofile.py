@@ -67,6 +67,9 @@ class HardwareProfile(object):
 
         return
 
+    def get_name(self):
+        return self.name
+        
     def resolve_alias(self, alias_type, alias):
         selector = {}
         for d in self.devices:

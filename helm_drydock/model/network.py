@@ -58,6 +58,8 @@ class NetworkLink(object):
                 (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
+    def get_name(self):
+        return self.name
 
 class Network(object):
 
@@ -97,6 +99,9 @@ class Network(object):
             self.log.error("Unknown API version %s of %s" %
                 (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
+
+    def get_name(self):
+        return self.name
 
 
 class NetworkAddressRange(object):

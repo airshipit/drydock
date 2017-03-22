@@ -60,6 +60,9 @@ class Site(object):
                 (self.api_version, self.__class__))
             raise ValueError('Unknown API version of object')
 
+    def get_name(self):
+        return self.name
+        
     def start_build(self):
         if self.build.get('status', '') == '':
             self.build['status'] = SiteStatus.Unknown

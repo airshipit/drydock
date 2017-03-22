@@ -14,3 +14,6 @@
 
 class DesignError(Exception):
     pass
+
+class StateError(Exception):
+    pass

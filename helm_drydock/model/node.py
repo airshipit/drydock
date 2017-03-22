@@ -58,38 +58,50 @@ class BaremetalNode(HostProfile):
                     self.log.error("Invalid address assignment %s on Node %s" 
                                     % (address, self.name))
 
-        self.build = kwargs.get('build', {})
+        self.applied = kwargs.get('applied_data', None)
+        self.build = kwargs.get('build', None)
 
-    def start_build(self):
-        if self.build.get('status','') == '':
+    # Compile the applied version of this model sourcing referenced
+    # data from the passed site design
+    def compile_applied_model(self, site):
+        self.apply_host_profile(site)
+        self.apply_hardware_profile(site)
+        self.apply_network_connections(site)
+        return
+
+    def init_build(self):
+        if self.build is None:
+            self.build = {}
             self.build['status'] = NodeStatus.Unknown
 
     def apply_host_profile(self, site):
-        return self.apply_inheritance(site)
+        self.apply_inheritance(site)
+        return
 
     # Translate device alises to physical selectors and copy
     # other hardware attributes into this object
     def apply_hardware_profile(self, site):
-        self_copy = deepcopy(self)
-
-        if self.hardware_profile is None:
+        if self.applied['hardware_profile'] is None:
             raise ValueError("Hardware profile not set")
 
-        hw_profile = site.get_hardware_profile(self.hardware_profile)
+        hw_profile = site.get_hardware_profile(
+                            self.applied['hardware_profile'])
 
-        for i in self_copy.interfaces:
-            for s in i.hardware_slaves:
+        for i in self.applied.get('interfaces', []):
+            for s in i.get_applied_hw_slaves():
                 selector = hw_profile.resolve_alias("pci", s)
                 if selector is None:
-                    i.add_selector("name", address=p.device)
+                    i.add_selector("name", address=s)
                 else:
                     i.add_selector("address", address=selector['address'],
                                    dev_type=selector['device_type'])
 
-        for p in self_copy.partitions:
-            selector = hw_profile.resolve_alias("scsi", p.device)
+        for p in self.applied.get('partitions', []):
+            selector = hw_profile.resolve_alias("scsi",
+                                                p.get_applied_device())
             if selector is None:
-                p.set_selector("name", address=p.device)
+                p.set_selector("name",
+                               address=p.get_applied_device())
             else:
                 p.set_selector("address", address=selector['address'],
                                dev_type=selector['device_type'])
@@ -106,44 +118,50 @@ class BaremetalNode(HostProfile):
                     "pxe_interface": getattr(hw_profile, 'pxe_interface', None)
                     }
 
-        self_copy.hardware = hardware
+        self.applied['hardware'] = hardware
 
-        return self_copy
+        return
 
     def apply_network_connections(self, site):
-        self_copy = deepcopy(self)
-
         for n in site.network_links:
-            for i in self_copy.interfaces:
+            for i in self.applied.get('interfaces', []):
                 i.apply_link_config(n)
 
         for n in site.networks:
-            for i in self_copy.interfaces:
+            for i in self.applied.get('interfaces', []):
                 i.apply_network_config(n)
 
-        for a in self_copy.addressing:
-            for i in self_copy.interfaces:
+        for a in self.applied.get('addressing', []):
+            for i in self.applied.get('interfaces', []):
                 i.set_network_address(a.get('network'), a.get('address'))
 
-        return self_copy
+        return
 
-    def get_interface(self, iface_name):
-        for i in self.interfaces:
-            if i.device_name == iface_name:
-                return i
+    def get_applied_interface(self, iface_name):
+        if getattr(self, 'applied', None) is not None:
+            for i in self.applied.get('interfaces', []):
+                if i.get_name() == iface_name:
+                    return i
+
         return None
 
     def get_status(self):
-        return self.build['status']
+        self.init_build()
+        return self.build.get('status', NodeStatus.Unknown)
 
     def set_status(self, status):
         if isinstance(status, NodeStatus):
+            self.init_build()
             self.build['status'] = status
 
     def get_last_build_action(self):
+        if getattr(self, 'build', None) is None:
+            return None
+
         return self.build.get('last_action', None)
 
     def set_last_build_action(self, action, result, detail=None):
+        self.init_build()
         last_action = self.build.get('last_action', None)
         if last_action is None:
             self.build['last_action'] = {}
