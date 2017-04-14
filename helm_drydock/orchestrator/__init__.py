@@ -11,23 +11,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import uuid
+import time
+
 from enum import Enum, unique
 
-import uuid
+import helm_drydock.drivers as drivers
+import helm_drydock.model.task as tasks
+import helm_drydock.error as errors
+
+from helm_drydock.enum import TaskStatus, OrchestratorAction
 
 class Orchestrator(object):
 
     # enabled_drivers is a map which provider drivers
     # should be enabled for use by this orchestrator
-
-    def __init__(self, enabled_drivers=None, design_state=None):
+    def __init__(self, enabled_drivers=None, state_manager=None):
         self.enabled_drivers = {}
 
-        self.enabled_drivers['oob'] = enabled_drivers.get('oob', None)
-        self.enabled_drivers['server'] = enabled_drivers.get('server', None)
-        self.enabled_drivers['network'] = enabled_drivers.get('network', None)
+        if enabled_drivers is not None:
+            self.enabled_drivers['oob'] = enabled_drivers.get('oob', None)
+            self.enabled_drivers['server'] = enabled_drivers.get(
+                                                'server', None)
+            self.enabled_drivers['network'] = enabled_drivers.get(
+                                                'network', None)
 
-        self.design_state = design_state
+        self.state_manager = state_manager
+
+        self.thread_objs = {}
 
     """
     execute_task
@@ -38,34 +49,28 @@ class Orchestrator(object):
     module. Based on those 3 inputs, we'll decide what is needed next.
     """
     def execute_task(self, task):
-        if design_state is None:
-            raise Exception("Cannot execute task without initialized state manager")
+        if self.state_manager is None:
+            raise errors.OrchestratorError("Cannot execute task without" \
+                                           " initialized state manager")
 
+        # Just for testing now, need to implement with enabled_drivers
+        # logic
+        if task.action == OrchestratorAction.Noop:
+            task.set_status(TaskStatus.Running)
+            self.state_manager.put_task(task)
 
-class OrchestrationTask(object):
+            driver_task = task.create_subtask(drivers.DriverTask,
+                            target_design_id=0,
+                            target_action=OrchestratorAction.Noop)
+            self.state_manager.post_task(driver_task)
 
-    def __init__(self, action, **kwargs):
-        self.taskid = uuid.uuid4()
+            driver = drivers.ProviderDriver(self.state_manager)
+            driver.execute_task(driver_task)
 
-        self.action = action
+            task.set_status(driver_task.get_status())
+            self.state_manager.put_task(task)
 
-        parent_task = kwargs.get('parent_task','')
-
-        # Validate parameters based on action
-        self.site = kwargs.get('site', '')
-
-
-        if self.site == '':
-            raise ValueError("Task requires 'site' parameter")
-
-        if action in [Action.VerifyNode, Action.PrepareNode,
-            Action.DeployNode, Action.DestroyNode]:
-            self.node_filter = kwargs.get('node_filter', None)
-
-    def child_task(self, action, **kwargs):
-        child_task = OrchestrationTask(action, parent_task=self.taskid, site=self.site, **kwargs)
-        return child_task
-
-
-
-
+            return
+        else:
+            raise errors.OrchestratorError("Action %s not supported"
+                                     % (task.action))

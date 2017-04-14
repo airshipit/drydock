@@ -18,8 +18,8 @@ import logging
 
 from copy import deepcopy
 
-from helm_drydock.orchestrator.enum import SiteStatus
-from helm_drydock.orchestrator.enum import NodeStatus
+from helm_drydock.enum import SiteStatus
+from helm_drydock.enum import NodeStatus
 
 class HardwareProfile(object):
 

@@ -14,7 +14,7 @@
 from enum import Enum, unique
 
 @unique
-class Action(Enum):
+class OrchestratorAction(Enum):
     Noop = 'noop'
     ValidateDesign = 'validate_design'
     VerifySite = 'verify_site'
@@ -62,3 +62,14 @@ class NodeStatus(Enum):
     FailedBootstrap = 'failed_bootstrap' # Node bootstrapping failed
     Bootstrapped = 'bootstrapped' # Node fully bootstrapped
     Complete = 'complete' # Node is complete
+
+@unique
+class TaskStatus(Enum):
+    Created = 'created'
+    Waiting = 'waiting'
+    Running = 'running'
+    Stopping = 'stopping'
+    Terminated = 'terminated'
+    Errored = 'errored'
+    Complete = 'complete'
+    Stopped = 'stopped'
