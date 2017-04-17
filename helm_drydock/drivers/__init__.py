@@ -24,15 +24,16 @@ import helm_drydock.model.task as tasks
 # driver tasks and feed them via queue
 class ProviderDriver(object):
 
-    def __init__(self, state_manager):
+    def __init__(self, state_manager, orchestrator):
+        self.orchestrator = orchestrator
         self.state_manager = state_manager
 
-    def execute_task(self, task):
-        task_manager = DriverTaskManager(task, self.state_manager)
+    def execute_task(self, task_id):
+        task_manager = DriverTaskManager(task_id, self.state_manager,
+                                         self.orchestrator)
         task_manager.start()
         
         while task_manager.is_alive():
-            self.state_manager.put_task(task)
             time.sleep(1)
 
         return
@@ -40,39 +41,38 @@ class ProviderDriver(object):
 # Execute a single task in a separate thread
 class DriverTaskManager(Thread):
 
-    def __init__(self, task, state_manager):
+    def __init__(self, task_id, state_manager, orchestrator):
         super(DriverTaskManager, self).__init__()
 
-        if isinstance(task, DriverTask):
-            self.task = task
-        else:
-            raise DriverError("DriverTaskManager must be initialized" \
-                "with a DriverTask instance")
+        self.orchestrator = orchestrator
 
         if isinstance(state_manager, statemgmt.DesignState):
             self.state_manager = state_manager
         else:
             raise DriverError("Invalid state manager specified")
 
+        self.task = self.state_manager.get_task(task_id)
+
         return
 
-    def run():
-        self.task.set_manager(self.name)
+    def run(self):
+        if self.task.target_action == enum.OrchestratorAction.Noop:
+            self.orchestrator.task_field_update(self.task.get_id(),
+                                                status=enum.TaskStatus.Running)
 
-        if self.task.action == enum.OrchestratorAction.Noop:
-            task.set_status(enum.TaskStatus.Running)
-            self.state_manager.put_task(task)
             i = 0
             while i < 5:
+                self.task = self.state_manager.get_task(self.task.get_id())
                 i = i + 1
-                if task.terminate:
-                    task.set_status(enum.TaskStatus.Terminated)
-                    self.state_manager.put_task(task)
+                if self.task.terminate:
+                    self.orchestrator.task_field_update(self.task.get_id(),
+                                        status=enum.TaskStatus.Terminated)
                     return
                 else:
                     time.sleep(1)
-            task.set_status(enum.TaskStatus.Complete)
-            self.state_manager.put_task(task)
+                    
+            self.orchestrator.task_field_update(self.task.get_id(),
+                                    status=enum.TaskStatus.Complete)
             return
         else:
             raise DriverError("Unknown Task action")
@@ -101,24 +101,3 @@ class DriverTask(tasks.Task):
                 % (target_action))
 
         self.task_scope = task_scope
-
-        # The DriverTaskManager thread that is managing this task. We
-        # don't want a task to be submitted multiple times
-
-        self.task_manager = None
-
-    def set_manager(self, manager_name):
-        my_lock = self.get_lock()
-        if my_lock:
-            if self.task_manager is None:
-                self.task_manager = manager_name
-            else:
-                self.release_lock()
-                raise DriverError("Task %s already managed by %s" 
-                    % (self.taskid, self.task_manager))
-            self.release_lock()
-            return True
-        raise DriverError("Could not acquire lock")
-
-    def get_manager(self):
-        return self.task_manager

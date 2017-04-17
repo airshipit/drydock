@@ -26,36 +26,43 @@ import time
 
 class TestClass(object):
 
-    def test_driver_threading(self):
+    def test_task_complete(self):
         state_mgr = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
-        orch_task = task.OrchestratorTask(action=enum.OrchestratorAction.Noop,
-                                site="default")
+        orch_task = orchestrator.create_task(task.OrchestratorTask,
+                                             site='default',
+                                             action=enum.OrchestratorAction.Noop)
 
-        orchestrator.execute_task(orch_task)
+        orchestrator.execute_task(orch_task.get_id())
 
-        # Check that each subtask executed in a different thread than this one
-        for t in orch_task.subtasks:
-            if isinstance(t, drivers.DriverTask):
-                assert t.get_manager() != threading.current_thread().name
+        orch_task = state_mgr.get_task(orch_task.get_id())
+
+        assert orch_task.get_status() == enum.TaskStatus.Complete
+
+        for t_id in orch_task.subtasks:
+            t = state_mgr.get_task(t_id)
+            assert t.get_status() == enum.TaskStatus.Complete
 
     def test_task_termination(self):
         state_mgr = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
-        orch_task = task.OrchestratorTask(action=enum.OrchestratorAction.Noop,
-                                          site="default")
+        orch_task = orchestrator.create_task(task.OrchestratorTask,
+                                             site='default',
+                                             action=enum.OrchestratorAction.Noop)
 
         orch_thread = threading.Thread(target=orchestrator.execute_task,
-                                       args=(orch_task,))
+                                       args=(orch_task.get_id(),))
         orch_thread.start()
 
         time.sleep(1)
-        orch_task.terminate_task()
+        orchestrator.terminate_task(orch_task.get_id())
 
         while orch_thread.is_alive():
             time.sleep(1)
 
+        orch_task = state_mgr.get_task(orch_task.get_id())
         assert orch_task.get_status() == enum.TaskStatus.Terminated
 
-        for t in orch_task.subtasks:
+        for t_id in orch_task.subtasks:
+            t = state_mgr.get_task(t_id)
             assert t.get_status() == enum.TaskStatus.Terminated

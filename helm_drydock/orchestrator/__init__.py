@@ -13,6 +13,7 @@
 # limitations under the License.
 import uuid
 import time
+import threading
 
 from enum import Enum, unique
 
@@ -38,7 +39,6 @@ class Orchestrator(object):
 
         self.state_manager = state_manager
 
-        self.thread_objs = {}
 
     """
     execute_task
@@ -48,29 +48,98 @@ class Orchestrator(object):
     the current designed state and current built state from the statemgmt
     module. Based on those 3 inputs, we'll decide what is needed next.
     """
-    def execute_task(self, task):
+    def execute_task(self, task_id):
         if self.state_manager is None:
             raise errors.OrchestratorError("Cannot execute task without" \
                                            " initialized state manager")
 
+        task = self.state_manager.get_task(task_id)
+
+        if task is None:
+            raise errors.OrchestratorError("Task %s not found." 
+                                            % (task_id))
         # Just for testing now, need to implement with enabled_drivers
         # logic
         if task.action == OrchestratorAction.Noop:
-            task.set_status(TaskStatus.Running)
-            self.state_manager.put_task(task)
+            self.task_field_update(task_id,
+                                   status=TaskStatus.Running)        
 
-            driver_task = task.create_subtask(drivers.DriverTask,
+            driver_task = self.create_task(drivers.DriverTask,
                             target_design_id=0,
-                            target_action=OrchestratorAction.Noop)
-            self.state_manager.post_task(driver_task)
+                            target_action=OrchestratorAction.Noop,
+                            parent_task_id=task.get_id())
 
-            driver = drivers.ProviderDriver(self.state_manager)
-            driver.execute_task(driver_task)
 
-            task.set_status(driver_task.get_status())
-            self.state_manager.put_task(task)
 
+            driver = drivers.ProviderDriver(self.state_manager, self)
+            driver.execute_task(driver_task.get_id())
+            driver_task = self.state_manager.get_task(driver_task.get_id())
+
+            self.task_field_update(task_id, status=driver_task.get_status())
+            
             return
         else:
             raise errors.OrchestratorError("Action %s not supported"
                                      % (task.action))
+
+    """
+    terminate_task
+
+    Mark a task for termination and optionally propagate the termination
+    recursively to all subtasks
+    """
+    def terminate_task(self, task_id, propagate=True):
+        task = self.state_manager.get_task(task_id)
+
+        if task is None:
+            raise errors.OrchestratorError("Could find task %s" % task_id)
+        else:
+            # Terminate initial task first to prevent add'l subtasks
+
+            self.task_field_update(task_id, terminate=True)
+
+            if propagate:
+                # Get subtasks list
+                subtasks = task.get_subtasks()
+    
+                for st in subtasks:
+                    self.terminate_task(st, propagate=True)
+            else:
+                return True
+
+    def create_task(self, task_class, **kwargs):
+        parent_task_id = kwargs.get('parent_task_id', None)
+        new_task = task_class(**kwargs)
+        self.state_manager.post_task(new_task)
+
+        if parent_task_id is not None:
+            self.task_subtask_add(parent_task_id, new_task.get_id())
+
+        return new_task
+
+    # Lock a task and make all field updates, then unlock it
+    def task_field_update(self, task_id, **kwargs):
+        lock_id = self.state_manager.lock_task(task_id)
+        if lock_id is not None:
+            task = self.state_manager.get_task(task_id)
+        
+            for k,v in kwargs.items():
+                print("Setting task %s field %s to %s" % (task_id, k, v))
+                setattr(task, k, v)
+
+            self.state_manager.put_task(task, lock_id=lock_id)
+            self.state_manager.unlock_task(task_id, lock_id)
+            return True
+        else:
+            return False
+
+    def task_subtask_add(self, task_id, subtask_id):
+        lock_id = self.state_manager.lock_task(task_id)
+        if lock_id is not None:
+            task = self.state_manager.get_task(task_id)
+            task.register_subtask(subtask_id)
+            self.state_manager.put_task(task, lock_id=lock_id)
+            self.state_manager.unlock_task(task_id, lock_id)
+            return True
+        else:
+            return False

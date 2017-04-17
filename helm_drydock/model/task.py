@@ -26,60 +26,30 @@ class Task(object):
         self.status = TaskStatus.Created
         self.terminate = False
         self.subtasks = []
+        self.lock_id = None
 
-        parent_task = kwargs.get('parent_task','')
-
-        # A lock to prevent concurrency race conditions
-        self.update_lock = Lock()
+        self.parent_task_id = kwargs.get('parent_task_id','')
 
     def get_id(self):
         return self.task_id
 
-    # Mark this task and all subtasks as requested termination
-    # so that the task manager knows termination has been requested
     def terminate_task(self):
-        locked = self.get_lock()
-        if locked:
-            # TODO Naively assume subtask termination will succeed for now
-            for t in self.subtasks:
-                t.terminate_task()
-            self.terminate = True
-            self.release_lock()
-        else:
-            raise errors.OrchestratorError("Could not get task update lock")
+        self.terminate = True
 
     def set_status(self, status):
-        locked = self.get_lock()
-        if locked:
-            self.status = status
-            self.release_lock()
-        else:
-            raise errors.OrchestratorError("Could not get task update lock")
+        self.status = status
 
     def get_status(self):
         return self.status
 
-    def get_lock(self):
-        locked = self.update_lock.acquire(blocking=True, timeout=10)
-        return locked
-
-    def release_lock(self):
-        self.update_lock.release()
-        return
-
-    def create_subtask(self, subtask_class, **kwargs):
+    def register_subtask(self, subtask_id):
         if self.terminate:
-            raise errors.OrchestratorError("Cannot create subtask for parent" \
+            raise errors.OrchestratorError("Cannot add subtask for parent" \
                                            " marked for termination")
-        locked = self.get_lock()
-        if locked:
-            subtask = subtask_class(parent_task=self.get_id(), **kwargs)
-            self.subtasks.append(subtask.get_id())
-            self.release_lock()
-            return subtask
-        else:
-            raise errors.OrchestratorError("Could not get task update lock")
+        self.subtasks.append(subtask_id)
 
+    def get_subtasks(self):
+        return self.subtasks
 
 class OrchestratorTask(Task):
 
