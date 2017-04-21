@@ -20,3 +20,6 @@ class StateError(Exception):
 
 class OrchestratorError(Exception):
     pass
+
+class DriverError(Exception):
+    pass

@@ -33,7 +33,9 @@ class BaremetalNode(HostProfile):
         super(BaremetalNode, self).__init__(**kwargs)
 
         if self.api_version == "v1.0":
-            self.addressing = []
+            addressing = []
+
+            self.design['addressing'] = addressing
 
             spec = kwargs.get('spec', {})
             addresses = spec.get('addressing', [])
@@ -48,12 +50,12 @@ class BaremetalNode(HostProfile):
                     assignment['type'] = 'dhcp'
                     assignment['address'] = None
                     assignment['network'] = a.get('network')
-                    self.addressing.append(assignment)
+                    addressing.append(assignment)
                 elif address != '':
                     assignment['type'] = 'static'
                     assignment['address'] = a.get('address')
                     assignment['network'] = a.get('network')
-                    self.addressing.append(assignment)
+                    addressing.append(assignment)
                 else:
                     self.log.error("Invalid address assignment %s on Node %s" 
                                     % (address, self.name))
@@ -65,6 +67,9 @@ class BaremetalNode(HostProfile):
     # data from the passed site design
     def compile_applied_model(self, site):
         self.apply_host_profile(site)
+
+        self.applied['addressing'] = deepcopy(self.design['addressing'])
+
         self.apply_hardware_profile(site)
         self.apply_network_connections(site)
         return
@@ -170,3 +175,13 @@ class BaremetalNode(HostProfile):
             last_action['result'] = result
             if detail is not None:
                 last_action['detail'] = detail
+
+    def get_network_address(self, network_name):
+        if self.applied is None:
+            return None
+
+        for a in self.applied.get('addressing', []):
+            if a.get('network', None)  == network_name:
+                return a.get('address', None)
+
+        return None

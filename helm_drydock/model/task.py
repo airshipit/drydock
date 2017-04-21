@@ -17,16 +17,19 @@ from threading import Lock
 
 import helm_drydock.error as errors
 
-from helm_drydock.enum import TaskStatus, OrchestratorAction
+import helm_drydock.enum as enum
 
 class Task(object):
 
     def __init__(self, **kwargs):
         self.task_id = uuid.uuid4()
-        self.status = TaskStatus.Created
+        self.status = enum.TaskStatus.Created
         self.terminate = False
         self.subtasks = []
         self.lock_id = None
+        self.result = enum.ActionResult.Incomplete
+        self.result_detail = None
+        self.action = kwargs.get('action', enum.OrchestratorAction.Noop)
 
         self.parent_task_id = kwargs.get('parent_task_id','')
 
@@ -42,6 +45,18 @@ class Task(object):
     def get_status(self):
         return self.status
 
+    def set_result(self, result):
+        self.result = result
+
+    def get_result(self):
+        return self.result
+
+    def set_result_detail(self, detail):
+        self.result_detail = detail
+
+    def get_result_detail(self):
+        return self.result_detail
+
     def register_subtask(self, subtask_id):
         if self.terminate:
             raise errors.OrchestratorError("Cannot add subtask for parent" \
@@ -56,16 +71,30 @@ class OrchestratorTask(Task):
     def __init__(self, **kwargs):
         super(OrchestratorTask, self).__init__(**kwargs)
 
-        self.action = kwargs.get('action', OrchestratorAction.Noop)
-
         # Validate parameters based on action
         self.site = kwargs.get('site', '')
 
         if self.site == '':
             raise ValueError("Orchestration Task requires 'site' parameter")
 
-        if self.action in [OrchestratorAction.VerifyNode,
-                      OrchestratorAction.PrepareNode,
-                      OrchestratorAction.DeployNode,
-                      OrchestratorAction.DestroyNode]:
+        self.design_id = kwargs.get('design_id', 0)
+
+        if self.action in [enum.OrchestratorAction.VerifyNode,
+                      enum.OrchestratorAction.PrepareNode,
+                      enum.OrchestratorAction.DeployNode,
+                      enum.OrchestratorAction.DestroyNode]:
             self.node_filter = kwargs.get('node_filter', None)
+
+
+class DriverTask(Task):
+    # subclasses implemented by each driver should override this with the list
+    # of actions that driver supports
+
+    def __init__(self, task_scope={}, **kwargs):
+        super(DriverTask, self).__init__(**kwargs)
+
+        self.design_id = kwargs.get('design_id', 0)
+
+        self.site_name = task_scope.get('site', None)
+
+        self.node_list = task_scope.get('node_names', [])

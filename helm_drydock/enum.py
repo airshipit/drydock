@@ -25,7 +25,17 @@ class OrchestratorAction(Enum):
     DestroyNode = 'destroy_node'
 
 @unique
+class OobAction(Enum):
+    ConfigNodePxe = 'config_node_pxe'
+    SetNodeBoot = 'set_node_boot'
+    PowerOffNode = 'power_off_node'
+    PowerOnNode = 'power_on_node'
+    PowerCycleNode = 'power_cycle_node'
+    InterrogateNode = 'interrogate_node'
+
+@unique
 class ActionResult(Enum):
+    Incomplete = 'incomplete'
     Success = 'success'
     PartialSuccess = 'partial_success'
     Failure = 'failure'

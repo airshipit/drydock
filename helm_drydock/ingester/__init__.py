@@ -72,6 +72,7 @@ class Ingester(object):
             design_data = design_state.get_design_base()
         except DesignError:
             design_data = SiteDesign()
+            design_state.post_design_base(design_data)
 
         if plugin_name in self.registered_plugins:
             design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)

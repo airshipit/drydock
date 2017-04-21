@@ -18,31 +18,53 @@ import time
 import helm_drydock.statemgmt as statemgmt
 import helm_drydock.enum as  enum
 import helm_drydock.model.task as tasks
+import helm_drydock.error as errors
 
 # This is the interface for the orchestrator to access a driver
 # TODO Need to have each driver spin up a seperate thread to manage
 # driver tasks and feed them via queue
 class ProviderDriver(object):
 
-    def __init__(self, state_manager, orchestrator):
+    def __init__(self, orchestrator=None, state_manager=None, **kwargs):
+        if orchestrator is None:
+            raise ValueError("ProviderDriver requires valid orchestrator")
+
         self.orchestrator = orchestrator
+
+        if state_manager is None:
+            raise ValueError("ProviderDriver requires valid state manager")
+
         self.state_manager = state_manager
+        
+        # These are the actions that this driver supports
+        self.supported_actions = [enum.OrchestratorAction.Noop]
+
+        self.driver_name = "generic"
+        self.driver_key = "generic"
+        self.driver_desc = "Generic Provider Driver"
 
     def execute_task(self, task_id):
-        task_manager = DriverTaskManager(task_id, self.state_manager,
-                                         self.orchestrator)
-        task_manager.start()
-        
-        while task_manager.is_alive():
-            time.sleep(1)
+        task = self.state_manager.get_task(task_id)
+        task_action = task.action
 
-        return
+        if task_action in self.supported_actions:
+            task_runner = DriverTaskRunner(task_id, self.state_manager,
+                                         self.orchestrator)
+            task_runner.start()
+        
+            while task_runner.is_alive():
+                time.sleep(1)
+
+            return
+        else:
+            raise errors.DriverError("Unsupported action %s for driver %s" % 
+                (task_action, self.driver_desc))
 
 # Execute a single task in a separate thread
-class DriverTaskManager(Thread):
+class DriverTaskRunner(Thread):
 
-    def __init__(self, task_id, state_manager, orchestrator):
-        super(DriverTaskManager, self).__init__()
+    def __init__(self, task_id, state_manager=None, orchestrator=None):
+        super(DriverTaskRunner, self).__init__()
 
         self.orchestrator = orchestrator
 
@@ -56,7 +78,10 @@ class DriverTaskManager(Thread):
         return
 
     def run(self):
-        if self.task.target_action == enum.OrchestratorAction.Noop:
+        self.execute_task()
+
+    def execute_task(self):
+        if self.task.action == enum.OrchestratorAction.Noop:
             self.orchestrator.task_field_update(self.task.get_id(),
                                                 status=enum.TaskStatus.Running)
 
@@ -74,30 +99,4 @@ class DriverTaskManager(Thread):
             self.orchestrator.task_field_update(self.task.get_id(),
                                     status=enum.TaskStatus.Complete)
             return
-        else:
-            raise DriverError("Unknown Task action")
 
-
-
-class DriverTask(tasks.Task):
-    # subclasses implemented by each driver should override this with the list
-    # of actions that driver supports
-
-    supported_actions = [enum.OrchestratorAction.Noop]
-
-    def __init__(self, target_design_id=None,
-                 target_action=None, task_scope={}, **kwargs):
-        super(DriverTask, self).__init__(**kwargs)
-        
-        if target_design_id is None:
-            raise DriverError("target_design_id cannot be None")
-
-        self.target_design_id = target_design_id
-
-        if target_action in self.supported_actions:
-            self.target_action = target_action
-        else:
-            raise DriverError("DriverTask does not support action %s"
-                % (target_action))
-
-        self.task_scope = task_scope

@@ -94,15 +94,22 @@ class HostProfile(object):
             raise ValueError('Unknown API version of object')
 
     def get_rack(self):
-        return self.design['rack']
+        if getattr(self, 'applied', None) is not None:
+            return self.applied.get('rack', None)
+        else:
+            return self.design.get('rack', None)
 
     def get_name(self):
         return self.name
 
     def has_tag(self, tag):
-        if tag in self.design['tags']:
-            return True
-
+        if getattr(self, 'applied', None) is not None:
+            if tag in self.applied.get('tags', []):
+                return True
+        else:
+            if tag in self.design.get('tags', []):
+                return True
+        
         return False
 
     def apply_inheritance(self, site):
