@@ -19,24 +19,33 @@
 # initiate_reboot
 # set_power_off
 # set_power_on
+import helm_drydock.enum as enum
+import helm_drydock.error as errors
 
 from helm_drydock.drivers import ProviderDriver
 
 class OobDriver(ProviderDriver):
 
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        super(OobDriver, self).__init__(**kwargs)
 
-    def execute_action(self, action, **kwargs):
-        if action == 
+        self.supported_actions = [enum.OobAction.ConfigNodePxe,
+                                  enum.OobAction.SetNodeBoot,
+                                  enum.OobAction.PowerOffNode,
+                                  enum.OobAction.PowerOnNode,
+                                  enum.OobAction.PowerCycleNode,
+                                  enum.OobAction.InterrogateNode]
 
+        self.driver_name = "oob_generic"
+        self.driver_key = "oob_generic"
+        self.driver_desc = "Generic OOB Driver"
 
+    def execute_task(self, task_id):
+        task = self.state_manager.get_task(task_id)
+        task_action = task.action
 
-class OobAction(Enum):
-    ConfigNodePxe = 'config_node_pxe'
-    SetNodeBoot = 'set_node_boot'
-    PowerOffNode = 'power_off_node'
-    PowerOnNode = 'power_on_node'
-    PowerCycleNode = 'power_cycle_node'
-    InterrogateNode = 'interrogate_node'
-
+        if task_action in self.supported_actions:
+            return
+        else:
+            raise DriverError("Unsupported action %s for driver %s" %
+                (task_action, self.driver_desc))

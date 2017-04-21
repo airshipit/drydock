@@ -14,7 +14,7 @@
 
 from helm_drydock.ingester import Ingester
 from helm_drydock.statemgmt import DesignState, SiteDesign
-from helm_drydock.orchestrator.designdata import DesignStateClient
+from helm_drydock.orchestrator import Orchestrator
 
 from copy import deepcopy
 
@@ -31,13 +31,14 @@ class TestClass(object):
 
 
     def test_design_inheritance(self, loaded_design):
-        client = DesignStateClient()
+        orchestrator = Orchestrator(state_manager=loaded_design,
+                                    enabled_drivers={'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver'})
 
-        design_data = client.load_design_data("sitename", design_state=loaded_design)
+        design_data = orchestrator.load_design_data("sitename")
 
         assert len(design_data.baremetal_nodes) == 2
 
-        design_data = client.compute_model_inheritance(design_data)
+        design_data = orchestrator.compute_model_inheritance(design_data)
 
         node = design_data.get_baremetal_node("controller01")
         

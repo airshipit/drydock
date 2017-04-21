@@ -23,6 +23,7 @@ import helm_drydock.model.hostprofile as hostprofile
 import helm_drydock.model.network as network
 import helm_drydock.model.site as site
 import helm_drydock.model.hwprofile as hwprofile
+import helm_drydock.model.task as tasks
 
 from helm_drydock.error import DesignError, StateError
 
@@ -37,6 +38,9 @@ class DesignState(object):
 
         self.builds = []
         self.builds_lock = Lock()
+
+        self.tasks = []
+        self.tasks_lock = Lock()
 
         return
 
@@ -165,6 +169,82 @@ class DesignState(object):
             raise StateError("Could not acquire lock")
         else:
             raise DesignError("Design change must be a SiteDesign instance")
+
+    def get_task(self, task_id):
+        for t in self.tasks:
+            if t.get_id() == task_id:
+                return deepcopy(t)
+        return None
+
+    def post_task(self, task):
+        if task is not None and isinstance(task, tasks.Task):
+            my_lock = self.tasks_lock.acquire(blocking=True, timeout=10)
+            if my_lock:
+                task_id = task.get_id()
+                matching_tasks = [t for t in self.tasks
+                                  if t.get_id() == task_id]
+                if len(matching_tasks) > 0:
+                    self.tasks_lock.release()
+                    raise StateError("Task %s already created" % task_id)
+
+                self.tasks.append(deepcopy(task))
+                self.tasks_lock.release()
+                return True
+            else:
+                raise StateError("Could not acquire lock")
+        else:
+            raise StateError("Task is not the correct type")
+
+    def put_task(self, task, lock_id=None):
+        if task is not None and isinstance(task, tasks.Task):
+            my_lock = self.tasks_lock.acquire(blocking=True, timeout=10)
+            if my_lock:
+                task_id = task.get_id()
+                t = self.get_task(task_id)
+                if t.lock_id is not None and t.lock_id != lock_id:
+                    self.tasks_lock.release()
+                    raise StateError("Task locked for updates")
+
+                task.lock_id = lock_id
+                self.tasks = [i
+                              if i.get_id() != task_id
+                              else deepcopy(task)
+                              for i in self.tasks]
+
+                self.tasks_lock.release()
+                return True
+            else:
+                raise StateError("Could not acquire lock")
+        else:
+            raise StateError("Task is not the correct type")
+
+    def lock_task(self, task_id):
+        my_lock = self.tasks_lock.acquire(blocking=True, timeout=10)
+        if my_lock:
+            lock_id = uuid.uuid4()
+            for t in self.tasks:
+                if t.get_id() == task_id and t.lock_id is None:
+                    t.lock_id = lock_id
+                    self.tasks_lock.release()
+                    return lock_id
+            self.tasks_lock.release()
+            return None
+        else:
+            raise StateError("Could not acquire lock")
+
+    def unlock_task(self, task_id, lock_id):
+        my_lock = self.tasks_lock.acquire(blocking=True, timeout=10)
+        if my_lock:
+            for t in self.tasks:
+                if t.get_id() == task_id and t.lock_id == lock_id:
+                    t.lock_id = None
+                    self.tasks_lock.release()
+                    return True
+            self.tasks_lock.release()
+            return False
+        else:
+            raise StateError("Could not acquire lock")
+
 
 class SiteDesign(object):
 

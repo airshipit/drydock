@@ -395,6 +395,8 @@ spec:
     address: 172.16.1.20
   - network: public
     address: 172.16.3.20
+  - network: oob
+    address: 172.16.100.20
   metadata:
     roles: os_ctl
     rack: rack01
@@ -416,6 +418,8 @@ spec:
     address: 172.16.1.21
   - network: private
     address: 172.16.2.21
+  - network: oob
+    address: 172.16.100.21
 ---
 apiVersion: 'v1.0'
 kind: HardwareProfile

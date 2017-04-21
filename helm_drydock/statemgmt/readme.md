@@ -20,6 +20,12 @@ Serialization of Drydock internal model as rendered to effective implementation 
 /drydock/build
 /drydock/build/[datestamp] - A point-in-time view of what was deployed with deployment results
 
+## Tasks ##
+
+Management of task state for the internal orchestrator
+
+/drydock/tasks
+
 ## Node data ##
 
 Per-node data that can drive introspection as well as accept updates from nodes

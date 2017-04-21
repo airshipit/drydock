@@ -10,17 +10,18 @@ Orchestrator should persist the state of each task
 such that on failure the task can retried and only the
 steps needed will be executed.
 
+## Drydock Tasks ##
 Bullet points listed below are not exhaustive and will
 change as we move through testing
 
-## ValidateDesign ##
+### ValidateDesign ###
 
 Load design data from the statemgmt persistent store and
 validate that the current state of design data represents
 a valid site design. No claim is made that the design data
 is compatible with the physical state of the site.
 
-## VerifySite ##
+### VerifySite ###
 
 Verify site-wide resources are in a useful state
 
@@ -29,7 +30,7 @@ Verify site-wide resources are in a useful state
 * Promenade or other next-step services are up and available
 * Verify credentials are available
 
-## PrepareSite ##
+### PrepareSite ###
 
 Begin preparing site-wide resources for bootstrapping. This
 action will lock site design data for changes.
@@ -37,7 +38,7 @@ action will lock site design data for changes.
 * Configure bootstrapper with site network configs
 * Shuffle images so they are correctly configured for bootstrapping
 
-## VerifyNode ##
+### VerifyNode ###
 
 Verification of per-node configurations within the context
 of the current node status
@@ -54,7 +55,7 @@ of the current node status
     - Possibly network connectivity
     - Firmware versions
 
-## PrepareNode ##
+### PrepareNode ###
 
 Prepare a node for bootstrapping
 
@@ -67,7 +68,7 @@ Prepare a node for bootstrapping
 * Configure node networking
 * Configure node storage
 
-## DeployNode ##
+### DeployNode ###
 
 Begin bootstrapping the node and monitor
 success
@@ -78,6 +79,13 @@ success
 * Reboot node from local disk
 * Monitor platform bootstrapping
 
-## DestroyNode ##
+### DestroyNode ###
 
 Destroy current node configuration and rebootstrap from scratch
+
+## Integration with Drivers ##
+
+Based on the requested task and the current known state of a node
+the orchestrator will call the enabled downstream drivers with one
+or more tasks. Each call will provide the driver with the desired
+state (the applied model) and current known state (the build model).

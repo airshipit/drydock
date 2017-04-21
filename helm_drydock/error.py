@@ -17,3 +17,9 @@ class DesignError(Exception):
 
 class StateError(Exception):
     pass
+
+class OrchestratorError(Exception):
+    pass
+
+class DriverError(Exception):
+    pass
