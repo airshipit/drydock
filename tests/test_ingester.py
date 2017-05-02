@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState, SiteDesign
+from helm_drydock.statemgmt import DesignState
+import helm_drydock.objects as objects
 
 import pytest
 import shutil
@@ -26,36 +27,43 @@ class TestClass(object):
         print("Running test {0}".format(method.__name__))
 
     def test_ingest_full_site(self, input_files):
+        objects.register_all()
+
         input_file = input_files.join("fullsite.yaml")
 
         design_state = DesignState()
-        design_data = SiteDesign()
-        design_state.post_design_base(design_data)
+        design_data = objects.SiteDesign()
+        design_id = design_data.assign_id()
+        design_state.post_design(design_data)
 
         ingester = Ingester()
         ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state, filenames=[str(input_file)])
+        ingester.ingest_data(plugin_name='yaml', design_state=design_state,
+                             filenames=[str(input_file)], design_id=design_id)
 
-        design_data = design_state.get_design_base()
+        design_data = design_state.get_design(design_id)
 
-        assert len(design_data.get_host_profiles()) == 3
-        assert len(design_data.get_baremetal_nodes()) == 2
+        assert len(design_data.host_profiles) == 3
+        assert len(design_data.baremetal_nodes) == 2
 
     def test_ingest_federated_design(self, input_files):
+        objects.register_all()
+
         profiles_file = input_files.join("fullsite_profiles.yaml")
         networks_file = input_files.join("fullsite_networks.yaml")
         nodes_file = input_files.join("fullsite_nodes.yaml")
 
         design_state = DesignState()
-        design_data = SiteDesign()
-        design_state.post_design_base(design_data)
+        design_data = objects.SiteDesign()
+        design_id = design_data.assign_id()
+        design_state.post_design(design_data)
 
         ingester = Ingester()
         ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state,
-            filenames=[str(profiles_file), str(networks_file), str(nodes_file)])
+        ingester.ingest_data(plugin_name='yaml', design_state=design_state, design_id=design_id,
+                    filenames=[str(profiles_file), str(networks_file), str(nodes_file)])
 
-        design_data = design_state.get_design_base()
+        design_data = design_state.get_design(design_id)
 
         assert len(design_data.host_profiles) == 3
 

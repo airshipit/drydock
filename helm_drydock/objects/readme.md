@@ -1,6 +1,7 @@
 # Drydock Model #
 
-Models for the drydock design parts and subparts
+Object models for the drydock design parts and subparts. We use oslo.versionedobjects as the supporting library for object management
+to support RPC and versioned persistence.
 
 ## Features ##
 
@@ -25,13 +26,10 @@ based on the name.
 
 ### Phased Data ###
 
-In other words, as a modeled object goes from design to apply
-to build the model keeps the data separated to retain reference
-values and provide context around particular attribute values.
+The *source* of the data in a object instance can be one of three
+types.
 
-* Design - The data ingested from sources such as Formation
-* Apply - Computing inheritance of design data to render an effective site design
-* Build - Maintaining actions taken to implement the design and the results
-
-Currently only applies to BaremetalNodes as no other design parts
-flow through the build process.
+* Designed - This is data directly ingested by Drydock representing a design part (Site, HostProfile, etc...) supplied by an external source
+* Compiled - This is designed data that has been processed through the Drydock
+inheritance / merge system. It is the effective design that will be implemented.
+* Build - This is the result of actual implementation. It should basically match the compiled view of the model, but might have some additional information only available after implementation.

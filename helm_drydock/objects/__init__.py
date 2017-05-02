@@ -18,6 +18,17 @@ import logging
 
 from copy import deepcopy
 
+
+def register_all():
+    # NOTE(sh8121att) - Import all versioned objects so
+    # they are available via RPC. Any new object definitions
+    # need to be added here.
+    __import__('helm_drydock.objects.network')
+    __import__('helm_drydock.objects.node')
+    __import__('helm_drydock.objects.hostprofile')
+    __import__('helm_drydock.objects.hwprofile')
+    __import__('helm_drydock.objects.site')
+
 # Utility class for calculating inheritance
 
 class Utils(object):
@@ -74,18 +85,18 @@ class Utils(object):
     @staticmethod
     def merge_lists(child_list, parent_list):
 
-        if type(child_list) is not list or type(parent_list) is not list:
-            raise ValueError("One parameter is not a list")
-
         effective_list = []
 
-        # Probably should handle non-string values
-        effective_list.extend(
-            filter(lambda x: not x.startswith("!"), child_list))
+        try:
+            # Probably should handle non-string values
+            effective_list.extend(
+                filter(lambda x: not x.startswith("!"), child_list))
 
-        effective_list.extend(
-            filter(lambda x: ("!" + x) not in child_list,
-                   filter(lambda x: x not in effective_list, parent_list)))
+            effective_list.extend(
+                filter(lambda x: ("!" + x) not in child_list,
+                       filter(lambda x: x not in effective_list, parent_list)))
+        except TypeError:
+            raise TypeError("Error iterating list argument")
 
         return effective_list
 
@@ -107,21 +118,21 @@ class Utils(object):
     @staticmethod
     def merge_dicts(child_dict, parent_dict):
 
-        if type(child_dict) is not dict or type(parent_dict) is not dict:
-            raise ValueError("One parameter is not a dict")
-
         effective_dict = {}
 
-        # Probably should handle non-string keys
-        use_keys = filter(lambda x: ("!" + x) not in child_dict.keys(),
-                          parent_dict)
+        try:
+            # Probably should handle non-string keys
+            use_keys = filter(lambda x: ("!" + x) not in child_dict.keys(),
+                              parent_dict)
 
-        for k in use_keys:
-            effective_dict[k] = deepcopy(parent_dict[k])
+            for k in use_keys:
+                effective_dict[k] = deepcopy(parent_dict[k])
 
-        use_keys = filter(lambda x: not x.startswith("!"), child_dict)
+            use_keys = filter(lambda x: not x.startswith("!"), child_dict)
 
-        for k in use_keys:
-            effective_dict[k] = deepcopy(child_dict[k])
-
+            for k in use_keys:
+                effective_dict[k] = deepcopy(child_dict[k])
+        except TypeError:
+            raise TypeError("Error iterating dict argument")
+            
         return effective_dict

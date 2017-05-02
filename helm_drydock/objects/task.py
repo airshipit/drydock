@@ -17,19 +17,19 @@ from threading import Lock
 
 import helm_drydock.error as errors
 
-import helm_drydock.enum as enum
+import helm_drydock.objects.fields as hd_fields
 
 class Task(object):
 
     def __init__(self, **kwargs):
         self.task_id = uuid.uuid4()
-        self.status = enum.TaskStatus.Created
+        self.status = hd_fields.TaskStatus.Created
         self.terminate = False
         self.subtasks = []
         self.lock_id = None
-        self.result = enum.ActionResult.Incomplete
+        self.result = hd_fields.ActionResult.Incomplete
         self.result_detail = None
-        self.action = kwargs.get('action', enum.OrchestratorAction.Noop)
+        self.action = kwargs.get('action', hd_fields.OrchestratorAction.Noop)
 
         self.parent_task_id = kwargs.get('parent_task_id','')
 
@@ -79,10 +79,10 @@ class OrchestratorTask(Task):
 
         self.design_id = kwargs.get('design_id', 0)
 
-        if self.action in [enum.OrchestratorAction.VerifyNode,
-                      enum.OrchestratorAction.PrepareNode,
-                      enum.OrchestratorAction.DeployNode,
-                      enum.OrchestratorAction.DestroyNode]:
+        if self.action in [hd_fields.OrchestratorAction.VerifyNode,
+                      hd_fields.OrchestratorAction.PrepareNode,
+                      hd_fields.OrchestratorAction.DeployNode,
+                      hd_fields.OrchestratorAction.DestroyNode]:
             self.node_filter = kwargs.get('node_filter', None)
 
 

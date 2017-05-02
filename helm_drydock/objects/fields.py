@@ -11,10 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from enum import Enum, unique
 
-@unique
-class OrchestratorAction(Enum):
+from oslo_versionedobjects import fields
+
+class BaseDrydockEnum(fields.Enum):
+    def __init__(self):
+        super(BaseDrydockEnum, self).__init__(valid_values=self.__class__.ALL)
+
+class OrchestratorAction(BaseDrydockEnum):
+    # Orchestrator actions
     Noop = 'noop'
     ValidateDesign = 'validate_design'
     VerifySite = 'verify_site'
@@ -24,8 +29,7 @@ class OrchestratorAction(Enum):
     DeployNode = 'deploy_node'
     DestroyNode = 'destroy_node'
 
-@unique
-class OobAction(Enum):
+    # OOB driver actions
     ConfigNodePxe = 'config_node_pxe'
     SetNodeBoot = 'set_node_boot'
     PowerOffNode = 'power_off_node'
@@ -33,16 +37,53 @@ class OobAction(Enum):
     PowerCycleNode = 'power_cycle_node'
     InterrogateNode = 'interrogate_node'
 
-@unique
-class ActionResult(Enum):
+    ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNode,
+           PrepareNode, DeployNode, DestroyNode, ConfigNodePxe,
+           SetNodeBoot, PowerOffNode, PowerOnNode, PowerCycleNode,
+           InterrogateNode)
+
+class OrchestratorActionField(fields.BaseEnumField):
+    AUTO_TYPE = OrchestratorAction()
+
+class ActionResult(BaseDrydockEnum):
     Incomplete = 'incomplete'
     Success = 'success'
     PartialSuccess = 'partial_success'
     Failure = 'failure'
     DependentFailure = 'dependent_failure'
 
-@unique
-class SiteStatus(Enum):
+    ALL = (Incomplete, Success, PartialSuccess, Failure)
+
+class ActionResultField(fields.BaseEnumField):
+    AUTO_TYPE = ActionResult()
+
+class TaskStatus(BaseDrydockEnum):
+    Created = 'created'
+    Waiting = 'waiting'
+    Running = 'running'
+    Stopping = 'stopping'
+    Terminated = 'terminated'
+    Errored = 'errored'
+    Complete = 'complete'
+    Stopped = 'stopped'
+
+    ALL = (Created, Waiting, Running, Stopping, Terminated,
+           Errored, Complete, Stopped)
+
+class TaskStatusField(fields.BaseEnumField):
+    AUTO_TYPE = TaskStatus()
+
+class ModelSource(BaseDrydockEnum):
+    Designed = 'designed'
+    Compiled = 'compiled'
+    Build = 'build'
+
+    ALL = (Designed, Compiled, Build)
+
+class ModelSourceField(fields.BaseEnumField):
+    AUTO_TYPE = ModelSource()
+    
+class SiteStatus(BaseDrydockEnum):
     Unknown = 'unknown'
     DesignStarted = 'design_started'
     DesignAvailable = 'design_available'
@@ -51,10 +92,15 @@ class SiteStatus(Enum):
     Deployed = 'deployed'
     DesignUpdated = 'design_updated'
 
-@unique
-class NodeStatus(Enum):
+    ALL = (Unknown, Deploying, Deployed)
+
+class SiteStatusField(fields.BaseEnumField):
+    AUTO_TYPE = SiteStatus()
+
+class NodeStatus(BaseDrydockEnum):
     Unknown = 'unknown'
     Designed = 'designed'
+    Compiled = 'compiled' # Node attributes represent effective config after inheritance/merge
     Present = 'present' # IPMI access verified
     BasicVerifying = 'basic_verifying' # Base node verification in process
     FailedBasicVerify = 'failed_basic_verify' # Base node verification failed
@@ -73,13 +119,31 @@ class NodeStatus(Enum):
     Bootstrapped = 'bootstrapped' # Node fully bootstrapped
     Complete = 'complete' # Node is complete
 
-@unique
-class TaskStatus(Enum):
-    Created = 'created'
-    Waiting = 'waiting'
-    Running = 'running'
-    Stopping = 'stopping'
-    Terminated = 'terminated'
-    Errored = 'errored'
-    Complete = 'complete'
-    Stopped = 'stopped'
+    ALL = (Unknown, Designed, Compiled, Present, BasicVerifying, FailedBasicVerify,
+           BasicVerified, Preparing, FailedPrepare, Prepared, FullyVerifying,
+           FailedFullVerify, FullyVerified, Deploying, FailedDeploy, Deployed,
+           Bootstrapping, FailedBootstrap, Bootstrapped, Complete)
+
+
+class NodeStatusField(fields.BaseEnumField):
+    AUTO_TYPE = NodeStatus()
+
+class NetworkLinkBondingMode(BaseDrydockEnum):
+    Disabled = 'disabled'
+    LACP = '802.3ad'
+    RoundRobin = 'balanced-rr'
+    Standby = 'active-backup'
+
+    ALL = (Disabled, LACP, RoundRobin, Standby)
+
+class NetworkLinkBondingModeField(fields.BaseEnumField):
+    AUTO_TYPE = NetworkLinkBondingMode()
+
+class NetworkLinkTrunkingMode(BaseDrydockEnum):
+    Disabled = 'disabled'
+    Tagged = '802.1q'
+
+    ALL = (Disabled, Tagged)
+
+class NetworkLinkTrunkingModeField(fields.BaseEnumField):
+    AUTO_TYPE = NetworkLinkTrunkingMode()

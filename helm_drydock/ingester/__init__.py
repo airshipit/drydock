@@ -17,14 +17,16 @@
 
 import logging
 import yaml
+import  uuid
 
-import helm_drydock.model.site as site
-import helm_drydock.model.network as network
-import helm_drydock.model.hwprofile as hwprofile
-import helm_drydock.model.node as node
-import helm_drydock.model.hostprofile as hostprofile
+import helm_drydock.objects as objects
+import helm_drydock.objects.site as site
+import helm_drydock.objects.network as network
+import helm_drydock.objects.hwprofile as hwprofile
+import helm_drydock.objects.node as node
+import helm_drydock.objects.hostprofile as hostprofile
 
-from helm_drydock.statemgmt import DesignState, SiteDesign, DesignError
+from helm_drydock.statemgmt import DesignState
 
 class Ingester(object):
 
@@ -64,22 +66,22 @@ class Ingester(object):
             self.log.error("ingest_data called without valid DesignState handler")
             raise Exception("Invalid design_state handler")
 
-        # TODO this method needs refactored to handle design base vs change
-
         design_data = None
 
-        try:
-            design_data = design_state.get_design_base()
-        except DesignError:
-            design_data = SiteDesign()
-            design_state.post_design_base(design_data)
+        # If no design_id is specified, instantiate a new one
+        if 'design_id' not in kwargs.keys():
+            design_id = str(uuid.uuid4())
+            design_data = objects.SiteDesign(id=design_id)
+            design_state.post_design(design_data)
+        else:
+            design_id = kwargs.get('design_id')
+            design_data = design_state.get_design(design_id)
 
         if plugin_name in self.registered_plugins:
             design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)
-            # Need to persist data here, but we don't yet have the statemgmt service working
             for m in design_items:
                 if type(m) is site.Site:
-                    design_data.add_site(m)
+                    design_data.set_site(m)
                 elif type(m) is network.Network:
                     design_data.add_network(m)
                 elif type(m) is network.NetworkLink:
@@ -90,7 +92,7 @@ class Ingester(object):
                     design_data.add_hardware_profile(m)
                 elif type(m) is node.BaremetalNode:
                     design_data.add_baremetal_node(m)
-            design_state.put_design_base(design_data)
+            design_state.put_design(design_data)
         else:
             self.log.error("Could not find plugin %s to ingest data." % (plugin_name))
             raise LookupError("Could not find plugin %s" % plugin_name)

@@ -13,57 +13,73 @@
 # limitations under the License.
 
 import pytest
-import yaml
-from helm_drydock.model.hwprofile import HardwareProfile
+
+import helm_drydock.objects as objects
+from helm_drydock.objects import fields
 
 class TestClass(object):
 
-    def setup_method(self, method):
-        print("Running test {0}".format(method.__name__))
-
     def test_hardwareprofile(self):
-        yaml_snippet = ("---\n"
-                        "apiVersion: 'v1.0'\n"
-                        "kind: HardwareProfile\n"
-                        "metadata:\n"
-                        "  name: HPGen8v3\n"
-                        "  region: sitename\n"
-                        "  date: 17-FEB-2017\n"
-                        "  name: Sample hardware definition\n"
-                        "  author: Scott Hussey\n"
-                        "spec:\n"
-                        "  # Vendor of the server chassis\n"
-                        "  vendor: HP\n"
-                        "  # Generation of the chassis model\n"
-                        "  generation: '8'\n"
-                        "  # Version of the chassis model within its generation - not version of the hardware definition\n"
-                        "  hw_version: '3'\n"
-                        "  # The certified version of the chassis BIOS\n"
-                        "  bios_version: '2.2.3'\n"
-                        "  # Mode of the default boot of hardware - bios, uefi\n"
-                        "  boot_mode: bios\n"
-                        "  # Protocol of boot of the hardware - pxe, usb, hdd\n"
-                        "  bootstrap_protocol: pxe\n"
-                        "  # Which interface to use for network booting within the OOB manager, not OS device\n"
-                        "  pxe_interface: 0\n"
-                        "  # Map hardware addresses to aliases/roles to allow a mix of hardware configs\n"
-                        "  # in a site to result in a consistent configuration\n"
-                        "  device_aliases:\n"
-                        "    pci:\n"
-                        "    - address: pci@0000:00:03.0\n"
-                        "      alias: prim_nic01\n"
-                        "      # type could identify expected hardware - used for hardware manifest validation\n"
-                        "      type: '82540EM Gigabit Ethernet Controller'\n"
-                        "    - address: pci@0000:00:04.0\n"
-                        "      alias: prim_nic02\n"
-                        "      type: '82540EM Gigabit Ethernet Controller'\n"
-                        "    scsi:\n"
-                        "    - address: scsi@2:0.0.0\n"
-                        "      alias: primary_boot\n"
-                        "      type: 'VBOX HARDDISK'\n")
+        objects.register_all()
 
-        hw_profile = yaml.load(yaml_snippet)
-        hw_profile_model = HardwareProfile(**hw_profile)
+        model_attr = {
+            'versioned_object.namespace':            'helm_drydock.objects',
+            'versioned_object.name':                 'HardwareProfile',
+            'versioned_object.version':              '1.0',
+            'versioned_object.data': {
+                'name':                 'server',
+                'source':               fields.ModelSource.Designed,
+                'site':                 'test_site',
+                'vendor':               'Acme',
+                'generation':           '9',
+                'hw_version':           '3',
+                'bios_version':         '2.1.1',
+                'boot_mode':            'bios',
+                'bootstrap_protocol':   'pxe',
+                'pxe_interface':        '0',
+                'devices':  {
+                    'versioned_object.namespace':    'helm_drydock.objects',
+                    'versioned_object.name':         'HardwareDeviceAliasList',
+                    'versioned_object.version':      '1.0',
+                    'versioned_object.data': {
+                        'objects': [
+                            {
+                                'versioned_object.namespace':    'helm_drydock.objects',
+                                'versioned_object.name':         'HardwareDeviceAlias',
+                                'versioned_object.version':      '1.0',
+                                'versioned_object.data': {
+                                    'alias':    'nic',
+                                    'source':   fields.ModelSource.Designed,
+                                    'address':  '0000:00:03.0',
+                                    'bus_type': 'pci',
+                                    'dev_type': '82540EM Gigabit Ethernet Controller',
+                                }
+                            },
+                            {
+                                'versioned_object.namespace':    'helm_drydock.objects',
+                                'versioned_object.name':         'HardwareDeviceAlias',
+                                'versioned_object.version':      '1.0',
+                                'versioned_object.data': {
+                                    'alias':    'bootdisk',
+                                    'source':   fields.ModelSource.Designed,
+                                    'address':  '2:0.0.0',
+                                    'bus_type': 'scsi',
+                                    'dev_type': 'SSD',
+                                }
+                            },
+                        ]
 
-        assert hasattr(hw_profile_model, 'bootstrap_protocol')
+                    }
+                }
+            }
+        }
+
+        hwprofile = objects.HardwareProfile.obj_from_primitive(model_attr)
+
+        assert getattr(hwprofile, 'bootstrap_protocol') == 'pxe'
+        
+        hwprofile.bootstrap_protocol = 'network'
+
+        assert 'bootstrap_protocol' in hwprofile.obj_what_changed()
+        assert 'bios_version' not in hwprofile.obj_what_changed()
 

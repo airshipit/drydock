@@ -21,18 +21,21 @@ import pytest
 
 import os
 import shutil
+import uuid
 
 from helm_drydock.ingester import Ingester
 
 import helm_drydock.orchestrator as orch
-import helm_drydock.enum as enum
+import helm_drydock.objects.fields as hd_fields
 import helm_drydock.statemgmt as statemgmt
-import helm_drydock.model.task as task
+import helm_drydock.objects as objects
+import helm_drydock.objects.task as task
 import helm_drydock.drivers as drivers
 import helm_drydock.ingester.plugins.yaml as yaml_ingester
 
 class TestClass(object):
 
+    design_id = str(uuid.uuid4())
 
     # sthussey None of these work right until I figure out correct
     # mocking of pyghmi
@@ -45,7 +48,8 @@ class TestClass(object):
 
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='sitename',
-                                             action=enum.OrchestratorAction.VerifyNode)
+                                             design_id=self.design_id,
+                                             action=hd_fields.OrchestratorAction.VerifyNode)
 
         orchestrator.execute_task(orch_task.get_id())
 
@@ -73,15 +77,19 @@ class TestClass(object):
 
     @pytest.fixture(scope='module')
     def loaded_design(self, input_files):
+        objects.register_all()
+
         input_file = input_files.join("oob.yaml")
 
         design_state = statemgmt.DesignState()
-        design_data = statemgmt.SiteDesign()
-        design_state.post_design_base(design_data)
+        design_data = objects.SiteDesign(id=self.design_id)
+
+        design_state.post_design(design_data)
 
         ingester = Ingester()
         ingester.enable_plugins([yaml_ingester.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state, filenames=[str(input_file)])
+        ingester.ingest_data(plugin_name='yaml', design_state=design_state,
+                             design_id=self.design_id, filenames=[str(input_file)])
 
         return design_state
 
