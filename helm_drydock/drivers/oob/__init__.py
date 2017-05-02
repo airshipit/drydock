@@ -19,7 +19,7 @@
 # initiate_reboot
 # set_power_off
 # set_power_on
-import helm_drydock.enum as enum
+import helm_drydock.objects.fields as hd_fields
 import helm_drydock.error as errors
 
 from helm_drydock.drivers import ProviderDriver
@@ -29,12 +29,12 @@ class OobDriver(ProviderDriver):
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
 
-        self.supported_actions = [enum.OobAction.ConfigNodePxe,
-                                  enum.OobAction.SetNodeBoot,
-                                  enum.OobAction.PowerOffNode,
-                                  enum.OobAction.PowerOnNode,
-                                  enum.OobAction.PowerCycleNode,
-                                  enum.OobAction.InterrogateNode]
+        self.supported_actions = [hd_fields.OrchestratorAction.ConfigNodePxe,
+                                  hd_fields.OrchestratorAction.SetNodeBoot,
+                                  hd_fields.OrchestratorAction.PowerOffNode,
+                                  hd_fields.OrchestratorAction.PowerOnNode,
+                                  hd_fields.OrchestratorAction.PowerCycleNode,
+                                  hd_fields.OrchestratorAction.InterrogateNode]
 
         self.driver_name = "oob_generic"
         self.driver_key = "oob_generic"

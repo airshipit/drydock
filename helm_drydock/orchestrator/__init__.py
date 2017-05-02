@@ -16,13 +16,12 @@ import time
 import threading
 import importlib
 
-from enum import Enum, unique
 from copy import deepcopy
 
 import helm_drydock.drivers as drivers
-import helm_drydock.model.task as tasks
+import helm_drydock.objects.task as tasks
 import helm_drydock.error as errors
-import helm_drydock.enum as enum
+import helm_drydock.objects.fields as hd_fields
 
 class Orchestrator(object):
 
@@ -86,13 +85,13 @@ class Orchestrator(object):
 
         # Just for testing now, need to implement with enabled_drivers
         # logic
-        if task.action == enum.OrchestratorAction.Noop:
+        if task.action == hd_fields.OrchestratorAction.Noop:
             self.task_field_update(task_id,
-                                   status=enum.TaskStatus.Running)        
+                                   status=hd_fields.TaskStatus.Running)        
 
             driver_task = self.create_task(tasks.DriverTask,
                             design_id=0,
-                            action=enum.OrchestratorAction.Noop,
+                            action=hd_fields.OrchestratorAction.Noop,
                             parent_task_id=task.get_id())
 
             driver = drivers.ProviderDriver(state_manager=self.state_manager,
@@ -103,34 +102,33 @@ class Orchestrator(object):
             self.task_field_update(task_id, status=driver_task.get_status())
             
             return
-        elif task.action == enum.OrchestratorAction.ValidateDesign:
+        elif task.action == hd_fields.OrchestratorAction.ValidateDesign:
             self.task_field_update(task_id,
-                                   status=enum.TaskStatus.Running)
+                                   status=hd_fields.TaskStatus.Running)
             try:
                 site_design = self.get_effective_site(task_site,
                                                   change_id=design_id)
                 self.task_field_update(task_id,
-                                       result=enum.ActionResult.Success)
+                                       result=hd_fields.ActionResult.Success)
             except:
                 self.task_field_update(task_id,
-                                       result=enum.ActionResult.Failure)
+                                       result=hd_fields.ActionResult.Failure)
             
-            self.task_field_update(task_id, status=enum.TaskStatus.Complete)
+            self.task_field_update(task_id, status=hd_fields.TaskStatus.Complete)
             return
-        elif task.action == enum.OrchestratorAction.VerifyNode:
+        elif task.action == hd_fields.OrchestratorAction.VerifyNode:
             self.task_field_update(task_id,
-                                   status=enum.TaskStatus.Running)
+                                   status=hd_fields.TaskStatus.Running)
 
             driver = self.enabled_drivers['oob']
 
             if driver is None:
                 self.task_field_update(task_id,
-                        status=enum.TaskStatus.Errored,
-                        result=enum.ActionResult.Failure)
+                        status=hd_fields.TaskStatus.Errored,
+                        result=hd_fields.ActionResult.Failure)
                 return
 
-            site_design = self.get_effective_site(task_site,
-                                                  change_id=design_id)
+            site_design = self.get_effective_site(design_id, task_site)
 
             node_filter = task.node_filter
 
@@ -144,7 +142,7 @@ class Orchestrator(object):
             driver_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           action=enum.OobAction.InterrogateNode,
+                                           action=hd_fields.OrchestratorAction.InterrogateNode,
                                            task_scope=task_scope)
 
             driver.execute_task(driver_task.get_id())
@@ -152,19 +150,19 @@ class Orchestrator(object):
             driver_task = self.state_manager.get_task(driver_task.get_id())
 
             self.task_field_update(task_id,
-                                   status=enum.TaskStatus.Complete,
+                                   status=hd_fields.TaskStatus.Complete,
                                    result=driver_task.get_result())
             return
-        elif task.action == enum.OrchestratorAction.PrepareNode:
+        elif task.action == hd_fields.OrchestratorAction.PrepareNode:
             self.task_field_update(task_id,
-                                   status=enum.TaskStatus.Running)
+                                   status=hd_fields.TaskStatus.Running)
 
             driver = self.enabled_drivers['oob']
 
             if driver is None:
                 self.task_field_update(task_id,
-                        status=enum.TaskStatus.Errored,
-                        result=enum.ActionResult.Failure)
+                        status=hd_fields.TaskStatus.Errored,
+                        result=hd_fields.ActionResult.Failure)
                 return
 
             site_design = self.get_effective_site(task_site,
@@ -182,7 +180,7 @@ class Orchestrator(object):
             setboot_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           action=enum.OobAction.SetNodeBoot,
+                                           action=hd_fields.OrchestratorAction.SetNodeBoot,
                                            task_scope=task_scope)
 
             driver.execute_task(setboot_task.get_id())
@@ -192,26 +190,26 @@ class Orchestrator(object):
             cycle_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           action=enum.OobAction.PowerCycleNode,
+                                           action=hd_fields.OrchestratorAction.PowerCycleNode,
                                            task_scope=task_scope)
             driver.execute_task(cycle_task.get_id())
 
             cycle_task = self.state_manager.get_task(cycle_task.get_id())
 
-            if (setboot_task.get_result() == enum.ActionResult.Success and
-                cycle_task.get_result() == enum.ActionResult.Success):
+            if (setboot_task.get_result() == hd_fields.ActionResult.Success and
+                cycle_task.get_result() == hd_fields.ActionResult.Success):
                 self.task_field_update(task_id,
-                                       status=enum.TaskStatus.Complete,
-                                       result=enum.ActionResult.Success)
-            elif (setboot_task.get_result() == enum.ActionResult.Success or
-                  cycle_task.get_result() == enum.ActionResult.Success):
+                                       status=hd_fields.TaskStatus.Complete,
+                                       result=hd_fields.ActionResult.Success)
+            elif (setboot_task.get_result() == hd_fields.ActionResult.Success or
+                  cycle_task.get_result() == hd_fields.ActionResult.Success):
                 self.task_field_update(task_id,
-                                       status=enum.TaskStatus.Complete,
-                                       result=enum.ActionResult.PartialSuccess)
+                                       status=hd_fields.TaskStatus.Complete,
+                                       result=hd_fields.ActionResult.PartialSuccess)
             else:
                 self.task_field_update(task_id,
-                                       status=enum.TaskStatus.Complete,
-                                       result=enum.ActionResult.Failure)
+                                       status=hd_fields.TaskStatus.Complete,
+                                       result=hd_fields.ActionResult.Failure)
 
             return
         else:
@@ -279,74 +277,17 @@ class Orchestrator(object):
         else:
             return False
 
-    """
-    load_design_data - Pull all the defined models in statemgmt and assemble
-    them into a representation of the site. Does not compute inheritance.
-    Throws an exception if multiple Site models are found.
-
-    param design_state - Instance of statemgmt.DesignState to load data from
-
-    return a Site model populated with all components from the design state
-    """
-
-    def load_design_data(self, site_name, change_id=None):
-        design_data = None
-
-        if change_id is None or change_id == 0:
-            try:
-                design_data = self.state_manager.get_design_base()
-            except DesignError(e):
-                raise e
-        else:
-            design_data = self.state_manager.get_design_change(change_id)
-
-        site = design_data.get_site(site_name)
-
-        networks = design_data.get_networks()
-
-        for n in networks:
-            if n.site == site_name:
-                site.networks.append(n)
-
-        network_links = design_data.get_network_links()
-
-        for l in network_links:
-            if l.site == site_name:
-                site.network_links.append(l)
-
-        host_profiles = design_data.get_host_profiles()
-
-        for p in host_profiles:
-            if p.site == site_name:
-                site.host_profiles.append(p)
-
-        hardware_profiles = design_data.get_hardware_profiles()
-
-        for p in hardware_profiles:
-            if p.site == site_name:
-                site.hardware_profiles.append(p)
-
-        baremetal_nodes = design_data.get_baremetal_nodes()
-
-        for n in baremetal_nodes:
-            if n.site == site_name:
-                site.baremetal_nodes.append(n)
-
-        return site
-
-    def compute_model_inheritance(self, site_root):
+    def compute_model_inheritance(self, site_design):
         
         # For now the only thing that really incorporates inheritance is
         # host profiles and baremetal nodes. So we'll just resolve it for
         # the baremetal nodes which recursively resolves it for host profiles
         # assigned to those nodes
 
-        site_copy = deepcopy(site_root)
-
-        for n in site_copy.baremetal_nodes:
-            n.compile_applied_model(site_copy)
+        for n in site_design.baremetal_nodes:
+            n.compile_applied_model(site_design)
         
-        return site_copy
+        return
     """
     compute_model_inheritance - given a fully populated Site model,
     compute the effecitve design by applying inheritance and references
@@ -354,22 +295,22 @@ class Orchestrator(object):
     return a Site model reflecting the effective design for the site
     """
 
-    def get_described_site(self, site_name, change_id=None):
+    def get_described_site(self, design_id, site_name):
         site_design = None
 
         if site_name is None:
             raise errors.OrchestratorError("Cannot source design for site None")
 
-        site_design = self.load_design_data(site_name, change_id=change_id)
+        site_design = self.state_manager.get_design(design_id)
         
         return site_design
 
-    def get_effective_site(self, site_name, change_id=None):
-        site_design = self.get_described_site(site_name, change_id=change_id)
+    def get_effective_site(self, design_id, site_name):
+        site_design = self.get_described_site(design_id, site_name)
 
-        site_model = self.compute_model_inheritance(site_design)
+        self.compute_model_inheritance(site_design)
 
-        return site_model
+        return site_design
 
     def process_node_filter(self, node_filter, site_design):
         target_nodes = site_design.baremetal_nodes
@@ -398,5 +339,3 @@ class Orchestrator(object):
                             if x.has_tag(t)]
 
         return target_nodes
-
-

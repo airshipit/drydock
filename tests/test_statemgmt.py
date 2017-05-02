@@ -11,52 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from helm_drydock.statemgmt import SiteDesign
-
-import helm_drydock.model.site as site
-import helm_drydock.model.network as network
-
 import pytest
 import shutil
-import os
-import helm_drydock.ingester.plugins.yaml
+
+
+import helm_drydock.objects as objects
+import helm_drydock.statemgmt as statemgmt
 
 class TestClass(object):
 
     def setup_method(self, method):
         print("Running test {0}".format(method.__name__))
 
-    def test_sitedesign_merge(self):
-        design_data = SiteDesign()
+    def test_sitedesign_post(self):
+        objects.register_all()
 
-        initial_site = site.Site(**{'apiVersion': 'v1.0',
-                                    'metadata': {
-                                        'name': 'testsite',
-                                    },
-                                })
-        net_a = network.Network(**{ 'apiVersion': 'v1.0',
-                                    'metadata': {
-                                        'name': 'net_a',
-                                        'region': 'testsite',
-                                    },
-                                    'spec': {
-                                        'cidr': '172.16.0.0/24',
-                                }})
-        net_b = network.Network(**{ 'apiVersion': 'v1.0',
-                                    'metadata': {
-                                        'name': 'net_b',
-                                        'region': 'testsite',
-                                    },
-                                    'spec': {
-                                        'cidr': '172.16.0.1/24',
-                                }})
+        state_manager = statemgmt.DesignState()
+        design_data = objects.SiteDesign()
+        design_id = design_data.assign_id()
 
-        design_data.add_site(initial_site)
+        initial_site = objects.Site()
+        initial_site.name = 'testsite'
+
+        net_a = objects.Network()
+        net_a.name = 'net_a'
+        net_a.region = 'testsite'
+        net_a.cidr = '172.16.0.0/24'
+
+        design_data.set_site(initial_site)
         design_data.add_network(net_a)
 
-        design_update = SiteDesign()
-        design_update.add_network(net_b)
+        state_manager.post_design(design_data)
 
-        design_data.merge_updates(design_update)
+        my_design = state_manager.get_design(design_id)
 
-        assert len(design_data.get_networks()) == 2
+        assert design_data.obj_to_primitive() == my_design.obj_to_primitive()

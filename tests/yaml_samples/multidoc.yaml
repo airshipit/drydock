@@ -10,11 +10,11 @@ metadata:
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
   bonding:
-    mode: none
+    mode: disabled
   mtu: 1500
   linkspeed: 100full
   trunking:
-    mode: none
+    mode: disabled
     default_network: oob
 ---
 # pxe is a bit of 'magic' indicating the link config used when PXE booting
@@ -31,14 +31,14 @@ metadata:
   description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
 spec:
   bonding:
-    mode: none
+    mode: disabled
   mtu: 1500
   linkspeed: auto
   # Is this link supporting multiple layer 2 networks?
   # none is a port-based VLAN identified by default_network
   # tagged is is using 802.1q VLAN tagging. Untagged packets will default to default_netwokr
   trunking:
-    mode: none
+    mode: disabled
     # use name, will translate to VLAN ID
     default_network: pxe
 ---
@@ -61,17 +61,14 @@ spec:
   # balance-rr 
   # Can add support for others down the road
   bonding:
-    mode: 802.3ad
+    mode: '802.3ad'
     # For LACP (802.3ad) xmit hashing policy: layer2, layer2+3, layer3+4, encap3+4
     hash: layer3+4
     # 802.3ad specific options
     peer_rate: slow
-    mon_rate: default
-    up_delay: default
-    down_delay: default
   mtu: 9000
   linkspeed: auto
   # Is this link supporting multiple layer 2 networks?
   trunking:
-    mode: tagged
+    mode: '802.1q'
     default_network: mgmt

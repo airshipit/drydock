@@ -68,7 +68,6 @@ class TestClass(object):
 
         return design_state
 
-        
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

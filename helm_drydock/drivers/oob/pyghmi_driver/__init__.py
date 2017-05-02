@@ -16,8 +16,9 @@ import time
 from pyghmi.ipmi.command import Command
 
 import helm_drydock.error as errors
-import helm_drydock.enum as enum
-import helm_drydock.model.task as task_model
+
+import helm_drydock.objects.fields as hd_fields
+import helm_drydock.objects.task as task_model
 
 import helm_drydock.drivers.oob as oob
 import helm_drydock.drivers as drivers
@@ -54,10 +55,9 @@ class PyghmiDriver(oob.OobDriver):
                                     (task_id))
 
         self.orchestrator.task_field_update(task.get_id(),
-                            status=enum.TaskStatus.Running)
+                            status=hd_fields.TaskStatus.Running)
 
-        site_design = self.orchestrator.get_effective_site(task.site_name,
-                                                           change_id=design_id)
+        site_design = self.orchestrator.get_effective_site(design_id, task.site_name)
 
         target_nodes = []
 
@@ -89,9 +89,9 @@ class PyghmiDriver(oob.OobDriver):
         while len(incomplete_subtasks) > 0:
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
-                if t.get_status() in [enum.TaskStatus.Terminated,
-                                  enum.TaskStatus.Complete,
-                                  enum.TaskStatus.Errored]:
+                if t.get_status() in [hd_fields.TaskStatus.Terminated,
+                                  hd_fields.TaskStatus.Complete,
+                                  hd_fields.TaskStatus.Errored]:
                     incomplete_subtasks.remove(n)
             time.sleep(2)
             i = i+1
@@ -103,11 +103,11 @@ class PyghmiDriver(oob.OobDriver):
 
         success_subtasks = [x
                             for x in subtasks
-                            if x.get_result() == enum.ActionResult.Success]
+                            if x.get_result() == hd_fields.ActionResult.Success]
         nosuccess_subtasks = [x
                               for x in subtasks
-                              if x.get_result() in [enum.ActionResult.PartialSuccess,
-                                                    enum.ActionResult.Failure]]
+                              if x.get_result() in [hd_fields.ActionResult.PartialSuccess,
+                                                    hd_fields.ActionResult.Failure]]
 
         print("Task %s successful subtasks: %s" %
             (task.get_id(), len(success_subtasks)))
@@ -118,17 +118,17 @@ class PyghmiDriver(oob.OobDriver):
 
         task_result = None
         if len(success_subtasks) > 0 and len(nosuccess_subtasks) > 0:
-            task_result = enum.ActionResult.PartialSuccess
+            task_result = hd_fields.ActionResult.PartialSuccess
         elif len(success_subtasks) == 0 and len(nosuccess_subtasks) > 0:
-            task_result = enum.ActionResult.Failure
+            task_result = hd_fields.ActionResult.Failure
         elif len(success_subtasks) > 0 and len(nosuccess_subtasks) == 0:
-            task_result = enum.ActionResult.Success
+            task_result = hd_fields.ActionResult.Success
         else:
-            task_result = enum.ActionResult.Incomplete
+            task_result = hd_fields.ActionResult.Incomplete
 
         self.orchestrator.task_field_update(task.get_id(),
                             result=task_result,
-                            status=enum.TaskStatus.Complete)
+                            status=hd_fields.TaskStatus.Complete)
         return
 
 class PyghmiTaskRunner(drivers.DriverTaskRunner):
@@ -148,8 +148,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
         if len(self.task.node_list) != 1:
             self.orchestrator.task_field_update(self.task.get_id(),
-                result=enum.ActionResult.Incomplete,
-                status=enum.TaskStatus.Errored)
+                result=hd_fields.ActionResult.Incomplete,
+                status=hd_fields.TaskStatus.Errored)
             raise errors.DriverError("Multiple names (%s) in task %s node_list"
                 % (len(self.task.node_list), self.task.get_id()))
 
@@ -157,8 +157,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
         
         if self.node.get_name() != target_node_name:
             self.orchestrator.task_field_update(self.task.get_id(),
-                result=enum.ActionResult.Incomplete,
-                status=enum.TaskStatus.Errored)
+                result=hd_fields.ActionResult.Incomplete,
+                status=hd_fields.TaskStatus.Errored)
             raise errors.DriverError("Runner node does not match " \
                                      "task node scope")
 
@@ -168,25 +168,25 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
         if ipmi_address is None:
             self.orchestrator.task_field_update(self.task.get_id(),
-                result=enum.ActionResult.Incomplete,
-                status=enum.TaskStatus.Errored)
+                result=hd_fields.ActionResult.Incomplete,
+                status=hd_fields.TaskStatus.Errored)
             raise errors.DriverError("Node %s has no IPMI address" %
                 (target_node_name))
 
         self.orchestrator.task_field_update(self.task.get_id(),
-                status=enum.TaskStatus.Running)
+                status=hd_fields.TaskStatus.Running)
         ipmi_account = self.node.applied.get('oob_account', '')
         ipmi_credential = self.node.applied.get('oob_credential', '')
 
         ipmi_session = Command(bmc=ipmi_address, userid=ipmi_account,
                                password=ipmi_credential)
 
-        if task_action == enum.OobAction.ConfigNodePxe:
+        if task_action == hd_fields.OrchestratorAction.ConfigNodePxe:
             self.orchestrator.task_field_update(self.task.get_id(),
-                result=enum.ActionResult.Failure,
-                status=enum.TaskStatus.Complete)
+                result=hd_fields.ActionResult.Failure,
+                status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == enum.OobAction.SetNodeBoot:
+        elif task_action == hd_fields.OrchestratorAction.SetNodeBoot:
             ipmi_session.set_bootdev('pxe')
 
             time.sleep(3)
@@ -195,14 +195,14 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
             if bootdev.get('bootdev', '') == 'network':
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Success,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Success,
+                    status=hd_fields.TaskStatus.Complete)
             else:
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Failure,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Failure,
+                    status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == enum.OobAction.PowerOffNode:
+        elif task_action == hd_fields.OrchestratorAction.PowerOffNode:
             ipmi_session.set_power('off')
 
             i = 18
@@ -216,14 +216,14 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
             if power_state.get('powerstate', '') == 'off':
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Success,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Success,
+                    status=hd_fields.TaskStatus.Complete)
             else:
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Failure,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Failure,
+                    status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == enum.OobAction.PowerOnNode:
+        elif task_action == hd_fields.OrchestratorAction.PowerOnNode:
             ipmi_session.set_power('on')
 
             i = 18
@@ -237,14 +237,14 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
             if power_state.get('powerstate', '') == 'on':
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Success,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Success,
+                    status=hd_fields.TaskStatus.Complete)
             else:
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Failure,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Failure,
+                    status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == enum.OobAction.PowerCycleNode:
+        elif task_action == hd_fields.OrchestratorAction.PowerCycleNode:
             ipmi_session.set_power('off')
 
             # Wait for power state of off before booting back up
@@ -260,8 +260,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
             if power_state.get('powerstate', '') == 'on':
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Failure,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Failure,
+                    status=hd_fields.TaskStatus.Complete)
                 return
 
             ipmi_session.set_power('on')
@@ -277,18 +277,18 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
             if power_state.get('powerstate', '') == 'on':
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Success,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Success,
+                    status=hd_fields.TaskStatus.Complete)
             else:
                 self.orchestrator.task_field_update(self.task.get_id(),
-                    result=enum.ActionResult.Failure,
-                    status=enum.TaskStatus.Complete)
+                    result=hd_fields.ActionResult.Failure,
+                    status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == enum.OobAction.InterrogateNode:
+        elif task_action == hd_fields.OrchestratorAction.InterrogateNode:
             mci_id = ipmi_session.get_mci()
 
             self.orchestrator.task_field_update(self.task.get_id(),
-                result=enum.ActionResult.Success,
-                status=enum.TaskStatus.Complete,
+                result=hd_fields.ActionResult.Success,
+                status=hd_fields.TaskStatus.Complete,
                 result_detail=mci_id)
             return

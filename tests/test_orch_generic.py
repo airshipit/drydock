@@ -15,14 +15,15 @@
 #
 # Generic testing for the orchestrator
 #
-
-import helm_drydock.orchestrator as orch
-import helm_drydock.enum as enum
-import helm_drydock.statemgmt as statemgmt
-import helm_drydock.model.task as task
-import helm_drydock.drivers as drivers
 import threading
 import time
+
+import helm_drydock.orchestrator as orch
+import helm_drydock.objects.fields as hd_fields
+import helm_drydock.statemgmt as statemgmt
+import helm_drydock.objects.task as task
+import helm_drydock.drivers as drivers
+
 
 class TestClass(object):
 
@@ -31,24 +32,24 @@ class TestClass(object):
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='default',
-                                             action=enum.OrchestratorAction.Noop)
+                                             action=hd_fields.OrchestratorAction.Noop)
 
         orchestrator.execute_task(orch_task.get_id())
 
         orch_task = state_mgr.get_task(orch_task.get_id())
 
-        assert orch_task.get_status() == enum.TaskStatus.Complete
+        assert orch_task.get_status() == hd_fields.TaskStatus.Complete
 
         for t_id in orch_task.subtasks:
             t = state_mgr.get_task(t_id)
-            assert t.get_status() == enum.TaskStatus.Complete
+            assert t.get_status() == hd_fields.TaskStatus.Complete
 
     def test_task_termination(self):
         state_mgr = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='default',
-                                             action=enum.OrchestratorAction.Noop)
+                                             action=hd_fields.OrchestratorAction.Noop)
 
         orch_thread = threading.Thread(target=orchestrator.execute_task,
                                        args=(orch_task.get_id(),))
@@ -61,8 +62,8 @@ class TestClass(object):
             time.sleep(1)
 
         orch_task = state_mgr.get_task(orch_task.get_id())
-        assert orch_task.get_status() == enum.TaskStatus.Terminated
+        assert orch_task.get_status() == hd_fields.TaskStatus.Terminated
 
         for t_id in orch_task.subtasks:
             t = state_mgr.get_task(t_id)
-            assert t.get_status() == enum.TaskStatus.Terminated
+            assert t.get_status() == hd_fields.TaskStatus.Terminated

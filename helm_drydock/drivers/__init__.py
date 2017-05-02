@@ -15,9 +15,9 @@ from threading import Thread, Lock
 import uuid
 import time
 
+import helm_drydock.objects.fields as hd_fields
 import helm_drydock.statemgmt as statemgmt
-import helm_drydock.enum as  enum
-import helm_drydock.model.task as tasks
+import helm_drydock.objects.task as tasks
 import helm_drydock.error as errors
 
 # This is the interface for the orchestrator to access a driver
@@ -37,7 +37,7 @@ class ProviderDriver(object):
         self.state_manager = state_manager
         
         # These are the actions that this driver supports
-        self.supported_actions = [enum.OrchestratorAction.Noop]
+        self.supported_actions = [hd_fields.OrchestratorAction.Noop]
 
         self.driver_name = "generic"
         self.driver_key = "generic"
@@ -81,9 +81,9 @@ class DriverTaskRunner(Thread):
         self.execute_task()
 
     def execute_task(self):
-        if self.task.action == enum.OrchestratorAction.Noop:
+        if self.task.action == hd_fields.OrchestratorAction.Noop:
             self.orchestrator.task_field_update(self.task.get_id(),
-                                                status=enum.TaskStatus.Running)
+                                                status=hd_fields.TaskStatus.Running)
 
             i = 0
             while i < 5:
@@ -91,12 +91,12 @@ class DriverTaskRunner(Thread):
                 i = i + 1
                 if self.task.terminate:
                     self.orchestrator.task_field_update(self.task.get_id(),
-                                        status=enum.TaskStatus.Terminated)
+                                        status=hd_fields.TaskStatus.Terminated)
                     return
                 else:
                     time.sleep(1)
                     
             self.orchestrator.task_field_update(self.task.get_id(),
-                                    status=enum.TaskStatus.Complete)
+                                    status=hd_fields.TaskStatus.Complete)
             return
 
