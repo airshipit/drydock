@@ -126,12 +126,7 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
     def __init__(self, **kwargs):
         super(SiteDesign, self).__init__(**kwargs)
 
-    # Initialize lists for blank instances
-    def obj_load_attr(self, attrname):
-        if attrname in self.fields.keys():
-            setattr(self, attrname, None)
-        else:
-            raise ValueError("Unknown field %s" % (attrname))
+
 
     # Assign UUID id
     def assign_id(self):

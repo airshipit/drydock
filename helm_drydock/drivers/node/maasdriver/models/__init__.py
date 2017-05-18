@@ -11,23 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Read application configuration
-#
-
-# configuration map with defaults
-
-class DrydockConfig(object):
-
-    node_driver = {
-        'maasdriver':   {
-            'api_key':  'KTMHgA42cNSMnfmJ82:cdg4yQUhp542aHsCTV:7Dc2KB9hQpWq3LfQAAAKAj6wdg22yWxZ',
-            'api_url':  'http://localhost:5240/MAAS/api/2.0/'
-        },
-    }
-
-    ingester_config = {
-        'plugins': ['helm_drydock.ingester.plugins.yaml']
-    }

@@ -11,6 +11,7 @@ such that on failure the task can retried and only the
 steps needed will be executed.
 
 ## Drydock Tasks ##
+
 Bullet points listed below are not exhaustive and will
 change as we move through testing
 
@@ -20,6 +21,14 @@ Load design data from the statemgmt persistent store and
 validate that the current state of design data represents
 a valid site design. No claim is made that the design data
 is compatible with the physical state of the site.
+
+#### Validations ####
+
+* All baremetal nodes have an address, either static or DHCP, for all networks they are attached to.
+* No static IP assignments are duplicated
+* No static IP assignments are outside of the network they are targetted for
+* No network MTU mismatches due to a network riding different links on different nodes
+* Boot drive is above minimum size
 
 ### VerifySite ###
 
@@ -67,6 +76,9 @@ Prepare a node for bootstrapping
     - Hardware configuration (e.g. RAID)
 * Configure node networking
 * Configure node storage
+* Interrogate node
+    - lshw output
+    - lldp output
 
 ### DeployNode ###
 

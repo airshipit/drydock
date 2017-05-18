@@ -189,7 +189,7 @@ class HostInterface(base.DrydockObject):
         if len(child_list) == 0 and len(parent_list) > 0:
             for p in parent_list:
                 pp = deepcopy(p)
-                pp.source = hd_obj_fields.ModelSource.Compiled
+                pp.source = hd_fields.ModelSource.Compiled
                 effective_list.append(pp)
         elif len(parent_list) == 0 and len(child_list) > 0:
             for i in child_list:
@@ -197,7 +197,7 @@ class HostInterface(base.DrydockObject):
                     continue
                 else:
                     ii = deepcopy(i)
-                    ii.source = hd_obj_fields.ModelSource.Compiled
+                    ii.source = hd_fields.ModelSource.Compiled
                     effective_list.append(ii)
         elif len(parent_list) > 0 and len(child_list) > 0:
             parent_interfaces = []
@@ -212,8 +212,8 @@ class HostInterface(base.DrydockObject):
                     elif j.get_name() == parent_name:
                         m = objects.HostInterface()
                         m.device_name = j.get_name()
-                        m.primary_network =
-                            objects.Util.apply_field_inheritance(
+                        m.primary_network = \
+                            objects.Utils.apply_field_inheritance(
                                 getattr(j, 'primary_network', None),
                                 getattr(i, 'primary_network', None))
                             
@@ -243,7 +243,7 @@ class HostInterface(base.DrydockObject):
                              if not x.startswith("!")])
 
                         m.networks = n
-                        m.source = hd_obj_fields.ModelSource.Compiled
+                        m.source = hd_fields.ModelSource.Compiled
 
                         effective_list.append(m)
                         add = False
@@ -251,14 +251,14 @@ class HostInterface(base.DrydockObject):
 
                 if add:
                     ii = deepcopy(i)
-                    ii.source = hd_obj_fields.ModelSource.Compiled
+                    ii.source = hd_fields.ModelSource.Compiled
                     effective_list.append(ii)
 
             for j in child_list:
                 if (j.device_name not in parent_interfaces
                     and not j.get_name().startswith("!")):
                     jj = deepcopy(j)
-                    jj.source = hd_obj_fields.ModelSource.Compiled
+                    jj.source = hd_fields.ModelSource.Compiled
                     effective_list.append(jj)
 
         return effective_list

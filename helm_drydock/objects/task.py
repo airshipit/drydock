@@ -87,9 +87,6 @@ class OrchestratorTask(Task):
 
 
 class DriverTask(Task):
-    # subclasses implemented by each driver should override this with the list
-    # of actions that driver supports
-
     def __init__(self, task_scope={}, **kwargs):
         super(DriverTask, self).__init__(**kwargs)
 

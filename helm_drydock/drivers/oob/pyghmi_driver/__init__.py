@@ -16,6 +16,7 @@ import time
 from pyghmi.ipmi.command import Command
 
 import helm_drydock.error as errors
+import helm_drydock.config as config
 
 import helm_drydock.objects.fields as hd_fields
 import helm_drydock.objects.task as task_model
@@ -32,6 +33,8 @@ class PyghmiDriver(oob.OobDriver):
         self.driver_name = "pyghmi_driver"
         self.driver_key = "pyghmi_driver"
         self.driver_desc = "Pyghmi OOB Driver"
+
+        self.config = config.DrydockConfig.node_driver[self.driver_key]
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -57,6 +60,12 @@ class PyghmiDriver(oob.OobDriver):
         self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Running)
 
+        if task.action == hd_fields.OrchestratorAction.ValidateOobServices:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=hd_fields.ActionResult.Success)
+            return
+            
         site_design = self.orchestrator.get_effective_site(design_id, task.site_name)
 
         target_nodes = []
@@ -284,7 +293,7 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
             return
-        elif task_action == hd_fields.OrchestratorAction.InterrogateNode:
+        elif task_action == hd_fields.OrchestratorAction.InterrogateOob:
             mci_id = ipmi_session.get_mci()
 
             self.orchestrator.task_field_update(self.task.get_id(),

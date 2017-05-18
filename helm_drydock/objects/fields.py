@@ -30,17 +30,41 @@ class OrchestratorAction(BaseDrydockEnum):
     DestroyNode = 'destroy_node'
 
     # OOB driver actions
+    ValidateOobServices = 'validate_oob_services'
     ConfigNodePxe = 'config_node_pxe'
     SetNodeBoot = 'set_node_boot'
     PowerOffNode = 'power_off_node'
     PowerOnNode = 'power_on_node'
     PowerCycleNode = 'power_cycle_node'
+    InterrogateOob = 'interrogate_oob'
+
+    # Node driver actions
+    ValidateNodeServices = 'validate_node_services'
+    CreateNetworkTemplate = 'create_network_template'
+    CreateStorageTemplate = 'create_storage_template'
+    CreateBootMedia = 'create_boot_media'
+    PrepareHardwareConfig = 'prepare_hardware_config'
+    ConfigureHardware = 'configure_hardware'
     InterrogateNode = 'interrogate_node'
+    ApplyNodeNetworking = 'apply_node_networking'
+    ApplyNodeStorage = 'apply_node_storage'
+    ApplyNodePlatform = 'apply_node_platform'
+    DeployNode = 'deploy_node'
+    DestroyNode = 'destroy_node'
+
+    # Network driver actions
+    ValidateNetworkServices = 'validate_network_services'
+    InterrogatePort = 'interrogate_port'
+    ConfigurePortProvisioning = 'config_port_provisioning'
+    ConfigurePortProduction = 'config_port_production'
 
     ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNode,
            PrepareNode, DeployNode, DestroyNode, ConfigNodePxe,
            SetNodeBoot, PowerOffNode, PowerOnNode, PowerCycleNode,
-           InterrogateNode)
+           InterrogateOob, CreateNetworkTemplate, CreateStorageTemplate,
+           CreateBootMedia, PrepareHardwareConfig, ConfigureHardware,
+           InterrogateNode, ApplyNodeNetworking, ApplyNodeStorage,
+           ApplyNodePlatform, DeployNode, DestroyNode)
 
 class OrchestratorActionField(fields.BaseEnumField):
     AUTO_TYPE = OrchestratorAction()
@@ -52,7 +76,7 @@ class ActionResult(BaseDrydockEnum):
     Failure = 'failure'
     DependentFailure = 'dependent_failure'
 
-    ALL = (Incomplete, Success, PartialSuccess, Failure)
+    ALL = (Incomplete, Success, PartialSuccess, Failure, DependentFailure)
 
 class ActionResultField(fields.BaseEnumField):
     AUTO_TYPE = ActionResult()

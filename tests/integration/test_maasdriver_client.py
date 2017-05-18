@@ -11,23 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+import json
 
-#
-# Read application configuration
-#
+import helm_drydock.config as config
+import helm_drydock.drivers.node.maasdriver.api_client as client
 
-# configuration map with defaults
+class TestClass(object):
 
-class DrydockConfig(object):
+    def test_client_authenticate(self):
+        client_config = config.DrydockConfig.node_driver['maasdriver']
 
-    node_driver = {
-        'maasdriver':   {
-            'api_key':  'KTMHgA42cNSMnfmJ82:cdg4yQUhp542aHsCTV:7Dc2KB9hQpWq3LfQAAAKAj6wdg22yWxZ',
-            'api_url':  'http://localhost:5240/MAAS/api/2.0/'
-        },
-    }
+        maas_client = client.MaasRequestFactory(client_config['api_url'], client_config['api_key'])
 
-    ingester_config = {
-        'plugins': ['helm_drydock.ingester.plugins.yaml']
-    }
+        resp = maas_client.get('account/', params={'op': 'list_authorisation_tokens'})
+
+        parsed = resp.json()
+        
+        assert len(parsed) > 0

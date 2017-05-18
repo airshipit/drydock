@@ -31,6 +31,13 @@ class DrydockObject(base.VersionedObject):
 
     OBJ_PROJECT_NAMESPACE = 'helm_drydock.objects'
 
+    # Return None for undefined attributes
+    def obj_load_attr(self, attrname):
+        if attrname in self.fields.keys():
+            setattr(self, attrname, None)
+        else:
+            raise ValueError("Unknown field %s" % (attrname))
+
 class DrydockPersistentObject(base.VersionedObject):
 
     fields = {
