@@ -13,16 +13,44 @@
 # limitations under the License.
 #
 
+import helm_drydock.objects.fields as hd_fields
+import helm_drydock.error as errors
+
 from helm_drydock.drivers import ProviderDriver
 
 class NodeDriver(ProviderDriver):
 
-class NodeAction(Enum):
-    PrepareNode = 'prepare_node'
-    ApplyNetworkConfig = 'apply_network_config'
-    ApplyStorageConfig = 'apply_storage_config'
-    InterrogateNode = 'interrogate_node'
-    DeployNode = 'deploy_node'
+    def __init__(self, **kwargs):
+        super(NodeDriver, self).__init__(**kwargs)
+
+        self.supported_actions = [hd_fields.OrchestratorAction.ValidateNodeServices,
+                                  hd_fields.OrchestratorAction.CreateNetworkTemplate,
+                                  hd_fields.OrchestratorAction.CreateStorageTemplate,
+                                  hd_fields.OrchestratorAction.CreateBootMedia,
+                                  hd_fields.OrchestratorAction.PrepareHardwareConfig,
+                                  hd_fields.OrchestratorAction.ConfigureHardware,
+                                  hd_fields.OrchestratorAction.InterrogateNode,
+                                  hd_fields.OrchestratorAction.ApplyNodeNetworking,
+                                  hd_fields.OrchestratorAction.ApplyNodeStorage,
+                                  hd_fields.OrchestratorAction.ApplyNodePlatform,
+                                  hd_fields.OrchestratorAction.DeployNode,
+                                  hd_fields.OrchestratorAction.DestroyNode]
+
+        self.driver_name = "node_generic"
+        self.driver_key = "node_generic"
+        self.driver_desc = "Generic Node Driver"
+
+    def execute_task(self, task_id):
+        task = self.state_manager.get_task(task_id)
+        task_action = task.action
+
+        if task_action in self.supported_actions:
+            return
+        else:
+            raise DriverError("Unsupported action %s for driver %s" %
+                (task_action, self.driver_desc))
+
+
 
 
 

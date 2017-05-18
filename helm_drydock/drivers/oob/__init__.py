@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# OOB:
-# sync_hardware_clock
-# collect_chassis_sysinfo
-# enable_netboot
-# initiate_reboot
-# set_power_off
-# set_power_on
 import helm_drydock.objects.fields as hd_fields
 import helm_drydock.error as errors
 
@@ -29,12 +22,13 @@ class OobDriver(ProviderDriver):
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
 
-        self.supported_actions = [hd_fields.OrchestratorAction.ConfigNodePxe,
+        self.supported_actions = [hd_fields.OrchestrationAction.ValidateOobServices,
+                                  hd_fields.OrchestratorAction.ConfigNodePxe,
                                   hd_fields.OrchestratorAction.SetNodeBoot,
                                   hd_fields.OrchestratorAction.PowerOffNode,
                                   hd_fields.OrchestratorAction.PowerOnNode,
                                   hd_fields.OrchestratorAction.PowerCycleNode,
-                                  hd_fields.OrchestratorAction.InterrogateNode]
+                                  hd_fields.OrchestratorAction.InterrogateOob]
 
         self.driver_name = "oob_generic"
         self.driver_key = "oob_generic"

@@ -35,6 +35,7 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
         'source': hd_fields.ModelSourceField(),
         'tag_definitions': ovo_fields.ObjectField('NodeTagDefinitionList',
                                                nullable=True),
+        'repositories': ovo_fields.ObjectField('RepositoryList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -77,6 +78,33 @@ class NodeTagDefinitionList(base.DrydockObjectListBase, base.DrydockObject):
         'objects': ovo_fields.ListOfObjectsField('NodeTagDefinition'),
     }
 
+# Need to determine how best to define a repository that can encompass
+# all repositories needed
+@base.DrydockObjectRegistry.register
+class Repository(base.DrydockObject):
+
+    VERSION = '1.0'
+
+    fields = {
+        'name': ovo_fields.StringField(),
+    }
+
+    def __init__(self, **kwargs):
+        super(Repository, self).__init__(**kwargs)
+
+    # TagDefinition keyed by tag
+    def get_id(self):
+        return self.name
+
+@base.DrydockObjectRegistry.register
+class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
+
+    VERSION = '1.0'
+
+    fields = {
+        'objects': ovo_fields.ListOfObjectsField('Repository'),
+    }
+
 @base.DrydockObjectRegistry.register
 class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
@@ -98,12 +126,7 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
     def __init__(self, **kwargs):
         super(SiteDesign, self).__init__(**kwargs)
 
-    # Initialize lists for blank instances
-    def obj_load_attr(self, attrname):
-        if attrname in self.fields.keys():
-            setattr(self, attrname, None)
-        else:
-            raise ValueError("Unknown field %s" % (attrname))
+
 
     # Assign UUID id
     def assign_id(self):

@@ -48,19 +48,18 @@ setup(name='helm_drydock',
                 'helm_drydock.control',
                 'helm_drydock.drivers',
                 'helm_drydock.drivers.oob',
-                'helm_drydock.drivers.oob.pyghmi_driver'],
+                'helm_drydock.drivers.oob.pyghmi_driver',
+                'helm_drydock.drivers.node',
+                'helm_drydock.drivers.node.maasdriver',
+                'helm_drydock.drivers.node.maasdriver.models'],
       install_requires=[
         'PyYAML',
-        'oauth',
-        'requests-oauthlib',
         'pyghmi>=1.0.18',
         'netaddr',
         'falcon',
-        'webob',
         'oslo.versionedobjects>=1.23.0',
-      ],
-      dependency_link=[
-        'git+https://github.com/maas/python-libmaas.git'
+        'requests',
+        'oauthlib',
       ]
      )
 

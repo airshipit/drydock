@@ -161,7 +161,7 @@ class YamlIngester(IngesterPlugin):
 
                             model.cidr = spec.get('cidr', None)
                             model.allocation_strategy = spec.get('allocation', 'static')
-                            model.vlan_id = spec.get('vlan_id', 1)
+                            model.vlan_id = spec.get('vlan_id', None)
                             model.mtu = spec.get('mtu', None)
 
                             dns = spec.get('dns', {})
@@ -286,6 +286,7 @@ class YamlIngester(IngesterPlugin):
 
                             int_model.device_name = i.get('device_name', None)
                             int_model.network_link = i.get('device_link', None)
+                            int_model.primary_netowrk = i.get('primary', False)
 
                             int_model.hardware_slaves = []
                             slaves = i.get('slaves', [])

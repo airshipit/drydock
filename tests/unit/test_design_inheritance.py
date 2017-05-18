@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState, SiteDesign
+from helm_drydock.statemgmt import DesignState
 from helm_drydock.orchestrator import Orchestrator
 
 from copy import deepcopy
@@ -72,7 +72,7 @@ class TestClass(object):
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "/yaml_samples"
+        samples_dir = os.path.dirname(str(request.fspath)) + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

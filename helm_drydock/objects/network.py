@@ -34,11 +34,11 @@ class NetworkLink(base.DrydockPersistentObject, base.DrydockObject):
         'site':             ovo_fields.StringField(),
         'bonding_mode':     hd_fields.NetworkLinkBondingModeField(
                                         default=hd_fields.NetworkLinkBondingMode.Disabled),
-        'bonding_xmit_hash':    ovo_fields.StringField(nullable=True),
-        'bonding_peer_rate':    ovo_fields.StringField(nullable=True),
-        'bonding_mon_rate':     ovo_fields.IntegerField(nullable=True),
-        'bonding_up_delay':     ovo_fields.IntegerField(nullable=True),
-        'bonding_down_delay':   ovo_fields.IntegerField(nullable=True),
+        'bonding_xmit_hash':    ovo_fields.StringField(nullable=True, default='layer3+4'),
+        'bonding_peer_rate':    ovo_fields.StringField(nullable=True, default='slow'),
+        'bonding_mon_rate':     ovo_fields.IntegerField(nullable=True, default=100),
+        'bonding_up_delay':     ovo_fields.IntegerField(nullable=True, default=200),
+        'bonding_down_delay':   ovo_fields.IntegerField(nullable=True, default=200),
         'mtu':              ovo_fields.IntegerField(default=1500),
         'linkspeed':        ovo_fields.StringField(default='auto'),
         'trunk_mode':       hd_fields.NetworkLinkTrunkingModeField(
@@ -81,7 +81,9 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
         'mtu':      ovo_fields.IntegerField(nullable=True),
         'dns_domain':   ovo_fields.StringField(nullable=True),
         'dns_servers':  ovo_fields.StringField(nullable=True),
+        # Keys of ranges are 'type', 'start', 'end'
         'ranges':   ovo_fields.ListOfDictOfNullableStringsField(),
+        # Keys of routes are 'subnet', 'gateway', 'metric'
         'routes':   ovo_fields.ListOfDictOfNullableStringsField(),
     }
 
@@ -94,6 +96,14 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
         
     def get_name(self):
         return self.name
+
+    def get_default_gateway(self):
+        for r in getattr(self,'routes', []):
+            if r.get('subnet', '') == '0.0.0.0/0':
+                return r.get('gateway', None)
+
+        return None
+
 
 
 @base.DrydockObjectRegistry.register

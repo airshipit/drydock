@@ -116,6 +116,53 @@ class Orchestrator(object):
             
             self.task_field_update(task_id, status=hd_fields.TaskStatus.Complete)
             return
+        elif task.action == hd_fields.OrchestratorAction.VerifySite:
+            self.task_field_update(task_id,
+                                   status=hd_fields.TaskStatus.Running)
+
+            node_driver = self.enabled_drivers['node']
+
+            if node_driver is not None:
+                node_driver_task = self.create_task(tasks.DriverTask,
+                                           parent_task_id=task.get_id(),
+                                           design_id=design_id,
+                                           action=hd_fields.OrchestratorAction.ValidateNodeServices)
+
+                node_driver.execute_task(node_driver_task.get_id())
+
+                node_driver_task = self.state_manager.get_task(node_driver_task.get_id())
+
+                self.task_field_update(task_id,
+                                   status=hd_fields.TaskStatus.Complete,
+                                   result=node_driver_task.get_result())
+            return
+        elif task.action == hd_fields.OrchestratorAction.PrepareSite:
+            driver = self.enabled_drivers['node']
+
+            if driver is None:
+                self.task_field_update(task_id,
+                        status=hd_fields.TaskStatus.Errored,
+                        result=hd_fields.ActionResult.Failure)
+                return
+
+            task_scope = {
+                'site': task.site
+            }
+
+            driver_task = self.create_task(tasks.DriverTask,
+                                           parent_task_id=task.get_id(),
+                                           design_id=design_id,
+                                           task_scope=task_scope,
+                                           action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
+
+            driver.execute_task(driver_task.get_id())
+
+            driver_task = self.state_manager.get_task(driver_task.get_id())
+
+            self.task_field_update(task_id,
+                                   status=hd_fields.TaskStatus.Complete,
+                                   result=driver_task.get_result())
+            return
         elif task.action == hd_fields.OrchestratorAction.VerifyNode:
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
