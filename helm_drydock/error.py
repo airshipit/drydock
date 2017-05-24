@@ -14,3 +14,24 @@
 
 class DesignError(Exception):
     pass
+
+class StateError(Exception):
+    pass
+
+class OrchestratorError(Exception):
+    pass
+
+class TransientOrchestratorError(OrchestratorError):
+    pass
+
+class PersistentOrchestratorError(OrchestratorError):
+    pass
+
+class DriverError(Exception):
+    pass
+
+class TransientDriverError(DriverError):
+    pass
+
+class PersistentDriverError(DriverError):
+    pass

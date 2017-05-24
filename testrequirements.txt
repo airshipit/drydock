@@ -1,2 +1,5 @@
+pytest-mock
 pytest
+mock
 tox
+oslo.versionedobjects[fixtures]>=1.23.0

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState, SiteDesign
-from helm_drydock.orchestrator.designdata import DesignStateClient
+from helm_drydock.statemgmt import DesignState
+from helm_drydock.orchestrator import Orchestrator
 
 from copy import deepcopy
 
@@ -31,29 +31,28 @@ class TestClass(object):
 
 
     def test_design_inheritance(self, loaded_design):
-        client = DesignStateClient()
+        orchestrator = Orchestrator(state_manager=loaded_design,
+                                    enabled_drivers={'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver'})
 
-        design_data = client.load_design_data("sitename", design_state=loaded_design)
+        design_data = orchestrator.load_design_data("sitename")
 
         assert len(design_data.baremetal_nodes) == 2
 
-        print(yaml.dump(design_data, default_flow_style=False))
-
-        design_data = client.compute_model_inheritance(design_data)
+        design_data = orchestrator.compute_model_inheritance(design_data)
 
         node = design_data.get_baremetal_node("controller01")
-
-        print(yaml.dump(node, default_flow_style=False))
         
-        assert node.hardware_profile == 'HPGen9v3'
+        assert node.applied.get('hardware_profile') == 'HPGen9v3'
 
-        iface = node.get_interface('bond0')
+        iface = node.get_applied_interface('bond0')
 
-        assert iface.get_slave_count() == 2
+        print(yaml.dump(iface, default_flow_style=False))
+        
+        assert iface.get_applied_slave_count() == 2
 
-        iface = node.get_interface('pxe')
+        iface = node.get_applied_interface('pxe')
 
-        assert iface.get_slave_count() == 1
+        assert iface.get_applied_slave_count() == 1
 
     @pytest.fixture(scope='module')
     def loaded_design(self, input_files):
@@ -69,12 +68,11 @@ class TestClass(object):
 
         return design_state
 
-        
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "/yaml_samples"
+        samples_dir = os.path.dirname(str(request.fspath)) + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

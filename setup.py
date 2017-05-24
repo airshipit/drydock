@@ -40,23 +40,26 @@ setup(name='helm_drydock',
       author_email='sh8121@att.com',
       license='Apache 2.0',
       packages=['helm_drydock',
-                'helm_drydock.model',
+                'helm_drydock.objects',
                 'helm_drydock.ingester',
                 'helm_drydock.ingester.plugins',
                 'helm_drydock.statemgmt',
                 'helm_drydock.orchestrator',
-                'helm_drydock.control'],
+                'helm_drydock.control',
+                'helm_drydock.drivers',
+                'helm_drydock.drivers.oob',
+                'helm_drydock.drivers.oob.pyghmi_driver',
+                'helm_drydock.drivers.node',
+                'helm_drydock.drivers.node.maasdriver',
+                'helm_drydock.drivers.node.maasdriver.models'],
       install_requires=[
         'PyYAML',
-        'oauth',
-        'requests-oauthlib',
-        'pyghmi',
+        'pyghmi>=1.0.18',
         'netaddr',
-        'pecan',
-        'webob'
-      ],
-      dependency_link=[
-        'git+https://github.com/maas/python-libmaas.git'
+        'falcon',
+        'oslo.versionedobjects>=1.23.0',
+        'requests',
+        'oauthlib',
       ]
      )
 
