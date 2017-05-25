@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields as obj_fields
@@ -38,6 +39,32 @@ class DrydockObject(base.VersionedObject):
         else:
             raise ValueError("Unknown field %s" % (attrname))
 
+    def obj_to_simple(self):
+        """
+        Create a simple primitive representation of this object excluding
+        all the versioning stuff. Used to serialize an object for public
+        consumption, not intended to be deserialized by OVO
+        """
+
+        primitive = dict()
+
+        primitive['model_type'] = self.__class__.__name__
+        primitive['model_version'] = self.VERSION
+
+        for name, field in self.fields.items():
+            if self.obj_attr_is_set(name):
+                value = getattr(self, name)
+                if (hasattr(value, 'obj_to_simple') and
+                    callable(value.obj_to_simple)):
+                    primitive[name] = value.obj_to_simple()
+                else:
+                    value = field.to_primitive(self, name, value)
+                    if value is not None:
+                        primitive[name] = value
+
+        return primitive
+
+
 class DrydockPersistentObject(base.VersionedObject):
 
     fields = {
@@ -46,6 +73,15 @@ class DrydockPersistentObject(base.VersionedObject):
         'updated_at': obj_fields.DateTimeField(nullable=True),
         'updated_by': obj_fields.StringField(nullable=True),
     }
+
+    def set_create_fields(self, context):
+        self.created_at = datetime.datetime.now()
+        self.created_by = context.user
+
+    def set_update_fields(self, context):
+        self.updated_at = datetime.datetime.now()
+        self.updated_by = context.user
+
 
 class DrydockObjectListBase(base.ObjectListBase):
     
@@ -73,3 +109,11 @@ class DrydockObjectListBase(base.ObjectListBase):
             model_list.append(o)
 
         return model_list
+
+    def obj_to_simple(self):
+        primitive_list = list()
+
+        for o in self.objects:
+            primitive_list.append(o.obj_to_simple())
+
+        return primitive_list

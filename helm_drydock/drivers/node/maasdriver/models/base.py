@@ -250,8 +250,23 @@ class ResourceCollectionBase(object):
 
         return result
 
+    def singleton(self, query):
+        """
+        A query that requires a single item response
+
+        :param query: A dict of k:v pairs defining the query parameters
+        """
+        result = self.query(query)
+
+        if len(result) > 1:
+            raise ValueError("Multiple results found")
+        elif len(result) == 1:
+            return result[0]
+
+        return None
+        
     """
-    If the collection has a single item, return it
+    If the collection contains a single item, return it
     """
     def single(self):
         if self.len() == 1:

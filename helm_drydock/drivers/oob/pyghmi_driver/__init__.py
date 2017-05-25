@@ -34,7 +34,7 @@ class PyghmiDriver(oob.OobDriver):
         self.driver_key = "pyghmi_driver"
         self.driver_desc = "Pyghmi OOB Driver"
 
-        self.config = config.DrydockConfig.node_driver[self.driver_key]
+        self.config = config.DrydockConfig.node_driver.get(self.driver_key, {})
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)

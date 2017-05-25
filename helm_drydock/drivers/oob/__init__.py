@@ -22,7 +22,7 @@ class OobDriver(ProviderDriver):
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
 
-        self.supported_actions = [hd_fields.OrchestrationAction.ValidateOobServices,
+        self.supported_actions = [hd_fields.OrchestratorAction.ValidateOobServices,
                                   hd_fields.OrchestratorAction.ConfigNodePxe,
                                   hd_fields.OrchestratorAction.SetNodeBoot,
                                   hd_fields.OrchestratorAction.PowerOffNode,
