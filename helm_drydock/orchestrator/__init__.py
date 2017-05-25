@@ -1,3 +1,4 @@
+
 # Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -106,8 +107,7 @@ class Orchestrator(object):
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
             try:
-                site_design = self.get_effective_site(task_site,
-                                                  change_id=design_id)
+                site_design = self.get_effective_site(design_id)
                 self.task_field_update(task_id,
                                        result=hd_fields.ActionResult.Success)
             except:
@@ -175,7 +175,7 @@ class Orchestrator(object):
                         result=hd_fields.ActionResult.Failure)
                 return
 
-            site_design = self.get_effective_site(design_id, task_site)
+            site_design = self.get_effective_site(design_id)
 
             node_filter = task.node_filter
 
@@ -212,8 +212,7 @@ class Orchestrator(object):
                         result=hd_fields.ActionResult.Failure)
                 return
 
-            site_design = self.get_effective_site(task_site,
-                                                  change_id=design_id)
+            site_design = self.get_effective_site(design_id)
 
             node_filter = task.node_filter
 
@@ -331,7 +330,7 @@ class Orchestrator(object):
         # the baremetal nodes which recursively resolves it for host profiles
         # assigned to those nodes
 
-        for n in site_design.baremetal_nodes:
+        for n in getattr(site_design, 'baremetal_nodes', []):
             n.compile_applied_model(site_design)
         
         return
@@ -342,18 +341,13 @@ class Orchestrator(object):
     return a Site model reflecting the effective design for the site
     """
 
-    def get_described_site(self, design_id, site_name):
-        site_design = None
-
-        if site_name is None:
-            raise errors.OrchestratorError("Cannot source design for site None")
-
+    def get_described_site(self, design_id):
         site_design = self.state_manager.get_design(design_id)
         
         return site_design
 
-    def get_effective_site(self, design_id, site_name):
-        site_design = self.get_described_site(design_id, site_name)
+    def get_effective_site(self, design_id):
+        site_design = self.get_described_site(design_id)
 
         self.compute_model_inheritance(site_design)
 

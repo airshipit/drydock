@@ -13,6 +13,10 @@
 # limitations under the License.
 
 import falcon
+import logging
+import uuid
+
+import helm_drydock.config as config
 
 class AuthMiddleware(object):
 
@@ -31,7 +35,7 @@ class AuthMiddleware(object):
             ctx.add_role('anyone')
 
     # Authorization
-    def process_resource(self, req, resp, resource):
+    def process_resource(self, req, resp, resource, params):
         ctx = req.context
 
         if not resource.authorize_roles(ctx.roles):
@@ -62,12 +66,29 @@ class ContextMiddleware(object):
 
         requested_logging = req.get_header('X-Log-Level')
 
-        if requested_logging == 'DEBUG' and 'admin' in ctx.roles:
-            ctx.set_log_level('debug')
+        if (config.DrydockConfig.global_config.get('log_level', '') == 'DEBUG' or
+           (requested_logging == 'DEBUG' and 'admin' in ctx.roles)):
+            ctx.set_log_level('DEBUG')
         elif requested_logging == 'INFO':
-            ctx.set_log_level('info')
+            ctx.set_log_level('INFO')
+
+        ctx.req_id = str(uuid.uuid4())
+
+        ext_marker = req.get_header('X-Context-Marker')
+
+        ctx.external_ctx = ext_marker if ext_marker is not None else ''
 
 class LoggingMiddleware(object):
 
+    def __init__(self):
+        self.logger = logging.getLogger('drydock.control')
+
     def process_response(self, req, resp, resource, req_succeeded):
         ctx = req.context
+        extra = {
+            'user': ctx.user,
+            'req_id': ctx.req_id,
+            'external_ctx': ctx.external_ctx,
+        }
+        resp.append_header('X-Drydock-Req', ctx.req_id)
+        self.logger.info("%s - %s" % (req.uri, resp.status), extra=extra)

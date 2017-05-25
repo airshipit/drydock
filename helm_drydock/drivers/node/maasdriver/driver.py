@@ -101,7 +101,7 @@ class MaasNodeDriver(NodeDriver):
         self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Running)
 
-        site_design = self.orchestrator.get_effective_site(design_id, task.site_name)
+        site_design = self.orchestrator.get_effective_site(design_id)
 
         if task.action == hd_fields.OrchestratorAction.CreateNetworkTemplate:
             subtask = self.orchestrator.create_task(task_model.DriverTask,
@@ -149,8 +149,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
         self.maas_client = MaasRequestFactory(self.driver_config['api_url'],
                                               self.driver_config['api_key'])
 
-        site_design = self.orchestrator.get_effective_site(self.task.design_id,
-                                                           self.task.site_name)
+        site_design = self.orchestrator.get_effective_site(self.task.design_id)
 
         if task_action == hd_fields.OrchestratorAction.CreateNetworkTemplate:
             # Try to true up MaaS definitions of fabrics/vlans/subnets
@@ -165,110 +164,120 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
             }
 
             for n in design_networks:
-                exists = subnets.query({'cidr': n.cidr})
+                try:
+                    subnet = subnets.singleton({'cidr': n.cidr})
 
-                subnet = None
+                    if subnet is not None:
+                        subnet.name = n.name
+                        subnet.dns_servers = n.dns_servers
 
-                if len(exists) > 0:
-                    subnet = exists[0]
-
-                    subnet.name = n.name
-                    subnet.dns_servers = n.dns_servers
-
-                    vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=subnet.fabric)
-                    vlan_list.refresh()
-
-                    vlan = vlan_list.select(subnet.vlan)
-
-                    if vlan is not None:
-                        if ((n.vlan_id is None and vlan.vid != 0) or 
-                           (n.vlan_id is not None and vlan.vid != n.vlan_id)):
-
-                            # if the VLAN name matches, assume this is the correct resource
-                            # and it needs to be updated
-                            if vlan.name == n.name:
-                                vlan.set_vid(n.vlan_id)
-                                vlan.mtu = n.mtu
-                                vlan.update()
-                            else:
-                                vlan_id = n.vlan_id if n.vlan_id is not None else 0
-                                target_vlan = vlan_list.query({'vid': vlan_id})
-                                if len(target_vlan) > 0:
-                                    subnet.vlan = target_vlan[0].resource_id
-                                else:
-                                    # This is a flag that after creating a fabric and
-                                    # VLAN below, update the subnet
-                                    subnet.vlan = None
-                    else:
-                        subnet.vlan = None
-            
-                    # Check if the routes have a default route
-                    subnet.gateway_ip = n.get_default_gateway()
-
-
-                    result_detail['detail'].append("Subnet %s found for network %s, updated attributes"
-                                                % (exists[0].resource_id, n.name))
-
-                # Need to create a Fabric/Vlan for this network
-                if (subnet is None or (subnet is not None and subnet.vlan is None)):
-                    fabric_list = maas_fabric.Fabrics(self.maas_client)
-                    fabric_list.refresh()
-                    matching_fabrics = fabric_list.query({'name': n.name})
-                    
-                    fabric = None
-                    vlan = None
-                    
-                    if len(matching_fabrics) > 0:
-                        # Fabric exists, update VLAN
-                        fabric = matching_fabrics[0]
-
-                        vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=fabric.resource_id)
+                        vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=subnet.fabric)
                         vlan_list.refresh()
-                        vlan_id = n.vlan_id if n.vlan_id is not None else 0
-                        matching_vlans = vlan_list.query({'vid': vlan_id})
 
-                        if len(matching_vlans) > 0:
-                            vlan = matching_vlans[0]
+                        vlan = vlan_list.select(subnet.vlan)
+
+                        if vlan is not None:
+                            if ((n.vlan_id is None and vlan.vid != 0) or 
+                                (n.vlan_id is not None and vlan.vid != n.vlan_id)):
+
+                                # if the VLAN name matches, assume this is the correct resource
+                                # and it needs to be updated
+                                if vlan.name == n.name:
+                                    vlan.set_vid(n.vlan_id)
+                                    vlan.mtu = n.mtu
+                                    vlan.update()
+                                    result_detail['detail'].append("VLAN %s found for network %s, updated attributes"
+                                                                    % (vlan.resource_id, n.name))
+                                else:
+                                    # Found a VLAN with the correct VLAN tag, update subnet to use it
+                                    target_vlan = vlan_list.singleton({'vid': n.vlan_id if n.vlan_id is not None else 0})
+                                    if target_vlan is not None:
+                                        subnet.vlan = target_vlan.resource_id
+                                    else:
+                                        # This is a flag that after creating a fabric and
+                                        # VLAN below, update the subnet
+                                        subnet.vlan = None
+                        else:
+                            subnet.vlan = None
+            
+                        # Check if the routes have a default route
+                        subnet.gateway_ip = n.get_default_gateway()
+
+
+                        result_detail['detail'].append("Subnet %s found for network %s, updated attributes"
+                                                % (subnet.resource_id, n.name))
+
+                    # Need to find or create a Fabric/Vlan for this subnet
+                    if (subnet is None or (subnet is not None and subnet.vlan is None)):
+                        fabric_list = maas_fabric.Fabrics(self.maas_client)
+                        fabric_list.refresh()
+                        fabric = fabric_list.singleton({'name': n.name})
+
+                        vlan = None
+                    
+                        if fabric is not None:
+                            vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=fabric.resource_id)
+                            vlan_list.refresh()
+                        
+                            vlan = vlan_list.singleton({'vid': n.vlan_id if n.vlan_id is not None else 0})
+
+                            if vlan is not None:
+                                vlan = matching_vlans[0]
+
+                                vlan.name = n.name
+                                if getattr(n, 'mtu', None) is not None:
+                                    vlan.mtu = n.mtu
+
+                                if subnet is not None:
+                                    subnet.vlan = vlan.resource_id
+                                    subnet.update()
+
+                                vlan.update()
+                                result_detail['detail'].append("VLAN %s found for network %s, updated attributes"
+                                                % (vlan.resource_id, n.name))
+                            else:
+                                # Create a new VLAN in this fabric and assign subnet to it
+                                vlan = maas_vlan.Vlan(self.maas_client, name=n.name, vid=vlan_id,
+                                                    mtu=getattr(n, 'mtu', None),fabric_id=fabric.resource_id)
+                                vlan = vlan_list.add(vlan)
+
+                                result_detail['detail'].append("VLAN %s created for network %s"
+                                                                % (vlan.resource_id, n.name))
+                                if subnet is not None:
+                                    subnet.vlan = vlan.resource_id
+                                    subnet.update()
+
+                        else:
+                            # Create new fabric and VLAN
+                            fabric = maas_fabric.Fabric(self.maas_client, name=n.name)
+                            fabric = fabric_list.add(fabric)
+                            fabric_list.refresh()
+
+                            result_detail['detail'].append("Fabric %s created for network %s"
+                                                                % (fabric.resource_id, n.name))
+
+                            vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=new_fabric.resource_id)
+                            vlan_list.refresh()
+
+                            # A new fabric comes with a single default VLAN. Retrieve it and update attributes
+                            vlan = vlan_list.single()
 
                             vlan.name = n.name
+                            vlan.vid = n.vlan_id if n.vlan_id is not None else 0
                             if getattr(n, 'mtu', None) is not None:
                                 vlan.mtu = n.mtu
 
-                            if subnet is not None:
-                                subnet.vlan = vlan.resource_id
-                                subnet.update()
                             vlan.update()
-                        else:
-                            vlan = maas_vlan.Vlan(self.maas_client, name=n.name, vid=vlan_id,
-                                                mtu=getattr(n, 'mtu', None),fabric_id=fabric.resource_id)
-                            vlan = vlan_list.add(vlan)
-
-                            if subnet is not None:
-                                subnet.vlan = vlan.resource_id
-                                subnet.update()
-
-                    else:
-                        new_fabric = maas_fabric.Fabric(self.maas_client, name=n.name)
-                        new_fabric = fabric_list.add(new_fabric)
-                        new_fabric.refresh()
-                        fabric = new_fabric
-
-                        vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=new_fabric.resource_id)
-                        vlan_list.refresh()
-                        vlan = vlan_list.single()
-
-                        vlan.name = n.name
-                        vlan.vid = n.vlan_id if n.vlan_id is not None else 0
-                        if getattr(n, 'mtu', None) is not None:
-                            vlan.mtu = n.mtu
-
-                        vlan.update()
-
+                            result_detail['detail'].append("VLAN %s updated for network %s"
+                                                            % (vlan.resource_id, n.name))
                         if subnet is not None:
+                            # If subnet was found above, but needed attached to a new fabric/vlan then
+                            # attach it
                             subnet.vlan = vlan.resource_id
                             subnet.update()
 
                     if subnet is None:
+                        # If subnet did not exist, create it here and attach it to the fabric/VLAN
                         subnet = maas_subnet.Subnet(self.maas_client, name=n.name, cidr=n.cidr, fabric=fabric.resource_id,
                                                 vlan=vlan.resource_id, gateway_ip=n.get_default_gateway())
 

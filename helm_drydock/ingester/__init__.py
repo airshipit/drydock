@@ -18,6 +18,7 @@
 import logging
 import yaml
 import  uuid
+import importlib
 
 import helm_drydock.objects as objects
 import helm_drydock.objects.site as site
@@ -31,55 +32,62 @@ from helm_drydock.statemgmt import DesignState
 class Ingester(object):
 
     def __init__(self):
-        logging.basicConfig(format="%(asctime)-15s [%(levelname)] %(module)s %(process)d %(message)s")
-        self.log = logging.Logger("ingester")
+        self.logger = logging.getLogger("drydock.ingester")
         self.registered_plugins = {}
 
     def enable_plugins(self, plugins=[]):
+        """
+        enable_plugins
+
+        :params plugins: - A list of strings naming class objects denoting the ingester plugins to be enabled
+
+        Enable plugins that can be used for ingest_data calls. Each plugin should use
+        helm_drydock.ingester.plugins.IngesterPlugin as its base class. As long as one
+        enabled plugin successfully initializes, the call is considered successful. Otherwise
+        it will throw an exception
+        """
         if len(plugins) == 0:
             self.log.error("Cannot have an empty plugin list.")
 
         for plugin in plugins:
             try:
-                new_plugin = plugin()
+                (module, x, classname) = plugin.rpartition('.')
+
+                if module == '':
+                    raise Exception()
+                mod = importlib.import_module(module)
+                klass = getattr(mod, classname)
+                new_plugin = klass()
                 plugin_name = new_plugin.get_name()
                 self.registered_plugins[plugin_name] = new_plugin
-            except:
-                self.log.error("Could not enable plugin %s" % (plugin.__name__))
+            except Exception as ex:
+                self.logger.error("Could not enable plugin %s - %s" % (plugin, str(ex)))
 
         if len(self.registered_plugins) == 0:
-            self.log.error("Could not enable at least one plugin")
+            self.logger.error("Could not enable at least one plugin")
             raise Exception("Could not enable at least one plugin")
-    """
-      enable_plugins
 
-      params: plugins - A list of class objects denoting the ingester plugins to be enabled
-
-      Enable plugins that can be used for ingest_data calls. Each plugin should use
-      helm_drydock.ingester.plugins.IngesterPlugin as its base class. As long as one
-      enabled plugin successfully initializes, the call is considered successful. Otherwise
-      it will throw an exception
-    """
     
-    def ingest_data(self, plugin_name='', design_state=None, **kwargs):
+    def ingest_data(self, plugin_name='', design_state=None, design_id=None, context=None, **kwargs):
         if design_state is None:
-            self.log.error("ingest_data called without valid DesignState handler")
-            raise Exception("Invalid design_state handler")
-
-        design_data = None
+            self.logger.error("Ingester:ingest_data called without valid DesignState handler")
+            raise ValueError("Invalid design_state handler")
 
         # If no design_id is specified, instantiate a new one
-        if 'design_id' not in kwargs.keys():
-            design_id = str(uuid.uuid4())
-            design_data = objects.SiteDesign(id=design_id)
-            design_state.post_design(design_data)
-        else:
-            design_id = kwargs.get('design_id')
-            design_data = design_state.get_design(design_id)
+        if 'design_id' is None:
+            self.logger.error("Ingester:ingest_data required kwarg 'design_id' missing")
+            raise ValueError("Ingester:ingest_data required kwarg 'design_id' missing")
+        
+        design_data = design_state.get_design(design_id)
+
+        self.logger.debug("Ingester:ingest_data ingesting design parts for design %s" % design_id)
 
         if plugin_name in self.registered_plugins:
             design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)
+            self.logger.debug("Ingester:ingest_data parsed %s design parts" % str(len(design_items)))
             for m in design_items:
+                if context is not None:
+                    m.set_create_fields(context)
                 if type(m) is site.Site:
                     design_data.set_site(m)
                 elif type(m) is network.Network:
@@ -93,8 +101,9 @@ class Ingester(object):
                 elif type(m) is node.BaremetalNode:
                     design_data.add_baremetal_node(m)
             design_state.put_design(design_data)
+            return design_items
         else:
-            self.log.error("Could not find plugin %s to ingest data." % (plugin_name))
+            self.logger.error("Could not find plugin %s to ingest data." % (plugin_name))
             raise LookupError("Could not find plugin %s" % plugin_name)
     """
       ingest_data

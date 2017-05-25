@@ -28,6 +28,7 @@ class YamlIngester(IngesterPlugin):
 
     def __init__(self):
         super(YamlIngester, self).__init__()
+        self.logger = logging.getLogger('drydock.ingester.yaml')
 
     def get_name(self):
         return "yaml"
@@ -52,12 +53,10 @@ class YamlIngester(IngesterPlugin):
                     file.close()
                     models.extend(self.parse_docs(contents))
                 except OSError as err:
-                    self.log.error(
+                    self.logger.error(
                         "Error opening input file %s for ingestion: %s" 
                         % (filename, err))
                     continue
-        
-                
         elif 'content' in kwargs:
             models.extend(self.parse_docs(kwargs.get('content')))
         else:

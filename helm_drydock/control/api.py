@@ -13,24 +13,35 @@
 # limitations under the License.
 import falcon
 
-from .designs import DesignsResource, DesignPartsResource
-from .tasks import TasksResource
+from .designs import *
+from .tasks import *
+
 from .base import DrydockRequest
 from .middleware import AuthMiddleware, ContextMiddleware, LoggingMiddleware
 
-def start_api(state_manager):
+def start_api(state_manager=None, ingester=None, orchestrator=None):
+    """
+    Start the Drydock API service
+
+    :param state_manager:   Instance of helm_drydock.statemgmt.manager.DesignState for accessing
+                            state persistence
+    :param ingester:        Instance of helm_drydock.ingester.ingester.Ingester for handling design
+                            part input
+    """
     control_api = falcon.API(request_type=DrydockRequest,
                              middleware=[AuthMiddleware(), ContextMiddleware(), LoggingMiddleware()])
 
     # API for managing orchestrator tasks
-    control_api.add_route('/tasks', TasksResource(state_manager=state_manager))
+    control_api.add_route('/tasks', TasksResource(state_manager=state_manager, orchestrator=orchestrator))
     control_api.add_route('/tasks/{task_id}', TaskResource(state_manager=state_manager))
 
     # API for managing site design data
     control_api.add_route('/designs', DesignsResource(state_manager=state_manager))
-    control_api.add_route('/designs/{design_id}', DesignResource(state_manager=state_manager))
-    control_api.add_route('/designs/{design_id}/parts', DesignsPartsResource(state_manager=state_manager))
+    control_api.add_route('/designs/{design_id}', DesignResource(state_manager=state_manager, orchestrator=orchestrator))
+    control_api.add_route('/designs/{design_id}/parts', DesignsPartsResource(state_manager=state_manager, ingester=ingester))
     control_api.add_route('/designs/{design_id}/parts/{kind}', DesignsPartsKindsResource(state_manager=state_manager))
-    control_api.add_route('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(state_manager=state_manager))
+
+    control_api.add_route('/designs/{design_id}/parts/{kind}/{name}',
+                          DesignsPartResource(state_manager=state_manager, orchestrator=orchestrator))
 
     return control_api

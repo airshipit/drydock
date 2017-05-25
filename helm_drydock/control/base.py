@@ -13,8 +13,16 @@
 # limitations under the License.
 import falcon.request as request
 import uuid
+import json
+import logging
+
+import helm_drydock.error as errors
 
 class BaseResource(object):
+
+    def __init__(self):
+        self.logger = logging.getLogger('control')
+        self.authorized_roles = []
 
     def on_options(self, req, resp):
         self_attrs = dir(self)
@@ -28,9 +36,68 @@ class BaseResource(object):
         resp.headers['Allow'] = ','.join(allowed_methods)
         resp.status = falcon.HTTP_200
 
-    # By default, no one is authorized to use a resource
+    # For authorizing access at the Resource level. A Resource requiring
+    # finer grained authorization at the method or instance level must
+    # implement that in the request handlers
     def authorize_roles(self, role_list):
-        return False
+        authorized = set(self.authorized_roles)
+        applied = set(role_list)
+
+        if authorized.isdisjoint(applied):
+            return False
+        else:
+            return True
+
+    def req_json(self, req):
+        if req.content_length is None or req.content_length == 0:
+            return None
+
+        if req.content_type is not None and req.content_type.lower() == 'application/json':
+            raw_body = req.stream.read(req.content_length or 0)
+
+            if raw_body is None:
+                return None
+
+            try:
+                json_body = json.loads(raw_body.decode('utf-8'))
+                return json_body
+            except json.JSONDecodeError as jex:
+                raise errors.InvalidFormat("%s: Invalid JSON in body: %s" % (req.path, jex))
+        else:
+            raise errors.InvalidFormat("Requires application/json payload")
+
+    def return_error(self, resp, status_code, message="", retry=False):
+        resp.body = json.dumps({'type': 'error', 'message': message, 'retry': retry})
+        resp.status = status_code
+
+    def log_error(self, ctx, level, msg):
+        extra = {
+            'user': 'N/A',
+            'req_id': 'N/A',
+            'external_ctx': 'N/A'
+        }
+
+        if ctx is not None:
+            extra = {
+                'user': ctx.user,
+                'req_id': ctx.request_id,
+                'external_ctx': ctx.external_marker,
+            }
+
+        self.logger.log(level, msg, extra=extra)
+
+    def debug(self, ctx, msg):
+        self.log_error(ctx, logging.DEBUG, msg)
+
+    def info(self, ctx, msg):
+        self.log_error(ctx, logging.INFO, msg)
+
+    def warn(self, ctx, msg):
+        self.log_error(ctx, logging.WARN, msg)
+
+    def error(self, ctx, msg):
+        self.log_error(ctx, logging.ERROR, msg)
+
 
 class StatefulResource(BaseResource):
 
@@ -38,6 +105,7 @@ class StatefulResource(BaseResource):
         super(StatefulResource, self).__init__()
 
         if state_manager is None:
+            self.error(None, "StatefulResource:init - StatefulResources require a state manager be set")
             raise ValueError("StatefulResources require a state manager be set")
 
         self.state_manager = state_manager
@@ -46,7 +114,7 @@ class StatefulResource(BaseResource):
 class DrydockRequestContext(object):
 
     def __init__(self):
-        self.log_level = 'error'
+        self.log_level = 'ERROR'
         self.user = None
         self.roles = ['anyone']
         self.request_id = str(uuid.uuid4())
@@ -72,5 +140,5 @@ class DrydockRequestContext(object):
     def set_external_marker(self, marker):
         self.external_marker = str(marker)[:32]
 
-class DrydockRequest(request.Request)
+class DrydockRequest(request.Request):
     context_type = DrydockRequestContext

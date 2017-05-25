@@ -51,7 +51,8 @@ setup(name='helm_drydock',
                 'helm_drydock.drivers.oob.pyghmi_driver',
                 'helm_drydock.drivers.node',
                 'helm_drydock.drivers.node.maasdriver',
-                'helm_drydock.drivers.node.maasdriver.models'],
+                'helm_drydock.drivers.node.maasdriver.models',
+                'helm_drydock.control'],
       install_requires=[
         'PyYAML',
         'pyghmi>=1.0.18',
@@ -60,6 +61,7 @@ setup(name='helm_drydock',
         'oslo.versionedobjects>=1.23.0',
         'requests',
         'oauthlib',
+        'uwsgi>1.4',
       ]
      )
 

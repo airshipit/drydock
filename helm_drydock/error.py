@@ -35,3 +35,9 @@ class TransientDriverError(DriverError):
 
 class PersistentDriverError(DriverError):
     pass
+
+class ApiError(Exception):
+    pass
+
+class InvalidFormat(ApiError):
+    pass

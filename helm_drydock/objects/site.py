@@ -16,6 +16,7 @@
 #
 from copy import deepcopy
 import uuid
+import datetime
 
 import oslo_versionedobjects.fields as ovo_fields
 
@@ -126,8 +127,6 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
     def __init__(self, **kwargs):
         super(SiteDesign, self).__init__(**kwargs)
 
-
-
     # Assign UUID id
     def assign_id(self):
         self.id = uuid.uuid4()
@@ -227,6 +226,18 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
         raise DesignError("BaremetalNode %s not found in design state"
                           % node_key)
+
+    def create(self, ctx, state_manager):
+        self.created_at = datetime.datetime.now()
+        self.created_by = ctx.user
+
+        state_manager.post_design(self)
+
+    def save(self, ctx, state_manager):
+        self.updated_at = datetime.datetime.now()
+        self.updated_by = ctx.user
+
+        state_manager.put_design(self)
 
     """
     Support filtering on rack name, node name or node tag

@@ -41,6 +41,7 @@ class DesignState(object):
     # has started
     def get_design(self, design_id):
         if design_id not in self.designs.keys():
+
             raise DesignError("Design ID %s not found" % (design_id))
 
         return objects.SiteDesign.obj_from_primitive(self.designs[design_id])
@@ -133,7 +134,7 @@ class DesignState(object):
 
     def get_task(self, task_id):
         for t in self.tasks:
-            if t.get_id() == task_id:
+            if t.get_id() == task_id or str(t.get_id()) == task_id:
                 return deepcopy(t)
         return None
 

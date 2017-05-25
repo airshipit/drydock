@@ -21,13 +21,24 @@
 
 class DrydockConfig(object):
 
+    global_config = {
+        'log_level':    'DEBUG',
+    }
+
     node_driver = {
         'maasdriver':   {
             'api_key':  'KTMHgA42cNSMnfmJ82:cdg4yQUhp542aHsCTV:7Dc2KB9hQpWq3LfQAAAKAj6wdg22yWxZ',
-            'api_url':  'http://localhost:5240/MAAS/api/2.0/'
+            'api_url':  'http://localhost:5240/MAAS/api/2.0/',
         },
     }
 
     ingester_config = {
-        'plugins': ['helm_drydock.ingester.plugins.yaml']
+        'plugins': ['helm_drydock.ingester.plugins.yaml.YamlIngester'],
+    }
+
+    orchestrator_config = {
+        'drivers': {
+            'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver',
+            'node': 'helm_drydock.drivers.node.maasdriver.driver.MaasNodeDriver',
+        }
     }
