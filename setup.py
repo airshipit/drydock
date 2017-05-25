@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# helm_drydock - A tool to consume a host topology and orchestrate
+# drydock_provisioner - A tool to consume a host topology and orchestrate
 # and monitor the provisioning of those hosts and execution of bootstrap
 # scripts
 #
@@ -32,27 +32,27 @@
 
 from setuptools import setup
 
-setup(name='helm_drydock',
+setup(name='drydock_provisioner',
       version='0.1a1',
       description='Bootstrapper for Kubernetes infrastructure',
       url='http://github.com/att-comdev/drydock',
       author='Scott Hussey - AT&T',
       author_email='sh8121@att.com',
       license='Apache 2.0',
-      packages=['helm_drydock',
-                'helm_drydock.objects',
-                'helm_drydock.ingester',
-                'helm_drydock.ingester.plugins',
-                'helm_drydock.statemgmt',
-                'helm_drydock.orchestrator',
-                'helm_drydock.control',
-                'helm_drydock.drivers',
-                'helm_drydock.drivers.oob',
-                'helm_drydock.drivers.oob.pyghmi_driver',
-                'helm_drydock.drivers.node',
-                'helm_drydock.drivers.node.maasdriver',
-                'helm_drydock.drivers.node.maasdriver.models',
-                'helm_drydock.control'],
+      packages=['drydock_provisioner',
+                'drydock_provisioner.objects',
+                'drydock_provisioner.ingester',
+                'drydock_provisioner.ingester.plugins',
+                'drydock_provisioner.statemgmt',
+                'drydock_provisioner.orchestrator',
+                'drydock_provisioner.control',
+                'drydock_provisioner.drivers',
+                'drydock_provisioner.drivers.oob',
+                'drydock_provisioner.drivers.oob.pyghmi_driver',
+                'drydock_provisioner.drivers.node',
+                'drydock_provisioner.drivers.node.maasdriver',
+                'drydock_provisioner.drivers.node.maasdriver.models',
+                'drydock_provisioner.control'],
       install_requires=[
         'PyYAML',
         'pyghmi>=1.0.18',

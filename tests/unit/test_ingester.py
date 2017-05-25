@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState
-import helm_drydock.objects as objects
+from drydock_provisioner.ingester import Ingester
+from drydock_provisioner.statemgmt import DesignState
+import drydock_provisioner.objects as objects
 
 import pytest
 import shutil
 import os
-import helm_drydock.ingester.plugins.yaml
+import drydock_provisioner.ingester.plugins.yaml
 
 class TestClass(object):
 
@@ -37,7 +37,7 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
+        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
         ingester.ingest_data(plugin_name='yaml', design_state=design_state,
                              filenames=[str(input_file)], design_id=design_id)
 
@@ -59,7 +59,7 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
+        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
         ingester.ingest_data(plugin_name='yaml', design_state=design_state, design_id=design_id,
                     filenames=[str(profiles_file), str(networks_file), str(nodes_file)])
 

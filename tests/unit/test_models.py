@@ -14,8 +14,8 @@
 
 import pytest
 
-import helm_drydock.objects as objects
-from helm_drydock.objects import fields
+import drydock_provisioner.objects as objects
+from drydock_provisioner.objects import fields
 
 class TestClass(object):
 
@@ -23,7 +23,7 @@ class TestClass(object):
         objects.register_all()
 
         model_attr = {
-            'versioned_object.namespace':            'helm_drydock.objects',
+            'versioned_object.namespace':            'drydock_provisioner.objects',
             'versioned_object.name':                 'HardwareProfile',
             'versioned_object.version':              '1.0',
             'versioned_object.data': {
@@ -38,13 +38,13 @@ class TestClass(object):
                 'bootstrap_protocol':   'pxe',
                 'pxe_interface':        '0',
                 'devices':  {
-                    'versioned_object.namespace':    'helm_drydock.objects',
+                    'versioned_object.namespace':    'drydock_provisioner.objects',
                     'versioned_object.name':         'HardwareDeviceAliasList',
                     'versioned_object.version':      '1.0',
                     'versioned_object.data': {
                         'objects': [
                             {
-                                'versioned_object.namespace':    'helm_drydock.objects',
+                                'versioned_object.namespace':    'drydock_provisioner.objects',
                                 'versioned_object.name':         'HardwareDeviceAlias',
                                 'versioned_object.version':      '1.0',
                                 'versioned_object.data': {
@@ -56,7 +56,7 @@ class TestClass(object):
                                 }
                             },
                             {
-                                'versioned_object.namespace':    'helm_drydock.objects',
+                                'versioned_object.namespace':    'drydock_provisioner.objects',
                                 'versioned_object.name':         'HardwareDeviceAlias',
                                 'versioned_object.version':      '1.0',
                                 'versioned_object.data': {
