@@ -283,7 +283,9 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
 
                         subnet_list = maas_subnet.Subnets(self.maas_client)
                         subnet = subnet_list.add(subnet)
-
+                except ValueError as vex:
+                    raise errors.DriverError("Inconsistent data from MaaS")
+                    
             subnet_list = maas_subnet.Subnets(self.maas_client)
             subnet_list.refresh()
 
