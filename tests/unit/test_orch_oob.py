@@ -23,15 +23,15 @@ import os
 import shutil
 import uuid
 
-from helm_drydock.ingester import Ingester
+from drydock_provisioner.ingester import Ingester
 
-import helm_drydock.orchestrator as orch
-import helm_drydock.objects.fields as hd_fields
-import helm_drydock.statemgmt as statemgmt
-import helm_drydock.objects as objects
-import helm_drydock.objects.task as task
-import helm_drydock.drivers as drivers
-import helm_drydock.ingester.plugins.yaml as yaml_ingester
+import drydock_provisioner.orchestrator as orch
+import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.statemgmt as statemgmt
+import drydock_provisioner.objects as objects
+import drydock_provisioner.objects.task as task
+import drydock_provisioner.drivers as drivers
+import drydock_provisioner.ingester.plugins.yaml as yaml_ingester
 
 class TestClass(object):
 
@@ -44,7 +44,7 @@ class TestClass(object):
         #mocker.patch.object('pyghmi.ipmi.command.Command','get_asset_tag')
 
         orchestrator = orch.Orchestrator(state_manager=loaded_design,
-                                    enabled_drivers={'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver'})
+                                    enabled_drivers={'oob': 'drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'})
 
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='sitename',
@@ -63,7 +63,7 @@ class TestClass(object):
         #mocker.patch.object('pyghmi.ipmi.command.Command','set_bootdev')
 
         orchestrator = orch.Orchestrator(state_manager=loaded_design,
-                                    enabled_drivers={'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver'})
+                                    enabled_drivers={'oob': 'drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'})
 
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='sitename',

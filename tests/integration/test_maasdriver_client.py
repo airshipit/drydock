@@ -13,8 +13,8 @@
 # limitations under the License.
 import json
 
-import helm_drydock.config as config
-import helm_drydock.drivers.node.maasdriver.api_client as client
+import drydock_provisioner.config as config
+import drydock_provisioner.drivers.node.maasdriver.api_client as client
 
 class TestClass(object):
 
