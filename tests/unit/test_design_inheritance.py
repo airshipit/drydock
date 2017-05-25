@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from helm_drydock.ingester import Ingester
-from helm_drydock.statemgmt import DesignState
-from helm_drydock.orchestrator import Orchestrator
+from drydock_provisioner.ingester import Ingester
+from drydock_provisioner.statemgmt import DesignState
+from drydock_provisioner.orchestrator import Orchestrator
 
 from copy import deepcopy
 
 import pytest
 import shutil
 import os
-import helm_drydock.ingester.plugins.yaml
+import drydock_provisioner.ingester.plugins.yaml
 import yaml
 
 class TestClass(object):
@@ -32,7 +32,7 @@ class TestClass(object):
 
     def test_design_inheritance(self, loaded_design):
         orchestrator = Orchestrator(state_manager=loaded_design,
-                                    enabled_drivers={'oob': 'helm_drydock.drivers.oob.pyghmi_driver.PyghmiDriver'})
+                                    enabled_drivers={'oob': 'drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'})
 
         design_data = orchestrator.load_design_data("sitename")
 
@@ -63,7 +63,7 @@ class TestClass(object):
         design_state.post_design_base(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
+        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
         ingester.ingest_data(plugin_name='yaml', design_state=design_state, filenames=[str(input_file)])
 
         return design_state

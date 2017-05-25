@@ -14,10 +14,10 @@
 import json
 import uuid
 
-import helm_drydock.config as config
-import helm_drydock.drivers.node.maasdriver.api_client as client
-import helm_drydock.drivers.node.maasdriver.models.fabric as maas_fabric
-import helm_drydock.drivers.node.maasdriver.models.subnet as maas_subnet
+import drydock_provisioner.config as config
+import drydock_provisioner.drivers.node.maasdriver.api_client as client
+import drydock_provisioner.drivers.node.maasdriver.models.fabric as maas_fabric
+import drydock_provisioner.drivers.node.maasdriver.models.subnet as maas_subnet
 
 class TestClass(object):
 

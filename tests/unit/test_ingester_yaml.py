@@ -16,7 +16,7 @@ import shutil
 import os
 import uuid
 
-from helm_drydock.ingester.plugins.yaml import YamlIngester
+from drydock_provisioner.ingester.plugins.yaml import YamlIngester
 
 class TestClass(object):
 
