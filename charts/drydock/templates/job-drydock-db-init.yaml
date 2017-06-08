@@ -1,0 +1,58 @@
+{{/*
+Copyright (c) 2017 AT&T Intellectual Property. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/}}
+
+{{- if .Values.manifests.job_drydock_db_sync }}
+{{- $envAll := . }}
+{{- $dependencies := .Values.dependencies.db_sync }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: drydock-db-sync
+spec:
+  template:
+    metadata:
+      labels:
+{{ tuple $envAll "drydock" "db-sync" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        {{ .Values.labels.node_selector_key }}: {{ .Values.labels.node_selector_value }}
+      initContainers:
+{{ tuple $envAll $dependencies "[]" | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
+      containers:
+        - name: drydock-db-sync
+          image: {{ .Values.images.drydock_db_sync | quote }}
+          imagePullPolicy: {{ .Values.images.pull_policy | quote }}
+{{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_sync | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
+          env:
+            - name: DRYDOCK_DB_URL
+              value: {{ tuple "postgresql" "internal" "user" "postgresql" . | include "helm-toolkit.endpoints.authenticated_endpoint_uri_lookup" | quote }}
+          command:
+            - /tmp/db-sync.sh
+          volumeMounts:
+            - name: drydock-bin
+              mountPath: /tmp/db-sync.sh
+              subPath: db-sync.sh
+              readOnly: true
+      volumes:
+        - name: drydock-bin
+          configMap:
+            name: drydock-bin
+            defaultMode: 0555
+...
+{{- end }}
+
