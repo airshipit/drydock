@@ -32,6 +32,7 @@ and storage.
 * CreateStorageTemplate - Configure site-wide storage information in bootstrapper
 * CreateBootMedia - Ensure all needed boot media is available to the bootstrapper including external repositories
 * PrepareHardwareConfig - Prepare the bootstrapper to handle all hardware configuration actions (firmware updates, RAID configuration, driver installation)
+* IdentifyNode - Correlate a node definition in the Drydock internal model with a node detected by the downstream node bootstrapper. 
 * ConfigureHardware - Update and validate all hardware configurations on a node prior to deploying the OS on it
 * InterrogateNode - Interrogate the bootstrapper about node information. Depending on the current state of the node, this interrogation will produce different information.
 * ApplyNodeNetworking - Configure networking for a node
