@@ -62,6 +62,7 @@ setup(name='drydock_provisioner',
         'requests',
         'oauthlib',
         'uwsgi>1.4',
+        'bson===0.4.7'
       ]
      )
 

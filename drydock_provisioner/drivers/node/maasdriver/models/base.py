@@ -13,6 +13,7 @@
 # limitations under the License.
 import json
 import re
+import logging
 
 import drydock_provisioner.error as errors
 """
@@ -28,6 +29,7 @@ class ResourceBase(object):
 
     def __init__(self, api_client, **kwargs):
         self.api_client = api_client
+        self.logger = logging.getLogger('drydock.drivers.maasdriver')
 
         for f in self.fields:
             if f in kwargs.keys():
@@ -143,13 +145,16 @@ class ResourceBase(object):
         return i
 
 
-"""
-A collection of MaaS resources.
 
-Rather than a simple list, we will key the collection on resource
-ID for more efficient access.
-"""
 class ResourceCollectionBase(object):
+    """
+    A collection of MaaS resources.
+
+    Rather than a simple list, we will key the collection on resource
+    ID for more efficient access.
+
+    :param api_client: An instance of api_client.MaasRequestFactory
+    """
 
     collection_url = ''
     collection_resource = ResourceBase
@@ -157,12 +162,13 @@ class ResourceCollectionBase(object):
     def __init__(self, api_client):
         self.api_client = api_client
         self.resources = {}
+        self.logger = logging.getLogger('drydock.drivers.maasdriver')
 
-    """
-    Parse URL for placeholders and replace them with current
-    instance values
-    """
     def interpolate_url(self):
+        """
+        Parse URL for placeholders and replace them with current
+        instance values
+        """
         pattern = '\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0

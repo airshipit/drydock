@@ -83,7 +83,11 @@ class Ingester(object):
         self.logger.debug("Ingester:ingest_data ingesting design parts for design %s" % design_id)
 
         if plugin_name in self.registered_plugins:
-            design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)
+            try:
+                design_items = self.registered_plugins[plugin_name].ingest_data(**kwargs)
+            except ValueError as vex:
+                self.logger.warn("Ingester:ingest_data - Error process data - %s" % (str(vex)))
+                return None
             self.logger.debug("Ingester:ingest_data parsed %s design parts" % str(len(design_items)))
             for m in design_items:
                 if context is not None:

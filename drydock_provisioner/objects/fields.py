@@ -44,6 +44,7 @@ class OrchestratorAction(BaseDrydockEnum):
     CreateStorageTemplate = 'create_storage_template'
     CreateBootMedia = 'create_boot_media'
     PrepareHardwareConfig = 'prepare_hardware_config'
+    IdentifyNode = 'identify_node'
     ConfigureHardware = 'configure_hardware'
     InterrogateNode = 'interrogate_node'
     ApplyNodeNetworking = 'apply_node_networking'

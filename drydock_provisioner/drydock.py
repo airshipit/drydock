@@ -28,7 +28,7 @@ def start_drydock():
 
     logger.setLevel(config.DrydockConfig.global_config.get('log_level'))
     ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 

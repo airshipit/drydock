@@ -16,6 +16,7 @@ import uuid
 import time
 import threading
 import importlib
+import logging
 
 from copy import deepcopy
 
@@ -32,6 +33,8 @@ class Orchestrator(object):
         self.enabled_drivers = {}
 
         self.state_manager = state_manager
+
+        self.logger = logging.getLogger('drydock.orchestrator')
 
         if enabled_drivers is not None:
             oob_driver_name = enabled_drivers.get('oob', None)
@@ -155,9 +158,13 @@ class Orchestrator(object):
                                            task_scope=task_scope,
                                            action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
 
+            self.logger.info("Starting node driver task %s to create network templates" % (driver_task.get_id()))
+
             driver.execute_task(driver_task.get_id())
 
             driver_task = self.state_manager.get_task(driver_task.get_id())
+
+            self.logger.info("Node driver task %s complete" % (driver_task.get_id()))            
 
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Complete,
@@ -167,12 +174,13 @@ class Orchestrator(object):
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
 
-            driver = self.enabled_drivers['oob']
+            oob_driver = self.enabled_drivers['oob']
 
-            if driver is None:
+            if oob_driver is None:
                 self.task_field_update(task_id,
                         status=hd_fields.TaskStatus.Errored,
-                        result=hd_fields.ActionResult.Failure)
+                        result=hd_fields.ActionResult.Failure,
+                        result_detail={'detail': 'Error: No oob driver configured', 'retry': False})
                 return
 
             site_design = self.get_effective_site(design_id)
@@ -186,30 +194,42 @@ class Orchestrator(object):
             task_scope = {'site'        : task_site,
                           'node_names'  : target_names}
 
-            driver_task = self.create_task(tasks.DriverTask,
+            oob_driver_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           action=hd_fields.OrchestratorAction.InterrogateNode,
+                                           action=hd_fields.OrchestratorAction.InterrogateOob,
                                            task_scope=task_scope)
 
-            driver.execute_task(driver_task.get_id())
+            oob_driver.execute_task(oob_driver_task.get_id())
 
-            driver_task = self.state_manager.get_task(driver_task.get_id())
+            oob_driver_task = self.state_manager.get_task(oob_driver_task.get_id())
 
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Complete,
-                                   result=driver_task.get_result())
+                                   result=oob_driver_task.get_result())
             return
         elif task.action == hd_fields.OrchestratorAction.PrepareNode:
+            failed = worked = False
+
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
 
-            driver = self.enabled_drivers['oob']
+            oob_driver = self.enabled_drivers['oob']
 
-            if driver is None:
+            if oob_driver is None:
                 self.task_field_update(task_id,
                         status=hd_fields.TaskStatus.Errored,
-                        result=hd_fields.ActionResult.Failure)
+                        result=hd_fields.ActionResult.Failure,
+                        result_detail={'detail': 'Error: No oob driver configured', 'retry': False})
+                return
+
+            node_driver = self.enabled_drivers['node']
+
+            if node_driver is None:
+                self.task_field_update(task_id,
+                        status=hd_fields.TaskStatus.Errored,
+                        result=hd_fields.ActionResult.Failure,
+                        result_detail={'detail': 'Error: No node driver configured', 'retry': False})
                 return
 
             site_design = self.get_effective_site(design_id)
@@ -229,33 +249,88 @@ class Orchestrator(object):
                                            action=hd_fields.OrchestratorAction.SetNodeBoot,
                                            task_scope=task_scope)
 
-            driver.execute_task(setboot_task.get_id())
+            self.logger.info("Starting OOB driver task %s to set PXE boot" % (setboot_task.get_id()))
+
+            oob_driver.execute_task(setboot_task.get_id())
+
+            self.logger.info("OOB driver task %s complete" % (setboot_task.get_id()))
 
             setboot_task = self.state_manager.get_task(setboot_task.get_id())
+
+            if setboot_task.get_result() == hd_fields.ActionResult.Success:
+                worked = True
+            elif setboot_task.get_result() == hd_fields.ActionResult.PartialSuccess:
+                worked = failed = True
+            elif setboot_task.get_result() == hd_fields.ActionResult.Failure:
+                failed = True
 
             cycle_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
                                            action=hd_fields.OrchestratorAction.PowerCycleNode,
                                            task_scope=task_scope)
-            driver.execute_task(cycle_task.get_id())
+
+            self.logger.info("Starting OOB driver task %s to power cycle nodes" % (cycle_task.get_id()))
+
+            oob_driver.execute_task(cycle_task.get_id())
+
+            self.logger.info("OOB driver task %s complete" % (cycle_task.get_id()))
 
             cycle_task = self.state_manager.get_task(cycle_task.get_id())
 
-            if (setboot_task.get_result() == hd_fields.ActionResult.Success and
-                cycle_task.get_result() == hd_fields.ActionResult.Success):
-                self.task_field_update(task_id,
-                                       status=hd_fields.TaskStatus.Complete,
-                                       result=hd_fields.ActionResult.Success)
-            elif (setboot_task.get_result() == hd_fields.ActionResult.Success or
-                  cycle_task.get_result() == hd_fields.ActionResult.Success):
-                self.task_field_update(task_id,
-                                       status=hd_fields.TaskStatus.Complete,
-                                       result=hd_fields.ActionResult.PartialSuccess)
+            if cycle_task.get_result() == hd_fields.ActionResult.Success:
+                worked = True
+            elif cycle_task.get_result() == hd_fields.ActionResult.PartialSuccess:
+                worked = failed = True
+            elif cycle_task.get_result() == hd_fields.ActionResult.Failure:
+                failed = True
+
+
+            # IdentifyNode success will take some time after PowerCycleNode finishes
+            # Retry the operation a few times if it fails before considering it a final failure
+            # Each attempt is a new task which might make the final task tree a bit confusing
+
+            node_identify_attempts = 0
+
+            while True:
+
+                node_identify_task = self.create_task(tasks.DriverTask,
+                                            parent_task_id=task.get_id(),
+                                            design_id=design_id,
+                                            action=hd_fields.OrchestratorAction.IdentifyNode,
+                                            task_scope=task_scope)
+
+                self.logger.info("Starting node driver task %s to identify node - attempt %s" %
+                                 (node_identify_task.get_id(), node_identify_attempts+1))
+
+                node_driver.execute_task(node_identify_task.get_id())
+                node_identify_attempts = node_identify_attempts + 1
+
+                node_identify_task = self.state_manager.get_task(node_identify_task.get_id())
+
+                if node_identify_task.get_result() == hd_fields.ActionResult.Success:
+                    worked = True
+                    break
+                elif node_identify_task.get_result() in [hd_fields.ActionResult.PartialSuccess,
+                                                         hd_fields.ActionResult.Failure]:
+                    # TODO This threshold should be a configurable default and tunable by task API
+                    if node_identify_attempts > 2:
+                        failed = True
+                        break
+
+                    time.sleep(5 * 60)
+
+            final_result = None
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
             else:
-                self.task_field_update(task_id,
-                                       status=hd_fields.TaskStatus.Complete,
-                                       result=hd_fields.ActionResult.Failure)
+                final_result = hd_fields.ActionResult.Failure
+                
+            self.task_field_update(task_id,
+                                status=hd_fields.TaskStatus.Complete,
+                                result=final_result)
 
             return
         else:
