@@ -29,5 +29,4 @@ RUN python3 setup.py install
 
 EXPOSE 9000
 
-ENTRYPOINT ['/usr/bin/uwsgi']
-CMD ['--http',':9000','-w','drydock_provisioner.drydock','--callable','drydock','--enable-threads','-L']
+CMD ["/usr/bin/uwsgi","--http",":9000","-w","drydock_provisioner.drydock","--callable","drydock","--enable-threads","-L"]
