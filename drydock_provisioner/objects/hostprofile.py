@@ -51,6 +51,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         'base_os':  obj_fields.StringField(nullable=True),
         'kernel': obj_fields.StringField(nullable=True),
         'kernel_params': obj_fields.StringField(nullable=True),
+        'primary_network': obj_fields.StringField(nullable=False),
     }
 
     def __init__(self, **kwargs):
@@ -93,7 +94,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
             'hardware_profile', 'oob_type', 'oob_network',
             'oob_credential', 'oob_account', 'storage_layout',
             'bootdisk_device', 'bootdisk_root_size', 'bootdisk_boot_size',
-            'rack', 'base_os', 'kernel', 'kernel_params']
+            'rack', 'base_os', 'kernel', 'kernel_params', 'primary_network']
 
         # Create applied data from self design values and parent
         # applied values
@@ -134,7 +135,6 @@ class HostInterface(base.DrydockObject):
 
     fields = {
         'device_name':  obj_fields.StringField(),
-        'primary_network': obj_fields.BooleanField(nullable=False, default=False),
         'source':   hd_fields.ModelSourceField(),
         'network_link': obj_fields.StringField(nullable=True),
         'hardware_slaves':  obj_fields.ListOfStringsField(nullable=True),
@@ -212,10 +212,6 @@ class HostInterface(base.DrydockObject):
                     elif j.get_name() == parent_name:
                         m = objects.HostInterface()
                         m.device_name = j.get_name()
-                        m.primary_network = \
-                            objects.Utils.apply_field_inheritance(
-                                getattr(j, 'primary_network', None),
-                                getattr(i, 'primary_network', None))
                             
                         m.network_link = \
                             objects.Utils.apply_field_inheritance(

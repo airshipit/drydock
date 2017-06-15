@@ -145,6 +145,8 @@ class YamlIngester(IngesterPlugin):
                         model.trunk_mode = trunking.get('mode', hd_fields.NetworkLinkTrunkingMode.Disabled)
                         model.native_network = trunking.get('default_network', None)
 
+                        model.allowed_networks = spec.get('allowed_networks', None)
+
                         models.append(model)
                     else:
                         raise ValueError('Unknown API version of object')
@@ -162,7 +164,7 @@ class YamlIngester(IngesterPlugin):
 
                             model.cidr = spec.get('cidr', None)
                             model.allocation_strategy = spec.get('allocation', 'static')
-                            model.vlan_id = spec.get('vlan_id', None)
+                            model.vlan_id = spec.get('vlan', None)
                             model.mtu = spec.get('mtu', None)
 
                             dns = spec.get('dns', {})
@@ -287,7 +289,6 @@ class YamlIngester(IngesterPlugin):
 
                             int_model.device_name = i.get('device_name', None)
                             int_model.network_link = i.get('device_link', None)
-                            int_model.primary_netowrk = i.get('primary', False)
 
                             int_model.hardware_slaves = []
                             slaves = i.get('slaves', [])
@@ -303,6 +304,8 @@ class YamlIngester(IngesterPlugin):
                             
                             model.interfaces.append(int_model)
 
+                        model.primary_network = spec.get('primary_network', None)
+                        
                         node_metadata = spec.get('metadata', {})
                         metadata_tags = node_metadata.get('tags', [])
                         model.tags = []

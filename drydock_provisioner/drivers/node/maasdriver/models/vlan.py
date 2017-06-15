@@ -19,8 +19,9 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 class Vlan(model_base.ResourceBase):
 
     resource_url = 'fabrics/{fabric_id}/vlans/{api_id}/'
-    fields = ['resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on', 'mtu']
-    json_fields = ['name', 'description', 'vid', 'dhcp_on', 'mtu']
+    fields = ['resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on', 'mtu',
+             'primary_rack', 'secondary_rack']
+    json_fields = ['name', 'description', 'vid', 'dhcp_on', 'mtu', 'primary_rack', 'secondary_rack']
 
     def __init__(self, api_client, **kwargs):
         super(Vlan, self).__init__(api_client, **kwargs)

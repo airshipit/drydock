@@ -44,6 +44,7 @@ class NetworkLink(base.DrydockPersistentObject, base.DrydockObject):
         'trunk_mode':       hd_fields.NetworkLinkTrunkingModeField(
                                         default=hd_fields.NetworkLinkTrunkingMode.Disabled),
         'native_network':   ovo_fields.StringField(nullable=True),
+        'allowed_networks': ovo_fields.ListOfStringsField(),
     }
 
     def __init__(self, **kwargs):
@@ -103,8 +104,6 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
                 return r.get('gateway', None)
 
         return None
-
-
 
 @base.DrydockObjectRegistry.register
 class NetworkList(base.DrydockObjectListBase, base.DrydockObject):
