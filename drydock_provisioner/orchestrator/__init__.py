@@ -214,6 +214,9 @@ class Orchestrator(object):
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
 
+            # NOTE Should we attempt to interrogate the node via Node Driver to see if
+            # it is in a deployed state before we start rebooting? Or do we just leverage
+            # Drydock internal state via site build data (when implemented)?
             oob_driver = self.enabled_drivers['oob']
 
             if oob_driver is None:
@@ -357,6 +360,61 @@ class Orchestrator(object):
                                 result=final_result)
 
             return
+        elif task.action == hd_fields.OrchestratorAction.DeployNode:
+            failed = worked = False
+
+            self.task_field_update(task_id,
+                                   status=hd_fields.TaskStatus.Running)
+
+            node_driver = self.enabled_drivers['node']
+
+            if node_driver is None:
+                self.task_field_update(task_id,
+                        status=hd_fields.TaskStatus.Errored,
+                        result=hd_fields.ActionResult.Failure,
+                        result_detail={'detail': 'Error: No node driver configured', 'retry': False})
+                return
+
+            site_design = self.get_effective_site(design_id)
+
+            node_filter = task.node_filter
+
+            target_nodes = self.process_node_filter(node_filter, site_design)
+
+            target_names = [x.get_name() for x in target_nodes]
+
+            task_scope = {'site'        : task_site,
+                          'node_names'  : target_names}
+
+            node_networking_task = self.create_task(tasks.DriverTask,
+                                            parent_task_id=task.get_id(), design_id=design_id,
+                                            action=hd_fields.OrchestratorAction.ApplyNodeNetworking,
+                                            task_scope=task_scope)
+
+            self.logger.info("Starting node driver task %s to apply networking on nodes." % (node_networking_task.get_id()))
+            node_driver.execute_task(node_networking_task.get_id())
+
+            node_networking_task = self.state_manager.get_task(node_networking_task.get_id())
+
+            if node_networking_task.get_result() in [hd_fields.ActionResult.Success,
+                                                     hd_fields.ActionResult.PartialSuccess]:
+                worked = True
+            elif node_networking_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                       hd_fields.ActionResult.PartialSuccess]:
+                failed = True
+        
+            final_result = None
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
+            else:
+                final_result = hd_fields.ActionResult.Failure
+
+            self.task_field_update(task_id,
+                                status=hd_fields.TaskStatus.Complete,
+                                result=final_result)
+
         else:
             raise errors.OrchestratorError("Action %s not supported"
                                      % (task.action))

@@ -11,30 +11,61 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
+import drydock_provisioner.drivers.node.maasdriver.models.iprange as maas_iprange
 
 class Subnet(model_base.ResourceBase):
 
     resource_url = 'subnets/{resource_id}/'
-    fields = ['resource_id', 'name', 'description', 'fabric', 'vlan', 'vid', 'dhcp_on',
-              'space', 'cidr', 'gateway_ip', 'rdns_mode', 'allow_proxy', 'dns_servers']
-    json_fields = ['name', 'description','vlan', 'space', 'cidr', 'gateway_ip', 'rdns_mode',
+    fields = ['resource_id', 'name', 'description', 'fabric', 'vlan', 'vid',
+              'cidr', 'gateway_ip', 'rdns_mode', 'allow_proxy', 'dns_servers']
+    json_fields = ['name', 'description','vlan', 'cidr', 'gateway_ip', 'rdns_mode',
                    'allow_proxy', 'dns_servers']
 
     def __init__(self, api_client, **kwargs):
         super(Subnet, self).__init__(api_client, **kwargs)
 
-        # For now all subnets will be part of the default space
-        self.space = 0
+    def add_address_range(self, addr_range):
+        """
+        Add a reserved or dynamic (DHCP) address range to this subnet
 
-    """
-    Because MaaS decides to replace the VLAN id with the
-    representation of the VLAN, we must reverse it for a true
-    representation of the resource
-    """
+        :param addr_range: Dict with keys 'type', 'start', 'end'
+        """
+
+        # TODO Do better overlap detection. For now we just check if the exact range exists
+        current_ranges = maas_iprange.IpRanges(self.api_client)
+        current_ranges.refresh()
+
+        exists = current_ranges.query({'start_ip': addr_range.get('start', None),
+                                       'end_ip': addr_range.get('end', None)})
+
+        if len(exists) > 0:
+            self.logger.info('Address range from %s to %s already exists, skipping.' %
+                            (addr_range.get('start', None), addr_range.get('end', None)))
+            return
+
+        # Static ranges are what is left after reserved (not assigned by MaaS)
+        # and DHCP ranges are removed from a subnet
+        if addr_range.get('type', None) in ['reserved','dhcp']:
+            range_type = addr_range('type', None)
+
+            if range_type == 'dhcp':
+                range_type = 'dynamic'
+
+            maas_range = maas_iprange.IpRange(self.api_client, comment="Configured by Drydock", subnet=self.resource_id,
+                                          type=range_type, start_ip=addr_range.get('start', None),
+                                          end_ip=addr_range.get('end', None))
+            maas_ranges = maas_iprange.IpRanges(self.api_client)
+            maas_ranges.add(maas_range)
+
+
     @classmethod
     def from_dict(cls, api_client, obj_dict):
+        """
+        Because MaaS decides to replace the VLAN id with the
+        representation of the VLAN, we must reverse it for a true
+        representation of the resource
+        """
         refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
         if 'id' in obj_dict.keys():
             refined_dict['resource_id'] = obj_dict.get('id')
