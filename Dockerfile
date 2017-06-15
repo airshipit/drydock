@@ -16,8 +16,8 @@ FROM ubuntu:16.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
 
-RUN apt-get -qq update && \
-    apt-get -y install git netbase python3-minimal python3-setuptools python3-pip python3-dev ca-certificates gcc gcc g++ make libffi-dev libssl-dev --no-install-recommends
+RUN apt -qq update && \
+    apt -y install git netbase python3-minimal python3-setuptools python3-pip python3-dev ca-certificates gcc g++ make libffi-dev libssl-dev --no-install-recommends
 
 # Need to configure proxies?
 
