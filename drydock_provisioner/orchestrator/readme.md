@@ -27,7 +27,8 @@ is compatible with the physical state of the site.
 * All baremetal nodes have an address, either static or DHCP, for all networks they are attached to.
 * No static IP assignments are duplicated
 * No static IP assignments are outside of the network they are targetted for
-* No network MTU mismatches due to a network riding different links on different nodes
+* All IP assignments are within declared ranges on the network
+* Networks assigned to each node's interface are within the set of of the attached link's allowed_networks
 * Boot drive is above minimum size
 
 ### VerifySite ###

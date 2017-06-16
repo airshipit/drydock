@@ -29,7 +29,7 @@ class ResourceBase(object):
 
     def __init__(self, api_client, **kwargs):
         self.api_client = api_client
-        self.logger = logging.getLogger('drydock.drivers.maasdriver')
+        self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
         for f in self.fields:
             if f in kwargs.keys():
@@ -162,7 +162,7 @@ class ResourceCollectionBase(object):
     def __init__(self, api_client):
         self.api_client = api_client
         self.resources = {}
-        self.logger = logging.getLogger('drydock.drivers.maasdriver')
+        self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
     def interpolate_url(self):
         """
