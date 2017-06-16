@@ -44,7 +44,7 @@ class ResourceBase(object):
 
         updated_fields = resp.json()
 
-        for f in self.json_fields:
+        for f in self.fields:
             if f in updated_fields.keys():
                 setattr(self, f, updated_fields.get(f))
 

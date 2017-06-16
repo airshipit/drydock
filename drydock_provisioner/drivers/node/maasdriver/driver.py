@@ -22,6 +22,7 @@ import drydock_provisioner.objects.task as task_model
 
 from drydock_provisioner.drivers.node import NodeDriver
 from .api_client import MaasRequestFactory
+
 import drydock_provisioner.drivers.node.maasdriver.models.fabric as maas_fabric
 import drydock_provisioner.drivers.node.maasdriver.models.vlan as maas_vlan
 import drydock_provisioner.drivers.node.maasdriver.models.subnet as maas_subnet
@@ -133,7 +134,7 @@ class MaasNodeDriver(NodeDriver):
                     'retry': False,
                     'detail': 'MaaS Network creation timed-out'
                 }
-                self.logger.warn("Thread for task %s timed out after 120s" % (subtask.get_id()))
+                self.logger.warning("Thread for task %s timed out after 120s" % (subtask.get_id()))
                 self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Complete,
                             result=hd_fields.ActionResult.Failure,
@@ -153,7 +154,9 @@ class MaasNodeDriver(NodeDriver):
             subtasks = []
 
             result_detail = {
-                'detail': []
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
             }
 
             for n in task.node_list:
@@ -183,25 +186,95 @@ class MaasNodeDriver(NodeDriver):
                     if subtask.status == hd_fields.TaskStatus.Complete:
                         self.logger.info("Task %s to identify node %s complete - status %s" %
                                         (subtask.get_id(), n, subtask.get_result()))
-
-                        result_detail['detail'].extend(subtask.result_detail['detail'])
                         running_subtasks = running_subtasks - 1
 
-                        if subtask.result in [hd_fields.ActionResult.Success,
-                                           hd_fields.ActionResult.PartialSuccess]:
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
                             worked = True
-                        elif subtask.result in [hd_fields.ActionResult.Failure,
-                                             hd_fields.ActionResult.PartialSuccess]:
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
                             failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
 
                 time.sleep(1 * 60)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
-                self.logger.warn("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
-            if worked and failed:
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=result,
+                                result_detail=result_detail)
+        elif task.action == hd_fields.OrchestratorAction.ConfigureHardware:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug("Starting subtask to commissiong %s nodes." % (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=hd_fields.OrchestratorAction.ConfigureHardware,
+                        site_name=task.site_name,
+                        task_scope={'site': task.site_name, 'node_names': [n]})
+                runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id(),config=self.config)
+
+                self.logger.info("Starting thread for task %s to commission node %s" % (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            running_subtasks = len(subtasks)
+            attempts = 0
+            worked = failed = False
+
+            #TODO Add timeout to config
+            while running_subtasks > 0 and attempts < 20:
+                for t in subtasks:
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info("Task %s to commission node %s complete - status %s" %
+                                        (subtask.get_id(), n, subtask.get_result()))
+                        running_subtasks = running_subtasks - 1
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(1 * 60)
+                attempts = attempts + 1
+
+            if running_subtasks > 0:
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
+            elif worked and failed:
                 result = hd_fields.ActionResult.PartialSuccess
             elif worked:
                 result = hd_fields.ActionResult.Success
@@ -440,8 +513,80 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                                 status=hd_fields.TaskStatus.Complete,
                                                 result=result,
                                                 result_detail=result_detail)
+        elif task_action == hd_fields.OrchestratorAction.ConfigureHardware:
+            try:
+                machine_list = maas_machine.Machines(self.maas_client)
+                machine_list.refresh()
+            except:
+                self.orchestrator.task_field_update(self.task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=hd_fields.ActionResult.Failure,
+                            result_detail={'detail': 'Error accessing MaaS Machines API', 'retry': True})
+                return
 
+            nodes = self.task.node_list
 
+            result_detail = {'detail': []}
 
+            worked = failed = False
 
-            
+            # TODO Better way of representing the node statuses than static strings
+            for n in nodes:
+                try:
+                    self.logger.debug("Locating node %s for commissioning" % (n))
+                    node = site_design.get_baremetal_node(n)
+                    machine = machine_list.identify_baremetal_node(node, update_name=False)
+                    if machine is not None:
+                        if machine.status_name == 'New':
+                            self.logger.debug("Located node %s in MaaS, starting commissioning" % (n))
+                            machine.commission()
+
+                            # Poll machine status
+                            attempts = 0
+
+                            while attempts < 20 and machine.status_name != 'Ready':
+                                attempts = attempts + 1
+                                time.sleep(1 * 60)
+                                try:
+                                    machine.refresh()
+                                    self.logger.debug("Polling node %s status attempt %d: %s" % (n, attempts, machine.status_name))
+                                except:
+                                    self.logger.warning("Error updating node %s status during commissioning, will re-attempt." %
+                                                     (n))
+                            if machine.status_name == 'Ready':
+                                self.logger.info("Node %s commissioned." % (n))
+                                result_detail['detail'].append("Node %s commissioned" % (n))
+                                worked = True
+                        elif machine.status_name == 'Commissioning':
+                            self.logger.info("Located node %s in MaaS, node already being commissioned. Skipping..." % (n))
+                            result_detail['detail'].append("Located node %s in MaaS, node already being commissioned. Skipping..." % (n))
+                            worked = True
+                        elif machine.status_name == 'Ready':
+                            self.logger.info("Located node %s in MaaS, node commissioned. Skipping..." % (n))
+                            result_detail['detail'].append("Located node %s in MaaS, node commissioned. Skipping..." % (n))
+                            worked = True
+                        else:
+                            self.logger.warning("Located node %s in MaaS, unknown status %s. Skipping..." % (n, machine.status_name))
+                            result_detail['detail'].append("Located node %s in MaaS, node commissioned. Skipping..." % (n))
+                            failed = True
+                    else:
+                        self.logger.warning("Node %s not found in MaaS" % n)
+                        failed = True
+                        result_detail['detail'].append("Node %s not found in MaaS" % n)
+
+                except Exception as ex:
+                    failed = True
+                    result_detail['detail'].append("Error commissioning node %s: %s" % (n, str(ex)))
+
+            result = None
+            if worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            elif failed:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(self.task.get_id(),
+                                                status=hd_fields.TaskStatus.Complete,
+                                                result=result,
+                                                result_detail=result_detail)

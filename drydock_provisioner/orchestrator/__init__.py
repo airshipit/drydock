@@ -314,11 +314,35 @@ class Orchestrator(object):
                 elif node_identify_task.get_result() in [hd_fields.ActionResult.PartialSuccess,
                                                          hd_fields.ActionResult.Failure]:
                     # TODO This threshold should be a configurable default and tunable by task API
-                    if node_identify_attempts > 2:
+                    if node_identify_attempts > 10:
                         failed = True
                         break
 
-                    time.sleep(5 * 60)
+                    time.sleep(1 * 60)
+
+            # We can only commission nodes that were successfully identified in the provisioner
+            if len(node_identify_task.result_detail['successful_nodes']) > 0:
+                self.logger.info("Found %s successfully identified nodes, starting commissioning." %
+                                 (len(node_identify_task.result_detail['successful_nodes'])))
+                node_commission_task = self.create_task(tasks.DriverTask,
+                                            parent_task_id=task.get_id(), design_id=design_id,
+                                            action=hd_fields.OrchestratorAction.ConfigureHardware,
+                                            task_scope={'site': task_site,
+                                                        'node_names': node_identify_task.result_detail['successful_nodes']})
+
+                self.logger.info("Starting node driver task %s to commission nodes." % (node_commission_task.get_id()))
+                node_driver.execute_task(node_commission_task.get_id())
+
+                node_commission_task = self.state_manager.get_task(node_commission_task.get_id())
+
+                if node_commission_task.get_result() in [hd_fields.ActionResult.Success,
+                                                         hd_fields.ActionResult.PartialSuccess]:
+                    worked = True
+                elif node_commission_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                           hd_fields.ActionResult.PartialSuccess]:
+                    failed = True
+            else:
+                self.logger.warning("No nodes successfully identified, skipping commissioning subtask")
 
             final_result = None
             if worked and failed:
@@ -327,7 +351,8 @@ class Orchestrator(object):
                 final_result = hd_fields.ActionResult.Success
             else:
                 final_result = hd_fields.ActionResult.Failure
-                
+            
+
             self.task_field_update(task_id,
                                 status=hd_fields.TaskStatus.Complete,
                                 result=final_result)
