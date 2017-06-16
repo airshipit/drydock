@@ -15,8 +15,8 @@ import pytest
 import shutil
 
 
-import helm_drydock.objects as objects
-import helm_drydock.statemgmt as statemgmt
+import drydock_provisioner.objects as objects
+import drydock_provisioner.statemgmt as statemgmt
 
 class TestClass(object):
 

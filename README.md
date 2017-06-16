@@ -1,5 +1,12 @@
-# helm_drydock
+# drydock_provisioner
 A python REST orchestrator to translate a YAML host topology to a provisioned set of hosts and provide a set of cloud-init post-provisioning instructions.
+
+To run:
+
+    $ virtualenv -p python3 /var/tmp/drydock
+    $ . /var/tmp/drydock/bin/activate
+    $ python setup.py install
+    $ uwsgi --http :9000 -w drydock_provisioner.drydock --callable drydock --enable-threads -L
 
 ## Modular service
 

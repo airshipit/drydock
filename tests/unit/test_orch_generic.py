@@ -18,11 +18,11 @@
 import threading
 import time
 
-import helm_drydock.orchestrator as orch
-import helm_drydock.objects.fields as hd_fields
-import helm_drydock.statemgmt as statemgmt
-import helm_drydock.objects.task as task
-import helm_drydock.drivers as drivers
+import drydock_provisioner.orchestrator as orch
+import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.statemgmt as statemgmt
+import drydock_provisioner.objects.task as task
+import drydock_provisioner.drivers as drivers
 
 
 class TestClass(object):

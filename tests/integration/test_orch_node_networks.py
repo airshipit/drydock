@@ -17,23 +17,23 @@ import shutil
 import os
 import uuid
 
-import helm_drydock.config as config
-import helm_drydock.drivers.node.maasdriver.api_client as client
-import helm_drydock.ingester.plugins.yaml
-import helm_drydock.statemgmt as statemgmt
-import helm_drydock.objects as objects
-import helm_drydock.orchestrator as orch
-import helm_drydock.objects.fields as hd_fields
-import helm_drydock.objects.task as task
-import helm_drydock.drivers as drivers
-from helm_drydock.ingester import Ingester
+import drydock_provisioner.config as config
+import drydock_provisioner.drivers.node.maasdriver.api_client as client
+import drydock_provisioner.ingester.plugins.yaml
+import drydock_provisioner.statemgmt as statemgmt
+import drydock_provisioner.objects as objects
+import drydock_provisioner.orchestrator as orch
+import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.objects.task as task
+import drydock_provisioner.drivers as drivers
+from drydock_provisioner.ingester import Ingester
 
 class TestClass(object):
 
     def test_client_verify(self):
         design_state = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=design_state,
-                                    enabled_drivers={'node': 'helm_drydock.drivers.node.maasdriver.driver.MaasNodeDriver'})
+                                    enabled_drivers={'node': 'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'})
 
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='sitename',
@@ -57,14 +57,14 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([helm_drydock.ingester.plugins.yaml.YamlIngester])
+        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
         ingester.ingest_data(plugin_name='yaml', design_state=design_state,
                              filenames=[str(input_file)], design_id=design_id)
 
         design_data = design_state.get_design(design_id)
 
         orchestrator = orch.Orchestrator(state_manager=design_state,
-                                    enabled_drivers={'node': 'helm_drydock.drivers.node.maasdriver.driver.MaasNodeDriver'})
+                                    enabled_drivers={'node': 'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'})
 
         orch_task = orchestrator.create_task(task.OrchestratorTask,
                                              site='sitename',

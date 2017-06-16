@@ -11,20 +11,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 
-import drydock_provisioner.config as config
-import drydock_provisioner.drivers.node.maasdriver.api_client as client
+class DesignError(Exception):
+    pass
 
-class TestClass(object):
+class StateError(Exception):
+    pass
 
-    def test_client_authenticate(self):
-        client_config = config.DrydockConfig.node_driver['maasdriver']
+class OrchestratorError(Exception):
+    pass
 
-        maas_client = client.MaasRequestFactory(client_config['api_url'], client_config['api_key'])
+class TransientOrchestratorError(OrchestratorError):
+    pass
 
-        resp = maas_client.get('account/', params={'op': 'list_authorisation_tokens'})
+class PersistentOrchestratorError(OrchestratorError):
+    pass
 
-        parsed = resp.json()
-        
-        assert len(parsed) > 0
+class DriverError(Exception):
+    pass
+
+class TransientDriverError(DriverError):
+    pass
+
+class PersistentDriverError(DriverError):
+    pass
+
+class ApiError(Exception):
+    pass
+
+class InvalidFormat(ApiError):
+    pass
