@@ -29,6 +29,7 @@ is compatible with the physical state of the site.
 * No static IP assignments are outside of the network they are targetted for
 * All IP assignments are within declared ranges on the network
 * Networks assigned to each node's interface are within the set of of the attached link's allowed_networks
+* No network is allowed on multiple network links
 * Boot drive is above minimum size
 
 ### VerifySite ###
