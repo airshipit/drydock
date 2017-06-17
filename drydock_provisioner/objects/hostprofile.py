@@ -33,9 +33,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         'parent_profile': obj_fields.StringField(nullable=True),
         'hardware_profile': obj_fields.StringField(nullable=True),
         'oob_type': obj_fields.StringField(nullable=True),
-        'oob_network': obj_fields.StringField(nullable=True),
-        'oob_account': obj_fields.StringField(nullable=True),
-        'oob_credential': obj_fields.StringField(nullable=True),
+        'oob_parameters': obj_fields.DictOfStringsField(nullable=True),
         'storage_layout': obj_fields.StringField(nullable=True),
         'bootdisk_device': obj_fields.StringField(nullable=True),
         # Consider a custom field for storage size
@@ -91,8 +89,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
 
         # First compute inheritance for simple fields
         inheritable_field_list = [
-            'hardware_profile', 'oob_type', 'oob_network',
-            'oob_credential', 'oob_account', 'storage_layout',
+            'hardware_profile', 'oob_type', 'storage_layout',
             'bootdisk_device', 'bootdisk_root_size', 'bootdisk_boot_size',
             'rack', 'base_os', 'kernel', 'kernel_params', 'primary_network']
 
@@ -105,6 +102,8 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
                                 getattr(parent, f, None)))
 
         # Now compute inheritance for complex types
+        self.oob_parameters = objects.Utils.merge_dicts(self.oob_parameters, parent.oob_parameters)
+
         self.tags = objects.Utils.merge_lists(self.tags, parent.tags)
 
         self.owner_data = objects.Utils.merge_dicts(self.owner_data, parent.owner_data)

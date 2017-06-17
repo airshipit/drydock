@@ -225,7 +225,7 @@ class Interfaces(model_base.ResourceCollectionBase):
         if exists is not None:
             self.logger.info("Interface for VLAN %s already exists on node %s, skipping" %
                              (vlan_tag, self.system_id))
-            return None
+            return exists
 
         url = self.interpolate_url()
 
