@@ -357,6 +357,77 @@ class MaasNodeDriver(NodeDriver):
                                 status=hd_fields.TaskStatus.Complete,
                                 result=result,
                                 result_detail=result_detail)
+        elif task.action ==hd_fields.OrchestratorAction.DeployNode:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug("Starting subtask to deploy %s nodes." % (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=hd_fields.OrchestratorAction.DeployNode,
+                        site_name=task.site_name,
+                        task_scope={'site': task.site_name, 'node_names': [n]})
+                runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id(),config=self.config)
+
+                self.logger.info("Starting thread for task %s to deploy node %s" % (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            running_subtasks = len(subtasks)
+            attempts = 0
+            worked = failed = False
+
+            #TODO Add timeout to config
+            while running_subtasks > 0 and attempts < 30:
+                for t in subtasks:
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info("Task %s to deploy node %s complete - status %s" %
+                                        (subtask.get_id(), n, subtask.get_result()))
+                        running_subtasks = running_subtasks - 1
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(1 * 60)
+                attempts = attempts + 1
+
+            if running_subtasks > 0:
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=result,
+                                result_detail=result_detail)
+
 class MaasTaskRunner(drivers.DriverTaskRunner):
 
     def __init__(self, config=None, **kwargs):
@@ -464,7 +535,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                                     % (vlan.resource_id, n.name))
                                 else:
                                     # Create a new VLAN in this fabric and assign subnet to it
-                                    vlan = maas_vlan.Vlan(self.maas_client, name=n.name, vid=vlan_id,
+                                    vlan = maas_vlan.Vlan(self.maas_client, name=n.name, vid=n.vlan_id,
                                                         mtu=getattr(n, 'mtu', None),fabric_id=fabric.resource_id)
                                     vlan = vlan_list.add(vlan)
 
@@ -655,7 +726,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     node = site_design.get_baremetal_node(n)
                     machine = machine_list.identify_baremetal_node(node, update_name=False)
                     if machine is not None:
-                        if machine.status_name == ['New', 'Broken']:
+                        if machine.status_name in ['New', 'Broken']:
                             self.logger.debug("Located node %s in MaaS, starting commissioning" % (n))
                             machine.commission()
 
@@ -849,3 +920,65 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 status=hd_fields.TaskStatus.Complete,
                                 result=final_result,
                                 result_detail=result_detail)
+        elif task_action == hd_fields.OrchestratorAction.DeployNode:
+            try:
+                machine_list = maas_machine.Machines(self.maas_client)
+                machine_list.refresh()
+ 
+                fabrics = maas_fabric.Fabrics(self.maas_client)
+                fabrics.refresh()
+
+                subnets = maas_subnet.Subnets(self.maas_client)
+                subnets.refresh()
+            except Exception as ex:
+                self.logger.error("Error deploying node, cannot access MaaS: %s" % str(ex))
+                traceback.print_tb(sys.last_traceback)
+                self.orchestrator.task_field_update(self.task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=hd_fields.ActionResult.Failure,
+                            result_detail={'detail': 'Error accessing MaaS API', 'retry': True})
+                return
+
+            nodes = self.task.node_list
+
+            result_detail = {'detail': []}
+
+            worked = failed = False
+
+            for n in nodes:
+                self.logger.info("Acquiring node %s for deployment" % (n))
+
+                try:
+                    machine = machine_list.acquire_node(n)
+                except DriverError as dex:
+                    self.logger.warning("Error acquiring node %s, skipping" % n)
+                    failed = True
+                    continue
+
+                self.logger.info("Deploying node %s" % (n))
+
+                try:
+                    machine.deploy()
+                except DriverError as dex:
+                    self.logger.warning("Error deploying node %s, skipping" % n)
+                    failed = True
+                    continue
+
+                self.logger.info("Node %s deployed" % (n))
+
+            if failed:
+                final_result = hd_fields.ActionResult.Failure
+            else:
+                final_result = hd_fields.ActionResult.Success
+
+            self.orchestrator.task_field_update(self.task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=final_result,
+                                result_detail=result_detail)
+
+
+
+                    
+
+
+

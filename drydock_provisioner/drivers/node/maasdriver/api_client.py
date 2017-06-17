@@ -100,7 +100,7 @@ class MaasRequestFactory(object):
         if 'Accept' not in headers.keys():
             headers['Accept'] = 'application/json'
 
-        if 'files' in kwargs.keys():
+        if kwargs.get('files', None) is not None:
             files = kwargs.pop('files')
 
             files_tuples = {}
