@@ -16,8 +16,10 @@ import logging
 import traceback
 import sys
 
+from oslo_config import cfg
+
+import drydock_provisioner
 import drydock_provisioner.error as errors
-import drydock_provisioner.config as config
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.objects.task as task_model
@@ -32,6 +34,11 @@ import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machin
 
 class MaasNodeDriver(NodeDriver):
 
+    maasdriver_options = [
+        cfg.StrOpt('maas_api_key', help='The API key for accessing MaaS'),
+        cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
+    ]
+
     def __init__(self, **kwargs):
         super(MaasNodeDriver, self).__init__(**kwargs)
 	
@@ -39,9 +46,13 @@ class MaasNodeDriver(NodeDriver):
         self.driver_key = "maasdriver"
         self.driver_desc = "MaaS Node Provisioning Driver"
 
-        self.config = config.DrydockConfig.node_driver[self.driver_key]
+        self.setup_config_options(drydock_provisioner.conf)
 
-        self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
+        self.logger = logging.getLogger("%s.%s" %
+                                (drydock_provisioner.conf.logging.nodedriver_logger_name, self.driver_key))
+
+    def setup_config_options(self, conf):
+        conf.register_opts(MaasNodeDriver.maasdriver_options, group=self.driver_key)
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -56,7 +67,7 @@ class MaasNodeDriver(NodeDriver):
         if task.action == hd_fields.OrchestratorAction.ValidateNodeServices:
             self.orchestrator.task_field_update(task.get_id(),
                                 status=hd_fields.TaskStatus.Running)
-            maas_client = MaasRequestFactory(self.config['api_url'], self.config['api_key']) 
+            maas_client = MaasRequestFactory(drydock_provisioner.conf.maasdriver.maas_api_url, drydock_provisioner.conf.maasdriver.maas_api_key) 
 
             try:
                 if maas_client.test_connectivity():
@@ -122,16 +133,13 @@ class MaasNodeDriver(NodeDriver):
                         task_scope={'site': task.site_name})
             runner = MaasTaskRunner(state_manager=self.state_manager,
                         orchestrator=self.orchestrator,
-                        task_id=subtask.get_id(),config=self.config)
+                        task_id=subtask.get_id())
 
             self.logger.info("Starting thread for task %s to create network templates" % (subtask.get_id()))
 
             runner.start()
 
-            # TODO Figure out coherent system for putting all the timeouts in
-            # the config
-
-            runner.join(timeout=120)
+            runner.join(timeout=drydock_provisioner.conf.timeouts.create_network_template * 60)
 
             if runner.is_alive():
                 result =  {
@@ -174,7 +182,7 @@ class MaasNodeDriver(NodeDriver):
                         task_scope={'site': task.site_name, 'node_names': [n]})
                 runner = MaasTaskRunner(state_manager=self.state_manager,
                         orchestrator=self.orchestrator,
-                        task_id=subtask.get_id(),config=self.config)
+                        task_id=subtask.get_id())
 
                 self.logger.info("Starting thread for task %s to identify node %s" % (subtask.get_id(), n))
 
@@ -185,8 +193,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < 3:
+            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.identify_node:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -244,7 +251,7 @@ class MaasNodeDriver(NodeDriver):
                         task_scope={'site': task.site_name, 'node_names': [n]})
                 runner = MaasTaskRunner(state_manager=self.state_manager,
                         orchestrator=self.orchestrator,
-                        task_id=subtask.get_id(),config=self.config)
+                        task_id=subtask.get_id())
 
                 self.logger.info("Starting thread for task %s to commission node %s" % (subtask.get_id(), n))
 
@@ -256,7 +263,7 @@ class MaasNodeDriver(NodeDriver):
             worked = failed = False
 
             #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < 20:
+            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.configure_hardware:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -314,7 +321,7 @@ class MaasNodeDriver(NodeDriver):
                         task_scope={'site': task.site_name, 'node_names': [n]})
                 runner = MaasTaskRunner(state_manager=self.state_manager,
                         orchestrator=self.orchestrator,
-                        task_id=subtask.get_id(),config=self.config)
+                        task_id=subtask.get_id())
 
                 self.logger.info("Starting thread for task %s to configure networking on node %s" % (subtask.get_id(), n))
 
@@ -325,8 +332,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < 2:
+            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.apply_node_networking:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -384,7 +390,7 @@ class MaasNodeDriver(NodeDriver):
                         task_scope={'site': task.site_name, 'node_names': [n]})
                 runner = MaasTaskRunner(state_manager=self.state_manager,
                         orchestrator=self.orchestrator,
-                        task_id=subtask.get_id(),config=self.config)
+                        task_id=subtask.get_id())
 
                 self.logger.info("Starting thread for task %s to deploy node %s" % (subtask.get_id(), n))
 
@@ -395,8 +401,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < 120:
+            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.deploy_node:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -435,10 +440,10 @@ class MaasNodeDriver(NodeDriver):
 
 class MaasTaskRunner(drivers.DriverTaskRunner):
 
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, **kwargs):
         super(MaasTaskRunner, self).__init__(**kwargs)
 
-        self.driver_config = config
+        # TODO Need to build this name from configs
         self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
     def execute_task(self):
@@ -448,8 +453,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             status=hd_fields.TaskStatus.Running,
                             result=hd_fields.ActionResult.Incomplete)
 
-        self.maas_client = MaasRequestFactory(self.driver_config['api_url'],
-                                              self.driver_config['api_key'])
+        self.maas_client = MaasRequestFactory(drydock_provisioner.conf.maasdriver.maas_api_url,
+                                              drydock_provisioner.conf.maasdriver.maas_api_key)
 
         site_design = self.orchestrator.get_effective_site(self.task.design_id)
 
@@ -738,7 +743,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             # Poll machine status
                             attempts = 0
 
-                            while attempts < 30 and machine.status_name != 'Ready':
+                            while attempts < drydock_provisioner.conf.timeouts.configure_hardware and machine.status_name != 'Ready':
                                 attempts = attempts + 1
                                 time.sleep(1 * 60)
                                 try:
@@ -970,7 +975,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     continue
 
                 attempts = 0
-                while attempts < 120 and not machine.status_name.startswith('Deployed'):
+                while attempts < drydock_provisioner.conf.timeouts.deploy_node and not machine.status_name.startswith('Deployed'):
                     attempts = attempts + 1
                     time.sleep(1 * 60)
                     try:

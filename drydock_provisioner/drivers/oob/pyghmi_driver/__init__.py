@@ -16,8 +16,8 @@ import logging
 
 from pyghmi.ipmi.command import Command
 
+import drydock_provisioner
 import drydock_provisioner.error as errors
-import drydock_provisioner.config as config
 
 import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.objects.task as task_model
@@ -37,8 +37,8 @@ class PyghmiDriver(oob.OobDriver):
         self.driver_key = "pyghmi_driver"
         self.driver_desc = "Pyghmi OOB Driver"
 
-        self.logger = logging.getLogger('drydock.oobdriver.pyghmi')
-        self.config = config.DrydockConfig.node_driver.get(self.driver_key, {})
+        self.logger = logging.getLogger("%s.%s" %
+                                (drydock_provisioner.conf.logging.oobdriver_logger_name, self.driver_key))
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -99,20 +99,16 @@ class PyghmiDriver(oob.OobDriver):
                         task_id=subtask.get_id(), node=n)
             runner.start()
 
-        # Wait for subtasks to complete
-        # TODO need some kind of timeout
-        i = 0
-        while len(incomplete_subtasks) > 0:
+        attempts = 0
+        while len(incomplete_subtasks) > 0 and attempts <= getattr(drydock_provisioner.conf.timeouts, task.action, 5):
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
                 if t.get_status() in [hd_fields.TaskStatus.Terminated,
                                   hd_fields.TaskStatus.Complete,
                                   hd_fields.TaskStatus.Errored]:
                     incomplete_subtasks.remove(n)
-            time.sleep(2)
-            i = i+1
-            if i == 5:
-                break
+            time.sleep(1 * 60)
+            attempts = attempts + 1
 
         task = self.state_manager.get_task(task.get_id())
         subtasks = map(self.state_manager.get_task, task.get_subtasks())
