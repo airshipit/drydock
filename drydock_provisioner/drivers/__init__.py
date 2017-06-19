@@ -35,7 +35,7 @@ class ProviderDriver(object):
             raise ValueError("ProviderDriver requires valid state manager")
 
         self.state_manager = state_manager
-        
+
         # These are the actions that this driver supports
         self.supported_actions = [hd_fields.OrchestratorAction.Noop]
 

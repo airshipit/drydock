@@ -37,9 +37,14 @@ class Orchestrator(object):
         self.logger = logging.getLogger('drydock.orchestrator')
 
         if enabled_drivers is not None:
-            oob_drivers = enabled_drivers.get('oob', [])
+            oob_drivers = enabled_drivers.oob_driver
+
+            # This is because oslo_config changes the option value
+            # for multiopt depending on if multiple values are actually defined
+            print("%s" % (oob_drivers))
 
             for d in oob_drivers:
+                print("Enabling OOB driver %s" % d)
                 if d is not None:
                     m, c = d.rsplit('.', 1)
                     oob_driver_class = \
@@ -50,7 +55,7 @@ class Orchestrator(object):
                         self.enabled_drivers['oob'].append(oob_driver_class(state_manager=state_manager,
                                                                    orchestrator=self))
 
-            node_driver_name = enabled_drivers.get('node', None)
+            node_driver_name = enabled_drivers.node_driver
             if node_driver_name is not None:
                 m, c = node_driver_name.rsplit('.', 1)
                 node_driver_class = \
@@ -59,7 +64,7 @@ class Orchestrator(object):
                     self.enabled_drivers['node'] = node_driver_class(state_manager=state_manager,
                                                                    orchestrator=self)
             
-            network_driver_name = enabled_drivers.get('network', None)
+            network_driver_name = enabled_drivers.network_driver
             if network_driver_name is not None:
                 m, c = network_driver_name.rsplit('.', 1)
                 network_driver_class = \

@@ -43,6 +43,8 @@ class MaasRequestFactory(object):
     def __init__(self, base_url, apikey):
         self.base_url = base_url
         self.apikey = apikey
+
+        print("Creating MaaS API client for URL %s with key %s" % (base_url, apikey))
         self.signer = MaasOauth(apikey)
         self.http_session = requests.Session()
 
