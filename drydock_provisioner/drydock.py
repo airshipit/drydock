@@ -66,6 +66,9 @@ def start_drydock():
     # Now that loggers are configured, log the effective config
     config.conf.log_opt_values(logging.getLogger(config.conf.logging.global_logger_name), logging.DEBUG)
 
+    # Now that loggers are configured, log the effective config
+    drydock_provisioner.conf.log_opt_values(logging.getLogger(drydock_provisioner.conf.logging.global_logger_name), logging.DEBUG)
+
     return api.start_api(state_manager=state, ingester=input_ingester,
                          orchestrator=orchestrator)
 
