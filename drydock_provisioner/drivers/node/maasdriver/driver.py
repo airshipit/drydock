@@ -391,7 +391,7 @@ class MaasNodeDriver(NodeDriver):
             worked = failed = False
 
             #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < 30:
+            while running_subtasks > 0 and attempts < 120:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -733,7 +733,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             # Poll machine status
                             attempts = 0
 
-                            while attempts < 20 and machine.status_name != 'Ready':
+                            while attempts < 30 and machine.status_name != 'Ready':
                                 attempts = attempts + 1
                                 time.sleep(1 * 60)
                                 try:
@@ -876,13 +876,13 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                         found = False
                                         for a in getattr(node, 'addressing', []):
                                             if a.network == iface_net:
-                                                link_options['ip_address'] = None if a.address == 'dhcp' else a.address
+                                                link_options['ip_address'] = 'dhcp' if a.address == 'dhcp' else a.address
                                                 found = True
 
                                         if not found:
-                                            self.logger.error("No addressed assigned to network %s for node %s, cannot link." %
+                                            self.logger.error("No addressed assigned to network %s for node %s, link is L2 only." %
                                                                (iface_net, node.name))
-                                            continue
+                                            link_options['ip_address'] = None
 
                                         self.logger.debug("Linking system %s interface %s to subnet %s" %
                                                           (node.name, i.device_name, dd_net.cidr))
@@ -964,9 +964,28 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     failed = True
                     continue
 
-                self.logger.info("Node %s deployed" % (n))
+                attempts = 0
+                while attempts < 120 and not machine.status_name.startswith('Deployed'):
+                    attempts = attempts + 1
+                    time.sleep(1 * 60)
+                    try:
+                        machine.refresh()
+                        self.logger.debug("Polling node %s status attempt %d: %s" % (n, attempts, machine.status_name))
+                    except:
+                        self.logger.warning("Error updating node %s status during commissioning, will re-attempt." %
+                                             (n))
+                if machine.status_name.startswith('Deployed'):
+                    result_detail['detail'].append("Node %s deployed" % (n))
+                    self.logger.info("Node %s deployed" % (n))
+                    worked = True
+                else:
+                    result_detail['detail'].append("Node %s deployment timed out" % (n))
+                    self.logger.warning("Node %s deployment timed out." % (n))
+                    failed = True
 
-            if failed:
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif failed:
                 final_result = hd_fields.ActionResult.Failure
             else:
                 final_result = hd_fields.ActionResult.Success
@@ -975,10 +994,3 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 status=hd_fields.TaskStatus.Complete,
                                 result=final_result,
                                 result_detail=result_detail)
-
-
-
-                    
-
-
-
