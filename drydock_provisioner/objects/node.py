@@ -31,7 +31,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
     VERSION = '1.0'
 
     fields = {
-        'addressing':   ovo_fields.ObjectField('IpAddressAssignmentList')
+        'addressing':   ovo_fields.ObjectField('IpAddressAssignmentList'),
+        'boot_mac':     ovo_fields.StringField(nullable=True),
     }
 
     # A BaremetalNode is really nothing more than a physical

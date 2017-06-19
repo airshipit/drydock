@@ -37,14 +37,18 @@ class Orchestrator(object):
         self.logger = logging.getLogger('drydock.orchestrator')
 
         if enabled_drivers is not None:
-            oob_driver_name = enabled_drivers.get('oob', None)
-            if oob_driver_name is not None:
-                m, c = oob_driver_name.rsplit('.', 1)
-                oob_driver_class = \
-                    getattr(importlib.import_module(m), c, None)
-                if oob_driver_class is not None:
-                    self.enabled_drivers['oob'] = oob_driver_class(state_manager=state_manager,
-                                                                   orchestrator=self)
+            oob_drivers = enabled_drivers.get('oob', [])
+
+            for d in oob_drivers:
+                if d is not None:
+                    m, c = d.rsplit('.', 1)
+                    oob_driver_class = \
+                        getattr(importlib.import_module(m), c, None)
+                    if oob_driver_class is not None:
+                        if self.enabled_drivers.get('oob', None) is None:
+                            self.enabled_drivers['oob'] = []
+                        self.enabled_drivers['oob'].append(oob_driver_class(state_manager=state_manager,
+                                                                   orchestrator=self))
 
             node_driver_name = enabled_drivers.get('node', None)
             if node_driver_name is not None:
@@ -174,39 +178,75 @@ class Orchestrator(object):
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
 
-            oob_driver = self.enabled_drivers['oob']
-
-            if oob_driver is None:
-                self.task_field_update(task_id,
-                        status=hd_fields.TaskStatus.Errored,
-                        result=hd_fields.ActionResult.Failure,
-                        result_detail={'detail': 'Error: No oob driver configured', 'retry': False})
-                return
-
             site_design = self.get_effective_site(design_id)
 
             node_filter = task.node_filter
 
+            oob_type_partition = {}
+
             target_nodes = self.process_node_filter(node_filter, site_design)
 
-            target_names = [x.get_name() for x in target_nodes]
+            for n in target_nodes:
+                if n.oob_type not in oob_type_partition.keys():
+                    oob_type_partition[n.oob_type] = []
 
-            task_scope = {'site'        : task_site,
-                          'node_names'  : target_names}
+                oob_type_partition[n.oob_type].append(n)
 
-            oob_driver_task = self.create_task(tasks.DriverTask,
+            result_detail = {'detail': []}
+            worked = failed = False
+
+            # TODO Need to multithread tasks for different OOB types
+            for oob_type, oob_nodes in oob_type_partition.items():
+                oob_driver = None
+                for d in self.enabled_drivers['oob']:
+                    if d.oob_type_support(oob_type):
+                        oob_driver = d
+                        break
+
+                if oob_driver is None:
+                    self.logger.warning("Node OOB type %s has no enabled driver." % oob_type)
+                    result_detail['detail'].append("Error: No oob driver configured for type %s" % oob_type)
+                    continue
+                    
+
+                target_names = [x.get_name() for x in oob_nodes]
+
+                task_scope = {'site'        : task_site,
+                              'node_names'  : target_names}
+
+                oob_driver_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
                                            action=hd_fields.OrchestratorAction.InterrogateOob,
                                            task_scope=task_scope)
 
-            oob_driver.execute_task(oob_driver_task.get_id())
+                self.logger.info("Starting task %s for node verification via OOB type %s" %
+                                (oob_driver_task.get_id(), oob_type))
 
-            oob_driver_task = self.state_manager.get_task(oob_driver_task.get_id())
+                oob_driver.execute_task(oob_driver_task.get_id())
+
+                oob_driver_task = self.state_manager.get_task(oob_driver_task.get_id())
+
+                if oob_driver_task.get_result() in [hd_fields.ActionResult.Success,
+                                                    hd_fields.ActionResult.PartialSuccess]:
+                    worked = True
+                if oob_driver_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                    hd_fields.ActionResult.PartialSuccess]:
+                    failed = True
+
+            final_result = None
+
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
+            else:
+                final_result = hd_fields.ActionResult.Failure
 
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Complete,
-                                   result=oob_driver_task.get_result())
+                                   result=final_result,
+                                   result_detail=result_detail)
             return
         elif task.action == hd_fields.OrchestratorAction.PrepareNode:
             failed = worked = False
@@ -217,15 +257,6 @@ class Orchestrator(object):
             # NOTE Should we attempt to interrogate the node via Node Driver to see if
             # it is in a deployed state before we start rebooting? Or do we just leverage
             # Drydock internal state via site build data (when implemented)?
-            oob_driver = self.enabled_drivers['oob']
-
-            if oob_driver is None:
-                self.task_field_update(task_id,
-                        status=hd_fields.TaskStatus.Errored,
-                        result=hd_fields.ActionResult.Failure,
-                        result_detail={'detail': 'Error: No oob driver configured', 'retry': False})
-                return
-
             node_driver = self.enabled_drivers['node']
 
             if node_driver is None:
@@ -241,53 +272,79 @@ class Orchestrator(object):
 
             target_nodes = self.process_node_filter(node_filter, site_design)
 
-            target_names = [x.get_name() for x in target_nodes]
+            oob_type_partition = {}
 
-            task_scope = {'site'        : task_site,
-                          'node_names'  : target_names}
+            for n in target_nodes:
+                if n.oob_type not in oob_type_partition.keys():
+                    oob_type_partition[n.oob_type] = []
 
-            setboot_task = self.create_task(tasks.DriverTask,
-                                           parent_task_id=task.get_id(),
-                                           design_id=design_id,
-                                           action=hd_fields.OrchestratorAction.SetNodeBoot,
-                                           task_scope=task_scope)
+                oob_type_partition[n.oob_type].append(n)
 
-            self.logger.info("Starting OOB driver task %s to set PXE boot" % (setboot_task.get_id()))
+            result_detail = {'detail': []}
+            worked = failed = False
 
-            oob_driver.execute_task(setboot_task.get_id())
+            # TODO Need to multithread tasks for different OOB types
+            for oob_type, oob_nodes in oob_type_partition.items():
+                oob_driver = None
+                for d in self.enabled_drivers['oob']:
+                    if d.oob_type_support(oob_type):
+                        oob_driver = d
+                        break
 
-            self.logger.info("OOB driver task %s complete" % (setboot_task.get_id()))
+                if oob_driver is None:
+                    self.logger.warning("Node OOB type %s has no enabled driver." % oob_type)
+                    result_detail['detail'].append("Error: No oob driver configured for type %s" % oob_type)
+                    continue
+                    
 
-            setboot_task = self.state_manager.get_task(setboot_task.get_id())
+                target_names = [x.get_name() for x in oob_nodes]
 
-            if setboot_task.get_result() == hd_fields.ActionResult.Success:
-                worked = True
-            elif setboot_task.get_result() == hd_fields.ActionResult.PartialSuccess:
-                worked = failed = True
-            elif setboot_task.get_result() == hd_fields.ActionResult.Failure:
-                failed = True
+                task_scope = {'site'        : task_site,
+                              'node_names'  : target_names}
 
-            cycle_task = self.create_task(tasks.DriverTask,
+                setboot_task = self.create_task(tasks.DriverTask,
+                                        parent_task_id=task.get_id(),
+                                        design_id=design_id,
+                                        action=hd_fields.OrchestratorAction.SetNodeBoot,
+                                        task_scope=task_scope)
+
+                self.logger.info("Starting OOB driver task %s to set PXE boot for OOB type %s" %
+                                 (setboot_task.get_id(), oob_type))
+
+                oob_driver.execute_task(setboot_task.get_id())
+
+                self.logger.info("OOB driver task %s complete" % (setboot_task.get_id()))
+
+                setboot_task = self.state_manager.get_task(setboot_task.get_id())
+
+                if setboot_task.get_result() == hd_fields.ActionResult.Success:
+                    worked = True
+                elif setboot_task.get_result() == hd_fields.ActionResult.PartialSuccess:
+                    worked = failed = True
+                elif setboot_task.get_result() == hd_fields.ActionResult.Failure:
+                    failed = True
+
+                cycle_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
                                            action=hd_fields.OrchestratorAction.PowerCycleNode,
                                            task_scope=task_scope)
 
-            self.logger.info("Starting OOB driver task %s to power cycle nodes" % (cycle_task.get_id()))
+                self.logger.info("Starting OOB driver task %s to power cycle nodes for OOB type %s" %
+                                 (cycle_task.get_id(), oob_type))
 
-            oob_driver.execute_task(cycle_task.get_id())
+                oob_driver.execute_task(cycle_task.get_id())
 
-            self.logger.info("OOB driver task %s complete" % (cycle_task.get_id()))
+                self.logger.info("OOB driver task %s complete" % (cycle_task.get_id()))
 
-            cycle_task = self.state_manager.get_task(cycle_task.get_id())
+                cycle_task = self.state_manager.get_task(cycle_task.get_id())
 
-            if cycle_task.get_result() == hd_fields.ActionResult.Success:
-                worked = True
-            elif cycle_task.get_result() == hd_fields.ActionResult.PartialSuccess:
-                worked = failed = True
-            elif cycle_task.get_result() == hd_fields.ActionResult.Failure:
-                failed = True
-
+                if cycle_task.get_result() == hd_fields.ActionResult.Success:
+                    worked = True
+                elif cycle_task.get_result() == hd_fields.ActionResult.PartialSuccess:
+                    worked = failed = True
+                elif cycle_task.get_result() == hd_fields.ActionResult.Failure:
+                    failed = True
 
             # IdentifyNode success will take some time after PowerCycleNode finishes
             # Retry the operation a few times if it fails before considering it a final failure
@@ -403,7 +460,31 @@ class Orchestrator(object):
             elif node_networking_task.get_result() in [hd_fields.ActionResult.Failure,
                                                        hd_fields.ActionResult.PartialSuccess]:
                 failed = True
-        
+
+
+            if len(node_networking_task.result_detail['successful_nodes']) > 0:
+                self.logger.info("Found %s successfully networked nodes, starting deployment." %
+                                 (len(node_networking_task.result_detail['successful_nodes'])))
+                node_deploy_task = self.create_task(tasks.DriverTask,
+                                            parent_task_id=task.get_id(), design_id=design_id,
+                                            action=hd_fields.OrchestratorAction.DeployNode,
+                                            task_scope={'site': task_site,
+                                                        'node_names': node_networking_task.result_detail['successful_nodes']})
+
+                self.logger.info("Starting node driver task %s to deploy nodes." % (node_deploy_task.get_id()))
+                node_driver.execute_task(node_deploy_task.get_id())
+
+                node_deploy_task = self.state_manager.get_task(node_deploy_task.get_id())
+
+                if node_deploy_task.get_result() in [hd_fields.ActionResult.Success,
+                                                     hd_fields.ActionResult.PartialSuccess]:
+                    worked = True
+                elif node_deploy_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                       hd_fields.ActionResult.PartialSuccess]:
+                    failed = True
+            else:
+                self.logger.warning("No nodes successfully networked, skipping deploy subtask")
+
             final_result = None
             if worked and failed:
                 final_result = hd_fields.ActionResult.PartialSuccess

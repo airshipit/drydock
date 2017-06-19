@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_interface
 
@@ -22,7 +23,7 @@ class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
     fields = ['resource_id', 'hostname', 'power_type', 'power_state', 'power_parameters', 'interfaces',
-              'boot_interface', 'memory', 'cpu_count', 'tag_names', 'status_name']
+              'boot_interface', 'memory', 'cpu_count', 'tag_names', 'status_name', 'boot_mac']
     json_fields = ['hostname', 'power_type']
 
     def __init__(self, api_client, **kwargs):
@@ -55,7 +56,30 @@ class Machine(model_base.ResourceBase):
 
         # Need to sort out how to handle exceptions
         if not resp.ok:
-            raise Exception()
+            self.logger.error("Error commissioning node, received HTTP %s from MaaS" % resp.status_code)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError("Error commissioning node, received HTTP %s from MaaS" % resp.status_code)
+
+    def deploy(self, user_data=None, platform=None, kernel=None):
+        deploy_options = {}
+
+        if user_data is not None:
+            deploy_options['user_data'] = user_data
+
+        if platform is not None:
+            deploy_options['distro_series'] = platform
+
+        if kernel is not None:
+            deploy_options['hwe_kernel'] = kernel
+
+        url = self.interpolate_url()
+        resp = self.api_client.post(url, op='deploy',
+                                files=deploy_options if len(deploy_options) > 0 else None)
+
+        if not resp.ok:
+            self.logger.error("Error deploying node, received HTTP %s from MaaS" % resp.status_code)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError("Error deploying node, received HTTP %s from MaaS" % resp.status_code)
 
     def get_network_interface(self, iface_name):
         if self.interfaces is not None:
@@ -106,6 +130,11 @@ class Machine(model_base.ResourceBase):
         if 'system_id' in obj_dict.keys():
             refined_dict['resource_id'] = obj_dict.get('system_id')
 
+        # Capture the boot interface MAC to allow for node id of VMs
+        if 'boot_interface' in obj_dict.keys():
+            if isinstance(obj_dict['boot_interface'], dict):
+                refined_dict['boot_mac'] = obj_dict['boot_interface']['mac_address']
+
         i = cls(api_client, **refined_dict)
         return i
 
@@ -122,6 +151,37 @@ class Machines(model_base.ResourceCollectionBase):
         for k, v in self.resources.items():
             v.get_power_params()
 
+    def acquire_node(self, node_name):
+        """
+        Acquire a commissioned node fro deployment
+
+        :param node_name: The hostname of a node to acquire
+        """
+
+        self.refresh()
+
+        node = self.singleton({'hostname': node_name})
+
+        if node is None:
+            self.logger.info("Node %s not found" % (node_name))
+            raise errors.DriverError("Node %s not found" % (node_name))
+
+        if node.status_name != 'Ready':
+            self.logger.info("Node %s status '%s' does not allow deployment, should be 'Ready'." %
+                                    (node_name, node.status_name))
+            raise errors.DriverError("Node %s status '%s' does not allow deployment, should be 'Ready'." %
+                                    (node_name, node.status_name))
+
+        url = self.interpolate_url()
+
+        resp = self.api_client.post(url, op='allocate', files={'system_id': node.resource_id})
+
+        if not resp.ok:
+            self.logger.error("Error acquiring node, MaaS returned %s" % resp.status_code)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError("Error acquiring node, MaaS returned %s" % resp.status_code)
+
+        return node
     
     def identify_baremetal_node(self, node_model, update_name=True):
         """
@@ -132,30 +192,43 @@ class Machines(model_base.ResourceCollectionBase):
         :param node_model: Instance of objects.node.BaremetalNode to search MaaS for matching resource
         :param update_name: Whether Drydock should update the MaaS resource name to match the Drydock design
         """
-        node_oob_network = node_model.oob_network
-        node_oob_ip = node_model.get_network_address(node_oob_network)
+        
+        maas_node = None
 
-        if node_oob_ip is None:
-            self.logger.warn("Node model missing OOB IP address")
-            raise ValueError('Node model missing OOB IP address')
+        if node_model.oob_type == 'ipmi':
+            node_oob_network = node_model.oob_network
+            node_oob_ip = node_model.get_network_address(node_oob_network)
 
-        try:
-            self.collect_power_params()
+            if node_oob_ip is None:
+                self.logger.warn("Node model missing OOB IP address")
+                raise ValueError('Node model missing OOB IP address')
 
-            maas_node = self.singleton({'power_params.power_address': node_oob_ip})
+            try:
+                self.collect_power_params()
 
-            self.logger.debug("Found MaaS resource %s matching Node %s" % (maas_node.resource_id, node_model.get_id()))
+                maas_node = self.singleton({'power_params.power_address': node_oob_ip})
+            except ValueError as ve:
+                self.logger.warn("Error locating matching MaaS resource for OOB IP %s" % (node_oob_ip))
+                return None
+        else:
+            # Use boot_mac for node's not using IPMI
+            node_boot_mac = node_model.boot_mac
 
-            if maas_node.hostname != node_model.name and update_name:
-                maas_node.hostname = node_model.name
-                maas_node.update()
-                self.logger.debug("Updated MaaS resource %s hostname to %s" % (maas_node.resource_id, node_model.name))
+            if node_boot_mac is not None:
+                maas_node = self.singleton({'boot_mac': node_model.boot_mac})
 
-            return maas_node
-                
-        except ValueError as ve:
-            self.logger.warn("Error locating matching MaaS resource for OOB IP %s" % (node_oob_ip))
+        if maas_node is None:
+            self.logger.info("Could not locate node %s in MaaS" % node_model.name)
             return None
+
+        self.logger.debug("Found MaaS resource %s matching Node %s" % (maas_node.resource_id, node_model.get_id()))
+
+        if maas_node.hostname != node_model.name and update_name:
+            maas_node.hostname = node_model.name
+            maas_node.update()
+            self.logger.debug("Updated MaaS resource %s hostname to %s" % (maas_node.resource_id, node_model.name))
+
+        return maas_node
 
     def query(self, query):
         """
