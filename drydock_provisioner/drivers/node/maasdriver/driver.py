@@ -35,7 +35,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machin
 class MaasNodeDriver(NodeDriver):
 
     maasdriver_options = [
-        cfg.StrOpt('maas_api_key', help='The API key for accessing MaaS'),
+        cfg.StrOpt('maas_api_key', help='The API key for accessing MaaS', secret=True),
         cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
     ]
 
