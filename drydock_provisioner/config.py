@@ -29,7 +29,7 @@ class DrydockConfig(object):
 
     # API Authentication options
     auth_options = [
-        cfg.StrOpt('admin_token', default='bigboss', help='X-Auth-Token value to bypass backend authentication'),
+        cfg.StrOpt('admin_token', default='bigboss', help='X-Auth-Token value to bypass backend authentication', secret=True),
         cfg.BoolOpt('bypass_enabled', default=False, help='Can backend authentication be bypassed?'),
     ]
 

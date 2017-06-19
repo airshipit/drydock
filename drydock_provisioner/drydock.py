@@ -54,12 +54,16 @@ def start_drydock():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
+
     state = statemgmt.DesignState()
 
     orchestrator = orch.Orchestrator(drydock_provisioner.conf.plugins,
                              state_manager=state)
     input_ingester = ingester.Ingester()
     input_ingester.enable_plugins(drydock_provisioner.conf.plugins.ingester)
+
+    # Now that loggers are configured, log the effective config
+    drydock_provisioner.conf.log_opt_values(logging.getLogger(drydock_provisioner.conf.logging.global_logger_name), logging.DEBUG)
 
     return api.start_api(state_manager=state, ingester=input_ingester,
                          orchestrator=orchestrator)
