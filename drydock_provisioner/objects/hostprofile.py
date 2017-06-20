@@ -47,8 +47,9 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         'owner_data': obj_fields.DictOfStringsField(nullable=True),
         'rack': obj_fields.StringField(nullable=True),
         'base_os':  obj_fields.StringField(nullable=True),
+        'image': obj_fields.StringField(nullable=True),
         'kernel': obj_fields.StringField(nullable=True),
-        'kernel_params': obj_fields.StringField(nullable=True),
+        'kernel_params': obj_fields.DictOfStringsField(nullable=True),
         'primary_network': obj_fields.StringField(nullable=False),
     }
 
@@ -91,7 +92,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         inheritable_field_list = [
             'hardware_profile', 'oob_type', 'storage_layout',
             'bootdisk_device', 'bootdisk_root_size', 'bootdisk_boot_size',
-            'rack', 'base_os', 'kernel', 'kernel_params', 'primary_network']
+            'rack', 'base_os', 'image', 'kernel', 'primary_network']
 
         # Create applied data from self design values and parent
         # applied values
@@ -107,6 +108,8 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         self.tags = objects.Utils.merge_lists(self.tags, parent.tags)
 
         self.owner_data = objects.Utils.merge_dicts(self.owner_data, parent.owner_data)
+
+        self.kernel_params = objects.Utils.merge_dicts(self.kernel_params, parent.kernel_params)
 
         self.interfaces = HostInterfaceList.from_basic_list(
                             HostInterface.merge_lists(self.interfaces, parent.interfaces))

@@ -306,6 +306,15 @@ class YamlIngester(IngesterPlugin):
                             
                             model.interfaces.append(int_model)
 
+                        platform = spec.get('platform', {})
+
+                        model.image = platform.get('image', None)
+                        model.kernel = platform.get('kernel', None)
+
+                        model.kernel_params = {}
+                        for k,v in platform.get('kernel_params', {}).items():
+                            model.kernel_params[k] = v
+
                         model.primary_network = spec.get('primary_network', None)
                         
                         node_metadata = spec.get('metadata', {})
