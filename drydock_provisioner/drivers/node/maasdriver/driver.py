@@ -18,7 +18,7 @@ import sys
 
 from oslo_config import cfg
 
-import drydock_provisioner
+import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.fields as hd_fields
@@ -33,26 +33,22 @@ import drydock_provisioner.drivers.node.maasdriver.models.subnet as maas_subnet
 import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machine
 
 class MaasNodeDriver(NodeDriver):
-
     maasdriver_options = [
         cfg.StrOpt('maas_api_key', help='The API key for accessing MaaS', secret=True),
         cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
     ]
 
+    driver_name = 'maasdriver'
+    driver_key = 'maasdriver'
+    driver_desc = 'MaaS Node Provisioning Driver'
+
     def __init__(self, **kwargs):
         super(MaasNodeDriver, self).__init__(**kwargs)
 	
-        self.driver_name = "maasdriver"
-        self.driver_key = "maasdriver"
-        self.driver_desc = "MaaS Node Provisioning Driver"
-
-        self.setup_config_options(drydock_provisioner.conf)
+        config.conf.register_opts(maasdriver_options, group='maasdriver')
 
         self.logger = logging.getLogger("%s.%s" %
-                                (drydock_provisioner.conf.logging.nodedriver_logger_name, self.driver_key))
-
-    def setup_config_options(self, conf):
-        conf.register_opts(MaasNodeDriver.maasdriver_options, group=self.driver_key)
+                                (config.conf.logging.nodedriver_logger_name, self.driver_key))
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -67,7 +63,7 @@ class MaasNodeDriver(NodeDriver):
         if task.action == hd_fields.OrchestratorAction.ValidateNodeServices:
             self.orchestrator.task_field_update(task.get_id(),
                                 status=hd_fields.TaskStatus.Running)
-            maas_client = MaasRequestFactory(drydock_provisioner.conf.maasdriver.maas_api_url, drydock_provisioner.conf.maasdriver.maas_api_key) 
+            maas_client = MaasRequestFactory(config.conf.maasdriver.maas_api_url, config.conf.maasdriver.maas_api_key) 
 
             try:
                 if maas_client.test_connectivity():
@@ -139,7 +135,7 @@ class MaasNodeDriver(NodeDriver):
 
             runner.start()
 
-            runner.join(timeout=drydock_provisioner.conf.timeouts.create_network_template * 60)
+            runner.join(timeout=config.conf.timeouts.create_network_template * 60)
 
             if runner.is_alive():
                 result =  {
@@ -193,7 +189,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.identify_node:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.identify_node:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -263,7 +259,7 @@ class MaasNodeDriver(NodeDriver):
             worked = failed = False
 
             #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.configure_hardware:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.configure_hardware:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -332,7 +328,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.apply_node_networking:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.apply_node_networking:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -401,7 +397,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.deploy_node:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.deploy_node:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -453,8 +449,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             status=hd_fields.TaskStatus.Running,
                             result=hd_fields.ActionResult.Incomplete)
 
-        self.maas_client = MaasRequestFactory(drydock_provisioner.conf.maasdriver.maas_api_url,
-                                              drydock_provisioner.conf.maasdriver.maas_api_key)
+        self.maas_client = MaasRequestFactory(config.conf.maasdriver.maas_api_url,
+                                              config.conf.maasdriver.maas_api_key)
 
         site_design = self.orchestrator.get_effective_site(self.task.design_id)
 
@@ -743,7 +739,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             # Poll machine status
                             attempts = 0
 
-                            while attempts < drydock_provisioner.conf.timeouts.configure_hardware and machine.status_name != 'Ready':
+                            while attempts < config.conf.timeouts.configure_hardware and machine.status_name != 'Ready':
                                 attempts = attempts + 1
                                 time.sleep(1 * 60)
                                 try:
@@ -975,7 +971,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     continue
 
                 attempts = 0
-                while attempts < drydock_provisioner.conf.timeouts.deploy_node and not machine.status_name.startswith('Deployed'):
+                while attempts < config.conf.timeouts.deploy_node and not machine.status_name.startswith('Deployed'):
                     attempts = attempts + 1
                     time.sleep(1 * 60)
                     try:
@@ -1004,3 +1000,6 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 status=hd_fields.TaskStatus.Complete,
                                 result=final_result,
                                 result_detail=result_detail)
+
+def list_opts():
+    return {MaasNodeDriver.driver_key: MaasNodeDriver.maasdriver_options}
