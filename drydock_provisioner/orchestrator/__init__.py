@@ -468,13 +468,37 @@ class Orchestrator(object):
 
 
             if len(node_networking_task.result_detail['successful_nodes']) > 0:
-                self.logger.info("Found %s successfully networked nodes, starting deployment." %
-                                 (len(node_networking_task.result_detail['successful_nodes'])))
+                self.logger.info("Found %s successfully networked nodes, configuring platform." %
+                                (len(node_networking_task.result_detail['successful_nodes'])))
+
+                node_platform_task = self.create_task(tasks.DriverTask,
+                                            parent_task_id=task.get_id(), design_id=design_id,
+                                            action=hd_fields.OrchestratorAction.ApplyNodePlatform,
+                                            task_scope={'site': task_site,
+                                                        'node_names': node_networking_task.result_detail['successful_nodes']})
+                self.logger.info("Starting node driver task %s to configure node platform." % (node_platform_task.get_id()))
+
+                node_driver.execute_task(node_platform_task.get_id())
+
+                node_platform_task = self.state_manager.get_task(node_platform_task.get_id())
+
+                if node_platform_task.get_result() in [hd_fields.ActionResult.Success,
+                                                     hd_fields.ActionResult.PartialSuccess]:
+                    worked = True
+                elif node_platform_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                       hd_fields.ActionResult.PartialSuccess]:
+                    failed = True
+            else:
+                self.logger.warning("No nodes successfully networked, skipping platform configuration subtask")
+
+            if len(node_platform_task.result_detail['successful_nodes']) > 0:
+                self.logger.info("Configured platform on %s nodes, starting deployment." %
+                                (len(node_platform_task.result_detail['successful_nodes'])))
                 node_deploy_task = self.create_task(tasks.DriverTask,
                                             parent_task_id=task.get_id(), design_id=design_id,
                                             action=hd_fields.OrchestratorAction.DeployNode,
                                             task_scope={'site': task_site,
-                                                        'node_names': node_networking_task.result_detail['successful_nodes']})
+                                                        'node_names': node_platform_task.result_detail['successful_nodes']})
 
                 self.logger.info("Starting node driver task %s to deploy nodes." % (node_deploy_task.get_id()))
                 node_driver.execute_task(node_deploy_task.get_id())
@@ -488,7 +512,7 @@ class Orchestrator(object):
                                                        hd_fields.ActionResult.PartialSuccess]:
                     failed = True
             else:
-                self.logger.warning("No nodes successfully networked, skipping deploy subtask")
+                self.logger.warning("Unable to configure platform on any nodes, skipping deploy subtask")
 
             final_result = None
             if worked and failed:

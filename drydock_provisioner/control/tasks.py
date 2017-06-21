@@ -37,6 +37,7 @@ class TasksResource(StatefulResource):
             sitename = json_data.get('sitename', None)
             design_id = json_data.get('design_id', None)
             action = json_data.get('action', None)
+            node_filter = json_data.get('node_filter', None)
 
             if sitename is None or design_id is None or action is None:
                 self.info(req.context, "Task creation requires fields sitename, design_id, action")
@@ -44,7 +45,7 @@ class TasksResource(StatefulResource):
                 return
 
             task = self.orchestrator.create_task(obj_task.OrchestratorTask, site=sitename,
-                                                 design_id=design_id, action=action)
+                                                 design_id=design_id, action=action, node_filter=node_filter)
 
             task_thread = threading.Thread(target=self.orchestrator.execute_task, args=[task.get_id()])
             task_thread.start()
