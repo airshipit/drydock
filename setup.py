@@ -15,20 +15,7 @@
 # drydock_provisioner - A tool to consume a host topology and orchestrate
 # and monitor the provisioning of those hosts and execution of bootstrap
 # scripts
-#
-# Modular services:
-# smelter - 	A service to consume the host topology, will support multiple
-#	 			input formats. Initially supports a YAML schema as demonstrated
-#				in the examples folder
-# tarot -		A service for persisting the host topology and orchestration state
-#				and making the data available via API
-# cockpit -		The entrypoint API for users to control helm-drydock and query
-#				current state
-# alchemist -	The core orchestrator
-# drivers - 	A tree with all of the plugins that alchemist uses to execute
-#				orchestrated tasks
-# jabberwocky -	An introspection API that newly provisioned nodes can use to
-#				ingest self-data and bootstrap their application deployment process
+
 
 from setuptools import setup
 
@@ -65,6 +52,9 @@ setup(name='drydock_provisioner',
         'uwsgi>1.4',
         'bson===0.4.7',
         'oslo.config',
-      ]
+      ],
+      entry_points={
+        'oslo.config.opts': 'drydock_provisioner = drydock_provisioner.config:list_opts',
+      }
      )
 

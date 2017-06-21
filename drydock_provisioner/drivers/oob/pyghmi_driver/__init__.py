@@ -100,7 +100,8 @@ class PyghmiDriver(oob.OobDriver):
             runner.start()
 
         attempts = 0
-        while len(incomplete_subtasks) > 0 and attempts <= getattr(drydock_provisioner.conf.timeouts, task.action, 5):
+        while (len(incomplete_subtasks) > 0 and
+              attempts <= getattr(drydock_provisioner.conf.timeouts, task.action, drydock_provisioner.conf.timeouts.drydock_timeout)):
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
                 if t.get_status() in [hd_fields.TaskStatus.Terminated,
