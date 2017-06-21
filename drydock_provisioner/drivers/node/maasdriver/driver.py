@@ -46,7 +46,7 @@ class MaasNodeDriver(NodeDriver):
     def __init__(self, **kwargs):
         super(MaasNodeDriver, self).__init__(**kwargs)
 	
-        config.conf.register_opts(maasdriver_options, group='maasdriver')
+        config.conf.register_opts(MaasNodeDriver.maasdriver_options, group=MaasNodeDriver.driver_key)
 
         self.logger = logging.getLogger("%s.%s" %
                                 (config.conf.logging.nodedriver_logger_name, self.driver_key))
