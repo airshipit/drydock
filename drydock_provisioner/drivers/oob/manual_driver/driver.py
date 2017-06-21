@@ -14,7 +14,7 @@
 import time
 import logging
 
-import drydock_provisioner
+import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 
 
@@ -37,7 +37,7 @@ class ManualDriver(oob.OobDriver):
         self.driver_desc = "Manual (Noop) OOB Driver"
 
         self.logger = logging.getLogger("%s.%s" % 
-                                (drydock_provisioner.conf.logging.oobdriver_logger_name, self.driver_key))
+                                (config.conf.logging.oobdriver_logger_name, self.driver_key))
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
