@@ -216,10 +216,10 @@ class DesignState(object):
     def post_promenade_part(self, part):
         my_lock = self.promenade_lock.acquire(blocking=True, timeout=10)
         if my_lock:
-            if self.promenade.get(target, None) is not None:
+            if self.promenade.get(part.target, None) is not None:
                 self.promenade[part.target].append(part.obj_to_primitive())
             else:
-                self.promenade[target] = [part.obj_to_primitive()]
+                self.promenade[part.target] = [part.obj_to_primitive()]
             self.promenade_lock.release()
             return None
         else:
