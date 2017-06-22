@@ -1140,7 +1140,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 # TODO this should be in the orchestrator
                 node = site_design.get_baremetal_node(n)
                 data_key = uuid.uuid4()
-                self.state_manager.set_bootdata_key(n, design_id, data_key)
+                self.state_manager.set_bootdata_key(n, self.task.design_id, data_key)
                 node.owner_data['bootdata_key'] = data_key
                 self.logger.debug("Configured bootdata for node %s" % (n))
 
