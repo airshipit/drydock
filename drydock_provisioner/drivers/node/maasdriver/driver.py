@@ -905,6 +905,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 if iface is None:
                                     self.logger.warning("Interface %s not found on node %s, skipping configuration" %
                                                         (i.device_name, machine.resource_id))
+                                    failed = True
                                     continue
 
                                 if iface.fabric_id == fabric.resource_id:
@@ -1139,7 +1140,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 # Need to create bootdata keys for all the nodes being deployed
                 # TODO this should be in the orchestrator
                 node = site_design.get_baremetal_node(n)
-                data_key = uuid.uuid4()
+                data_key = str(uuid.uuid4())
                 self.state_manager.set_bootdata_key(n, self.task.design_id, data_key)
                 node.owner_data['bootdata_key'] = data_key
                 self.logger.debug("Configured bootdata for node %s" % (n))
