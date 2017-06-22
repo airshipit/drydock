@@ -23,7 +23,7 @@ class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
     fields = ['resource_id', 'hostname', 'power_type', 'power_state', 'power_parameters', 'interfaces',
-              'boot_interface', 'memory', 'cpu_count', 'tag_names', 'status_name', 'boot_mac']
+              'boot_interface', 'memory', 'cpu_count', 'tag_names', 'status_name', 'boot_mac', 'owner_data']
     json_fields = ['hostname', 'power_type']
 
     def __init__(self, api_client, **kwargs):
@@ -90,6 +90,23 @@ class Machine(model_base.ResourceBase):
         url = self.interpolate_url()
 
         resp = self.api_client.get(url, op='details')
+
+        if resp.status_code == 200:
+            detail_config = bson.loads(resp.text)
+            return detail_config
+
+    def set_owner_data(self, key, value):
+        """
+        Add/update/remove node owner data. If the machine is not currently allocated to a user
+        it cannot have owner data
+
+        :param key: Key of the owner data
+        :param value: Value of the owner data. If None, the key is removed
+        """
+
+        url = self.interpolate_url()
+
+        resp = self.api_client.post(url, op='set_owner_data', files={key: value})
 
         if resp.status_code == 200:
             detail_config = bson.loads(resp.text)

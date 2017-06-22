@@ -42,7 +42,10 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
         ('/designs/{design_id}', DesignResource(state_manager=state_manager, orchestrator=orchestrator)),
         ('/designs/{design_id}/parts', DesignsPartsResource(state_manager=state_manager, ingester=ingester)),
         ('/designs/{design_id}/parts/{kind}', DesignsPartsKindsResource(state_manager=state_manager)),
-        ('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(state_manager=state_manager, orchestrator=orchestrator))
+        ('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(state_manager=state_manager, orchestrator=orchestrator)),
+
+    # API for nodes to discover their bootdata during curtin install
+        ('/bootdata/{hostname}/{data_key}', BootdataResource(state_manager=state_manager))
     ]
 
     for path, res in v1_0_routes:

@@ -29,11 +29,17 @@ class DesignState(object):
         self.designs = {}
         self.designs_lock = Lock()
 
+        self.promenade = {}
+        self.promenade_lock = Lock()
+
         self.builds = []
         self.builds_lock = Lock()
 
         self.tasks = []
         self.tasks_lock = Lock()
+
+        self.bootdata = {}
+        self.bootdata_lock = Lock()
 
         return
 
@@ -207,4 +213,34 @@ class DesignState(object):
         else:
             raise StateError("Could not acquire lock")
 
+    def post_promenade_part(self, part):
+        my_lock = self.promenade_lock.acquire(blocking=True, timeout=10)
+        if my_lock:
+            if self.promenade.get(target, None) is not None:
+                self.promenade[part.target].append(part.obj_to_primitive())
+            else:
+                self.promenade[target] = [part.obj_to_primitive()]
+            self.promenade_lock.release()
+            return None
+        else:
+            raise StateError("Could not acquire lock")        
+    
+    def get_promenade_parts(self, target):
+        parts = self.promenade.get(target, None)
 
+        if parts is not None:
+            return [p.obj_to_primitive() for p in parts]
+        else:
+            return None
+
+    def set_bootdata_key(self, hostname, design_id, data_key):
+        my_lock = self.bootdata_lock.acquire(blocking=True, timeout=10)
+        if my_lock:
+            self.bootdata[hostname] = {'design_id': design_id, 'key': data_key}
+            self.bootdata_lock.release()
+            return None
+        else:
+            raise StateError("Could not acquire lock")
+
+    def get_bootdata_key(self, hostname):
+        return self.bootdata.get(hostname, None)
