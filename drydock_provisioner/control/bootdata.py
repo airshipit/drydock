@@ -28,17 +28,17 @@ class BootdataResource(StatefulResource):
             resp.body = BootdataResource.systemd_definition
             resp.content_type = 'text/plain'
             return
-        elif data_key == 'prom_init':
-            resp.boy = BootdataResource.prominit
+        elif data_key == 'prominit':
+            resp.boy = BootdataResource.prom_init
             resp.content_type = 'text/plain'
             return
-        else:
+        elif data_key == 'promconfig':
             bootdata = self.state_manager.get_bootdata_key(hostname)
 
             if bootdata is None:
                 resp.status = falcon.HTTP_404
                 return
-            elif bootdata.get('key', None) == data_key:
+            else:
                 resp.content_type = 'text/plain'
 
                 host_design_id = bootdata.get('design_id', None)
@@ -64,9 +64,6 @@ class BootdataResource(StatefulResource):
                         part_list.extend(tag_parts)
 
                 resp.body = yaml.dump_all(part_list, explicit_start=True)
-                return
-            else:
-                resp.status = falcon.HTTP_403
                 return
 
     systemd_definition = \
