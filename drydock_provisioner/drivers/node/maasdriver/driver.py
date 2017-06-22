@@ -395,7 +395,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.apply_node_platform:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.apply_node_platform:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
