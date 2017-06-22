@@ -78,6 +78,7 @@ class DrydockConfig(object):
         cfg.IntOpt('identify_node', default=10, help='Timeout in minutes for initial node identification'),
         cfg.IntOpt('configure_hardware', default=30, help='Timeout in minutes for node commissioning and hardware configuration'),
         cfg.IntOpt('apply_node_networking', default=5, help='Timeout in minutes for configuring node networking'),
+        cfg.IntOpt('apply_node_platform', default=5, help='Timeout in minutes for configuring node platform'),
         cfg.IntOpt('deploy_node', default=45, help='Timeout in minutes for deploying a node'),
     ]
 
