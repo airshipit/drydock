@@ -28,12 +28,12 @@ class BootdataResource(StatefulResource):
             resp.body = BootdataResource.systemd_definition
             resp.content_type = 'text/plain'
             return
-        elif data_key == 'prominit':
+        elif data_key == 'prom_init':
             resp.boy = BootdataResource.prominit
             resp.content_type = 'text/plain'
             return
         else:
-            bootdata = self.state_manager.get_boot_data(hostname)
+            bootdata = self.state_manager.get_bootdata_key(hostname)
 
             if bootdata is None:
                 resp.status = falcon.HTTP_404
