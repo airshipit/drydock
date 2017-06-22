@@ -42,7 +42,7 @@ class BootdataResource(StatefulResource):
                 resp.content_type = 'text/plain'
 
                 host_design_id = bootdata.get('design_id', None)
-                self.orchestrator.get_effective_site(host_design_id)
+                host_design = self.orchestrator.get_effective_site(host_design_id)
 
                 host_model = host_design.get_baremetal_node(hostname)
 
