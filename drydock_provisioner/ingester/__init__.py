@@ -70,7 +70,15 @@ class Ingester(object):
 
     
     def ingest_data(self, plugin_name='', design_state=None, design_id=None, context=None, **kwargs):
-        
+        """
+        ingest_data - Execute a data ingestion using the named plugin (assuming it is enabled) 
+
+        :param plugin_name: - Which plugin should be used for ingestion
+        :param design_state: - An instance of statemgmt.DesignState
+        :param design_id: - The ID of the SiteDesign all parsed designed parts should be added
+        :param context: - Context of the request requesting ingestion
+        :param kwargs: - Keywork arguments to pass to the ingester plugin
+        """
         if design_state is None:
             self.logger.error("Ingester:ingest_data called without valid DesignState handler")
             raise ValueError("Invalid design_state handler")

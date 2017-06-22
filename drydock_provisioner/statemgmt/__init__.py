@@ -229,7 +229,7 @@ class DesignState(object):
         parts = self.promenade.get(target, None)
 
         if parts is not None:
-            return [p.obj_to_primitive() for p in parts]
+            return [objects.PromenadeConfig.obj_from_primitive(p) for p in parts]
         else:
             return None
 

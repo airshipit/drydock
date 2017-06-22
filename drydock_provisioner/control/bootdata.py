@@ -28,7 +28,7 @@ class BootdataResource(StatefulResource):
             resp.body = BootdataResource.systemd_definition
             resp.content_type = 'text/plain'
             return
-        elif data_key == 'prominit'
+        elif data_key == 'prominit':
             resp.boy = BootdataResource.prominit
             resp.content_type = 'text/plain'
             return
