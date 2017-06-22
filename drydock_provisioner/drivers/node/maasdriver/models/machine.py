@@ -108,9 +108,10 @@ class Machine(model_base.ResourceBase):
 
         resp = self.api_client.post(url, op='set_owner_data', files={key: value})
 
-        if resp.status_code == 200:
-            detail_config = bson.loads(resp.text)
-            return detail_config
+        if resp.status_code != 200:
+            self.logger.error("Error setting node metadata, received HTTP %s from MaaS" % resp.status_code)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError("Error setting node metadata, received HTTP %s from MaaS" % resp.status_code)
 
 
     def to_dict(self):
