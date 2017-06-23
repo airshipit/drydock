@@ -13,6 +13,7 @@
 # limitations under the License.
 import falcon
 import json
+import yaml
 
 from .base import StatefulResource
 
@@ -51,17 +52,17 @@ class BootdataResource(StatefulResource):
                 all_parts = self.state_manager.get_promenade_parts('all')
 
                 if all_parts is not None:
-                    part_list.extend(all_parts)
+                    part_list.extend([i.document for i in all_parts])
 
                 host_parts = self.state_manager.get_promenade_parts(hostname)
 
                 if host_parts is not None:
-                    part_list.extend(host_parts)
+                    part_list.extend([i.document for i in host_parts])
 
                 for t in host_model.tags:
                     tag_parts = self.state_manager.get_promenade_parts(t)
                     if t is not None:
-                        part_list.extend(tag_parts)
+                        part_list.extend([i.document for i in tag_parts])
 
                 resp.body = yaml.dump_all(part_list, explicit_start=True)
                 return
