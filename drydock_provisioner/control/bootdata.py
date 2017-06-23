@@ -30,7 +30,7 @@ class BootdataResource(StatefulResource):
             resp.content_type = 'text/plain'
             return
         elif data_key == 'prominit':
-            resp.boy = BootdataResource.prom_init
+            resp.body = BootdataResource.prom_init
             resp.content_type = 'text/plain'
             return
         elif data_key == 'promconfig':
