@@ -371,6 +371,6 @@ class YamlIngester(IngesterPlugin):
                     target = metadata.get('target', 'all')
                     name = metadata.get('name', None)
 
-                    model = objects.PromenadeConfig(target=target, name=name, kind=kind, document=yaml.dump(d, default_flow_style=False))
+                    model = objects.PromenadeConfig(target=target, name=name, kind=kind, document=yaml.dump(d))
                     models.append(model)
         return models
