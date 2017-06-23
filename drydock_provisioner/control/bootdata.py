@@ -30,7 +30,7 @@ class BootdataResource(StatefulResource):
             resp.content_type = 'text/plain'
             return
         elif data_key == 'prominit':
-            resp.boy = BootdataResource.prom_init
+            resp.body = BootdataResource.prom_init
             resp.content_type = 'text/plain'
             return
         elif data_key == 'promconfig':
@@ -64,7 +64,7 @@ class BootdataResource(StatefulResource):
                     if t is not None:
                         part_list.extend([i.document for i in tag_parts])
 
-                resp.body = "---\n" + "---\n".join(part_list) + "\n..."
+                resp.body = "---\n" + "---\n".join(part_list) + "...\n"
                 return
 
     systemd_definition = \
