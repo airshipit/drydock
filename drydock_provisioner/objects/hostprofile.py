@@ -50,7 +50,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         'image': obj_fields.StringField(nullable=True),
         'kernel': obj_fields.StringField(nullable=True),
         'kernel_params': obj_fields.DictOfStringsField(nullable=True),
-        'primary_network': obj_fields.StringField(nullable=False),
+        'primary_network': obj_fields.StringField(nullable=True),
     }
 
     def __init__(self, **kwargs):
