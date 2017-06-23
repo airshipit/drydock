@@ -151,7 +151,6 @@ class Machines(model_base.ResourceCollectionBase):
                 self.logger.debug("Updated MaaS resource %s hostname to %s" % (maas_node.resource_id, node_model.name))
 
             return maas_node
-                
         except ValueError as ve:
             self.logger.warn("Error locating matching MaaS resource for OOB IP %s" % (node_oob_ip))
             return None

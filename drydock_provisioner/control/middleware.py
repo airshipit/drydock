@@ -73,7 +73,6 @@ class ContextMiddleware(object):
             ctx.set_log_level('INFO')
 
         ext_marker = req.get_header('X-Context-Marker')
-
         ctx.set_external_marker(ext_marker if ext_marker is not None else '')
 
 class LoggingMiddleware(object):

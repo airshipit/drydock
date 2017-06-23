@@ -117,7 +117,7 @@ class DrydockRequestContext(object):
         self.log_level = 'ERROR'
         self.user = None
         self.roles = ['anyone']
-        self.req_id = str(uuid.uuid4())
+        self.request_id = str(uuid.uuid4())
         self.external_marker = None
 
     def set_log_level(self, level):

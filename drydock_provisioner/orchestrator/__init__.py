@@ -351,7 +351,6 @@ class Orchestrator(object):
                 final_result = hd_fields.ActionResult.Success
             else:
                 final_result = hd_fields.ActionResult.Failure
-            
 
             self.task_field_update(task_id,
                                 status=hd_fields.TaskStatus.Complete,

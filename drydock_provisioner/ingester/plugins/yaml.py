@@ -69,9 +69,7 @@ class YamlIngester(IngesterPlugin):
     """
     def parse_docs(self, yaml_string):
         models = []
-
         self.logger.debug("yamlingester:parse_docs - Parsing YAML string \n%s" % (yaml_string))
-
         try:
             parsed_data = yaml.load_all(yaml_string)
         except yaml.YAMLError as err:
