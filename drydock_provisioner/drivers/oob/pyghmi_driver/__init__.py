@@ -171,7 +171,6 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
             raise errors.DriverError("Runner node does not match " \
                                      "task node scope")
 
-
         ipmi_network = self.node.oob_network
         ipmi_address = self.node.get_network_address(ipmi_network)
 

@@ -27,8 +27,7 @@ class DrydockConfig(object):
 
     node_driver = {
         'maasdriver':   {
-            'api_key':  'UTBfxGL69XWjaffQek:NuKZSYGuBs6ZpYC6B9:byvXBgY8CsW5VQKxGdQjvJXtjXwr5G4U',
-            'api_url':  'http://10.23.19.16:30773/MAAS/api/2.0/',
+
         },
     }
 

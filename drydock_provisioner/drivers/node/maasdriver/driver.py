@@ -110,6 +110,7 @@ class MaasNodeDriver(NodeDriver):
         site_design = self.orchestrator.get_effective_site(design_id)
 
         if task.action == hd_fields.OrchestratorAction.CreateNetworkTemplate:
+
             self.orchestrator.task_field_update(task.get_id(), status=hd_fields.TaskStatus.Running)
 
             subtask = self.orchestrator.create_task(task_model.DriverTask,
@@ -126,6 +127,7 @@ class MaasNodeDriver(NodeDriver):
 
             # TODO Figure out coherent system for putting all the timeouts in
             # the config
+
             runner.join(timeout=120)
 
             if runner.is_alive():
@@ -133,6 +135,7 @@ class MaasNodeDriver(NodeDriver):
                     'retry': False,
                     'detail': 'MaaS Network creation timed-out'
                 }
+
                 self.logger.warn("Thread for task %s timed out after 120s" % (subtask.get_id()))
                 self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Complete,
@@ -140,12 +143,14 @@ class MaasNodeDriver(NodeDriver):
                             result_detail=result)
             else:
                 subtask = self.state_manager.get_task(subtask.get_id())
+
                 self.logger.info("Thread for task %s completed - result %s" % (subtask.get_id(), subtask.get_result()))
                 self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Complete,
                             result=subtask.get_result())
 
             return
+
         elif task.action == hd_fields.OrchestratorAction.IdentifyNode:
             self.orchestrator.task_field_update(task.get_id(),
                                 status=hd_fields.TaskStatus.Running)
@@ -219,6 +224,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
         super(MaasTaskRunner, self).__init__(**kwargs)
 
         self.driver_config = config
+
         self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
     def execute_task(self):
@@ -441,7 +447,3 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                                 result=result,
                                                 result_detail=result_detail)
 
-
-
-
-            

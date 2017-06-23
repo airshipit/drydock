@@ -33,7 +33,6 @@ class Orchestrator(object):
         self.enabled_drivers = {}
 
         self.state_manager = state_manager
-
         self.logger = logging.getLogger('drydock.orchestrator')
 
         if enabled_drivers is not None:
@@ -173,7 +172,6 @@ class Orchestrator(object):
         elif task.action == hd_fields.OrchestratorAction.VerifyNode:
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Running)
-
             oob_driver = self.enabled_drivers['oob']
 
             if oob_driver is None:
@@ -248,7 +246,7 @@ class Orchestrator(object):
                                            design_id=design_id,
                                            action=hd_fields.OrchestratorAction.SetNodeBoot,
                                            task_scope=task_scope)
-
+            
             self.logger.info("Starting OOB driver task %s to set PXE boot" % (setboot_task.get_id()))
 
             oob_driver.execute_task(setboot_task.get_id())
@@ -263,7 +261,7 @@ class Orchestrator(object):
                 worked = failed = True
             elif setboot_task.get_result() == hd_fields.ActionResult.Failure:
                 failed = True
-
+                
             cycle_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,

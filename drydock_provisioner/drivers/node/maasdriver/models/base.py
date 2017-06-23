@@ -145,7 +145,6 @@ class ResourceBase(object):
         return i
 
 
-
 class ResourceCollectionBase(object):
     """
     A collection of MaaS resources.
@@ -169,6 +168,7 @@ class ResourceCollectionBase(object):
         Parse URL for placeholders and replace them with current
         instance values
         """
+
         pattern = '\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0
