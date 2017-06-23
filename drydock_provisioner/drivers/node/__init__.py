@@ -28,6 +28,7 @@ class NodeDriver(ProviderDriver):
                                   hd_fields.OrchestratorAction.CreateStorageTemplate,
                                   hd_fields.OrchestratorAction.CreateBootMedia,
                                   hd_fields.OrchestratorAction.PrepareHardwareConfig,
+                                  hd_fields.OrchestratorAction.IdentifyNode,
                                   hd_fields.OrchestratorAction.ConfigureHardware,
                                   hd_fields.OrchestratorAction.InterrogateNode,
                                   hd_fields.OrchestratorAction.ApplyNodeNetworking,

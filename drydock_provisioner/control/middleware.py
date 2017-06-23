@@ -72,11 +72,9 @@ class ContextMiddleware(object):
         elif requested_logging == 'INFO':
             ctx.set_log_level('INFO')
 
-        ctx.req_id = str(uuid.uuid4())
-
         ext_marker = req.get_header('X-Context-Marker')
-
-        ctx.external_ctx = ext_marker if ext_marker is not None else ''
+       
+        ctx.set_external_marker(ext_marker if ext_marker is not None else '')
 
 class LoggingMiddleware(object):
 
@@ -88,7 +86,7 @@ class LoggingMiddleware(object):
         extra = {
             'user': ctx.user,
             'req_id': ctx.req_id,
-            'external_ctx': ctx.external_ctx,
+            'external_ctx': ctx.external_marker,
         }
         resp.append_header('X-Drydock-Req', ctx.req_id)
         self.logger.info("%s - %s" % (req.uri, resp.status), extra=extra)

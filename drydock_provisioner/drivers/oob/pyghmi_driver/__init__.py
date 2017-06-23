@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import time
+import logging
 
 from pyghmi.ipmi.command import Command
 
@@ -34,15 +35,19 @@ class PyghmiDriver(oob.OobDriver):
         self.driver_key = "pyghmi_driver"
         self.driver_desc = "Pyghmi OOB Driver"
 
+        self.logger = logging.getLogger('drydock.oobdriver.pyghmi')
         self.config = config.DrydockConfig.node_driver.get(self.driver_key, {})
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
 
         if task is None:
+            self.logger.error("Invalid task %s" % (task_id))
             raise errors.DriverError("Invalid task %s" % (task_id))
 
         if task.action not in self.supported_actions:
+            self.logger.error("Driver %s doesn't support task action %s"
+                % (self.driver_desc, task.action))
             raise errors.DriverError("Driver %s doesn't support task action %s"
                 % (self.driver_desc, task.action))
 
@@ -66,7 +71,7 @@ class PyghmiDriver(oob.OobDriver):
                                 result=hd_fields.ActionResult.Success)
             return
             
-        site_design = self.orchestrator.get_effective_site(design_id, task.site_name)
+        site_design = self.orchestrator.get_effective_site(design_id)
 
         target_nodes = []
 
@@ -118,13 +123,6 @@ class PyghmiDriver(oob.OobDriver):
                               if x.get_result() in [hd_fields.ActionResult.PartialSuccess,
                                                     hd_fields.ActionResult.Failure]]
 
-        print("Task %s successful subtasks: %s" %
-            (task.get_id(), len(success_subtasks)))
-        print("Task %s unsuccessful subtasks: %s" %
-            (task.get_id(), len(nosuccess_subtasks)))
-        print("Task %s total subtasks: %s" %
-            (task.get_id(), len(task.get_subtasks())))
-
         task_result = None
         if len(success_subtasks) > 0 and len(nosuccess_subtasks) > 0:
             task_result = hd_fields.ActionResult.PartialSuccess
@@ -145,9 +143,11 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
     def __init__(self, node=None, **kwargs):
         super(PyghmiTaskRunner, self).__init__(**kwargs)
 
+        self.logger = logging.getLogger('drydock.oobdriver.pyghmi')
         # We cheat here by providing the Node model instead
         # of making the runner source it from statemgmt
         if node is None:
+            self.logger.error("Did not specify target node")
             raise errors.DriverError("Did not specify target node")
 
         self.node = node
@@ -171,8 +171,7 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
             raise errors.DriverError("Runner node does not match " \
                                      "task node scope")
 
-
-        ipmi_network = self.node.applied.get('oob_network')
+        ipmi_network = self.node.oob_network
         ipmi_address = self.node.get_network_address(ipmi_network)
 
         if ipmi_address is None:
@@ -184,8 +183,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
         self.orchestrator.task_field_update(self.task.get_id(),
                 status=hd_fields.TaskStatus.Running)
-        ipmi_account = self.node.applied.get('oob_account', '')
-        ipmi_credential = self.node.applied.get('oob_credential', '')
+        ipmi_account = self.node.oob_account
+        ipmi_credential = self.node.oob_credential
 
         ipmi_session = Command(bmc=ipmi_address, userid=ipmi_account,
                                password=ipmi_credential)

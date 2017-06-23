@@ -31,17 +31,21 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
     control_api = falcon.API(request_type=DrydockRequest,
                              middleware=[AuthMiddleware(), ContextMiddleware(), LoggingMiddleware()])
 
+    # v1.0 of Drydock API
+    v1_0_routes = [
     # API for managing orchestrator tasks
-    control_api.add_route('/tasks', TasksResource(state_manager=state_manager, orchestrator=orchestrator))
-    control_api.add_route('/tasks/{task_id}', TaskResource(state_manager=state_manager))
+        ('/tasks', TasksResource(state_manager=state_manager, orchestrator=orchestrator)),
+        ('/tasks/{task_id}', TaskResource(state_manager=state_manager)),
 
     # API for managing site design data
-    control_api.add_route('/designs', DesignsResource(state_manager=state_manager))
-    control_api.add_route('/designs/{design_id}', DesignResource(state_manager=state_manager, orchestrator=orchestrator))
-    control_api.add_route('/designs/{design_id}/parts', DesignsPartsResource(state_manager=state_manager, ingester=ingester))
-    control_api.add_route('/designs/{design_id}/parts/{kind}', DesignsPartsKindsResource(state_manager=state_manager))
+        ('/designs', DesignsResource(state_manager=state_manager)),
+        ('/designs/{design_id}', DesignResource(state_manager=state_manager, orchestrator=orchestrator)),
+        ('/designs/{design_id}/parts', DesignsPartsResource(state_manager=state_manager, ingester=ingester)),
+        ('/designs/{design_id}/parts/{kind}', DesignsPartsKindsResource(state_manager=state_manager)),
+        ('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(state_manager=state_manager, orchestrator=orchestrator))
+    ]
 
-    control_api.add_route('/designs/{design_id}/parts/{kind}/{name}',
-                          DesignsPartResource(state_manager=state_manager, orchestrator=orchestrator))
+    for path, res in v1_0_routes:
+        control_api.add_route('/api/v1.0' + path, res)
 
     return control_api
