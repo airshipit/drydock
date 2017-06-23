@@ -231,7 +231,8 @@ class DesignState(object):
         if parts is not None:
             return [objects.PromenadeConfig.obj_from_primitive(p) for p in parts]
         else:
-            return None
+            # Return an empty list just to play nice with extend
+            return []
 
     def set_bootdata_key(self, hostname, design_id, data_key):
         my_lock = self.bootdata_lock.acquire(blocking=True, timeout=10)
