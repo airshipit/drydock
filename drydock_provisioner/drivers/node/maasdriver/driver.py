@@ -538,6 +538,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
             }
 
             for l in design_links:
+                if l.metalabels is not None:
+                    # TODO move metalabels into config
+                    if 'noconfig' in l.metalabels:
+                        self.logger.info("NetworkLink %s marked 'noconfig', skipping configuration including allowed networks." % (l.name))
+                        continue
+
                 fabrics_found = set()
 
                 # First loop through the possible Networks on this NetworkLink
@@ -711,6 +717,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
             success_rate = 0
 
             for n in design_networks:
+                if n.metalabels is not None:
+                    # TODO move metalabels into config
+                    if 'noconfig' in n.metalabels:
+                        self.logger.info("Network %s marked 'noconfig', skipping validation." % (l.name))
+                        continue
+
                 exists = subnet_list.query({'cidr': n.cidr})
                 if len(exists) > 0:
                     subnet = exists[0]
@@ -891,6 +903,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             
                             for i in node.interfaces:
                                 nl = site_design.get_network_link(i.network_link)
+
+                                if nl.metalabels is not None:
+                                    if 'noconfig' in nl.metalabels:
+                                        self.logger.info("Interface %s connected to NetworkLink %s marked 'noconfig', skipping." %
+                                                        (i.device_name, nl.name))
+                                        continue
 
                                 fabric = fabrics.singleton({'name': nl.name})
 

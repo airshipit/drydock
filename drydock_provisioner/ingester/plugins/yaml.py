@@ -125,6 +125,15 @@ class YamlIngester(IngesterPlugin):
                             model.name = metadata.get('name', '')
                             model.site = metadata.get('region', '')
 
+                            metalabels = metadata.get('labels', [])
+
+                            for l in metalabels:
+                                if model.metalabels is None:
+                                    model.metalabels = [l]
+                                else:
+                                    model.metalabels.append(l)
+
+
                             bonding = spec.get('bonding', {})
                             model.bonding_mode = bonding.get('mode',
                                                             hd_fields.NetworkLinkBondingMode.Disabled)
@@ -150,42 +159,50 @@ class YamlIngester(IngesterPlugin):
                         else:
                             raise ValueError('Unknown API version of object')
                     elif kind == 'Network':
-                            if api_version == "v1":
-                                model = objects.Network()
+                        if api_version == "v1":
+                            model = objects.Network()
 
-                                metadata = d.get('metadata', {})
-                                spec = d.get('spec', {})
+                            metadata = d.get('metadata', {})
+                            spec = d.get('spec', {})
 
-                                model.name = metadata.get('name', '')
-                                model.site = metadata.get('region', '')
+                            model.name = metadata.get('name', '')
+                            model.site = metadata.get('region', '')
 
-                                model.cidr = spec.get('cidr', None)
-                                model.allocation_strategy = spec.get('allocation', 'static')
-                                model.vlan_id = spec.get('vlan', None)
-                                model.mtu = spec.get('mtu', None)
+                            metalabels = metadata.get('labels', [])
 
-                                dns = spec.get('dns', {})
-                                model.dns_domain = dns.get('domain', 'local')
-                                model.dns_servers = dns.get('servers', None)
+                            for l in metalabels:
+                                if model.metalabels is None:
+                                    model.metalabels = [l]
+                                else:
+                                    model.metalabels.append(l)
+                                    
+                            model.cidr = spec.get('cidr', None)
+                            model.allocation_strategy = spec.get('allocation', 'static')
+                            model.vlan_id = spec.get('vlan', None)
+                            model.mtu = spec.get('mtu', None)
 
-                                ranges = spec.get('ranges', [])
-                                model.ranges = []
+                            dns = spec.get('dns', {})
+                            model.dns_domain = dns.get('domain', 'local')
+                            model.dns_servers = dns.get('servers', None)
 
-                                for r in ranges:
-                                    model.ranges.append({'type':    r.get('type', None),
-                                                         'start':   r.get('start', None),
-                                                         'end':     r.get('end', None),
-                                                        })
+                            ranges = spec.get('ranges', [])
+                            model.ranges = []
 
-                                routes = spec.get('routes', [])
-                                model.routes = []
+                            for r in ranges:
+                                model.ranges.append({'type':    r.get('type', None),
+                                                     'start':   r.get('start', None),
+                                                     'end':     r.get('end', None),
+                                                    })
 
-                                for r in routes:
-                                    model.routes.append({'subnet':  r.get('subnet', None),
-                                                         'gateway': r.get('gateway', None),
-                                                         'metric':  r.get('metric', None),
-                                                        })
-                                models.append(model)
+                            routes = spec.get('routes', [])
+                            model.routes = []
+
+                            for r in routes:
+                                model.routes.append({'subnet':  r.get('subnet', None),
+                                                     'gateway': r.get('gateway', None),
+                                                     'metric':  r.get('metric', None),
+                                                    })
+                            models.append(model)
                     elif kind == 'HardwareProfile':
                         if api_version == 'v1':
                             metadata = d.get('metadata', {})
