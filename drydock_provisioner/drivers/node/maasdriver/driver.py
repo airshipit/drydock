@@ -15,6 +15,7 @@ import time
 import logging
 import traceback
 import sys
+import uuid
 
 from oslo_config import cfg
 
@@ -394,7 +395,7 @@ class MaasNodeDriver(NodeDriver):
             attempts = 0
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.apply_node_platform:
+            while running_subtasks > 0 and attempts < config.conf.timeouts.apply_node_platform:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -904,6 +905,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 if iface is None:
                                     self.logger.warning("Interface %s not found on node %s, skipping configuration" %
                                                         (i.device_name, machine.resource_id))
+                                    failed = True
                                     continue
 
                                 if iface.fabric_id == fabric.resource_id:
@@ -1132,6 +1134,25 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     machine = machine_list.acquire_node(n)
                 except DriverError as dex:
                     self.logger.warning("Error acquiring node %s, skipping" % n)
+                    failed = True
+                    continue
+
+                # Need to create bootdata keys for all the nodes being deployed
+                # TODO this should be in the orchestrator
+                node = site_design.get_baremetal_node(n)
+                data_key = str(uuid.uuid4())
+                self.state_manager.set_bootdata_key(n, self.task.design_id, data_key)
+                node.owner_data['bootdata_key'] = data_key
+                self.logger.debug("Configured bootdata for node %s" % (n))
+
+                # Set owner data in MaaS
+                try:
+                    self.logger.info("Setting node %s owner data." % n)
+                    for k,v in node.owner_data.items():
+                        self.logger.debug("Set owner data %s = %s for node %s" % (k, v, n))
+                        machine.set_owner_data(k, v)
+                except Exception as ex:
+                    self.logger.warning("Error setting node %s owner data: %s" % (n, str(ex)))
                     failed = True
                     continue
 
