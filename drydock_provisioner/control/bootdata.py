@@ -64,7 +64,7 @@ class BootdataResource(StatefulResource):
                     if t is not None:
                         part_list.extend([i.document for i in tag_parts])
 
-                resp.body = "---" + "---\n".join(part_list) + "..."
+                resp.body = "---\n" + "---\n".join(part_list) + "\n..."
                 return
 
     systemd_definition = \
