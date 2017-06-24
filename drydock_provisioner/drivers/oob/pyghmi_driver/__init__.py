@@ -171,7 +171,7 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                                      "task node scope")
 
 
-        ipmi_network = self.node.oob_network
+        ipmi_network = self.node.oob_parameters['network']
         ipmi_address = self.node.get_network_address(ipmi_network)
 
         if ipmi_address is None:
@@ -183,8 +183,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
         self.orchestrator.task_field_update(self.task.get_id(),
                 status=hd_fields.TaskStatus.Running)
-        ipmi_account = self.node.oob_account
-        ipmi_credential = self.node.oob_credential
+        ipmi_account = self.node.oob_parameters['account']
+        ipmi_credential = self.node.oob_parameters['credential']
 
         ipmi_session = Command(bmc=ipmi_address, userid=ipmi_account,
                                password=ipmi_credential)
