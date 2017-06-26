@@ -25,4 +25,4 @@ RUN python3 setup.py install
 
 EXPOSE 9000
 
-CMD ["uwsgi","--http",":9000","-w","drydock_provisioner.drydock","--callable","drydock","--enable-threads","-L","--pyargv","--config-file /etc/drydock/drydock.conf"]
+CMD ["uwsgi","--http",":9000","-w","drydock_provisioner.drydock","--callable","drydock","--enable-threads","-L","--python-autoreload","1","--pyargv","--config-file /etc/drydock/drydock.conf"]
