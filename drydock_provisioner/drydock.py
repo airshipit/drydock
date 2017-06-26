@@ -35,7 +35,12 @@ def start_drydock():
     config.conf(sys.argv[1:])
 
     if config.conf.debug:
-        config.conf.logging.log_level = 'DEBUG'
+        config.conf.set_override(name='log_level', override='DEBUG', group='logging')
+
+    # Check if we have an API key in the environment
+    # Hack around until we move MaaS configs to the YAML schema
+    if 'MAAS_API_KEY' in os.environ:
+        config.conf.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
 
     # Setup root logger
     logger = logging.getLogger(config.conf.logging.global_logger_name)
