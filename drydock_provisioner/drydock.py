@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from oslo_config import cfg
 import sys
+import os
+
+from oslo_config import cfg
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -35,7 +37,7 @@ def start_drydock():
     config.conf(sys.argv[1:])
 
     if config.conf.debug:
-        config.conf.logging.log_level = 'DEBUG'
+        config.conf.set_override(name='log_level', override='DEBUG', group='logging')
 
     # Setup root logger
     logger = logging.getLogger(config.conf.logging.global_logger_name)
@@ -62,6 +64,11 @@ def start_drydock():
                              state_manager=state)
     input_ingester = ingester.Ingester()
     input_ingester.enable_plugins(config.conf.plugins.ingester)
+
+    # Check if we have an API key in the environment
+    # Hack around until we move MaaS configs to the YAML schema
+    if 'MAAS_API_KEY' in os.environ:
+        config.conf.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
 
     # Now that loggers are configured, log the effective config
     config.conf.log_opt_values(logging.getLogger(config.conf.logging.global_logger_name), logging.DEBUG)

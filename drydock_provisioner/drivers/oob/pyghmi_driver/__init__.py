@@ -15,6 +15,7 @@ import time
 import logging
 
 from pyghmi.ipmi.command import Command
+from pyghmi.exceptions import IpmiException
 
 import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
@@ -171,23 +172,8 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                                      "task node scope")
 
 
-        ipmi_network = self.node.oob_network
-        ipmi_address = self.node.get_network_address(ipmi_network)
-
-        if ipmi_address is None:
-            self.orchestrator.task_field_update(self.task.get_id(),
-                result=hd_fields.ActionResult.Incomplete,
-                status=hd_fields.TaskStatus.Errored)
-            raise errors.DriverError("Node %s has no IPMI address" %
-                (target_node_name))
-
         self.orchestrator.task_field_update(self.task.get_id(),
-                status=hd_fields.TaskStatus.Running)
-        ipmi_account = self.node.oob_account
-        ipmi_credential = self.node.oob_credential
-
-        ipmi_session = Command(bmc=ipmi_address, userid=ipmi_account,
-                               password=ipmi_credential)
+                            status=hd_fields.TaskStatus.Running)
 
         if task_action == hd_fields.OrchestratorAction.ConfigNodePxe:
             self.orchestrator.task_field_update(self.task.get_id(),
@@ -195,91 +181,124 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete)
             return
         elif task_action == hd_fields.OrchestratorAction.SetNodeBoot:
-            ipmi_session.set_bootdev('pxe')
-
+            
+            worked = False
+            
+            self.logger.debug("Setting bootdev to PXE for %s" % self.node.name)
+            self.exec_ipmi_command(Command.set_bootdev, 'pxe')
+                
             time.sleep(3)
 
-            bootdev = ipmi_session.get_bootdev()
-
+            bootdev = self.exec_ipmi_command(Command.get_bootdev)
+                
             if bootdev.get('bootdev', '') == 'network':
+                self.logger.debug("%s reports bootdev of network" % self.node.name)
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Success,
                     status=hd_fields.TaskStatus.Complete)
+                return
             else:
-                self.orchestrator.task_field_update(self.task.get_id(),
+                self.logger.warning("%s reports bootdev of %s" % (ipmi_address, bootdev.get('bootdev', None)))
+                worked = False
+                
+            self.logger.error("Giving up on IPMI command to %s after 3 attempts" % self.node.name)
+            self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
             return
         elif task_action == hd_fields.OrchestratorAction.PowerOffNode:
-            ipmi_session.set_power('off')
+            worked = False
+
+            self.logger.debug("Sending set_power = off command to %s" % self.node.name)
+            self.exec_ipmi_command(Command.set_power, 'off')
 
             i = 18
 
             while i > 0:
-                power_state = ipmi_session.get_power()
+                self.logger.debug("Polling powerstate waiting for success.")
+                power_state = self.exec_ipmi_command(Command.get_power)
                 if power_state.get('powerstate', '') == 'off':
+                    self.logger.debug("Node reports powerstate of off")
+                    worked = True
                     break
                 time.sleep(10)
                 i = i - 1
 
-            if power_state.get('powerstate', '') == 'off':
+            if worked:
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Success,
                     status=hd_fields.TaskStatus.Complete)
             else:
+                self.logger.error("Giving up on IPMI command to %s" % self.node.name)
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
             return
         elif task_action == hd_fields.OrchestratorAction.PowerOnNode:
-            ipmi_session.set_power('on')
+            worked = False
+
+            self.logger.debug("Sending set_power = off command to %s" % self.node.name)
+            self.exec_ipmi_command(Command.set_power, 'off')
 
             i = 18
 
             while i > 0:
-                power_state = ipmi_session.get_power()
-                if power_state.get('powerstate', '') == 'on':
+                self.logger.debug("Polling powerstate waiting for success.")
+                power_state = self.exec_ipmi_command(Command.get_power)
+                if power_state.get('powerstate', '') == 'off':
+                    self.logger.debug("Node reports powerstate of off")
+                    worked = True
                     break
                 time.sleep(10)
                 i = i - 1
 
-            if power_state.get('powerstate', '') == 'on':
+            if worked:
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Success,
                     status=hd_fields.TaskStatus.Complete)
             else:
+                self.logger.error("Giving up on IPMI command to %s" % self.node.name)
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
             return
         elif task_action == hd_fields.OrchestratorAction.PowerCycleNode:
-            ipmi_session.set_power('off')
+            self.logger.debug("Sending set_power = off command to %s" % self.node.name)
+            self.exec_ipmi_command(Command.set_power, 'off')
 
             # Wait for power state of off before booting back up
             # We'll wait for up to 3 minutes to power off
             i = 18
 
             while i > 0:
-                power_state = ipmi_session.get_power()
-                if power_state.get('powerstate', '') == 'off':
+                power_state = self.exec_ipmi_command(Command.get_power)
+                if power_state is not None and power_state.get('powerstate', '') == 'off':
+                    self.logger.debug("%s reports powerstate of off" % self.node.name)
                     break
+                elif power_state is None:
+                    self.logger.debug("None response on IPMI power query to %s" % self.node.name)
                 time.sleep(10)
                 i = i - 1
 
             if power_state.get('powerstate', '') == 'on':
+                self.logger.warning("Failed powering down node %s during power cycle task" % self.node.name)
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
                 return
 
-            ipmi_session.set_power('on')
+            self.logger.debug("Sending set_power = on command to %s" % self.node.name)
+            self.exec_ipmi_command(Command.set_power, 'on')
 
             i = 18
 
             while i > 0:
-                power_state = ipmi_session.get_power()
-                if power_state.get('powerstate', '') == 'on':
+                power_state = self.exec_ipmi_command(Command.get_power)
+                if power_state is not None and power_state.get('powerstate', '') == 'on':
+                    self.logger.debug("%s reports powerstate of on" % self.node.name)
                     break
+                elif power_state is None:
+                    self.logger.debug("None response on IPMI power query to %s" % self.node.name)
                 time.sleep(10)
                 i = i - 1
 
@@ -288,6 +307,7 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                     result=hd_fields.ActionResult.Success,
                     status=hd_fields.TaskStatus.Complete)
             else:
+                self.logger.warning("Failed powering up node %s during power cycle task" % self.node.name)
                 self.orchestrator.task_field_update(self.task.get_id(),
                     result=hd_fields.ActionResult.Failure,
                     status=hd_fields.TaskStatus.Complete)
@@ -300,3 +320,65 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete,
                 result_detail=mci_id)
             return
+
+    def get_ipmi_session(self):
+        """
+        Initialize a Pyghmi IPMI session to this runner's self.node
+
+        :return: An instance of pyghmi.ipmi.command.Command initialized to nodes' IPMI interface
+        """
+
+        node = self.node
+
+        if node.oob_type != 'ipmi':
+            raise errors.DriverError("Node OOB type is not IPMI")
+
+        ipmi_network = self.node.oob_parameters['network']
+        ipmi_address = self.node.get_network_address(ipmi_network)
+
+        if ipmi_address is None:
+            raise errors.DriverError("Node %s has no IPMI address" %
+                (node.name))
+
+        
+        ipmi_account = self.node.oob_parameters['account']
+        ipmi_credential = self.node.oob_parameters['credential']
+
+        self.logger.debug("Starting IPMI session to %s with %s/%s" %
+                            (ipmi_address, ipmi_account, ipmi_credential[:1]))
+        ipmi_session = Command(bmc=ipmi_address, userid=ipmi_account,
+                               password=ipmi_credential)
+
+        return ipmi_session
+
+    def exec_ipmi_command(self, callable, *args):
+        """
+        Call an IPMI command after establishing a session with this runner's node
+
+        :param callable: The pyghmi Command method to call
+        :param args: The args to pass the callable
+        """
+        attempts = 0
+        while attempts < 5:
+            try:
+                self.logger.debug("Initializing IPMI session")
+                ipmi_session = self.get_ipmi_session()
+            except IpmiException as iex:
+                self.logger.error("Error initializing IPMI session for node %s" % self.node.name)
+                self.logger.debug("IPMI Exception: %s" % str(iex))
+                self.logger.warning("IPMI command failed, retrying after 15 seconds...")
+                time.sleep(15)
+                attempts =  attempts + 1
+                continue
+
+            try:
+                self.logger.debug("Calling IPMI command %s on %s" % (callable.__name__, self.node.name))
+                response = callable(ipmi_session, *args)
+                ipmi_session.ipmi_session.logout()
+                return response
+            except IpmiException as iex:
+                self.logger.error("Error sending command: %s" % str(iex))
+                self.logger.warning("IPMI command failed, retrying after 15 seconds...")
+                time.sleep(15)
+                attempts = attempts + 1
+
