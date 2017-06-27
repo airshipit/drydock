@@ -68,7 +68,7 @@ class BootdataResource(StatefulResource):
                 return
 
     systemd_definition = \
-"""[Unit]
+r"""[Unit]
 Description=Promenade Initialization Service
 Documentation=http://github.com/att-comdev/drydock
 After=network.target local-fs.target
@@ -84,7 +84,7 @@ ExecStart=/var/tmp/prom_init.sh /etc/prom_init.yaml
 WantedBy=multi-user.target
 """
     prom_init = \
-"""#!/usr/bin/env bash
+r"""#!/usr/bin/env bash
 
 if [ "$(id -u)" != "0" ]; then
    echo "This script must be run as root." 1>&2
@@ -99,17 +99,17 @@ DOCKER_PACKAGE="docker.io"
 DOCKER_VERSION=1.12.6-0ubuntu1~16.04.1
 
 #Proxy Variables
-DOCKER_HTTP_PROXY=${{DOCKER_HTTP_PROXY:-${{HTTP_PROXY:-${{http_proxy}}}}}}
-DOCKER_HTTPS_PROXY=${{DOCKER_HTTPS_PROXY:-${{HTTPS_PROXY:-${{https_proxy}}}}}}
-DOCKER_NO_PROXY=${{DOCKER_NO_PROXY:-${{NO_PROXY:-${{}no_proxy}}}}}}
+DOCKER_HTTP_PROXY=${DOCKER_HTTP_PROXY:-${HTTP_PROXY:-${http_proxy}}}
+DOCKER_HTTPS_PROXY=${DOCKER_HTTPS_PROXY:-${HTTPS_PROXY:-${https_proxy}}}
+DOCKER_NO_PROXY=${DOCKER_NO_PROXY:-${NO_PROXY:-${no_proxy}}}
 
 
 mkdir -p /etc/docker
 cat <<EOS > /etc/docker/daemon.json
-{{
+{
   "live-restore": true,
   "storage-driver": "overlay2"
-}}
+}
 EOS
 
 #Configuration for Docker Behind a Proxy
@@ -118,19 +118,19 @@ mkdir -p /etc/systemd/system/docker.service.d
 #Set HTTPS Proxy Variable
 cat <<EOF > /etc/systemd/system/docker.service.d/http-proxy.conf
 [Service]
-Environment="HTTP_PROXY=${{DOCKER_HTTP_PROXY}}"
+Environment="HTTP_PROXY=${DOCKER_HTTP_PROXY}"
 EOF
 
 #Set HTTPS Proxy Variable
 cat <<EOF > /etc/systemd/system/docker.service.d/https-proxy.conf
 [Service]
-Environment="HTTPS_PROXY=${{DOCKER_HTTPS_PROXY}}"
+Environment="HTTPS_PROXY=${DOCKER_HTTPS_PROXY}"
 EOF
 
 #Set No Proxy Variable
 cat <<EOF > /etc/systemd/system/docker.service.d/no-proxy.conf
 [Service]
-Environment="NO_PROXY=${{DOCKER_NO_PROXY}}"
+Environment="NO_PROXY=${DOCKER_NO_PROXY}"
 EOF
 
 #Reload systemd and docker if present
@@ -143,7 +143,7 @@ apt-get install -y -qq --no-install-recommends \
     $DOCKER_PACKAGE=$DOCKER_VERSION \
 
 
-if [ -f "${{PROMENADE_LOAD_IMAGE}}" ]; then
+if [ -f "${PROMENADE_LOAD_IMAGE}" ]; then
   echo === Loading updated promenade image ===
   docker load -i "${{PROMENADE_LOAD_IMAGE}}"
 fi
