@@ -41,10 +41,9 @@ class Orchestrator(object):
 
             # This is because oslo_config changes the option value
             # for multiopt depending on if multiple values are actually defined
-            print("%s" % (oob_drivers))
 
             for d in oob_drivers:
-                print("Enabling OOB driver %s" % d)
+                self.logger.info("Enabling OOB driver %s" % d)
                 if d is not None:
                     m, c = d.rsplit('.', 1)
                     oob_driver_class = \

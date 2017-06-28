@@ -67,8 +67,6 @@ class DrydockConfig(object):
         cfg.StrOpt('node_driver',
                     default='drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
                     help='Module path string of the Node driver to enable'),
-        cfg.StrOpt('network_driver',
-                    default=None, help='Module path string of the Network driver to enable'),
     ]
 
     # Timeouts for various tasks specified in minutes
@@ -82,16 +80,13 @@ class DrydockConfig(object):
     ]
 
     def __init__(self):
-        self.conf = cfg.ConfigOpts()
+        self.conf = cfg.CONF
 
     def register_options(self):
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.auth_options, group='authentication')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(DrydockConfig.timeout_options, group='timeouts')
-
-config_mgr = DrydockConfig()
-conf = config_mgr.conf
 
 IGNORED_MODULES = ('drydock', 'config')
 

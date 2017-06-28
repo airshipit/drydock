@@ -14,9 +14,9 @@
 import time
 import logging
 
+from oslo_config import cfg
 from pyghmi.ipmi.command import Command
 
-import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 
 import drydock_provisioner.objects.fields as hd_fields
@@ -37,8 +37,7 @@ class PyghmiDriver(oob.OobDriver):
         self.driver_key = "pyghmi_driver"
         self.driver_desc = "Pyghmi OOB Driver"
 
-        self.logger = logging.getLogger("%s.%s" %
-                                (config.conf.logging.oobdriver_logger_name, self.driver_key))
+        self.logger = logging.getLogger(cfg.CONF.logging.oobdriver_logger_name)
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -101,7 +100,7 @@ class PyghmiDriver(oob.OobDriver):
 
         attempts = 0
         while (len(incomplete_subtasks) > 0 and
-              attempts <= getattr(config.conf.timeouts, task.action, config.conf.timeouts.drydock_timeout)):
+              attempts <= getattr(cfg.CONF.timeouts, task.action, cfg.CONF.timeouts.drydock_timeout)):
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
                 if t.get_status() in [hd_fields.TaskStatus.Terminated,
