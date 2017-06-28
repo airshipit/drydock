@@ -13,20 +13,37 @@
 # limitations under the License.
 FROM ubuntu:16.04
 
+ARG VERSION
+
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
 
 RUN apt -qq update && \
-    apt -y install git netbase python3-minimal python3-setuptools python3-pip python3-dev ca-certificates gcc g++ make libffi-dev libssl-dev --no-install-recommends
+    apt -y install git \
+                   netbase \
+                   python3-minimal \
+                   python3-setuptools \
+                   python3-pip \
+                   python3-dev \
+                   ca-certificates \
+                   gcc \
+                   g++ \
+                   make \
+                   libffi-dev \
+                   libssl-dev --no-install-recommends
 
-# Need to configure proxies?
+# Copy direct dependency requirements only to build a dependency layer
+COPY ./requirements-direct.txt /tmp/drydock/
+RUN pip3 install -r /tmp/drydock/requirements-direct.txt
 
-RUN git clone https://github.com/sh8121att/drydock /tmp/drydock
-
+COPY . /tmp/drydock
 WORKDIR /tmp/drydock
-
 RUN python3 setup.py install
 
 EXPOSE 9000
 
-CMD ["/usr/bin/uwsgi","--http",":9000","-w","drydock_provisioner.drydock","--callable","drydock","--enable-threads","-L"]
+COPY examples/drydock.conf /etc/drydock/drydock.conf
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+CMD ["server"]
