@@ -18,6 +18,7 @@
 #   
 import yaml
 import logging
+import base64
 
 import drydock_provisioner.objects.fields as hd_fields
 
@@ -388,6 +389,7 @@ class YamlIngester(IngesterPlugin):
                     target = metadata.get('target', 'all')
                     name = metadata.get('name', None)
 
-                    model = objects.PromenadeConfig(target=target, name=name, kind=kind, document=yaml.dump(d))
+                    model = objects.PromenadeConfig(target=target, name=name, kind=kind,
+                                document=base64.b64encode(bytearray(yaml.dump(d), encoding='utf-8')).decode('ascii'))
                     models.append(model)
         return models
