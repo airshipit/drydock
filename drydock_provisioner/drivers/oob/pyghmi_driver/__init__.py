@@ -19,7 +19,6 @@ from oslo_config import cfg
 from pyghmi.ipmi.command import Command
 from pyghmi.exceptions import IpmiException
 
-import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 
 import drydock_provisioner.objects.fields as hd_fields
@@ -45,8 +44,7 @@ class PyghmiDriver(oob.OobDriver):
 
         config.conf.register_opts(PyghmiDriver.pyghmi_driver_options, group=PyghmiDriver.driver_key)
 
-        self.logger = logging.getLogger("%s.%s" %
-                                (config.conf.logging.oobdriver_logger_name, self.driver_key))
+        self.logger = logging.getLogger(cfg.CONF.logging.oobdriver_logger_name)
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -108,7 +106,7 @@ class PyghmiDriver(oob.OobDriver):
             runner.start()
 
         attempts = 0
-        max_attempts = getattr(config.conf.timeouts, task.action, config.conf.timeouts.drydock_timeout) * (60 / config.conf.pyghmi_driver.poll_interval)
+        max_attempts = getattr(cfg.CONF.timeouts, task.action, cfg.CONF.timeouts.drydock_timeout) * (60 / cfg.CONF.pyghmi_driver.poll_interval)
         while (len(incomplete_subtasks) > 0 and attempts <= max_attempts):
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
@@ -327,6 +325,7 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete,
                 result_detail=mci_id)
             return
+<<<<<<< HEAD
 
     def get_ipmi_session(self):
         """
@@ -391,3 +390,5 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
 def list_opts():
     return {PyghmiDriver.driver_key: PyghmiDriver.pyghmi_driver_options}
+=======
+>>>>>>> 064395f... Convert to cfg.CONF pattern

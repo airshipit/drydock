@@ -19,7 +19,6 @@ import uuid
 
 from oslo_config import cfg
 
-import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.fields as hd_fields
@@ -49,10 +48,9 @@ class MaasNodeDriver(NodeDriver):
     def __init__(self, **kwargs):
         super(MaasNodeDriver, self).__init__(**kwargs)
 	
-        config.conf.register_opts(MaasNodeDriver.maasdriver_options, group=MaasNodeDriver.driver_key)
+        cfg.CONF.register_opts(MaasNodeDriver.maasdriver_options, group=MaasNodeDriver.driver_key)
 
-        self.logger = logging.getLogger("%s.%s" %
-                                (config.conf.logging.nodedriver_logger_name, self.driver_key))
+        self.logger = logging.getLogger(cfg.CONF.logging.nodedriver_logger_name)
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -67,7 +65,7 @@ class MaasNodeDriver(NodeDriver):
         if task.action == hd_fields.OrchestratorAction.ValidateNodeServices:
             self.orchestrator.task_field_update(task.get_id(),
                                 status=hd_fields.TaskStatus.Running)
-            maas_client = MaasRequestFactory(config.conf.maasdriver.maas_api_url, config.conf.maasdriver.maas_api_key) 
+            maas_client = MaasRequestFactory(cfg.CONF.maasdriver.maas_api_url, cfg.CONF.maasdriver.maas_api_key) 
 
             try:
                 if maas_client.test_connectivity():
@@ -138,7 +136,7 @@ class MaasNodeDriver(NodeDriver):
 
             runner.start()
 
-            runner.join(timeout=config.conf.timeouts.create_network_template * 60)
+            runner.join(timeout=cfg.CONF.timeouts.create_network_template * 60)
 
             if runner.is_alive():
                 result =  {
@@ -173,7 +171,7 @@ class MaasNodeDriver(NodeDriver):
 
             runner.start()
 
-            runner.join(timeout=config.conf.timeouts.configure_user_credentials * 60)
+            runner.join(timeout=cfg.CONF.timeouts.configure_user_credentials * 60)
 
             if runner.is_alive():
                 result =  {
@@ -222,11 +220,11 @@ class MaasNodeDriver(NodeDriver):
 
             cleaned_subtasks = []
             attempts = 0
-            max_attempts = config.conf.timeouts.identify_node * (60 // config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.identify_node * (60 // cfg.CONF.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
-                                (config.conf.poll_interval, max_attempts))
+                                (cfg.CONF.poll_interval, max_attempts))
             while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
                     if t in cleaned_subtasks:
@@ -248,7 +246,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(config.conf.maasdriver.poll_interval)
+                time.sleep(cfg.CONF.maasdriver.poll_interval)
                 attempts = attempts + 1
 
             if len(cleaned_subtasks) < len(subtasks):
@@ -297,12 +295,11 @@ class MaasNodeDriver(NodeDriver):
 
             cleaned_subtasks = []
             attempts = 0
-            max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.configure_hardware * (60 // cfg.CONF.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
-                                (config.conf.poll_interval, max_attempts))
-            #TODO Add timeout to config
+                                (cfg.CONF.poll_interval, max_attempts))
             while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
                     if t in cleaned_subtasks:
@@ -324,7 +321,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(config.conf.maasdriver.poll_interval)
+                time.sleep(cfg.CONF.maasdriver.poll_interval)
                 attempts = attempts + 1
 
             if len(cleaned_subtasks) < len(subtasks):
@@ -373,11 +370,11 @@ class MaasNodeDriver(NodeDriver):
 
             cleaned_subtasks = []
             attempts = 0
-            max_attempts = config.conf.timeouts.apply_node_networking * (60 // config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.apply_node_networking * (60 // cfg.CONF.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
-                                (config.conf.poll_interval, max_attempts))
+                                (cfg.CONF.poll_interval, max_attempts))
             while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
                     if t in cleaned_subtasks:
@@ -399,7 +396,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(config.conf.poll_interval)
+                time.sleep(cfg.CONF.poll_interval)
                 attempts = attempts + 1
 
             if len(cleaned_subtasks) < len(subtasks):
@@ -448,11 +445,11 @@ class MaasNodeDriver(NodeDriver):
 
             cleaned_subtasks = []
             attempts = 0
-            max_attempts = config.conf.timeouts.apply_node_platform * (60 // config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.apply_node_platform * (60 // cfg.CONF.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
-                                (config.conf.poll_interval, max_attempts))
+                                (cfg.CONF.poll_interval, max_attempts))
 
             while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
@@ -475,7 +472,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(config.conf.poll_interval)
+                time.sleep(cfg.CONF.poll_interval)
                 attempts = attempts + 1
 
             if len(cleaned_subtasks) < len(subtasks):
@@ -524,11 +521,11 @@ class MaasNodeDriver(NodeDriver):
 
             cleaned_subtasks = []
             attempts = 0
-            max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.deploy_node * (60 // cfg.CONF.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
-                                (config.conf.poll_interval, max_attempts))
+                                (cfg.CONF.poll_interval, max_attempts))
 
             while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
@@ -585,8 +582,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             status=hd_fields.TaskStatus.Running,
                             result=hd_fields.ActionResult.Incomplete)
 
-        self.maas_client = MaasRequestFactory(config.conf.maasdriver.maas_api_url,
-                                              config.conf.maasdriver.maas_api_key)
+        self.maas_client = MaasRequestFactory(cfg.CONF.maasdriver.maas_api_url,
+                                              cfg.CONF.maasdriver.maas_api_key)
 
         site_design = self.orchestrator.get_effective_site(self.task.design_id)
 
@@ -930,12 +927,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
 
                             # Poll machine status
                             attempts = 0
-                            max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.maasdriver.poll_interval)
+                            max_attempts = cfg.CONF.timeouts.configure_hardware * (60 // cfg.CONF.maasdriver.poll_interval)
 
                             while (attempts < max_attempts and 
                                       (machine.status_name != 'Ready' and not machine.status_name.startswith('Failed'))):
                                 attempts = attempts + 1
-                                time.sleep(config.conf.maasdriver.poll_interval)
+                                time.sleep(cfg.CONF.maasdriver.poll_interval)
                                 try:
                                     machine.refresh()
                                     self.logger.debug("Polling node %s status attempt %d of %d: %s" % (n, attempts, max_attempts, machine.status_name))
@@ -1317,12 +1314,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     continue
 
                 attempts = 0
-                max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.maasdriver.poll_interval)
+                max_attempts = cfg.CONF.timeouts.deploy_node * (60 // cfg.CONF.maasdriver.poll_interval)
 
                 while (attempts < max_attempts and 
                           ( not machine.status_name.startswith('Deployed') and not machine.status_name.startswith('Failed'))):
                     attempts = attempts + 1
-                    time.sleep(config.conf.maasdriver.poll_interval)
+                    time.sleep(cfg.CONF.maasdriver.poll_interval)
                     try:
                         machine.refresh()
                         self.logger.debug("Polling node %s status attempt %d of %d: %s" % (n, attempts, max_attempts, machine.status_name))

@@ -16,7 +16,7 @@ import falcon
 import logging
 import uuid
 
-import drydock_provisioner.config as config
+from oslo_config import cfg
 
 class AuthMiddleware(object):
 
@@ -66,7 +66,7 @@ class ContextMiddleware(object):
 
         requested_logging = req.get_header('X-Log-Level')
 
-        if (config.conf.logging.log_level == 'DEBUG' or
+        if (cfg.CONF.logging.log_level == 'DEBUG' or
            (requested_logging == 'DEBUG' and 'admin' in ctx.roles)):
             ctx.set_log_level('DEBUG')
         elif requested_logging == 'INFO':
@@ -79,7 +79,7 @@ class ContextMiddleware(object):
 class LoggingMiddleware(object):
 
     def __init__(self):
-        self.logger = logging.getLogger(config.conf.logging.control_logger_name)
+        self.logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
 
     def process_response(self, req, resp, resource, req_succeeded):
         ctx = req.context
