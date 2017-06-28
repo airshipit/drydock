@@ -1038,7 +1038,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     # Render the string of all kernel params for the node
                     kp_string = ""
 
-                    for k,v in getattr(node, 'kernel_params', {}).items():
+                    for k, v in getattr(node, 'kernel_params', {}).items():
                         if v == 'True':
                             kp_string = kp_string + " %s" % (k)
                         else:
@@ -1093,7 +1093,9 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     self.logger.error("Error configuring static tags for node %s: %s" % (node.name, str(ex3)))
                     continue
 
-            if failed:
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif failed:
                 final_result = hd_fields.ActionResult.Failure
             else:
                 final_result = hd_fields.ActionResult.Success

@@ -310,7 +310,7 @@ class YamlIngester(IngesterPlugin):
                         model.kernel = platform.get('kernel', None)
 
                         model.kernel_params = {}
-                        for k,v in platform.get('kernel_params', {}).items():
+                        for k, v in platform.get('kernel_params', {}).items():
                             model.kernel_params[k] = v
 
                         model.primary_network = spec.get('primary_network', None)

@@ -483,7 +483,7 @@ class Orchestrator(object):
                 if node_platform_task.get_result() in [hd_fields.ActionResult.Success,
                                                      hd_fields.ActionResult.PartialSuccess]:
                     worked = True
-                elif node_platform_task.get_result() in [hd_fields.ActionResult.Failure,
+                if node_platform_task.get_result() in [hd_fields.ActionResult.Failure,
                                                        hd_fields.ActionResult.PartialSuccess]:
                     failed = True
             else:
