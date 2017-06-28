@@ -27,7 +27,6 @@ class DrydockConfig(object):
 
     node_driver = {
         'maasdriver':   {
-
         },
     }
 

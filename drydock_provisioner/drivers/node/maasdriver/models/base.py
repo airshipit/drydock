@@ -44,7 +44,7 @@ class ResourceBase(object):
 
         updated_fields = resp.json()
 
-        for f in self.json_fields:
+        for f in self.fields:
             if f in updated_fields.keys():
                 setattr(self, f, updated_fields.get(f))
 
@@ -168,7 +168,6 @@ class ResourceCollectionBase(object):
         Parse URL for placeholders and replace them with current
         instance values
         """
-
         pattern = '\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0

@@ -21,7 +21,7 @@ class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
     fields = ['resource_id', 'hostname', 'power_type', 'power_state', 'power_parameters', 'interfaces',
-              'boot_interface', 'memory', 'cpu_count', 'tag_names']
+              'boot_interface', 'memory', 'cpu_count', 'tag_names', 'status_name']
     json_fields = ['hostname', 'power_type']
 
     def __init__(self, api_client, **kwargs):
@@ -31,6 +31,8 @@ class Machine(model_base.ResourceBase):
         if getattr(self, 'resource_id', None) is not None:
             self.interfaces = maas_interface.Interfaces(api_client, system_id=self.resource_id)
             self.interfaces.refresh()
+        else:
+            self.interfaces = None
 
     def get_power_params(self):
         url = self.interpolate_url()
@@ -53,6 +55,11 @@ class Machine(model_base.ResourceBase):
         # Need to sort out how to handle exceptions
         if not resp.ok:
             raise Exception()
+
+    def get_network_interface(self, iface_name):
+        if self.interfaces is not None:
+            iface = self.interfaces.singleton({'name': iface_name})
+            return iface
 
     def get_details(self):
         url = self.interpolate_url()
@@ -142,8 +149,8 @@ class Machines(model_base.ResourceCollectionBase):
                 maas_node.hostname = node_model.name
                 maas_node.update()
                 self.logger.debug("Updated MaaS resource %s hostname to %s" % (maas_node.resource_id, node_model.name))
-                return maas_node
-                
+
+            return maas_node
         except ValueError as ve:
             self.logger.warn("Error locating matching MaaS resource for OOB IP %s" % (node_oob_ip))
             return None
