@@ -1,0 +1,10 @@
+PyYAML
+pyghmi>=1.0.18
+netaddr
+falcon
+oslo.versionedobjects>=1.23.0
+requests
+oauthlib
+uwsgi>1.4
+bson===0.4.7
+oslo.config
