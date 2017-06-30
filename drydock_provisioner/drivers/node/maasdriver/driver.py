@@ -1123,7 +1123,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     tag_list.refresh()
                                     tag = tag_list.select(t)
                                     if tag is not None:
-                                        self.logger.debug("Tag %s arrived out of nowhere." % t
+                                        self.logger.debug("Tag %s arrived out of nowhere." % t)
                                     else:
                                         self.logger.error("Error creating tag %s." % t)
                                         continue
