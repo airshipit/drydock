@@ -992,7 +992,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                                 found = True
 
                                         if not found:
-                                            self.logger.error("No addressed assigned to network %s for node %s, link is L2 only." %
+                                            self.logger.warning("No addressed assigned to network %s for node %s, link is L2 only." %
                                                                (iface_net, node.name))
                                             link_options['ip_address'] = None
 
