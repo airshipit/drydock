@@ -20,6 +20,7 @@ import logging
 
 from copy import deepcopy
 
+import drydock_provisioner.config as config
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.task as tasks
 import drydock_provisioner.error as errors
