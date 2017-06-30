@@ -1119,7 +1119,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     self.logger.debug("Creating static tag %s" % t)
                                     tag = maas_tag.Tag(self.maas_client, name=t)
                                     tag = tag_list.add(tag)
-                                except DriverError as dex:
+                                except errors.DriverError as dex:
                                     tag_list.refresh()
                                     tag = tag_list.select(t)
                                     if tag is not None:
