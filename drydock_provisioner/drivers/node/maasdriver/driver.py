@@ -38,6 +38,7 @@ class MaasNodeDriver(NodeDriver):
     maasdriver_options = [
         cfg.StrOpt('maas_api_key', help='The API key for accessing MaaS', secret=True),
         cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
+        cfg.IntOpt('poll_interval', default=10, help='Polling interval for querying MaaS status in seconds'),
     ]
 
     driver_name = 'maasdriver'
@@ -185,9 +186,12 @@ class MaasNodeDriver(NodeDriver):
 
             running_subtasks = len(subtasks)
             attempts = 0
+            max_attempts = config.conf.timeouts.identify_node * (60 // config.conf.poll_interval)
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < config.conf.timeouts.identify_node:
+            self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
+                                (config.conf.poll_interval, max_attempts))
+            while running_subtasks > 0 and attempts < max_attempts:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -205,7 +209,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(1 * 60)
+                time.sleep(config.conf.maasdriver.poll_interval)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
@@ -254,10 +258,13 @@ class MaasNodeDriver(NodeDriver):
 
             running_subtasks = len(subtasks)
             attempts = 0
+            max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.poll_interval)
             worked = failed = False
 
+            self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
+                                (config.conf.poll_interval, max_attempts))
             #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < config.conf.timeouts.configure_hardware:
+            while running_subtasks > 0 and attempts < max_attempts:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -275,7 +282,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(1 * 60)
+                time.sleep(config.conf.maasdriver.poll_interval)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
@@ -324,9 +331,12 @@ class MaasNodeDriver(NodeDriver):
 
             running_subtasks = len(subtasks)
             attempts = 0
+            max_attempts = config.conf.timeouts.apply_node_networking * (60 // config.conf.poll_interval)
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < config.conf.timeouts.apply_node_networking:
+            self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
+                                (config.conf.poll_interval, max_attempts))
+            while running_subtasks > 0 and attempts < max_attempts:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -344,7 +354,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(1 * 60)
+                time.sleep(config.conf.poll_interval)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
@@ -393,9 +403,13 @@ class MaasNodeDriver(NodeDriver):
 
             running_subtasks = len(subtasks)
             attempts = 0
+            max_attempts = config.conf.timeouts.apply_node_platform * (60 // config.conf.poll_interval)
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < config.conf.timeouts.apply_node_platform:
+            self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
+                                (config.conf.poll_interval, max_attempts))
+
+            while running_subtasks > 0 and attempts < max_attempts:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -413,7 +427,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(1 * 60)
+                time.sleep(config.conf.poll_interval)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
@@ -462,9 +476,13 @@ class MaasNodeDriver(NodeDriver):
 
             running_subtasks = len(subtasks)
             attempts = 0
+            max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.poll_interval)
             worked = failed = False
 
-            while running_subtasks > 0 and attempts < config.conf.timeouts.deploy_node:
+            self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
+                                (config.conf.poll_interval, max_attempts))
+
+            while running_subtasks > 0 and attempts < max_attempts:
                 for t in subtasks:
                     subtask = self.state_manager.get_task(t)
 
@@ -482,7 +500,7 @@ class MaasNodeDriver(NodeDriver):
                         elif subtask.result == hd_fields.ActionResult.PartialSuccess:
                             worked = failed = True
 
-                time.sleep(1 * 60)
+                time.sleep(max_attempts)
                 attempts = attempts + 1
 
             if running_subtasks > 0:
@@ -817,13 +835,14 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
 
                             # Poll machine status
                             attempts = 0
+                            max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.maasdriver.poll_interval)
 
-                            while attempts < config.conf.timeouts.configure_hardware and machine.status_name != 'Ready':
+                            while attempts < max_attempts and machine.status_name != 'Ready':
                                 attempts = attempts + 1
-                                time.sleep(1 * 60)
+                                time.sleep(config.conf.maasdriver.poll_interval)
                                 try:
                                     machine.refresh()
-                                    self.logger.debug("Polling node %s status attempt %d: %s" % (n, attempts, machine.status_name))
+                                    self.logger.debug("Polling node %s status attempt %d of %d: %s" % (n, attempts, max_attempts, machine.status_name))
                                 except:
                                     self.logger.warning("Error updating node %s status during commissioning, will re-attempt." %
                                                      (n))
@@ -1184,12 +1203,14 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     continue
 
                 attempts = 0
-                while attempts < config.conf.timeouts.deploy_node and not machine.status_name.startswith('Deployed'):
+                max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.maasdriver.poll_interval)
+
+                while attempts < max_attempts and not machine.status_name.startswith('Deployed'):
                     attempts = attempts + 1
-                    time.sleep(1 * 60)
+                    time.sleep(config.conf.maasdriver.poll_interval)
                     try:
                         machine.refresh()
-                        self.logger.debug("Polling node %s status attempt %d: %s" % (n, attempts, machine.status_name))
+                        self.logger.debug("Polling node %s status attempt %d of %d: %s" % (n, attempts, max_attempts, machine.status_name))
                     except:
                         self.logger.warning("Error updating node %s status during commissioning, will re-attempt." %
                                              (n))

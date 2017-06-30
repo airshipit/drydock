@@ -14,6 +14,8 @@
 import time
 import logging
 
+from oslo_config import cfg
+
 from pyghmi.ipmi.command import Command
 from pyghmi.exceptions import IpmiException
 
@@ -28,15 +30,20 @@ import drydock_provisioner.drivers as drivers
 
 
 class PyghmiDriver(oob.OobDriver):
+    pyghmi_driver_options = [
+        cfg.IntOpt('poll_interval', default=10, help='Polling interval in seconds for querying IPMI status'),
+    ]
 
     oob_types_supported = ['ipmi']
+
+    driver_name = "pyghmi_driver"
+    driver_key = "pyghmi_driver"
+    driver_desc = "Pyghmi OOB Driver"
 
     def __init__(self, **kwargs):
         super(PyghmiDriver, self).__init__(**kwargs)
 
-        self.driver_name = "pyghmi_driver"
-        self.driver_key = "pyghmi_driver"
-        self.driver_desc = "Pyghmi OOB Driver"
+        config.conf.register_opts(PyghmiDriver.pyghmi_driver_options, group=PyghmiDriver.driver_key)
 
         self.logger = logging.getLogger("%s.%s" %
                                 (config.conf.logging.oobdriver_logger_name, self.driver_key))
@@ -101,15 +108,15 @@ class PyghmiDriver(oob.OobDriver):
             runner.start()
 
         attempts = 0
-        while (len(incomplete_subtasks) > 0 and
-              attempts <= getattr(config.conf.timeouts, task.action, config.conf.timeouts.drydock_timeout)):
+        max_attempts = getattr(config.conf.timeouts, task.action, config.conf.timeouts.drydock_timeout) * (60 / config.conf.pyghmi_driver.poll_interval)
+        while (len(incomplete_subtasks) > 0 and attempts <= max_attempts):
             for n in incomplete_subtasks:
                 t = self.state_manager.get_task(n)
                 if t.get_status() in [hd_fields.TaskStatus.Terminated,
                                   hd_fields.TaskStatus.Complete,
                                   hd_fields.TaskStatus.Errored]:
                     incomplete_subtasks.remove(n)
-            time.sleep(1 * 60)
+            time.sleep(config.conf.pyghmi_driver.poll_interval)
             attempts = attempts + 1
 
         task = self.state_manager.get_task(task.get_id())
@@ -382,3 +389,5 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 time.sleep(15)
                 attempts = attempts + 1
 
+def list_opts():
+    return {PyghmiDriver.driver_key: PyghmiDriver.pyghmi_driver_options}

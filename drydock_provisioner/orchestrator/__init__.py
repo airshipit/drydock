@@ -356,6 +356,7 @@ class Orchestrator(object):
             # Each attempt is a new task which might make the final task tree a bit confusing
 
             node_identify_attempts = 0
+            max_attempts = config.conf.timeouts.identify_node * (60 / config.conf.poll_interval)
 
             while True:
 
@@ -379,11 +380,11 @@ class Orchestrator(object):
                 elif node_identify_task.get_result() in [hd_fields.ActionResult.PartialSuccess,
                                                          hd_fields.ActionResult.Failure]:
                     # TODO This threshold should be a configurable default and tunable by task API
-                    if node_identify_attempts > 10:
+                    if node_identify_attempts > max_attempts:
                         failed = True
                         break
 
-                    time.sleep(1 * 60)
+                    time.sleep(config.conf.poll_interval)
 
             # We can only commission nodes that were successfully identified in the provisioner
             if len(node_identify_task.result_detail['successful_nodes']) > 0:

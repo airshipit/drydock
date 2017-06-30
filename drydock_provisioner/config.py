@@ -41,6 +41,11 @@ class DrydockConfig(object):
     """
     Initialize all the core options
     """
+    # Default options
+    options = [
+        cfg.IntOpt('poll_interval', default=10, help='Polling interval in seconds for checking subtask or downstream status'),
+    ]
+
     # Logging options
     logging_options = [
         cfg.StrOpt('log_level', default='INFO', help='Global log level for Drydock'),
@@ -86,6 +91,7 @@ class DrydockConfig(object):
         self.conf = cfg.ConfigOpts()
 
     def register_options(self):
+        self.conf.register_opts(DrydockConfig.options)
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.auth_options, group='authentication')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
@@ -97,7 +103,8 @@ conf = config_mgr.conf
 IGNORED_MODULES = ('drydock', 'config')
 
 def list_opts():
-    opts = {'logging': DrydockConfig.logging_options,
+    opts = {'DEFAULT': DrydockConfig.options,
+            'logging': DrydockConfig.logging_options,
             'authentication': DrydockConfig.auth_options,
             'plugins': DrydockConfig.plugin_options,
             'timeouts': DrydockConfig.timeout_options
