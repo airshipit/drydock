@@ -131,7 +131,9 @@ class Tags(model_base.ResourceCollectionBase):
             resp_json = resp.json()
             res.set_resource_id(resp_json.get('name'))
             return res
-        
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                % (url, resp.status_code))
+        elif resp.status_code == 400 and resp.text.find('Tag with this Name already exists.') != -1:
+            raise errors.DriverError("Tag %s already exists" % res.name)
+        else:
+            raise errors.DriverError("Failed updating MAAS url %s - return code %s"
+                      % (url, resp.status_code))
 
