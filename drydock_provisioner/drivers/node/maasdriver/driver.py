@@ -837,7 +837,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             attempts = 0
                             max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.maasdriver.poll_interval)
 
-                            while attempts < max_attempts and machine.status_name != 'Ready':
+                            while (attempts < max_attempts and 
+                                      (machine.status_name != 'Ready' and not machine.status_name.startswith('Failed'))):
                                 attempts = attempts + 1
                                 time.sleep(config.conf.maasdriver.poll_interval)
                                 try:
@@ -1205,7 +1206,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 attempts = 0
                 max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.maasdriver.poll_interval)
 
-                while attempts < max_attempts and not machine.status_name.startswith('Deployed'):
+                while (attempts < max_attempts and 
+                          ( not machine.status_name.startswith('Deployed') and not machine.status_name.startswith('Failed'))):
                     attempts = attempts + 1
                     time.sleep(config.conf.maasdriver.poll_interval)
                     try:
