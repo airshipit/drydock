@@ -26,8 +26,12 @@ class BootdataResource(StatefulResource):
         self.orchestrator = orchestrator
 
     def on_get(self, req, resp, hostname, data_key):
-        if data_key == 'systemd':
-            resp.body = BootdataResource.systemd_definition
+        if data_key == 'promservice':
+            resp.body = BootdataResource.prom_init_service 
+            resp.content_type = 'text/plain'
+            return
+        elif data_key == 'vfservice':
+            resp.body = BootdataResource.vfs_service
             resp.content_type = 'text/plain'
             return
         elif data_key == 'prominit':
@@ -68,7 +72,7 @@ class BootdataResource(StatefulResource):
                 resp.body = "---\n" + "---\n".join([base64.b64decode(i.encode()).decode('utf-8') for i in part_list]) + "\n..."
                 return
 
-    systemd_definition = \
+    prom_init_service = \
 r"""[Unit]
 Description=Promenade Initialization Service
 Documentation=http://github.com/att-comdev/drydock
@@ -78,12 +82,26 @@ ConditionPathExists=!/var/lib/prom.done
 [Service]
 Type=simple
 Environment=HTTP_PROXY=http://one.proxy.att.com:8080 HTTPS_PROXY=http://one.proxy.att.com:8080 NO_PROXY=127.0.0.1,localhost,135.16.101.87,135.16.101.86,135.16.101.85,135.16.101.84,135.16.101.83,135.16.101.82,135.16.101.81,135.16.101.80,kubernetes
-ExecStartPre=/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs
 ExecStart=/var/tmp/prom_init.sh /etc/prom_init.yaml
 
 [Install]
 WantedBy=multi-user.target
 """
+
+    vfs_service = \
+r"""[Unit]
+Description=SR-IOV Virtual Function configuration
+Documentation=http://github.com/att-comdev/drydock
+After=network.target local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs
+
+[Install]
+WantedBy=multi-user.target
+"""
+
     prom_init = \
 r"""#!/usr/bin/env bash
 
