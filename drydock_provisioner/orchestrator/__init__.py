@@ -162,23 +162,60 @@ class Orchestrator(object):
                 'site': task.site
             }
 
-            driver_task = self.create_task(tasks.DriverTask,
+            worked = failed = False
+
+            site_network_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
                                            task_scope=task_scope,
                                            action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
 
-            self.logger.info("Starting node driver task %s to create network templates" % (driver_task.get_id()))
+            self.logger.info("Starting node driver task %s to create network templates" % (site_network_task.get_id()))
 
-            driver.execute_task(driver_task.get_id())
+            driver.execute_task(site_network_task.get_id())
 
-            driver_task = self.state_manager.get_task(driver_task.get_id())
+            site_network_task = self.state_manager.get_task(site_network_task.get_id())
 
-            self.logger.info("Node driver task %s complete" % (driver_task.get_id()))            
+            if site_network_task.get_result() in [hd_fields.ActionResult.Success,
+                                                  hd_fields.ActionResult.PartialSuccess]:
+                worked = True
+            if site_network_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                  hd_fields.ActionResult.PartialSuccess]:
+                failed = True
+
+            self.logger.info("Node driver task %s complete" % (site_network_task.get_id()))
+
+            user_creds_task = self.create_task(tasks.DriverTask,
+                                           parent_task_id=task.get_id(),
+                                           design_id=design_id,
+                                           task_scope=task_scope,
+                                           action=hd_fields.OrchestratorAction.ConfigureUserCredentials)
+
+            self.logger.info("Starting node driver task %s to configure user credentials" % (user_creds_task.get_id()))
+
+            driver.execute_task(user_creds_task.get_id())
+
+            self.logger.info("Node driver task %s complete" % (site_network_task.get_id()))
+
+            user_creds_task = self.state_manager.get_task(site_network_task.get_id())
+
+            if user_creds_task.get_result() in [hd_fields.ActionResult.Success,
+                                                hd_fields.ActionResult.PartialSuccess]:
+                worked = True
+            if user_creds_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                hd_fields.ActionResult.PartialSuccess]:
+                failed = True
+
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
+            else:
+                final_result = hd_fields.ActionResult.Failure
 
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Complete,
-                                   result=driver_task.get_result())
+                                   result=final_result)
             return
         elif task.action == hd_fields.OrchestratorAction.VerifyNode:
             self.task_field_update(task_id,

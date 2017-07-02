@@ -33,6 +33,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.vlan as maas_vlan
 import drydock_provisioner.drivers.node.maasdriver.models.subnet as maas_subnet
 import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machine
 import drydock_provisioner.drivers.node.maasdriver.models.tag as maas_tag
+import drydock_provisioner.drivers.node.maasdriver.models.sshkey as maas_keys
 
 class MaasNodeDriver(NodeDriver):
     maasdriver_options = [
@@ -143,6 +144,41 @@ class MaasNodeDriver(NodeDriver):
                 result =  {
                     'retry': False,
                     'detail': 'MaaS Network creation timed-out'
+                }
+                self.logger.warning("Thread for task %s timed out after 120s" % (subtask.get_id()))
+                self.orchestrator.task_field_update(task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=hd_fields.ActionResult.Failure,
+                            result_detail=result)
+            else:
+                subtask = self.state_manager.get_task(subtask.get_id())
+                self.logger.info("Thread for task %s completed - result %s" % (subtask.get_id(), subtask.get_result()))
+                self.orchestrator.task_field_update(task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=subtask.get_result())
+
+            return
+        elif task.action == hd_fields.OrchestratorAction.ConfigureUserCredentials:
+            self.orchestrator.task_field_update(task.get_id(), status=hd_fields.TaskStatus.Running)
+
+            subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=task.action, site_name=task.site_name,
+                        task_scope={'site': task.site_name})
+            runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id())
+
+            self.logger.info("Starting thread for task %s to configure user credentials" % (subtask.get_id()))
+
+            runner.start()
+
+            runner.join(timeout=config.conf.timeouts.configure_user_credentials * 60)
+
+            if runner.is_alive():
+                result =  {
+                    'retry': False,
+                    'detail': 'MaaS ssh key creation timed-out'
                 }
                 self.logger.warning("Thread for task %s timed out after 120s" % (subtask.get_id()))
                 self.orchestrator.task_field_update(task.get_id(),
@@ -762,6 +798,50 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                             status=hd_fields.TaskStatus.Complete,
                             result=action_result,
                             result_detail=result_detail)
+        elif task_action == hd_fields.OrchestratorAction.ConfigureUserCredentials:
+            try:
+                key_list = maas_keys.SshKeys(self.maas_client)
+                key_list.refresh()
+            except:
+                self.orchestrator.task_field_update(self.task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=hd_fields.ActionResult.Failure,
+                            result_detail={'detail': 'Error accessing MaaS SshKeys API', 'retry': True})
+                return
+
+            site_model = site_design.get_site()
+
+            result_detail = { 'detail': [] }
+            failed = worked = False
+            for k in getattr(site_model, 'authorized_keys', []):
+                try:
+                    if len(key_list.query({'key': k.replace("\n","")})) == 0:
+                        new_key = maas_keys.SshKey(self.maas_client, key=k)
+                        new_key = key_list.add(new_key)
+                        self.logger.debug("Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." %
+                                    (k[:16]))
+                        result_detail['detail'].append("Added SSH key %s" % (k[:16]))
+                        worked = True
+                    else:
+                        self.logger.debug("SSH key %s already exists in MaaS user profile." % k[:16])
+                        result_detail['detail'].append("SSH key %s alreayd exists" % (k[:16]))
+                        worked = True
+                except Exception as ex:
+                    self.logger.warning("Error adding SSH key to MaaS user profile: %s" % str(ex))
+                    result_detail['detail'].append("Failed to add SSH key %s" % (k[:16]))
+                    failed = True
+
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
+            else:
+                final_result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(self.task.get_id(),
+                            status=hd_fields.TaskStatus.Complete,
+                            result=final_result, result_detail=result_detail)
+            return
         elif task_action == hd_fields.OrchestratorAction.IdentifyNode:
             try:
                 machine_list = maas_machine.Machines(self.maas_client)

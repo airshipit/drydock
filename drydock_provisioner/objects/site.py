@@ -37,6 +37,7 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
         'tag_definitions': ovo_fields.ObjectField('NodeTagDefinitionList',
                                                nullable=True),
         'repositories': ovo_fields.ObjectField('RepositoryList', nullable=True),
+        'authorized_keys': ovo_fields.ListOfStringsField(nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -50,6 +51,9 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
 
     def add_tag_definition(self, tag_definition):
         self.tag_definitions.append(tag_definition)
+
+    def add_key(self, key_string):
+        self.authorized_keys.append(key_string)
 
 @base.DrydockObjectRegistry.register
 class NodeTagDefinition(base.DrydockObject):

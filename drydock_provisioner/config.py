@@ -80,6 +80,7 @@ class DrydockConfig(object):
     timeout_options = [
         cfg.IntOpt('drydock_timeout', default=5, help='Fallback timeout when a specific one is not configured'),
         cfg.IntOpt('create_network_template', default=2, help='Timeout in minutes for creating site network templates'),
+        cfg.IntOpt('configure_user_credentials', default=2, help='Timeout in minutes for creating user credentials'),
         cfg.IntOpt('identify_node', default=10, help='Timeout in minutes for initial node identification'),
         cfg.IntOpt('configure_hardware', default=30, help='Timeout in minutes for node commissioning and hardware configuration'),
         cfg.IntOpt('apply_node_networking', default=5, help='Timeout in minutes for configuring node networking'),

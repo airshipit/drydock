@@ -113,6 +113,10 @@ class YamlIngester(IngesterPlugin):
                                         'NodeTagDefinition: %s' % (self.definition_type))
                                 model.tag_definitions.append(tag_model)
 
+                            auth_keys = spec.get('authorized_keys', [])
+
+                            model.authorized_keys = [k for k in auth_keys]
+
                             models.append(model)
                         else:
                             raise ValueError('Unknown API version %s of Region kind' %s (api_version))
@@ -330,10 +334,8 @@ class YamlIngester(IngesterPlugin):
                             
                             node_metadata = spec.get('metadata', {})
                             metadata_tags = node_metadata.get('tags', [])
-                            model.tags = []
 
-                            for t in metadata_tags:
-                                model.tags.append(t)
+                            model.tags = [t for t in metadata_tags]
 
                             owner_data = node_metadata.get('owner_data', {})
                             model.owner_data = {}
