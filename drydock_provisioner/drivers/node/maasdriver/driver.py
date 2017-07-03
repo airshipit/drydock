@@ -1068,7 +1068,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                         found = False
                                         for a in getattr(node, 'addressing', []):
                                             if a.network == iface_net:
-                                                link_options['ip_address'] = 'dhcp' if a.address == 'dhcp' else a.address
+                                                link_options['ip_address'] = 'dhcp' if a.type == 'dhcp' else a.address
                                                 found = True
 
                                         if not found:
