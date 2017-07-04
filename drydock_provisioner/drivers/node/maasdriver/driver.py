@@ -1258,8 +1258,17 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 self.logger.info("Acquiring node %s for deployment" % (n))
 
                 try:
-                    machine = machine_list.acquire_node(n)
-                except DriverError as dex:
+                    node = site_design.get_baremetal_node(n)
+                    machine = machine_list.identify_baremetal_node(node, update_name=False)
+                    if machine.status_name == 'Deployed':
+                        self.logger.info("Node %s already deployed, skipping." % (n))
+                        continue
+                    elif machine.status_name == 'Ready':
+                        machine = machine_list.acquire_node(n)
+                    else:
+                        self.logger.warning("Unexpected status %s for node %s, skipping deployment." % (machine.status_name, n))
+                        continuek
+                except errors.DriverError as dex:
                     self.logger.warning("Error acquiring node %s, skipping" % n)
                     failed = True
                     continue
