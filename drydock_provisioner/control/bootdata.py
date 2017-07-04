@@ -96,7 +96,7 @@ After=network.target local-fs.target
 
 [Service]
 Type=simple
-ExecStart=/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs
+ExecStart=/bin/sh -c '/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs'
 
 [Install]
 WantedBy=multi-user.target
