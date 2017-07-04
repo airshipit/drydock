@@ -220,21 +220,24 @@ class MaasNodeDriver(NodeDriver):
                 runner.start()
                 subtasks.append(subtask.get_id())
 
-            running_subtasks = len(subtasks)
+            cleaned_subtasks = []
             attempts = 0
             max_attempts = config.conf.timeouts.identify_node * (60 // config.conf.poll_interval)
             worked = failed = False
 
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
                                 (config.conf.poll_interval, max_attempts))
-            while running_subtasks > 0 and attempts < max_attempts:
+            while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
+                    if t in cleaned_subtasks:
+                        continue
+
                     subtask = self.state_manager.get_task(t)
 
                     if subtask.status == hd_fields.TaskStatus.Complete:
-                        self.logger.info("Task %s to identify node %s complete - status %s" %
-                                        (subtask.get_id(), n, subtask.get_result()))
-                        running_subtasks = running_subtasks - 1
+                        self.logger.info("Task %s to identify node complete - status %s" %
+                                        (subtask.get_id(), subtask.get_result()))
+                        cleaned_subtasks.append(t)
 
                         if subtask.result == hd_fields.ActionResult.Success:
                             result_detail['successful_nodes'].extend(subtask.node_list)
@@ -248,7 +251,7 @@ class MaasNodeDriver(NodeDriver):
                 time.sleep(config.conf.maasdriver.poll_interval)
                 attempts = attempts + 1
 
-            if running_subtasks > 0:
+            if len(cleaned_subtasks) < len(subtasks):
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
@@ -292,7 +295,7 @@ class MaasNodeDriver(NodeDriver):
                 runner.start()
                 subtasks.append(subtask.get_id())
 
-            running_subtasks = len(subtasks)
+            cleaned_subtasks = []
             attempts = 0
             max_attempts = config.conf.timeouts.configure_hardware * (60 // config.conf.poll_interval)
             worked = failed = False
@@ -300,14 +303,17 @@ class MaasNodeDriver(NodeDriver):
             self.logger.debug("Polling for subtask completetion every %d seconds, a max of %d polls." %
                                 (config.conf.poll_interval, max_attempts))
             #TODO Add timeout to config
-            while running_subtasks > 0 and attempts < max_attempts:
+            while len(cleaned_subtasks) < len(subtasks) and attempts < max_attempts:
                 for t in subtasks:
+                    if t in cleaned_subtasks:
+                        continue
+
                     subtask = self.state_manager.get_task(t)
 
                     if subtask.status == hd_fields.TaskStatus.Complete:
-                        self.logger.info("Task %s to commission node %s complete - status %s" %
-                                        (subtask.get_id(), n, subtask.get_result()))
-                        running_subtasks = running_subtasks - 1
+                        self.logger.info("Task %s to commission node complete - status %s" %
+                                        (subtask.get_id(), subtask.get_result()))
+                        cleaned_subtasks.append(t)
 
                         if subtask.result == hd_fields.ActionResult.Success:
                             result_detail['successful_nodes'].extend(subtask.node_list)
@@ -321,7 +327,7 @@ class MaasNodeDriver(NodeDriver):
                 time.sleep(config.conf.maasdriver.poll_interval)
                 attempts = attempts + 1
 
-            if running_subtasks > 0:
+            if len(cleaned_subtasks) < len(subtasks):
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
@@ -393,7 +399,7 @@ class MaasNodeDriver(NodeDriver):
                 time.sleep(config.conf.poll_interval)
                 attempts = attempts + 1
 
-            if running_subtasks > 0:
+            if len(cleaned_subtasks) < len(subtasks):
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
@@ -437,7 +443,7 @@ class MaasNodeDriver(NodeDriver):
                 runner.start()
                 subtasks.append(subtask.get_id())
 
-            running_subtasks = len(subtasks)
+            cleaned_subtasks = []
             attempts = 0
             max_attempts = config.conf.timeouts.apply_node_platform * (60 // config.conf.poll_interval)
             worked = failed = False
@@ -466,7 +472,7 @@ class MaasNodeDriver(NodeDriver):
                 time.sleep(config.conf.poll_interval)
                 attempts = attempts + 1
 
-            if running_subtasks > 0:
+            if len(cleaned_subtasks) < len(subtasks):
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
@@ -510,7 +516,7 @@ class MaasNodeDriver(NodeDriver):
                 runner.start()
                 subtasks.append(subtask.get_id())
 
-            running_subtasks = len(subtasks)
+            cleaned_subtasks = []
             attempts = 0
             max_attempts = config.conf.timeouts.deploy_node * (60 // config.conf.poll_interval)
             worked = failed = False
@@ -539,7 +545,7 @@ class MaasNodeDriver(NodeDriver):
                 time.sleep(max_attempts)
                 attempts = attempts + 1
 
-            if running_subtasks > 0:
+            if len(cleaned_subtasks) < len(subtasks):
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
