@@ -120,12 +120,16 @@ class Interface(model_base.ResourceBase):
 
         # TODO Probably need to enumerate link mode
         options = { 'subnet': subnet.resource_id,
-                    'mode': 'dhcp' if ip_address is None else 'static',
                     'default_gateway': primary,
                   }
 
-        if ip_address is not None:
+        if ip_address == 'dhcp':
+            options['mode'] = 'dhcp'
+        elif ip_address is not None:
             options['ip_address'] = ip_address
+            options['mode'] = 'static'
+        else:
+            options['mode'] = 'link_up'
 
         self.logger.debug("Linking interface %s to subnet: subnet=%s, mode=%s, address=%s, primary=%s" %
                           (self.resource_id, subnet.resource_id, options['mode'], ip_address, primary))
@@ -225,7 +229,7 @@ class Interfaces(model_base.ResourceCollectionBase):
         if exists is not None:
             self.logger.info("Interface for VLAN %s already exists on node %s, skipping" %
                              (vlan_tag, self.system_id))
-            return None
+            return exists
 
         url = self.interpolate_url()
 

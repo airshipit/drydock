@@ -19,6 +19,8 @@ from drydock_provisioner.drivers import ProviderDriver
 
 class OobDriver(ProviderDriver):
 
+    oob_types_supported = ['']
+
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
 
@@ -43,3 +45,16 @@ class OobDriver(ProviderDriver):
         else:
             raise DriverError("Unsupported action %s for driver %s" %
                 (task_action, self.driver_desc))
+
+    @classmethod
+    def oob_type_support(cls, type_string):
+        """
+        Does this driver support a particular OOB type
+
+        :param type_string: OOB type to check
+        """
+
+        if type_string in cls.oob_types_supported:
+            return True
+
+        return False

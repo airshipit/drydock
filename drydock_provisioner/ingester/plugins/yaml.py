@@ -247,10 +247,12 @@ class YamlIngester(IngesterPlugin):
 
                         oob = spec.get('oob', {})
 
-                        model.oob_type = oob.get('type', None)
-                        model.oob_network = oob.get('network', None)
-                        model.oob_account = oob.get('account', None)
-                        model.oob_credential = oob.get('credential', None)
+                        model.oob_parameters = {}
+                        for k,v in oob.items():
+                            if k == 'type':
+                                model.oob_type = oob.get('type', None)
+                            else:
+                                model.oob_parameters[k] = v
 
                         storage = spec.get('storage', {})
                         model.storage_layout = storage.get('layout', 'lvm')
@@ -320,6 +322,8 @@ class YamlIngester(IngesterPlugin):
                         model.rack = node_metadata.get('rack', None)
 
                         if kind == 'BaremetalNode':
+                            model.boot_mac = node_metadata.get('boot_mac', None)
+
                             addresses = spec.get('addressing', [])
 
                             if len(addresses) == 0:

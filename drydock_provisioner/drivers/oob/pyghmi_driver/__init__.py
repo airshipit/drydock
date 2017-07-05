@@ -28,6 +28,8 @@ import drydock_provisioner.drivers as drivers
 
 class PyghmiDriver(oob.OobDriver):
 
+    oob_types_supported = ['ipmi']
+
     def __init__(self, **kwargs):
         super(PyghmiDriver, self).__init__(**kwargs)
 

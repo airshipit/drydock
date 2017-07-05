@@ -47,7 +47,7 @@ class Subnet(model_base.ResourceBase):
         # Static ranges are what is left after reserved (not assigned by MaaS)
         # and DHCP ranges are removed from a subnet
         if addr_range.get('type', None) in ['reserved','dhcp']:
-            range_type = addr_range('type', None)
+            range_type = addr_range.get('type', None)
 
             if range_type == 'dhcp':
                 range_type = 'dynamic'
