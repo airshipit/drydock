@@ -25,6 +25,10 @@ import drydock_provisioner.error as errors
 # driver tasks and feed them via queue
 class ProviderDriver(object):
 
+    driver_name = "generic"
+    driver_key = "generic"
+    driver_desc = "Generic Provider Driver"
+
     def __init__(self, orchestrator=None, state_manager=None, **kwargs):
         if orchestrator is None:
             raise ValueError("ProviderDriver requires valid orchestrator")
@@ -35,13 +39,11 @@ class ProviderDriver(object):
             raise ValueError("ProviderDriver requires valid state manager")
 
         self.state_manager = state_manager
-        
+
         # These are the actions that this driver supports
         self.supported_actions = [hd_fields.OrchestratorAction.Noop]
 
-        self.driver_name = "generic"
-        self.driver_key = "generic"
-        self.driver_desc = "Generic Provider Driver"
+
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)

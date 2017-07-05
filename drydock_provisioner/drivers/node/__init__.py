@@ -20,6 +20,10 @@ from drydock_provisioner.drivers import ProviderDriver
 
 class NodeDriver(ProviderDriver):
 
+    driver_name = "node_generic"
+    driver_key = "node_generic"
+    driver_desc = "Generic Node Driver"
+
     def __init__(self, **kwargs):
         super(NodeDriver, self).__init__(**kwargs)
 
@@ -36,10 +40,6 @@ class NodeDriver(ProviderDriver):
                                   hd_fields.OrchestratorAction.ApplyNodePlatform,
                                   hd_fields.OrchestratorAction.DeployNode,
                                   hd_fields.OrchestratorAction.DestroyNode]
-
-        self.driver_name = "node_generic"
-        self.driver_key = "node_generic"
-        self.driver_desc = "Generic Node Driver"
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)

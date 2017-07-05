@@ -224,6 +224,16 @@ spec:
       networks:
       - 'mgmt'
       - 'admin'
+    # Settings for the platform (operating system)
+    platform:
+      # Which image to deploy on the node, must be available in the provisioner. Defaults to 'ubuntu/xenial'
+      image: 
+      # Which kernel to enable. Defaults to generic, can also be hwe (hardware enablement)
+      kernel: generic
+      # K/V list of kernel parameters to configure on boot. No default. Use value of true for params that are just flags
+      kernel_params:
+        console: tty1
+        quiet: true
     # Metadata about the node
     metadata:
       # Explicit tags to propagate to Kubernetes. Simple strings of any value

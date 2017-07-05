@@ -43,6 +43,7 @@ class MaasRequestFactory(object):
     def __init__(self, base_url, apikey):
         self.base_url = base_url
         self.apikey = apikey
+
         self.signer = MaasOauth(apikey)
         self.http_session = requests.Session()
 
@@ -141,7 +142,7 @@ class MaasRequestFactory(object):
         resp = self.http_session.send(prepared_req, timeout=timeout)
 
         if resp.status_code >= 400:
-            print("FAILED API CALL:\nURL: %s %s\nBODY:\n%s\nRESPONSE: %s\nBODY:\n%s" %
+            self.logger.debug("FAILED API CALL:\nURL: %s %s\nBODY:\n%s\nRESPONSE: %s\nBODY:\n%s" %
                 (prepared_req.method, prepared_req.url, str(prepared_req.body).replace('\\r\\n','\n'),
                  resp.status_code, resp.text))
         return resp
