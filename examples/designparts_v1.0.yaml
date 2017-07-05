@@ -67,6 +67,9 @@ spec:
     mode: disabled
     # If disabled, what network is this port on. If '802.1q' what is the default network for the port. No default.
     default_network: oob
+  # List of Network names that are supported on this link. A Network can be listed on only one NetworkLink
+  allowed_networks:
+  - 'oob'
 ---
 apiVersion: 'v1.0'
 kind: Network
@@ -93,7 +96,7 @@ spec:
   # Defined IP address ranges. All node IP address assignments must fall into a defined range
   # of the correct type
   ranges:
-    # Type of range. Supports 'static' or 'dhcp'. No default
+    # Type of range. Supports 'reserved', 'static' or 'dhcp'. No default
   - type: 'dhcp'
     # Start of the address range, inclusive. No default
     start: '172.16.1.100'
@@ -202,14 +205,14 @@ spec:
       fs_uuid:
       # A filesystem label. Defaults to None
       fs_label:
+    # Network name of the primary network (default gateway, DNS, etc...)
+    primary_network: 'mgmt'
     # Physical and logical network interfaces
     interfaces:
       # What the interface should be named in the operating system. May not match a hardware device name
       device_name: bond0
       # The NetworkLink connected to this interface. Must be the name of a NetworkLink design part
       device_link: 'gp'
-      # Whether this interface is considered the primary interface on the server. Supports true and false. Defaults to false
-      primary: true
       # Hardware devices that support this interface. For configurating a physical device, this would be a list of one
       # For bonds, this would be a list of all the physical devices in the bond. These can refer to HardwareProfile device aliases
       # or explicit device names
