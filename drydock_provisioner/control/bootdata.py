@@ -16,14 +16,27 @@ import json
 import yaml
 import base64
 
+from oslo_config import cfg
+
+import drydock_provisioner.config as config
 from .base import StatefulResource
 
 class BootdataResource(StatefulResource):
+
+    bootdata_options = [
+        cfg.StrOpt('prom_init', default=None, help='Path to file to distribute for prom_init.sh')        
+    ]
 
     def __init__(self, orchestrator=None, **kwargs):
         super(BootdataResource, self).__init__(**kwargs)
         self.authorized_roles = ['anyone']
         self.orchestrator = orchestrator
+
+        config.conf.register_opts(BootdataResource.bootdata_options, group='bootdata')
+
+        init_file = open(config.conf.bootdata.prom_init, 'r')
+        self.prom_init = init_file.read()
+        init_file.close()
 
     def on_get(self, req, resp, hostname, data_key):
         if data_key == 'promservice':
@@ -35,7 +48,7 @@ class BootdataResource(StatefulResource):
             resp.content_type = 'text/plain'
             return
         elif data_key == 'prominit':
-            resp.body = BootdataResource.prom_init
+            resp.body = self.prom_init
             resp.content_type = 'text/plain'
             return
         elif data_key == 'promconfig':
@@ -54,23 +67,26 @@ class BootdataResource(StatefulResource):
 
                 part_list = []
 
-                all_parts = self.state_manager.get_promenade_parts('all')
+                all_parts = host_design.get_promenade_config('all')
 
                 if all_parts is not None:
                     part_list.extend([i.document for i in all_parts])
 
-                host_parts = self.state_manager.get_promenade_parts(hostname)
+                host_parts = host_design.get_promenade_parts(hostname)
 
                 if host_parts is not None:
                     part_list.extend([i.document for i in host_parts])
 
                 for t in host_model.tags:
-                    tag_parts = self.state_manager.get_promenade_parts(t)
+                    tag_parts = host_design.get_promenade_parts(t)
                     if t is not None:
                         part_list.extend([i.document for i in tag_parts])
 
                 resp.body = "---\n" + "---\n".join([base64.b64decode(i.encode()).decode('utf-8') for i in part_list]) + "\n..."
                 return
+
+def list_opts():
+    return {'bootdata': BootdataResource.bootdata_options}
 
     prom_init_service = \
 r"""[Unit]
