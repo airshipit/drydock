@@ -28,6 +28,7 @@ def register_all():
     __import__('drydock_provisioner.objects.hostprofile')
     __import__('drydock_provisioner.objects.hwprofile')
     __import__('drydock_provisioner.objects.site')
+    __import__('drydock_provisioner.objects.promenade')
 
 # Utility class for calculating inheritance
 

@@ -115,7 +115,7 @@ class Ingester(object):
                 elif type(m) is node.BaremetalNode:
                     design_data.add_baremetal_node(m)
                 elif type(m) is prom.PromenadeConfig:
-                    design_state.post_promenade_part(m)
+                    design_data.add_promenade_config(m)
             design_state.put_design(design_data)
             return design_items
         else:
