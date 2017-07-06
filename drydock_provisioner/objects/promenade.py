@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from copy import deepcopy
-
 from oslo_versionedobjects import fields as ovo_fields
 
 import drydock_provisioner.objects as objects
@@ -43,3 +41,22 @@ class PromenadeConfig(base.DrydockPersistentObject, base.DrydockObject):
 
     def get_name(self):
         return self.name
+
+@base.DrydockObjectRegistry.register
+class PromenadeConfigList(base.DrydockObjectListBase, base.DrydockObject):
+
+    VERSION = '1.0'
+
+    fields = {
+             'objects':  ovo_fields.ListOfObjectsField('PromenadeConfig'),
+             }
+
+    def select_for_target(target):
+        """
+        Select all promenade configs destined for the target
+
+        :param string target: Target to search documents for
+        """
+
+        return [x for x in self.objects if x.target == target]
+
