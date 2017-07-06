@@ -97,7 +97,6 @@ ConditionPathExists=!/var/lib/prom.done
 
 [Service]
 Type=simple
-Environment=HTTP_PROXY=http://one.proxy.att.com:8080 HTTPS_PROXY=http://one.proxy.att.com:8080 NO_PROXY=127.0.0.1,localhost,135.16.101.87,135.16.101.86,135.16.101.85,135.16.101.84,135.16.101.83,135.16.101.82,135.16.101.81,135.16.101.80,kubernetes
 ExecStart=/var/tmp/prom_init.sh /etc/prom_init.yaml
 
 [Install]
