@@ -70,11 +70,15 @@ def start_drydock():
     if 'MAAS_API_KEY' in os.environ:
         config.conf.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
 
+
+    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester,
+                         orchestrator=orchestrator)
+
     # Now that loggers are configured, log the effective config
     config.conf.log_opt_values(logging.getLogger(config.conf.logging.global_logger_name), logging.DEBUG)
 
-    return api.start_api(state_manager=state, ingester=input_ingester,
-                         orchestrator=orchestrator)
+    return wsgi_callable
+
 
 drydock = start_drydock()
 
