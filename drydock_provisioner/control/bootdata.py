@@ -72,13 +72,13 @@ class BootdataResource(StatefulResource):
                 if all_parts is not None:
                     part_list.extend([i.document for i in all_parts])
 
-                host_parts = host_design.get_promenade_parts(hostname)
+                host_parts = host_design.get_promenade_config(hostname)
 
                 if host_parts is not None:
                     part_list.extend([i.document for i in host_parts])
 
                 for t in host_model.tags:
-                    tag_parts = host_design.get_promenade_parts(t)
+                    tag_parts = host_design.get_promenade_config(t)
                     if t is not None:
                         part_list.extend([i.document for i in tag_parts])
 
