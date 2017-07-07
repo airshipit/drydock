@@ -51,7 +51,7 @@ class PromenadeConfigList(base.DrydockObjectListBase, base.DrydockObject):
              'objects':  ovo_fields.ListOfObjectsField('PromenadeConfig'),
              }
 
-    def select_for_target(target):
+    def select_for_target(self, target):
         """
         Select all promenade configs destined for the target
 
