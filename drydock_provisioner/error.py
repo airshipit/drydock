@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 
 class DesignError(Exception):
     pass
@@ -37,7 +38,15 @@ class PersistentDriverError(DriverError):
     pass
 
 class ApiError(Exception):
-    pass
+    def __init__(self, msg, code=500):
+        super().__init__(msg)
+        self.message = msg
+        self.status_code = code
+
+    def to_json(self):
+        err_dict = {'error': msg, 'type': self.__class__.__name__}}
+        return json.dumps(err_dict)
 
 class InvalidFormat(ApiError):
-    pass
+    def __init__(self, msg, code=400):
+        super(InvalidFormat, self).__init__(msg, code=code) 

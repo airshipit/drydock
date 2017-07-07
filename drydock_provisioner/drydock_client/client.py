@@ -69,6 +69,14 @@ class DrydockClient(object):
 
         :return: A list of string design_ids
         """
+        url = '/designs'
+
+        resp = send_get(url)
+
+        if resp.status_code != 200:
+            
+        else:
+            return resp.json()
 
     def get_design(self, design_id):
 
