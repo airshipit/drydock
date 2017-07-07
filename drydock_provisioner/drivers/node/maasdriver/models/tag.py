@@ -42,7 +42,9 @@ class Tag(model_base.ResourceBase):
             system_id_list = []
 
             for n in resp_json:
-                system_id_list.append(n.get('system_id'))
+                system_id = n.get('system_id', None)
+                if system_id is not None:
+                    system_id_list.append(system_id)
 
             return system_id_list
         else:
@@ -100,7 +102,7 @@ class Tag(model_base.ResourceBase):
 
         refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
 
-        if 'name' in obj_dict.keys():
+        if 'name' in obj_dict:
             refined_dict['resource_id'] = obj_dict.get('name')
 
         i = cls(api_client, **refined_dict)
