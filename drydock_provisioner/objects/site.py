@@ -244,6 +244,9 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
     def get_promenade_config(self, target_list):
         targeted_docs = []
 
+        if target_list is None or not isinstance(target_list, list):
+            return targeted_docs
+
         for t in target_list:
             targeted_docs.extend(self.prom_configs.select_for_target(t))
 
