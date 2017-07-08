@@ -19,8 +19,8 @@ import importlib
 import logging
 
 from copy import deepcopy
+from oslo_config import cfg
 
-import drydock_provisioner.config as config
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.task as tasks
 import drydock_provisioner.error as errors
@@ -393,7 +393,7 @@ class Orchestrator(object):
             # Each attempt is a new task which might make the final task tree a bit confusing
 
             node_identify_attempts = 0
-            max_attempts = config.conf.timeouts.identify_node * (60 / config.conf.poll_interval)
+            max_attempts = cfg.CONF.timeouts.identify_node * (60 / cfg.CONF.poll_interval)
 
             while True:
 
@@ -421,7 +421,7 @@ class Orchestrator(object):
                         failed = True
                         break
 
-                    time.sleep(config.conf.poll_interval)
+                    time.sleep(cfg.CONF.poll_interval)
 
             # We can only commission nodes that were successfully identified in the provisioner
             if len(node_identify_task.result_detail['successful_nodes']) > 0:

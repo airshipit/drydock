@@ -18,7 +18,6 @@ import base64
 
 from oslo_config import cfg
 
-import drydock_provisioner.config as config
 from .base import StatefulResource
 
 class BootdataResource(StatefulResource):
@@ -32,9 +31,9 @@ class BootdataResource(StatefulResource):
         self.authorized_roles = ['anyone']
         self.orchestrator = orchestrator
 
-        config.conf.register_opts(BootdataResource.bootdata_options, group='bootdata')
+        cfg.CONF.register_opts(BootdataResource.bootdata_options, group='bootdata')
 
-        init_file = open(config.conf.bootdata.prom_init, 'r')
+        init_file = open(cfg.CONF.bootdata.prom_init, 'r')
         self.prom_init = init_file.read()
         init_file.close()
 

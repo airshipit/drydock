@@ -42,7 +42,7 @@ class PyghmiDriver(oob.OobDriver):
     def __init__(self, **kwargs):
         super(PyghmiDriver, self).__init__(**kwargs)
 
-        config.conf.register_opts(PyghmiDriver.pyghmi_driver_options, group=PyghmiDriver.driver_key)
+        cfg.CONF.register_opts(PyghmiDriver.pyghmi_driver_options, group=PyghmiDriver.driver_key)
 
         self.logger = logging.getLogger(cfg.CONF.logging.oobdriver_logger_name)
 
@@ -114,7 +114,7 @@ class PyghmiDriver(oob.OobDriver):
                                   hd_fields.TaskStatus.Complete,
                                   hd_fields.TaskStatus.Errored]:
                     incomplete_subtasks.remove(n)
-            time.sleep(config.conf.pyghmi_driver.poll_interval)
+            time.sleep(cfg.CONF.pyghmi_driver.poll_interval)
             attempts = attempts + 1
 
         task = self.state_manager.get_task(task.get_id())

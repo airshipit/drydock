@@ -36,8 +36,8 @@ def start_drydock():
     config.config_mgr.register_options()
     cfg.CONF(sys.argv[1:])
 
-    if config.conf.debug:
-        config.conf.set_override(name='log_level', override='DEBUG', group='logging')
+    if cfg.CONF.debug:
+        cfg.CONF.set_override(name='log_level', override='DEBUG', group='logging')
 
     # Setup root logger
     logger = logging.getLogger(cfg.CONF.logging.global_logger_name)
@@ -66,14 +66,13 @@ def start_drydock():
     # Check if we have an API key in the environment
     # Hack around until we move MaaS configs to the YAML schema
     if 'MAAS_API_KEY' in os.environ:
-        config.conf.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
+        cfg.CONF.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
 
 
-    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester,
-                         orchestrator=orchestrator)
+    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester, orchestrator=orchestrator)
 
     # Now that loggers are configured, log the effective config
-    config.conf.log_opt_values(logging.getLogger(config.conf.logging.global_logger_name), logging.DEBUG)
+    cfg.CONF.log_opt_values(logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
 
     return wsgi_callable
 
