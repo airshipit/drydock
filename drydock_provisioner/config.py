@@ -72,6 +72,10 @@ class DrydockConfig(object):
         cfg.StrOpt('node_driver',
                     default='drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
                     help='Module path string of the Node driver to enable'),
+        # TODO Network driver not yet implemented
+        cfg.StrOpt('network_driver',
+                    default=None,
+                    help='Module path string of the Network driver enable'),
     ]
 
     # Timeouts for various tasks specified in minutes
