@@ -101,6 +101,7 @@ class DrydockConfig(object):
         self.conf.register_opts(DrydockConfig.timeout_options, group='timeouts')
 
 IGNORED_MODULES = ('drydock', 'config')
+config_mgr = DrydockConfig()
 
 def list_opts():
     opts = {'DEFAULT': DrydockConfig.options,
