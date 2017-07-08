@@ -325,7 +325,6 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete,
                 result_detail=mci_id)
             return
-<<<<<<< HEAD
 
     def get_ipmi_session(self):
         """
@@ -390,5 +389,3 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
 
 def list_opts():
     return {PyghmiDriver.driver_key: PyghmiDriver.pyghmi_driver_options}
-=======
->>>>>>> 064395f... Convert to cfg.CONF pattern

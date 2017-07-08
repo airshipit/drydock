@@ -65,22 +65,8 @@ class BootdataResource(StatefulResource):
 
                 host_model = host_design.get_baremetal_node(hostname)
 
-                part_list = []
-
-                all_parts = host_design.get_promenade_config('all')
-
-                if all_parts is not None:
-                    part_list.extend([i.document for i in all_parts])
-
-                host_parts = host_design.get_promenade_config(hostname)
-
-                if host_parts is not None:
-                    part_list.extend([i.document for i in host_parts])
-
-                for t in host_model.tags:
-                    tag_parts = host_design.get_promenade_config(t)
-                    if t is not None:
-                        part_list.extend([i.document for i in tag_parts])
+                all_configs = host_design.get_promenade_config(['all', hostname].extend(host_model.tags))
+                part_list = [i.document for i in all_configs]
 
                 resp.body = "---\n" + "---\n".join([base64.b64decode(i.encode()).decode('utf-8') for i in part_list]) + "\n..."
                 return
