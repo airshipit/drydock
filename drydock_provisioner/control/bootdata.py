@@ -64,14 +64,18 @@ class BootdataResource(StatefulResource):
 
                 host_model = host_design.get_baremetal_node(hostname)
 
-                all_configs = host_design.get_promenade_config(['all', hostname].extend(host_model.tags))
-                part_list = [i.document for i in all_configs]
+                part_selectors = ['all', hostname]
+
+                if host_model.tags is not None:
+                    part_selectors.extend(host_model.tags)
+
+                all_configs = host_design.get_promenade_config(part_selectors)
+
+                part_list = [i.document for i in all_configs]  
 
                 resp.body = "---\n" + "---\n".join([base64.b64decode(i.encode()).decode('utf-8') for i in part_list]) + "\n..."
                 return
 
-def list_opts():
-    return {'bootdata': BootdataResource.bootdata_options}
 
     prom_init_service = \
 r"""[Unit]
@@ -178,3 +182,6 @@ docker run -t --rm \
             --config-path /target$(realpath $1)
 touch /var/lib/prom.done
 """
+
+def list_opts():
+    return {'bootdata': BootdataResource.bootdata_options}
