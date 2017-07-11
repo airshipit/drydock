@@ -57,11 +57,6 @@ class ManualDriver(oob.OobDriver):
             raise errors.DriverError("No design ID specified in task %s" %
                                      (task_id))
 
-
-        if task.site_name is None:
-            raise errors.DriverError("Not site specified for task %s." %
-                                    (task_id))
-
         self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Running)
 
