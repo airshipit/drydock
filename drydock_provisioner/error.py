@@ -44,9 +44,16 @@ class ApiError(Exception):
         self.status_code = code
 
     def to_json(self):
-        err_dict = {'error': msg, 'type': self.__class__.__name__}}
+        err_dict = {'error': msg, 'type': self.__class__.__name__}
         return json.dumps(err_dict)
 
 class InvalidFormat(ApiError):
     def __init__(self, msg, code=400):
         super(InvalidFormat, self).__init__(msg, code=code) 
+
+class ClientError(Exception):
+    def __init__(self, msg, code=500):
+        super().__init__(msg)
+        self.message = msg
+        self.status_code = code
+
