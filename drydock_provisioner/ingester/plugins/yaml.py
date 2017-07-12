@@ -70,9 +70,7 @@ class YamlIngester(IngesterPlugin):
     """
     def parse_docs(self, yaml_string):
         models = []
-
         self.logger.debug("yamlingester:parse_docs - Parsing YAML string \n%s" % (yaml_string))
-
         try:
             parsed_data = yaml.load_all(yaml_string)
         except yaml.YAMLError as err:
@@ -274,10 +272,19 @@ class YamlIngester(IngesterPlugin):
                             storage = spec.get('storage', {})
                             model.storage_layout = storage.get('layout', 'lvm')
 
+<<<<<<< HEAD
                             bootdisk = storage.get('bootdisk', {})
                             model.bootdisk_device = bootdisk.get('device', None)
                             model.bootdisk_root_size = bootdisk.get('root_size', None)
                             model.bootdisk_boot_size = bootdisk.get('boot_size', None)
+=======
+                        model.oob_parameters = {}
+                        for k,v in oob.items():
+                            if k == 'type':
+                                model.oob_type = oob.get('type', None)
+                            else:
+                                model.oob_parameters[k] = v
+>>>>>>> attcomdev/master
 
                             partitions = storage.get('partitions', [])
                             model.partitions = objects.HostPartitionList()
@@ -310,8 +317,13 @@ class YamlIngester(IngesterPlugin):
                                 int_model.hardware_slaves = []
                                 slaves = i.get('slaves', [])
 
+<<<<<<< HEAD
                                 for s in slaves:
                                     int_model.hardware_slaves.append(s)
+=======
+                            int_model.device_name = i.get('device_name', None)
+                            int_model.network_link = i.get('device_link', None)
+>>>>>>> attcomdev/master
 
                                 int_model.networks = []
                                 networks = i.get('networks', [])
@@ -335,7 +347,24 @@ class YamlIngester(IngesterPlugin):
                             node_metadata = spec.get('metadata', {})
                             metadata_tags = node_metadata.get('tags', [])
 
+<<<<<<< HEAD
                             model.tags = [t for t in metadata_tags]
+=======
+                        platform = spec.get('platform', {})
+
+                        model.image = platform.get('image', None)
+                        model.kernel = platform.get('kernel', None)
+
+                        model.kernel_params = {}
+                        for k, v in platform.get('kernel_params', {}).items():
+                            model.kernel_params[k] = v
+
+                        model.primary_network = spec.get('primary_network', None)
+                        
+                        node_metadata = spec.get('metadata', {})
+                        metadata_tags = node_metadata.get('tags', [])
+                        model.tags = []
+>>>>>>> attcomdev/master
 
                             owner_data = node_metadata.get('owner_data', {})
                             model.owner_data = {}
@@ -348,7 +377,14 @@ class YamlIngester(IngesterPlugin):
                             if kind == 'BaremetalNode':
                                 model.boot_mac = node_metadata.get('boot_mac', None)
 
+<<<<<<< HEAD
                                 addresses = spec.get('addressing', [])
+=======
+                        if kind == 'BaremetalNode':
+                            model.boot_mac = node_metadata.get('boot_mac', None)
+
+                            addresses = spec.get('addressing', [])
+>>>>>>> attcomdev/master
 
                                 if len(addresses) == 0:
                                     raise ValueError('BaremetalNode needs at least' \

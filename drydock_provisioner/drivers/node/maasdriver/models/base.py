@@ -145,7 +145,6 @@ class ResourceBase(object):
         return i
 
 
-
 class ResourceCollectionBase(object):
     """
     A collection of MaaS resources.

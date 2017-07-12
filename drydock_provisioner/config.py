@@ -22,7 +22,6 @@ package. It is assumed that:
   returns a dict where:
 
   * The keys are strings which are the group names.
-
   * The value of each key is a list of config options for that group.
 
 * The conf package doesn't have further packages with config options.

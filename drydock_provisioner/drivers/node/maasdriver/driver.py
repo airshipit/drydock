@@ -122,6 +122,7 @@ class MaasNodeDriver(NodeDriver):
         site_design = self.orchestrator.get_effective_site(design_id)
 
         if task.action == hd_fields.OrchestratorAction.CreateNetworkTemplate:
+
             self.orchestrator.task_field_update(task.get_id(), status=hd_fields.TaskStatus.Running)
 
             subtask = self.orchestrator.create_task(task_model.DriverTask,
@@ -143,13 +144,16 @@ class MaasNodeDriver(NodeDriver):
                     'retry': False,
                     'detail': 'MaaS Network creation timed-out'
                 }
+
                 self.logger.warning("Thread for task %s timed out after 120s" % (subtask.get_id()))
+
                 self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Complete,
                             result=hd_fields.ActionResult.Failure,
                             result_detail=result)
             else:
                 subtask = self.state_manager.get_task(subtask.get_id())
+
                 self.logger.info("Thread for task %s completed - result %s" % (subtask.get_id(), subtask.get_result()))
                 self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Complete,
@@ -552,6 +556,213 @@ class MaasNodeDriver(NodeDriver):
                 attempts = attempts + 1
 
             if len(cleaned_subtasks) < len(subtasks):
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=result,
+                                result_detail=result_detail)
+        elif task.action == hd_fields.OrchestratorAction.ApplyNodeNetworking:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug("Starting subtask to configure networking on %s nodes." % (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=hd_fields.OrchestratorAction.ApplyNodeNetworking,
+                        site_name=task.site_name,
+                        task_scope={'site': task.site_name, 'node_names': [n]})
+                runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id())
+
+                self.logger.info("Starting thread for task %s to configure networking on node %s" % (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            running_subtasks = len(subtasks)
+            attempts = 0
+            worked = failed = False
+
+            while running_subtasks > 0 and attempts < cfg.CONF.timeouts.apply_node_networking:
+                for t in subtasks:
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info("Task %s to apply networking on node %s complete - status %s" %
+                                        (subtask.get_id(), n, subtask.get_result()))
+                        running_subtasks = running_subtasks - 1
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(1 * 60)
+                attempts = attempts + 1
+
+            if running_subtasks > 0:
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=result,
+                                result_detail=result_detail)
+        elif task.action == hd_fields.OrchestratorAction.ApplyNodePlatform:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug("Starting subtask to configure the platform on %s nodes." % (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=hd_fields.OrchestratorAction.ApplyNodePlatform,
+                        site_name=task.site_name,
+                        task_scope={'site': task.site_name, 'node_names': [n]})
+                runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id())
+
+                self.logger.info("Starting thread for task %s to config node %s platform" % (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            running_subtasks = len(subtasks)
+            attempts = 0
+            worked = failed = False
+
+            while running_subtasks > 0 and attempts < drydock_provisioner.conf.timeouts.apply_node_platform:
+                for t in subtasks:
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info("Task %s to configure node %s platform complete - status %s" %
+                                        (subtask.get_id(), n, subtask.get_result()))
+                        running_subtasks = running_subtasks - 1
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(1 * 60)
+                attempts = attempts + 1
+
+            if running_subtasks > 0:
+                self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Complete,
+                                result=result,
+                                result_detail=result_detail)
+        elif task.action == hd_fields.OrchestratorAction.DeployNode:
+            self.orchestrator.task_field_update(task.get_id(),
+                                status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug("Starting subtask to deploy %s nodes." % (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(task_model.DriverTask,
+                        parent_task_id=task.get_id(), design_id=design_id,
+                        action=hd_fields.OrchestratorAction.DeployNode,
+                        site_name=task.site_name,
+                        task_scope={'site': task.site_name, 'node_names': [n]})
+                runner = MaasTaskRunner(state_manager=self.state_manager,
+                        orchestrator=self.orchestrator,
+                        task_id=subtask.get_id())
+
+                self.logger.info("Starting thread for task %s to deploy node %s" % (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            running_subtasks = len(subtasks)
+            attempts = 0
+            worked = failed = False
+
+            while running_subtasks > 0 and attempts < cfg.CONF.timeouts.deploy_node:
+                for t in subtasks:
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info("Task %s to deploy node %s complete - status %s" %
+                                        (subtask.get_id(), n, subtask.get_result()))
+                        running_subtasks = running_subtasks - 1
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(1 * 60)
+                attempts = attempts + 1
+
+            if running_subtasks > 0:
                 self.logger.warning("Time out for task %s before all subtask threads complete" % (task.get_id()))
                 result = hd_fields.ActionResult.DependentFailure
                 result_detail['detail'].append('Some subtasks did not complete before the timeout threshold')
@@ -1168,7 +1379,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     # Render the string of all kernel params for the node
                     kp_string = ""
 
-                    for k,v in getattr(node, 'kernel_params', {}).items():
+                    for k, v in getattr(node, 'kernel_params', {}).items():
                         if v == 'True':
                             kp_string = kp_string + " %s" % (k)
                         else:
@@ -1232,7 +1443,9 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     self.logger.error("Error configuring static tags for node %s: %s" % (node.name, str(ex3)))
                     continue
 
-            if failed:
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif failed:
                 final_result = hd_fields.ActionResult.Failure
             else:
                 final_result = hd_fields.ActionResult.Success

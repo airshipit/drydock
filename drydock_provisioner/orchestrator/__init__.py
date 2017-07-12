@@ -349,7 +349,6 @@ class Orchestrator(object):
                                         design_id=design_id,
                                         action=hd_fields.OrchestratorAction.SetNodeBoot,
                                         task_scope=task_scope)
-
                 self.logger.info("Starting OOB driver task %s to set PXE boot for OOB type %s" %
                                  (setboot_task.get_id(), oob_type))
 
@@ -454,7 +453,6 @@ class Orchestrator(object):
                 final_result = hd_fields.ActionResult.Success
             else:
                 final_result = hd_fields.ActionResult.Failure
-            
 
             self.task_field_update(task_id,
                                 status=hd_fields.TaskStatus.Complete,
@@ -552,7 +550,6 @@ class Orchestrator(object):
                     self.logger.warning("Unable to configure platform on any nodes, skipping deploy subtask")
             else:
                 self.logger.warning("No nodes successfully networked, skipping platform configuration subtask")
-
 
             final_result = None
             if worked and failed:

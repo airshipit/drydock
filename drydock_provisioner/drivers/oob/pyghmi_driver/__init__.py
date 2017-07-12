@@ -39,6 +39,8 @@ class PyghmiDriver(oob.OobDriver):
     driver_key = "pyghmi_driver"
     driver_desc = "Pyghmi OOB Driver"
 
+    oob_types_supported = ['ipmi']
+
     def __init__(self, **kwargs):
         super(PyghmiDriver, self).__init__(**kwargs)
 
@@ -175,7 +177,6 @@ class PyghmiTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Errored)
             raise errors.DriverError("Runner node does not match " \
                                      "task node scope")
-
 
         self.orchestrator.task_field_update(self.task.get_id(),
                             status=hd_fields.TaskStatus.Running)
