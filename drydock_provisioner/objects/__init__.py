@@ -15,6 +15,7 @@
 # Models for drydock_provisioner
 #
 import logging
+import importlib
 
 from copy import deepcopy
 
@@ -23,12 +24,12 @@ def register_all():
     # NOTE(sh8121att) - Import all versioned objects so
     # they are available via RPC. Any new object definitions
     # need to be added here.
-    __import__('drydock_provisioner.objects.network')
-    __import__('drydock_provisioner.objects.node')
-    __import__('drydock_provisioner.objects.hostprofile')
-    __import__('drydock_provisioner.objects.hwprofile')
-    __import__('drydock_provisioner.objects.site')
-    __import__('drydock_provisioner.objects.promenade')
+    importlib.import_module('drydock_provisioner.objects.network')
+    importlib.import_module('drydock_provisioner.objects.node')
+    importlib.import_module('drydock_provisioner.objects.hostprofile')
+    importlib.import_module('drydock_provisioner.objects.hwprofile')
+    importlib.import_module('drydock_provisioner.objects.site')
+    importlib.import_module('drydock_provisioner.objects.promenade')
 
 # Utility class for calculating inheritance
 
