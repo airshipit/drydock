@@ -15,35 +15,34 @@ import os
 
 import click
 
+from .design import commands as design
+
 @click.group()
 @click.option('--debug/--no-debug', default=False)
-@click.option('--token')
-@click.option('--url')
+@click.option('--token', default=lambda: os.environ.get('DD_TOKEN', None))
+@click.option('--url' , default=lambda: os.environ.get('DD_URL', None))
 @click.pass_context
 def drydock(ctx, debug, token, url):
+    """ Base cli command. Peforms validations and sets default values.
+    """
+    if not ctx.obj:
+        ctx.obj = {}
+
     ctx.obj['DEBUG'] = debug
 
+    option_validation_error = False
+
     if not token:
-        ctx.obj['TOKEN'] = os.environ['DD_TOKEN']
-    else:
-        ctx.obj['TOKEN'] = token
+        click.echo("Error: Token must be specified either by "
+                   "--token or DD_TOKEN from the environment")
+        option_validation_error = True
 
     if not url:
-        ctx.obj['URL'] = os.environ['DD_URL']
-    else:
-        ctx.obj['URL'] = url
+        click.echo("Error: URL must be specified either by "
+                   "--url or DD_URL from the environment")
+        option_validation_error = True
 
-@drydock.group()
-def create():
-    pass
+    if option_validation_error:
+        ctx.exit()
 
-@drydock.group()
-def list()
-    pass
-
-@drydock.group()
-def show():
-    pass
-
-@create.command()
-def design
+drydock.add_command(design.design)
