@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
+
 from oauthlib import oauth1
 import requests
 import requests.auth as req_auth
@@ -46,6 +48,9 @@ class MaasRequestFactory(object):
 
         self.signer = MaasOauth(apikey)
         self.http_session = requests.Session()
+
+        # TODO Get logger name from config
+        self.logger = logging.getLogger('drydock')
 
     def get(self, endpoint, **kwargs):
         return self._send_request('GET', endpoint, **kwargs)

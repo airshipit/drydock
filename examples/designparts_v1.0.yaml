@@ -33,6 +33,11 @@ spec:
   # Image and package repositories needed by Drydock drivers. Needs to be defined
   repositories:
   - name: 'ubuntu-main'
+  authorized_keys:
+    - |
+      valid ssh key string
+    - |
+      valid ssh key string
 ---
 apiVersion: 'v1.0'
 kind: NetworkLink

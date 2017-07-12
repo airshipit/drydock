@@ -22,7 +22,6 @@ package. It is assumed that:
   returns a dict where:
 
   * The keys are strings which are the group names.
-
   * The value of each key is a list of config options for that group.
 
 * The conf package doesn't have further packages with config options.
@@ -41,6 +40,11 @@ class DrydockConfig(object):
     """
     Initialize all the core options
     """
+    # Default options
+    options = [
+        cfg.IntOpt('poll_interval', default=10, help='Polling interval in seconds for checking subtask or downstream status'),
+    ]
+
     # Logging options
     logging_options = [
         cfg.StrOpt('log_level', default='INFO', help='Global log level for Drydock'),
@@ -67,15 +71,21 @@ class DrydockConfig(object):
         cfg.StrOpt('node_driver',
                     default='drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
                     help='Module path string of the Node driver to enable'),
+        # TODO Network driver not yet implemented
+        cfg.StrOpt('network_driver',
+                    default=None,
+                    help='Module path string of the Network driver enable'),
     ]
 
     # Timeouts for various tasks specified in minutes
     timeout_options = [
         cfg.IntOpt('drydock_timeout', default=5, help='Fallback timeout when a specific one is not configured'),
         cfg.IntOpt('create_network_template', default=2, help='Timeout in minutes for creating site network templates'),
+        cfg.IntOpt('configure_user_credentials', default=2, help='Timeout in minutes for creating user credentials'),
         cfg.IntOpt('identify_node', default=10, help='Timeout in minutes for initial node identification'),
         cfg.IntOpt('configure_hardware', default=30, help='Timeout in minutes for node commissioning and hardware configuration'),
         cfg.IntOpt('apply_node_networking', default=5, help='Timeout in minutes for configuring node networking'),
+        cfg.IntOpt('apply_node_platform', default=5, help='Timeout in minutes for configuring node platform'),
         cfg.IntOpt('deploy_node', default=45, help='Timeout in minutes for deploying a node'),
     ]
 
@@ -83,15 +93,18 @@ class DrydockConfig(object):
         self.conf = cfg.CONF
 
     def register_options(self):
+        self.conf.register_opts(DrydockConfig.options)
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.auth_options, group='authentication')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(DrydockConfig.timeout_options, group='timeouts')
 
 IGNORED_MODULES = ('drydock', 'config')
+config_mgr = DrydockConfig()
 
 def list_opts():
-    opts = {'logging': DrydockConfig.logging_options,
+    opts = {'DEFAULT': DrydockConfig.options,
+            'logging': DrydockConfig.logging_options,
             'authentication': DrydockConfig.auth_options,
             'plugins': DrydockConfig.plugin_options,
             'timeouts': DrydockConfig.timeout_options

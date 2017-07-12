@@ -78,6 +78,20 @@ class Interface(model_base.ResourceBase):
 
         return False
 
+    def unlink_subnet(self, subnet_id):
+        for l in self.links:
+            if l.get('subnet_id', None) == subnet_id:
+                url = self.interpolate_url()
+
+                resp = self.api_client.post(url, op='unlink_subnet', files={'id': l.get('resource_id')})
+
+                if not resp.ok:
+                    raise errors.DriverError("Error unlinking subnet")
+                else:
+                    return
+
+        raise errors.DriverError("Error unlinking interface, Link to subnet_id %s not found." % subnet_id)
+
     def link_subnet(self, subnet_id=None, subnet_cidr=None, ip_address=None, primary=False):
         """
         Link this interface to a MaaS subnet. One of subnet_id or subnet_cidr
@@ -110,13 +124,13 @@ class Interface(model_base.ResourceBase):
             raise errors.DriverError("Subnet not found in MaaS for subnet_id %s, subnet_cidr %s" %
                                  (subnet_id, subnet_cidr))
 
-        # TODO Possibly add logic to true up link attributes, may be overkill
-        if self.is_linked(subnet.resource_id):
-            self.logger.info("Interface %s already linked to subnet %s, skipping." %
-                            (self.resource_id, subnet.resource_id))
-            return
-
         url = self.interpolate_url()
+
+        if self.is_linked(subnet.resource_id):
+            self.logger.info("Interface %s already linked to subnet %s, unlinking." %
+                            (self.resource_id, subnet.resource_id))
+            self.unlink_subnet(subnet.resource_id)
+
 
         # TODO Probably need to enumerate link mode
         options = { 'subnet': subnet.resource_id,
@@ -260,3 +274,4 @@ class Interfaces(model_base.ResourceCollectionBase):
         self.refresh()
         
         return
+

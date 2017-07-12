@@ -196,7 +196,7 @@ class ResourceCollectionBase(object):
 
         resp = self.api_client.post(url, files=data_dict)
 
-        if resp.status_code == 200:
+        if resp.status_code in [200,201]:
             resp_json = resp.json()
             res.set_resource_id(resp_json.get('id'))
             return res

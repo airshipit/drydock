@@ -26,6 +26,7 @@ import drydock_provisioner.objects.network as network
 import drydock_provisioner.objects.hwprofile as hwprofile
 import drydock_provisioner.objects.node as node
 import drydock_provisioner.objects.hostprofile as hostprofile
+import drydock_provisioner.objects.promenade as prom
 
 from drydock_provisioner.statemgmt import DesignState
 
@@ -69,6 +70,15 @@ class Ingester(object):
 
     
     def ingest_data(self, plugin_name='', design_state=None, design_id=None, context=None, **kwargs):
+        """
+        ingest_data - Execute a data ingestion using the named plugin (assuming it is enabled) 
+
+        :param plugin_name: - Which plugin should be used for ingestion
+        :param design_state: - An instance of statemgmt.DesignState
+        :param design_id: - The ID of the SiteDesign all parsed designed parts should be added
+        :param context: - Context of the request requesting ingestion
+        :param kwargs: - Keywork arguments to pass to the ingester plugin
+        """
         if design_state is None:
             self.logger.error("Ingester:ingest_data called without valid DesignState handler")
             raise ValueError("Invalid design_state handler")
@@ -104,17 +114,12 @@ class Ingester(object):
                     design_data.add_hardware_profile(m)
                 elif type(m) is node.BaremetalNode:
                     design_data.add_baremetal_node(m)
+                elif type(m) is prom.PromenadeConfig:
+                    design_data.add_promenade_config(m)
             design_state.put_design(design_data)
             return design_items
         else:
             self.logger.error("Could not find plugin %s to ingest data." % (plugin_name))
             raise LookupError("Could not find plugin %s" % plugin_name)
-    """
-      ingest_data
 
-      params: plugin_name - Which plugin should be used for ingestion
-      params: params - A map of parameters that will be passed to the plugin's ingest_data method
-
-      Execute a data ingestion using the named plugin (assuming it is enabled) 
-    """
 

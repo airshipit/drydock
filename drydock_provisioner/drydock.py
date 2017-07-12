@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+<<<<<<< HEAD
+import sys
+import os
+
+from oslo_config import cfg
+=======
 from oslo_config import cfg
 import sys
+>>>>>>> attcomdev/master
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -35,7 +42,11 @@ def start_drydock():
     cfg.CONF(sys.argv[1:])
 
     if cfg.CONF.debug:
+<<<<<<< HEAD
+        cfg.CONF.set_override(name='log_level', override='DEBUG', group='logging')
+=======
         cfg.CONF.logging.log_level = 'DEBUG'
+>>>>>>> attcomdev/master
 
     # Setup root logger
     logger = logging.getLogger(cfg.CONF.logging.global_logger_name)
@@ -61,14 +72,27 @@ def start_drydock():
     input_ingester = ingester.Ingester()
     input_ingester.enable_plugins(cfg.CONF.plugins.ingester)
 
+<<<<<<< HEAD
+    # Check if we have an API key in the environment
+    # Hack around until we move MaaS configs to the YAML schema
+    if 'MAAS_API_KEY' in os.environ:
+        cfg.CONF.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
+
+
+    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester, orchestrator=orchestrator)
+
+    # Now that loggers are configured, log the effective config
+    cfg.CONF.log_opt_values(logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
+
+    return wsgi_callable
+=======
     # Now that loggers are configured, log the effective config
     cfg.CONF.log_opt_values(logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
 
     # Now that loggers are configured, log the effective config
     drydock_provisioner.conf.log_opt_values(logging.getLogger(drydock_provisioner.conf.logging.global_logger_name), logging.DEBUG)
+>>>>>>> attcomdev/master
 
-    return api.start_api(state_manager=state, ingester=input_ingester,
-                         orchestrator=orchestrator)
 
 drydock = start_drydock()
 

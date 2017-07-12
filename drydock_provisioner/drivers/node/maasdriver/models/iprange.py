@@ -41,7 +41,7 @@ class IpRanges(model_base.ResourceCollectionBase):
     collection_resource = IpRange
 
     def __init__(self, api_client, **kwargs):
-        super(IpRanges, self).__init__(api_client)
+        super(IpRanges, self).__init__(api_client, **kwargs)
 
     def add(self, res):
         """

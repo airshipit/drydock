@@ -39,7 +39,8 @@ class NodeDriver(ProviderDriver):
                                   hd_fields.OrchestratorAction.ApplyNodeStorage,
                                   hd_fields.OrchestratorAction.ApplyNodePlatform,
                                   hd_fields.OrchestratorAction.DeployNode,
-                                  hd_fields.OrchestratorAction.DestroyNode]
+                                  hd_fields.OrchestratorAction.DestroyNode,
+                                  hd_fields.OrchestratorAction.ConfigureUserCredentials]
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)

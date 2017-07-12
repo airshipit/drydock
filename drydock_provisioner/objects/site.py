@@ -37,6 +37,7 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
         'tag_definitions': ovo_fields.ObjectField('NodeTagDefinitionList',
                                                nullable=True),
         'repositories': ovo_fields.ObjectField('RepositoryList', nullable=True),
+        'authorized_keys': ovo_fields.ListOfStringsField(nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -50,6 +51,9 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
 
     def add_tag_definition(self, tag_definition):
         self.tag_definitions.append(tag_definition)
+
+    def add_key(self, key_string):
+        self.authorized_keys.append(key_string)
 
 @base.DrydockObjectRegistry.register
 class NodeTagDefinition(base.DrydockObject):
@@ -122,6 +126,7 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         'host_profiles':    ovo_fields.ObjectField('HostProfileList', nullable=True),
         'hardware_profiles':    ovo_fields.ObjectField('HardwareProfileList', nullable=True),
         'baremetal_nodes':  ovo_fields.ObjectField('BaremetalNodeList', nullable=True),
+        'prom_configs':     ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -226,6 +231,26 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
         raise DesignError("BaremetalNode %s not found in design state"
                           % node_key)
+
+    def add_promenade_config(self, prom_conf):
+        if self.prom_configs is None:
+            self.prom_configs = objects.PromenadeConfigList()
+
+        self.prom_configs.append(prom_conf)
+
+    def get_promenade_configs(self):
+        return self.prom_configs
+
+    def get_promenade_config(self, target_list):
+        targeted_docs = []
+
+        if target_list is None or not isinstance(target_list, list):
+            return targeted_docs
+
+        for t in target_list:
+            targeted_docs.extend(self.prom_configs.select_for_target(t))
+
+        return targeted_docs
 
     def create(self, ctx, state_manager):
         self.created_at = datetime.datetime.now()

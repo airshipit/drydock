@@ -19,6 +19,7 @@ import importlib
 import logging
 
 from copy import deepcopy
+from oslo_config import cfg
 
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.task as tasks
@@ -160,23 +161,60 @@ class Orchestrator(object):
                 'site': task.site
             }
 
-            driver_task = self.create_task(tasks.DriverTask,
+            worked = failed = False
+
+            site_network_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
                                            task_scope=task_scope,
                                            action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
 
-            self.logger.info("Starting node driver task %s to create network templates" % (driver_task.get_id()))
+            self.logger.info("Starting node driver task %s to create network templates" % (site_network_task.get_id()))
 
-            driver.execute_task(driver_task.get_id())
+            driver.execute_task(site_network_task.get_id())
 
-            driver_task = self.state_manager.get_task(driver_task.get_id())
+            site_network_task = self.state_manager.get_task(site_network_task.get_id())
 
-            self.logger.info("Node driver task %s complete" % (driver_task.get_id()))            
+            if site_network_task.get_result() in [hd_fields.ActionResult.Success,
+                                                  hd_fields.ActionResult.PartialSuccess]:
+                worked = True
+            if site_network_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                  hd_fields.ActionResult.PartialSuccess]:
+                failed = True
+
+            self.logger.info("Node driver task %s complete" % (site_network_task.get_id()))
+
+            user_creds_task = self.create_task(tasks.DriverTask,
+                                           parent_task_id=task.get_id(),
+                                           design_id=design_id,
+                                           task_scope=task_scope,
+                                           action=hd_fields.OrchestratorAction.ConfigureUserCredentials)
+
+            self.logger.info("Starting node driver task %s to configure user credentials" % (user_creds_task.get_id()))
+
+            driver.execute_task(user_creds_task.get_id())
+
+            self.logger.info("Node driver task %s complete" % (site_network_task.get_id()))
+
+            user_creds_task = self.state_manager.get_task(site_network_task.get_id())
+
+            if user_creds_task.get_result() in [hd_fields.ActionResult.Success,
+                                                hd_fields.ActionResult.PartialSuccess]:
+                worked = True
+            if user_creds_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                hd_fields.ActionResult.PartialSuccess]:
+                failed = True
+
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                final_result = hd_fields.ActionResult.Success
+            else:
+                final_result = hd_fields.ActionResult.Failure
 
             self.task_field_update(task_id,
                                    status=hd_fields.TaskStatus.Complete,
-                                   result=driver_task.get_result())
+                                   result=final_result)
             return
         elif task.action == hd_fields.OrchestratorAction.VerifyNode:
             self.task_field_update(task_id,
@@ -311,7 +349,6 @@ class Orchestrator(object):
                                         design_id=design_id,
                                         action=hd_fields.OrchestratorAction.SetNodeBoot,
                                         task_scope=task_scope)
-
                 self.logger.info("Starting OOB driver task %s to set PXE boot for OOB type %s" %
                                  (setboot_task.get_id(), oob_type))
 
@@ -355,6 +392,7 @@ class Orchestrator(object):
             # Each attempt is a new task which might make the final task tree a bit confusing
 
             node_identify_attempts = 0
+            max_attempts = cfg.CONF.timeouts.identify_node * (60 / cfg.CONF.poll_interval)
 
             while True:
 
@@ -378,11 +416,11 @@ class Orchestrator(object):
                 elif node_identify_task.get_result() in [hd_fields.ActionResult.PartialSuccess,
                                                          hd_fields.ActionResult.Failure]:
                     # TODO This threshold should be a configurable default and tunable by task API
-                    if node_identify_attempts > 10:
+                    if node_identify_attempts > max_attempts:
                         failed = True
                         break
 
-                    time.sleep(1 * 60)
+                    time.sleep(cfg.CONF.poll_interval)
 
             # We can only commission nodes that were successfully identified in the provisioner
             if len(node_identify_task.result_detail['successful_nodes']) > 0:
@@ -460,7 +498,7 @@ class Orchestrator(object):
             if node_networking_task.get_result() in [hd_fields.ActionResult.Success,
                                                      hd_fields.ActionResult.PartialSuccess]:
                 worked = True
-            elif node_networking_task.get_result() in [hd_fields.ActionResult.Failure,
+            if node_networking_task.get_result() in [hd_fields.ActionResult.Failure,
                                                        hd_fields.ActionResult.PartialSuccess]:
                 failed = True
 
@@ -483,34 +521,35 @@ class Orchestrator(object):
                 if node_platform_task.get_result() in [hd_fields.ActionResult.Success,
                                                      hd_fields.ActionResult.PartialSuccess]:
                     worked = True
-                if node_platform_task.get_result() in [hd_fields.ActionResult.Failure,
+                elif node_platform_task.get_result() in [hd_fields.ActionResult.Failure,
                                                        hd_fields.ActionResult.PartialSuccess]:
                     failed = True
+
+                
+                if len(node_platform_task.result_detail['successful_nodes']) > 0:
+                    self.logger.info("Configured platform on %s nodes, starting deployment." %
+                                    (len(node_platform_task.result_detail['successful_nodes'])))
+                    node_deploy_task = self.create_task(tasks.DriverTask,
+                                                parent_task_id=task.get_id(), design_id=design_id,
+                                                action=hd_fields.OrchestratorAction.DeployNode,
+                                                task_scope={'site': task_site,
+                                                            'node_names': node_platform_task.result_detail['successful_nodes']})
+
+                    self.logger.info("Starting node driver task %s to deploy nodes." % (node_deploy_task.get_id()))
+                    node_driver.execute_task(node_deploy_task.get_id())
+
+                    node_deploy_task = self.state_manager.get_task(node_deploy_task.get_id())
+
+                    if node_deploy_task.get_result() in [hd_fields.ActionResult.Success,
+                                                         hd_fields.ActionResult.PartialSuccess]:
+                        worked = True
+                    elif node_deploy_task.get_result() in [hd_fields.ActionResult.Failure,
+                                                           hd_fields.ActionResult.PartialSuccess]:
+                        failed = True
+                else:
+                    self.logger.warning("Unable to configure platform on any nodes, skipping deploy subtask")
             else:
                 self.logger.warning("No nodes successfully networked, skipping platform configuration subtask")
-
-            if len(node_platform_task.result_detail['successful_nodes']) > 0:
-                self.logger.info("Configured platform on %s nodes, starting deployment." %
-                                (len(node_platform_task.result_detail['successful_nodes'])))
-                node_deploy_task = self.create_task(tasks.DriverTask,
-                                            parent_task_id=task.get_id(), design_id=design_id,
-                                            action=hd_fields.OrchestratorAction.DeployNode,
-                                            task_scope={'site': task_site,
-                                                        'node_names': node_platform_task.result_detail['successful_nodes']})
-
-                self.logger.info("Starting node driver task %s to deploy nodes." % (node_deploy_task.get_id()))
-                node_driver.execute_task(node_deploy_task.get_id())
-
-                node_deploy_task = self.state_manager.get_task(node_deploy_task.get_id())
-
-                if node_deploy_task.get_result() in [hd_fields.ActionResult.Success,
-                                                     hd_fields.ActionResult.PartialSuccess]:
-                    worked = True
-                elif node_deploy_task.get_result() in [hd_fields.ActionResult.Failure,
-                                                       hd_fields.ActionResult.PartialSuccess]:
-                    failed = True
-            else:
-                self.logger.warning("Unable to configure platform on any nodes, skipping deploy subtask")
 
             final_result = None
             if worked and failed:
