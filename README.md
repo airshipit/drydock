@@ -3,10 +3,10 @@ A python REST orchestrator to translate a YAML host topology to a provisioned se
 
 To run:
 
-    $ virtualenv -p python3 /var/tmp/drydock
-    $ . /var/tmp/drydock/bin/activate
-    $ python setup.py install
-    $ uwsgi --http :9000 -w drydock_provisioner.drydock --callable drydock --enable-threads -L
+    $ docker build . -t drydock
+    $ docker run -v /path/to/drydock/repo/examples:/etc/drydock -P --name='drydock' drydock
+    $ DDPORT=$(docker ps -f name=drydock | grep -oE '0.0.0.0:[0-9]+' | cut -d':' -f 2)
+    $ curl -v http://localhost:${DDPORT}/api/v1.0/designs
 
 ## Modular service
 
