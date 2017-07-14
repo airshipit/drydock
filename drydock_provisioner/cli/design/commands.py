@@ -14,34 +14,39 @@
 """ cli.design.commands
     Contains commands related to designs
 """
-import logging
 import click
 
+from drydock_provisioner.cli.design.actions import DesignList
+from drydock_provisioner.cli.design.actions import DesignShow
+from drydock_provisioner.cli.design.actions import DesignCreate
+
 @click.group()
-@click.pass_context
-def design(ctx):
+def design():
     """ Drydock design commands
     """
     pass
 
 @design.command(name='create')
+@click.option('--base-design',
+              '-b',
+              help='The base design to model this new design after')
 @click.pass_context
-def design_create(ctx):
+def design_create(ctx, base_design=None):
     """ Create a design
     """
-    click.echo('create invoked')
+    click.echo(DesignCreate(ctx.obj['CLIENT'], base_design).invoke())
 
 @design.command(name='list')
 @click.pass_context
 def design_list(ctx):
     """ List designs
     """
-    click.echo(ctx.obj['CLIENT'].get_design_ids())
+    click.echo(DesignList(ctx.obj['CLIENT']).invoke())
 
-@click.option('--design-id',
-              '-id',
-              help='The deisgn id to show')
 @design.command(name='show')
+@click.option('--design-id',
+              '-i',
+              help='The design id to show')
 @click.pass_context
 def design_show(ctx, design_id):
     """ show designs
@@ -49,4 +54,4 @@ def design_show(ctx, design_id):
     if not design_id:
         ctx.fail('The design id must be specified by --design-id')
 
-    click.echo('show invoked for {}'.format(design_id))
+    click.echo(DesignShow(ctx.obj['CLIENT'], design_id).invoke())

@@ -15,17 +15,15 @@
 """
 import logging
 
-from oslo_config import cfg
-
-class CliAction(object):
+class CliAction: # pylint: disable=too-few-public-methods
     """ Action base for CliActions
     """
-    def __init__(self, api_client, debug):
-        self.logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
+    def __init__(self, api_client):
+        self.logger = logging.getLogger('drydock_cli')
         self.api_client = api_client
-        self.debug = debug
-        if self.debug:
-            self.logger.info("Action initialized with client %s" % (self.api_client), extra=extra)
+        self.logger.debug("Action initialized with client %s", self.api_client.session.host)
 
     def invoke(self):
+        """ The action to be taken. By default, this is not implemented
+        """
         raise NotImplementedError("Invoke method has not been implemented")
