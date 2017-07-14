@@ -11,21 +11,42 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+""" cli.design.commands
+    Contains commands related to designs
+"""
+import logging
 import click
 
 @click.group()
-def design():
-    click.echo('design invoked')
+@click.pass_context
+def design(ctx):
+    """ Drydock design commands
+    """
+    pass
 
-@design.command()
-def create():
+@design.command(name='create')
+@click.pass_context
+def design_create(ctx):
+    """ Create a design
+    """
     click.echo('create invoked')
 
-@design.command()
-def list():
-    click.echo('list invoked')
+@design.command(name='list')
+@click.pass_context
+def design_list(ctx):
+    """ List designs
+    """
+    click.echo(ctx.obj['CLIENT'].get_design_ids())
 
-@design.command()
-def show():
-    click.echo('design invoked.')
+@click.option('--design-id',
+              '-id',
+              help='The deisgn id to show')
+@design.command(name='show')
+@click.pass_context
+def design_show(ctx, design_id):
+    """ show designs
+    """
+    if not design_id:
+        ctx.fail('The design id must be specified by --design-id')
+
+    click.echo('show invoked for {}'.format(design_id))

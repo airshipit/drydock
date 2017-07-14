@@ -68,7 +68,7 @@ class DrydockClient(object):
         """
         endpoint = '/designs'
 
-        resp = self.__send_get(endpiont)
+        resp = self.__send_get(endpoint)
 
         if resp.status_code != 200:
             raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
