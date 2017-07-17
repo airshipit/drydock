@@ -21,44 +21,10 @@ class DrydockClient(object):
     A client for the Drydock API
 
     :param DrydockSession session: A instance of DrydockSession to be used by this client
-    :param string version: Drydock API version to use, default is '1.0'
     """
 
-    def __init__(self, session, version='1.0'):
+    def __init__(self, session):
         self.session = session
-        self.version = version
-        self.api_url = "%s/%s/" % (self.session.base_url, version)
-
-    def __send_get(self, endpoint, query=None):
-        """
-        Send a GET request to Drydock.
-
-        :param string endpoint: The URL string following the hostname and API prefix
-        :param dict query: A dict of k, v pairs to add to the query string
-        :return: A requests.Response object
-        """
-        resp = self.session.get(self.api_url + endpoint, params=query)
-
-        return resp
-
-    def __send_post(self, endpoint, query=None, body=None, data=None):
-        """
-        Send a POST request to Drydock. If both body and data are specified,
-        body will will be used.
-
-        :param string endpoint: The URL string following the hostname and API prefix
-        :param dict query: A dict of k, v parameters to add to the query string
-        :param string body: A string to use as the request body. Will be treated as raw
-        :param data: Something json.dumps(s) can serialize. Result will be used as the request body
-        :return: A requests.Response object
-        """
-
-        if body is not None:
-            resp = self.session.post(self.api_url + endpoint, params=query, data=body)
-        else:
-            resp = self.session.post(self.api_url + endpoint, params=query, json=data)
-
-        return resp
 
     def get_design_ids(self):
         """
@@ -66,9 +32,9 @@ class DrydockClient(object):
 
         :return: A list of string design_ids
         """
-        endpoint = '/designs'
+        endpoint = 'v1.0/designs'
 
-        resp = self.__send_get(endpoint)
+        resp = self.session.get(endpoint)
 
         if resp.status_code != 200:
             raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
@@ -84,10 +50,10 @@ class DrydockClient(object):
         :param string source: The model source to return. 'designed' is as input, 'compiled' is after merging
         :return: A dict of the design and all currently loaded design parts
         """
-        endpoint = "/designs/%s" % design_id
+        endpoint = "v1.0/designs/%s" % design_id
 
 
-        resp = self.__send_get(endpoint, query={'source': source})
+        resp = self.session.get(endpoint, query={'source': source})
 
         if resp.status_code == 404:
             raise errors.ClientError("Design ID %s not found." % (design_id), code=404)
@@ -104,12 +70,12 @@ class DrydockClient(object):
         :param string base_design: String UUID of the base design to build this design upon
         :return string: String UUID of the design ID
         """
-        endpoint = '/designs'
+        endpoint = 'v1.0/designs'
 
         if base_design is not None:
-            resp = self.__send_post(endpoint, data={'base_design_id': base_design})
+            resp = self.session.post(endpoint, data={'base_design_id': base_design})
         else:
-            resp = self.__send_post(endpoint)
+            resp = self.session.post(endpoint)
 
         if resp.status_code != 201:
             raise errors.ClientError("Received a %d from POST URL: %s" % (resp.status_code, endpoint),
@@ -129,9 +95,9 @@ class DrydockClient(object):
         :return: A dict of the design part
         """
 
-        endpoint = "/designs/%s/parts/%s/%s" % (design_id, kind, key)
+        endpoint = "v1.0/designs/%s/parts/%s/%s" % (design_id, kind, key)
 
-        resp = self.__send_get(endpoint, query={'source': source})
+        resp = self.session.get(endpoint, query={'source': source})
 
         if resp.status_code == 404:
             raise errors.ClientError("%s %s in design %s not found" % (key, kind, design_id), code=404)
@@ -148,9 +114,9 @@ class DrydockClient(object):
         :return: Dict of the parsed design parts
         """
 
-        endpoint = "/designs/%s/parts" % (design_id)
+        endpoint = "v1.0/designs/%s/parts" % (design_id)
 
-        resp = self.__send_post(endpoint, query={'ingester': 'yaml'}, body=yaml_string)
+        resp = self.session.post(endpoint, query={'ingester': 'yaml'}, body=yaml_string)
 
         if resp.status_code == 400:
            raise errors.ClientError("Invalid inputs: %s" % resp.text, code=resp.status_code)
@@ -168,9 +134,9 @@ class DrydockClient(object):
         :return: List of string uuid task IDs
         """
 
-        endpoint = "/tasks"
+        endpoint = "v1.0/tasks"
 
-        resp = self.__send_get(endpoint)
+        resp = self.session.get(endpoint)
 
         if resp.status_code != 200:
             raise errors.ClientError("Server error: %s" % resp.text, code=resp.status_code)
@@ -185,9 +151,9 @@ class DrydockClient(object):
         :return: A dict representing the current state of the task
         """
 
-        endpoint = "/tasks/%s" % (task_id)
+        endpoint = "v1.0/tasks/%s" % (task_id)
 
-        resp = self.__send_get(endpoint)
+        resp = self.session.get(endpoint)
 
         if resp.status_code == 200:
             return resp.json()
@@ -207,7 +173,7 @@ class DrydockClient(object):
         :return: The string uuid of the create task's id
         """
 
-        endpoint = '/tasks'
+        endpoint = 'v1.0/tasks'
 
         task_dict = {
             'action':       task_action,
@@ -215,7 +181,7 @@ class DrydockClient(object):
             'node_filter':  node_filter
         }
 
-        resp = self.__send_post(endpoint, data=task_dict)
+        resp = self.session.post(endpoint, data=task_dict)
 
         if resp.status_code == 201:
             return resp.json().get('id')
@@ -223,4 +189,3 @@ class DrydockClient(object):
             raise errors.ClientError("Invalid inputs, received a %d: %s" % (resp.status_code, resp.text),
                                         code=resp.status_code)
 
-            
