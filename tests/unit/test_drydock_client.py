@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
+import responses
 
 import drydock_provisioner.drydock_client.session as dc_session
 import drydock_provisioner.drydock_client.client as dc_client
@@ -61,4 +62,54 @@ def test_session_init_marker():
 
     assert dd_ses.base_url == "http://%s/api/" % (host)
     assert dd_ses.marker == marker
+
+@responses.activate
+def test_session_get():
+    responses.add(responses.GET, 'http://foo.bar.baz/api/v1.0/test', body='okay',
+                  status=200)
+    host = 'foo.bar.baz'
+    token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
+    marker = '40c3eaf6-6a8a-11e7-a4bd-080027ef795a'
+
+    dd_ses = dc_session.DrydockSession(host, token=token, marker=marker)
+
+    resp = dd_ses.get('v1.0/test')
+    req = resp.request
+
+    assert req.headers.get('X-Auth-Token', None) == token
+    assert req.headers.get('X-Context-Marker', None) == marker
+
+@responses.activate
+def test_client_designs_get():
+    design_id = '828e88dc-6a8b-11e7-97ae-080027ef795a'
+    responses.add(responses.GET, 'http://foo.bar.baz/api/v1.0/designs',
+                  json=[design_id])
+
+    host = 'foo.bar.baz'
+    token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
+
+    dd_ses = dc_session.DrydockSession(host, token=token)
+    dd_client = dc_client.DrydockClient(dd_ses)
+    design_list = dd_client.get_design_ids()
+
+    assert design_id in design_list 
+
+@responses.activate
+def test_client_design_get():
+    design = { 'id': '828e88dc-6a8b-11e7-97ae-080027ef795a',
+               'model_type': 'SiteDesign'
+             }
+
+    responses.add(responses.GET, 'http://foo.bar.baz/api/v1.0/designs/828e88dc-6a8b-11e7-97ae-080027ef795a',
+                  json=design)
+
+    host = 'foo.bar.baz'
+    
+    dd_ses = dc_session.DrydockSession(host)
+    dd_client = dc_client.DrydockClient(dd_ses)
+
+    design_resp = dd_client.get_design('828e88dc-6a8b-11e7-97ae-080027ef795a')
+
+    assert design_resp['id'] == design['id']
+    assert design_resp['model_type'] == design['model_type']
 

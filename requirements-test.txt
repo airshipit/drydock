@@ -1,6 +1,6 @@
 pytest-mock
 pytest
-requests-mock
+responses
 mock
 tox
 oslo.versionedobjects[fixtures]>=1.23.0
