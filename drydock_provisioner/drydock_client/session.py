@@ -36,3 +36,34 @@ class DrydockSession(object):
         self.marker = marker
 
     # TODO Add keystone authentication to produce a token for this session
+    def get(self, endpoint, query=None):
+        """
+        Send a GET request to Drydock.
+
+        :param string endpoint: The URL string following the hostname and API prefix
+        :param dict query: A dict of k, v pairs to add to the query string
+        :return: A requests.Response object
+        """
+        resp = self.__session.get(self.base_url + endpoint, params=query, timeout=10)
+
+        return resp
+
+    def post(self, endpoint, query=None, body=None, data=None):
+        """
+        Send a POST request to Drydock. If both body and data are specified,
+        body will will be used.
+
+        :param string endpoint: The URL string following the hostname and API prefix
+        :param dict query: A dict of k, v parameters to add to the query string
+        :param string body: A string to use as the request body. Will be treated as raw
+        :param data: Something json.dumps(s) can serialize. Result will be used as the request body
+        :return: A requests.Response object
+        """
+
+        if body is not None:
+            resp = self.__session.post(self.base_url + endpoint, params=query, data=body, timeout=10)
+        else:
+            resp = self.__session.post(self.base_url + endpoint, params=query, json=data, timeout=10)
+
+        return resp
+
