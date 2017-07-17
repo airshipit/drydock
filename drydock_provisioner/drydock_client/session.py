@@ -23,15 +23,19 @@ class DrydockSession(object):
     :param string marker: (optional) external context marker
     """
 
-    def __init__(self, host, *, port=None, token=None, marker=None):
+    def __init__(self, host, *, port=None, scheme='http', token=None, marker=None):
         self.__session = requests.Session()
         self.__session.headers.update({'X-Auth-Token': token, 'X-Context-Marker': marker})
         self.host = host
-        self.port = port
+        self.scheme = scheme
+
         if port:
-            self.base_url = "http://%s:%d/api/" % (host, port)
+            self.port = port
+            self.base_url = "%s://%s:%s/api/" % (self.scheme, self.host, self.port)
         else:
-            self.base_url = "http://%s/api/" % (host)
+            #assume default port for scheme
+            self.base_url = "%s://%s/api/" % (self.scheme, self.host)
+
         self.token = token
         self.marker = marker
 

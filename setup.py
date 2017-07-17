@@ -43,6 +43,7 @@ setup(name='drydock_provisioner',
                 'drydock_provisioner.control',
                 'drydock_provisioner.cli',
                 'drydock_provisioner.cli.design',
+                'drydock_provisioner.cli.part',
                 'drydock_provisioner.drydock_client'],
       install_requires=[
         'PyYAML',

@@ -11,15 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" The entrypoint for the cli commands
+""" The entry point for the cli commands
 """
 import os
 import logging
-import click
+from urllib.parse import urlparse
 
+import click
 from drydock_provisioner.drydock_client.session import DrydockSession
 from drydock_provisioner.drydock_client.client import DrydockClient
 from .design import commands as design
+from .part import commands as part
 
 @click.group()
 @click.option('--debug/--no-debug',
@@ -43,12 +45,12 @@ def drydock(ctx, debug, token, url):
     ctx.obj['DEBUG'] = debug
 
     if not token:
-        ctx.fail("Error: Token must be specified either by "
-                 "--token or DD_TOKEN from the environment")
+        ctx.fail('Error: Token must be specified either by '
+                 '--token or DD_TOKEN from the environment')
 
     if not url:
-        ctx.fail("Error: URL must be specified either by "
-                 "--url or DD_URL from the environment")
+        ctx.fail('Error: URL must be specified either by '
+                 '--url or DD_URL from the environment')
 
     # setup logging for the CLI
     # Setup root logger
@@ -63,7 +65,13 @@ def drydock(ctx, debug, token, url):
     logger.debug('logging for cli initialized')
 
     # setup the drydock client using the passed parameters.
-    ctx.obj['CLIENT'] = DrydockClient(DrydockSession(host=url,
+    url_parse_result = urlparse(url)
+    logger.debug(url_parse_result)
+    if not url_parse_result.scheme:
+        ctx.fail('URL must specify a scheme and hostname, optionally a port')
+    ctx.obj['CLIENT'] = DrydockClient(DrydockSession(scheme=url_parse_result.scheme,
+                                                     host=url_parse_result.netloc,
                                                      token=token))
 
 drydock.add_command(design.design)
+drydock.add_command(part.part)
