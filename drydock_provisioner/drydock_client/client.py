@@ -104,6 +104,8 @@ class DrydockClient(object):
         elif resp.status_code != 200:
             raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
                                         code=resp.status_code)
+        else:
+            return resp.json()
 
     def load_parts(self, design_id, yaml_string=None):
         """
