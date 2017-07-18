@@ -15,6 +15,7 @@ FROM ubuntu:16.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
+ENV PORT 9000
 
 RUN apt -qq update && \
     apt -y install git \
@@ -39,7 +40,7 @@ COPY . /tmp/drydock
 WORKDIR /tmp/drydock
 RUN python3 setup.py install
 
-EXPOSE 8000
+EXPOSE $PORT
 
 ENTRYPOINT ["./entrypoint.sh"]
 
