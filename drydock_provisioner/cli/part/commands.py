@@ -46,10 +46,10 @@ def part_create(ctx, file=None):
 
     with open(file, 'r') as file_input:
         file_contents = file_input.read()
-        # here is where some yaml validation could be done
+        # here is where some potential validation could be done on the input file
         click.echo(PartCreate(ctx.obj['CLIENT'],
                               design_id=ctx.obj['DESIGN_ID'],
-                              yaml=file_contents).invoke())
+                              in_file=file_contents).invoke())
 
 @part.command(name='list')
 @click.pass_context

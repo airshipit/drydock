@@ -346,4 +346,4 @@ spec:
       address: 'dhcp'
     - network: 'mgmt'
       address: '172.16.1.83'
----
+...

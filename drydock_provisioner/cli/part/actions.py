@@ -38,24 +38,23 @@ class PartList(PartBase): # pylint: disable=too-few-public-methods
 
     def invoke(self):
         #TODO: change the api call
-        #return self.api_client.get_design_ids()
-        pass
+        return 'This function does not yet have an implementation to support the request'
 
 class PartCreate(PartBase): # pylint: disable=too-few-public-methods
     """ Action to create parts of a design
     """
-    def __init__(self, api_client, design_id, yaml):
+    def __init__(self, api_client, design_id, in_file):
         """
             :param DrydockClient api_client: The api client used for invocation.
             :param string design_id: The UUID of the design for which to create a part
-            :param yaml: The file containing the specification of the part
+            :param in_file: The file containing the specification of the part
         """
         super().__init__(api_client, design_id)
-        self.yaml = yaml
-        self.logger.debug('PartCreate action initialized with yaml=%s', yaml[:100])
+        self.in_file = in_file
+        self.logger.debug('PartCreate action init. Input file (trunc to 100 chars)=%s', in_file[:100])
 
     def invoke(self):
-        return self.api_client.load_parts(self.design_id, self.yaml)
+        return self.api_client.load_parts(self.design_id, self.in_file)
 
 class PartShow(PartBase): # pylint: disable=too-few-public-methods
     """ Action to show a part of a design.
