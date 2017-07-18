@@ -84,8 +84,8 @@ class LoggingMiddleware(object):
         ctx = req.context
         extra = {
             'user': ctx.user,
-            'req_id': ctx.req_id,
+            'req_id': ctx.request_id,
             'external_ctx': ctx.external_marker,
         }
-        resp.append_header('X-Drydock-Req', ctx.req_id)
+        resp.append_header('X-Drydock-Req', ctx.request_id)
         self.logger.info("%s - %s" % (req.uri, resp.status), extra=extra)
