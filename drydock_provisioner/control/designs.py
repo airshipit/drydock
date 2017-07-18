@@ -114,6 +114,32 @@ class DesignsPartsResource(StatefulResource):
             except LookupError:
                 self.return_error(resp, falcon.HTTP_400, message="Ingester %s not registered" % ingester_name, retry=False)
 
+    def on_get(self, req, resp, design_id):
+        try:
+            design = self.state_manager.get_design(design_id)
+        except DesignError:
+            self.return_error(resp, falcon.HTTP_404, message="Design %s nout found" % design_id, retry=False)
+
+        part_catalog = []
+
+        site = design.get_site()
+
+        part_catalog.append({'kind': 'Region', 'key': site.get_id()})
+
+        part_catalog.extend([{'kind': 'Netowrk', 'key': n.get_id()} for n in design.networks])
+
+        part_catalog.extend([{'kind': 'NetworkLink', 'key': l.get_id()} for l in design.network_links])
+
+        part_catalog.extend([{'kind': 'HostProfile', 'key': p.get_id()} for p in design.host_profiles])
+
+        part_catalog.extend([{'kind': 'HardwareProfile', 'key': p.get_id()} for p in design.hardware_profiles])
+
+        part_catalog.extend([{'kind': 'BaremetalNode', 'key': n.get_id()} for n in design.baremetal_nodes])
+
+        resp.body = json.dumps(part_catalog)
+        resp.status = falcon.HTTP_200
+        return
+
 
 class DesignsPartsKindsResource(StatefulResource):
     def __init__(self, **kwargs):
