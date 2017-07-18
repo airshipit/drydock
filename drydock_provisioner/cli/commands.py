@@ -22,6 +22,7 @@ from drydock_provisioner.drydock_client.session import DrydockSession
 from drydock_provisioner.drydock_client.client import DrydockClient
 from .design import commands as design
 from .part import commands as part
+from .task import commands as task
 
 @click.group()
 @click.option('--debug/--no-debug',
@@ -75,3 +76,4 @@ def drydock(ctx, debug, token, url):
 
 drydock.add_command(design.design)
 drydock.add_command(part.part)
+drydock.add_command(task.task)

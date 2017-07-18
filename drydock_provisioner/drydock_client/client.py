@@ -186,7 +186,7 @@ class DrydockClient(object):
         resp = self.session.post(endpoint, data=task_dict)
 
         if resp.status_code == 201:
-            return resp.json().get('id')
+            return resp.json().get('task_id')
         elif resp.status_code == 400:
             raise errors.ClientError("Invalid inputs, received a %d: %s" % (resp.status_code, resp.text),
                                         code=resp.status_code)

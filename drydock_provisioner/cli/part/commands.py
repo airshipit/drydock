@@ -74,8 +74,12 @@ def part_show(ctx, source, kind, key):
     """
     if not kind:
         ctx.fail('The kind must be specified by --kind')
-    
+
     if not key:
         ctx.fail('The key must be specified by --key')
 
-    click.echo(PartShow(ctx.obj['CLIENT'], design_id=ctx.obj['DESIGN_ID'], kind=kind, key=key, source=source).invoke())
+    click.echo(PartShow(ctx.obj['CLIENT'],
+                        design_id=ctx.obj['DESIGN_ID'],
+                        kind=kind,
+                        key=key,
+                        source=source).invoke())

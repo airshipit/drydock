@@ -27,9 +27,11 @@ class DesignList(CliAction): # pylint: disable=too-few-public-methods
 
 class DesignCreate(CliAction): # pylint: disable=too-few-public-methods
     """ Action to create designs
-        :param string base_design: A UUID of the base design to model after
     """
     def __init__(self, api_client, base_design=None):
+        """
+            :param string base_design: A UUID of the base design to model after
+        """
         super().__init__(api_client)
         self.logger.debug("DesignCreate action initialized with base_design=%s", base_design)
         self.base_design = base_design
