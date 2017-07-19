@@ -1,11 +1,11 @@
 # drydock_provisioner
 A python REST orchestrator to translate a YAML host topology to a provisioned set of hosts and provide a set of cloud-init post-provisioning instructions.
 
-To run:
+To build and run, first move into the root directory of the repo and run:
 
-    $ docker build . -t drydock
-    $ docker run -v /path/to/drydock/repo/examples:/etc/drydock -P --name='drydock' drydock
-    $ DDPORT=$(docker ps -f name=drydock | grep -oE '0.0.0.0:[0-9]+' | cut -d':' -f 2)
+    $ sudo docker build . -t drydock
+    $ sudo docker run -d -v $(pwd)/examples:/etc/drydock -P --name='drydock' drydock
+    $ DDPORT=$(sudo docker port drydock 8000/tcp | awk -F ':' '{ print $NF }')
     $ curl -v http://localhost:${DDPORT}/api/v1.0/designs
 
 ## Modular service

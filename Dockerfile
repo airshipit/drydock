@@ -39,7 +39,7 @@ COPY . /tmp/drydock
 WORKDIR /tmp/drydock
 RUN python3 setup.py install
 
-EXPOSE 9000
+EXPOSE 8000
 
 ENTRYPOINT ["./entrypoint.sh"]
 
