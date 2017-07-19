@@ -74,7 +74,7 @@ class MaasNodeDriver(NodeDriver):
                             status=hd_fields.TaskStatus.Complete,
                             result=hd_fields.ActionResult.Success)
                         return
-            except errors.TransientDriverError(ex):
+            except errors.TransientDriverError as ex:
                 result = {
                     'retry': True,
                     'detail':  str(ex),
@@ -84,7 +84,7 @@ class MaasNodeDriver(NodeDriver):
                             result=hd_fields.ActionResult.Failure,
                             result_details=result)
                 return
-            except errors.PersistentDriverError(ex):
+            except errors.PersistentDriverError as ex:
                 result = {
                     'retry': False,
                     'detail':  str(ex),
@@ -94,7 +94,7 @@ class MaasNodeDriver(NodeDriver):
                             result=hd_fields.ActionResult.Failure,
                             result_details=result)
                 return
-            except Exception(ex):
+            except Exception as ex:
                 result = {
                     'retry': False,
                     'detail':  str(ex),

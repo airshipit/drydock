@@ -333,6 +333,7 @@ class YamlIngester(IngesterPlugin):
                             node_metadata = spec.get('metadata', {})
                             metadata_tags = node_metadata.get('tags', [])
 
+                            model.tags = metadata_tags
 
                             owner_data = node_metadata.get('owner_data', {})
                             model.owner_data = {}
