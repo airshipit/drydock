@@ -8,6 +8,18 @@ To build and run, first move into the root directory of the repo and run:
     $ DDPORT=$(sudo docker port drydock 8000/tcp | awk -F ':' '{ print $NF }')
     $ curl -v http://localhost:${DDPORT}/api/v1.0/designs
 
+To be useful, Drydock needs to operate in a realistic topology and has some required
+downstream services.
+
+* A VM running Canonical MaaS v2.2+
+* Docker running to start the Drydock image (can be co-located on the MaaS VM)
+* A second VM or Baremetal Node to provision via Drydock
+    * Baremetal needs to be able to PXE boot
+    * Preferrably Baremetal will have an IPMI OOB interface
+    * Either VM or Baremetal will need to have one interface on the same L2 network (LAN or VLAN) as the MaaS VM
+
+See the [Getting Started](docs/getting_started.rst) guide  for instructions.
+
 ## Modular service
 
 ### Design Consumer ###
