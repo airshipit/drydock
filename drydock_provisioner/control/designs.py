@@ -126,7 +126,7 @@ class DesignsPartsResource(StatefulResource):
 
         part_catalog.append({'kind': 'Region', 'key': site.get_id()})
 
-        part_catalog.extend([{'kind': 'Netowrk', 'key': n.get_id()} for n in design.networks])
+        part_catalog.extend([{'kind': 'Network', 'key': n.get_id()} for n in design.networks])
 
         part_catalog.extend([{'kind': 'NetworkLink', 'key': l.get_id()} for l in design.network_links])
 
