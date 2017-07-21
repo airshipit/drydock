@@ -34,7 +34,6 @@ class TaskCreate(CliAction): # pylint: disable=too-few-public-methods
     """
     def __init__(self, api_client, design_id, action_name=None, node_names=None, rack_names=None, node_tags=None):
         """
-        node_filter : {node_names: [], rack_names:[], node-tags[]}
             :param DrydockClient api_client: The api client used for invocation.
             :param string design_id: The UUID of the design for which to create a task
             :param string action_name: The name of the action being performed for this task
