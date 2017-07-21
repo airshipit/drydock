@@ -12,68 +12,73 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import falcon
 import logging
 import uuid
+import re
 
 from oslo_config import cfg
 
+from drydock_provisioner import policy
+
 class AuthMiddleware(object):
+
+    def __init__(self):
+        self.logger = logging.getLogger('drydock')
 
     # Authentication
     def process_request(self, req, resp):
         ctx = req.context
-        token = req.get_header('X-Auth-Token')
 
-        user = self.validate_token(token)
+        ctx.set_policy_engine(policy.policy_engine)
 
-        if user is not None:
-            ctx.set_user(user)
-            user_roles = self.role_list(user)
-            ctx.add_roles(user_roles)
+        for k, v in req.headers.items():
+            self.logger.debug("Request with header %s: %s" % (k, v))
+
+        auth_status = req.get_header('X-SERVICE-IDENTITY-STATUS')
+        service = True
+
+        if auth_status is None:
+            auth_status = req.get_header('X-IDENTITY-STATUS')
+            service = False
+
+        if auth_status == 'Confirmed':
+            # Process account and roles
+            ctx.authenticated = True
+            ctx.user = req.get_header('X-SERVICE-USER-NAME') if service else req.get_header('X-USER-NAME')
+            ctx.user_id = req.get_header('X-SERVICE-USER-ID') if service else req.get_header('X-USER-ID')
+            ctx.user_domain_id = req.get_header('X-SERVICE-USER-DOMAIN-ID') if service else req.get_header('X-USER-DOMAIN-ID')
+            ctx.project_id = req.get_header('X-SERVICE-PROJECT-ID') if service else req.get_header('X-PROJECT-ID')
+            ctx.project_domain_id = req.get_header('X-SERVICE-PROJECT-DOMAIN-ID') if service else req.get_header('X-PROJECT-DOMAIN-NAME')
+            if service:
+                ctx.add_roles(req.get_header('X-SERVICE-ROLES').split(','))
+            else:
+                ctx.add_roles(req.get_header('X-ROLES').split(','))
+
+            if req.get_header('X-IS-ADMIN-PROJECT') == 'True':
+                ctx.is_admin_project = True
+            else:
+                ctx.is_admin_project = False
+
+            self.logger.debug('Request from authenticated user %s with roles %s' % (ctx.user, ','.join(ctx.roles)))
         else:
-            ctx.add_role('anyone')
+            ctx.authenticated = False
 
-    # Authorization
-    def process_resource(self, req, resp, resource, params):
-        ctx = req.context
-
-        if not resource.authorize_roles(ctx.roles):
-            raise falcon.HTTPUnauthorized('Authentication required',
-                                          ('This resource requires an authorized role.'))
-
-    # Return the username associated with an authenticated token or None
-    def validate_token(self, token):
-        if token == '42':
-            return 'scott'
-        elif token == 'bigboss':
-            return 'admin'
-        else:
-            return None
-
-    # Return the list of roles assigned to the username
-    # Roles need to be an enum
-    def role_list(self, username):
-        if username == 'scott':
-            return ['user']
-        elif username == 'admin':
-            return ['user', 'admin']
 
 class ContextMiddleware(object):
+
+    def __init__(self):
+        # Setup validation pattern for external marker
+        UUIDv4_pattern = '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$';
+        self.marker_re = re.compile(UUIDv4_pattern, re.I)
 
     def process_request(self, req, resp):
         ctx = req.context
 
-        requested_logging = req.get_header('X-Log-Level')
-
-        if (cfg.CONF.logging.log_level == 'DEBUG' or
-           (requested_logging == 'DEBUG' and 'admin' in ctx.roles)):
-            ctx.set_log_level('DEBUG')
-        elif requested_logging == 'INFO':
-            ctx.set_log_level('INFO')
-
         ext_marker = req.get_header('X-Context-Marker')
-        ctx.set_external_marker(ext_marker if ext_marker is not None else '')
+
+        if ext_marker is not None and self.marker_re.fullmatch(ext_marker):
+            ctx.set_external_marker(ext_marker)
+
 
 class LoggingMiddleware(object):
 

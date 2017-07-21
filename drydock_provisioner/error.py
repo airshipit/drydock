@@ -16,26 +16,34 @@ import json
 class DesignError(Exception):
     pass
 
+
 class StateError(Exception):
     pass
+
 
 class OrchestratorError(Exception):
     pass
 
+
 class TransientOrchestratorError(OrchestratorError):
     pass
+
 
 class PersistentOrchestratorError(OrchestratorError):
     pass
 
+
 class DriverError(Exception):
     pass
+
 
 class TransientDriverError(DriverError):
     pass
 
+
 class PersistentDriverError(DriverError):
     pass
+
 
 class ApiError(Exception):
     def __init__(self, msg, code=500):
@@ -47,13 +55,22 @@ class ApiError(Exception):
         err_dict = {'error': msg, 'type': self.__class__.__name__}
         return json.dumps(err_dict)
 
+
 class InvalidFormat(ApiError):
     def __init__(self, msg, code=400):
-        super(InvalidFormat, self).__init__(msg, code=code) 
+        super(InvalidFormat, self).__init__(msg, code=code)
 
-class ClientError(Exception):
+
+class ClientError(ApiError):
     def __init__(self, msg, code=500):
         super().__init__(msg)
-        self.message = msg
-        self.status_code = code
 
+
+class ClientUnauthorizedError(ClientError):
+    def __init__(self, msg):
+        super().__init__(msg, code=401)
+
+
+class ClientForbiddenError(ClientError):
+    def __init__(self, msg):
+        super().__init__(msg, code=403)

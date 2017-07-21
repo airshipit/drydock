@@ -36,6 +36,10 @@ import pkgutil
 
 from oslo_config import cfg
 
+import keystoneauth1.loading as loading
+
+IGNORED_MODULES = ('drydock', 'config')
+
 class DrydockConfig(object):
     """
     Initialize all the core options
@@ -52,12 +56,6 @@ class DrydockConfig(object):
         cfg.StrOpt('oobdriver_logger_name', default='${global_logger_name}.oobdriver', help='Logger name for OOB driver logging'),
         cfg.StrOpt('nodedriver_logger_name', default='${global_logger_name}.nodedriver', help='Logger name for Node driver logging'),
         cfg.StrOpt('control_logger_name', default='${global_logger_name}.control', help='Logger name for API server logging'),
-    ]
-
-    # API Authentication options
-    auth_options = [
-        cfg.StrOpt('admin_token', default='bigboss', help='X-Auth-Token value to bypass backend authentication', secret=True),
-        cfg.BoolOpt('bypass_enabled', default=False, help='Can backend authentication be bypassed?'),
     ]
 
     # Enabled plugins
@@ -95,17 +93,15 @@ class DrydockConfig(object):
     def register_options(self):
         self.conf.register_opts(DrydockConfig.options)
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
-        self.conf.register_opts(DrydockConfig.auth_options, group='authentication')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(DrydockConfig.timeout_options, group='timeouts')
+        self.conf.register_opts(loading.get_auth_plugin_conf_options('password'), group='keystone_authtoken')
 
-IGNORED_MODULES = ('drydock', 'config')
 config_mgr = DrydockConfig()
 
 def list_opts():
     opts = {'DEFAULT': DrydockConfig.options,
             'logging': DrydockConfig.logging_options,
-            'authentication': DrydockConfig.auth_options,
             'plugins': DrydockConfig.plugin_options,
             'timeouts': DrydockConfig.timeout_options
         }
@@ -115,6 +111,8 @@ def list_opts():
     module_names = _list_module_names(package_path, parent_module)
     imported_modules = _import_modules(module_names)
     _append_config_options(imported_modules, opts)
+    # Assume we'll use the password plugin, so include those options in the configuration template
+    opts['keystone_authtoken'] = loading.get_auth_plugin_conf_options('password')
     return _tupleize(opts)
 
 def _tupleize(d):

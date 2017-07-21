@@ -46,20 +46,9 @@ setup(name='drydock_provisioner',
                 'drydock_provisioner.cli.part',
                 'drydock_provisioner.cli.task',
                 'drydock_provisioner.drydock_client'],
-      install_requires=[
-        'PyYAML',
-        'pyghmi>=1.0.18',
-        'netaddr',
-        'falcon',
-        'oslo.versionedobjects>=1.23.0',
-        'requests',
-        'oauthlib',
-        'uwsgi>1.4',
-        'bson===0.4.7',
-        'oslo.config',
-      ],
       entry_points={
         'oslo.config.opts': 'drydock_provisioner = drydock_provisioner.config:list_opts',
+        'oslo.policy.policies': 'drydock_provisioner = drydock_provisioner.policy:list_policies',
         'console_scripts': 'drydock = drydock_provisioner.cli.commands:drydock'
       }
      )

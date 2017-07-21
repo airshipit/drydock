@@ -17,6 +17,7 @@ import os
 
 from oslo_config import cfg
 
+from drydock_provisioner import policy
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
 import drydock_provisioner.ingester as ingester
@@ -68,13 +69,23 @@ def start_drydock():
     if 'MAAS_API_KEY' in os.environ:
         cfg.CONF.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
 
+    # Setup the RBAC policy enforcer
+    policy.policy_engine = policy.DrydockPolicy()
+    policy.policy_engine.register_policy()
 
-    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester, orchestrator=orchestrator)
+    # Ensure that the policy_engine is initialized before starting the API
+    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester,
+                                  orchestrator=orchestrator)
 
     # Now that loggers are configured, log the effective config
     cfg.CONF.log_opt_values(logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
 
     return wsgi_callable
+
+# Initialization compatible with PasteDeploy
+def paste_start_drydock(global_conf, **kwargs):
+    # At this time just ignore everything in the paste configuration and rely on oslo_config
+    return drydock
 
 drydock = start_drydock()
 

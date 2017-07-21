@@ -1,17 +1,22 @@
 # drydock_provisioner
+
 A python REST orchestrator to translate a YAML host topology to a provisioned set of hosts and provide a set of cloud-init post-provisioning instructions.
 
 To build and run, first move into the root directory of the repo and run:
 
+    $ tox -e genconfig
+    $ tox -e genpolicy
     $ sudo docker build . -t drydock
-    $ sudo docker run -d -v $(pwd)/examples:/etc/drydock -P --name='drydock' drydock
+    $ vi etc/drydock/drydock.conf # Customize configuration
+    $ sudo docker run -d -v $(pwd)/etc/drydock:/etc/drydock -P --name='drydock' drydock
     $ DDPORT=$(sudo docker port drydock 8000/tcp | awk -F ':' '{ print $NF }')
     $ curl -v http://localhost:${DDPORT}/api/v1.0/designs
 
-To be useful, Drydock needs to operate in a realistic topology and has some required
-downstream services.
+See [Configuring Drydock](docs/configuration.rst) for details on customizing the configuration. To be useful, Drydock needs
+to operate in a realistic topology and has some required downstream services.
 
 * A VM running Canonical MaaS v2.2+
+* A functional Openstack Keystone instance w/ the v3 API
 * Docker running to start the Drydock image (can be co-located on the MaaS VM)
 * A second VM or Baremetal Node to provision via Drydock
     * Baremetal needs to be able to PXE boot

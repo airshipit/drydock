@@ -33,14 +33,14 @@ Clone the git repo and customize your configuration file
 ::
 
     git clone https://github.com/att-comdev/drydock
-    mkdir /tmp/drydock-etc
-    cp drydock/examples/drydock.conf /tmp/drydock-etc/
-    cp -r drydock/examples/bootdata /tmp/drydock-etc/
+    cd drydock
+    tox -e genconfig
+    cp -r etc /tmp/drydock-etc
 
-In `/tmp/drydock-etc/drydock.conf` customize your maas_api_url to be
+In `/tmp/drydock-etc/drydock/drydock.conf` customize your maas_api_url to be
 the URL you used when opening the web UI and maas_api_key.
 
-When starting the Drydock container, /tmp/drydock-etc will be
+When starting the Drydock container, /tmp/drydock-etc/drydock will be
 mounted as /etc/drydock with your customized configuration.
 
 Drydock
@@ -51,7 +51,7 @@ You will need to customize and mount your configuration file
 
 ::
 
-    $ sudo docker run -v /tmp/drydock-etc:/etc/drydock -P -d drydock:latest
+    $ sudo docker run -v /tmp/drydock-etc/drydock:/etc/drydock -P -d drydock:latest
 
 Configure Site
 --------------
@@ -77,4 +77,3 @@ Use the CLI to create tasks to deploy your site
     $ drydock --token <token> --url <drydock_url> task create -d <design_id> -a prepare_site
     $ drydock --token <token> --url <drydock_url> task create -d <design_id> -a prepare_node
     $ drydock --token <token> --url <drydock_url> task create -d <design_id> -a deploy_node
-

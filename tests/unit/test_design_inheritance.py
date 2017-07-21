@@ -26,9 +26,6 @@ import yaml
 
 class TestClass(object):
 
-    def setup_method(self, method):
-        print("Running test {0}".format(method.__name__))
-
 
     def test_design_inheritance(self, loaded_design):
         orchestrator = Orchestrator(state_manager=loaded_design,
@@ -41,13 +38,11 @@ class TestClass(object):
         design_data = orchestrator.compute_model_inheritance(design_data)
 
         node = design_data.get_baremetal_node("controller01")
-        
+
         assert node.applied.get('hardware_profile') == 'HPGen9v3'
 
         iface = node.get_applied_interface('bond0')
 
-        print(yaml.dump(iface, default_flow_style=False))
-        
         assert iface.get_applied_slave_count() == 2
 
         iface = node.get_applied_interface('pxe')
@@ -67,7 +62,6 @@ class TestClass(object):
         ingester.ingest_data(plugin_name='yaml', design_state=design_state, filenames=[str(input_file)])
 
         return design_state
-
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

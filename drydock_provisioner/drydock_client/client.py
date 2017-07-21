@@ -36,11 +36,9 @@ class DrydockClient(object):
 
         resp = self.session.get(endpoint)
 
-        if resp.status_code != 200:
-            raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
-                                        code=resp.status_code)
-        else:
-            return resp.json()
+        self._check_response(resp)
+
+        return resp.json()
 
     def get_design(self, design_id, source='designed'):
         """
@@ -55,14 +53,10 @@ class DrydockClient(object):
 
         resp = self.session.get(endpoint, query={'source': source})
 
-        if resp.status_code == 404:
-            raise errors.ClientError("Design ID %s not found." % (design_id), code=404)
-        elif resp.status_code != 200:
-            raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
-                                        code=resp.status_code)
-        else:
-            return resp.json()
-        
+        self._check_response(resp)
+
+        return resp.json()
+
     def create_design(self, base_design=None):
         """
         Create a new design context for holding design parts
@@ -77,12 +71,10 @@ class DrydockClient(object):
         else:
             resp = self.session.post(endpoint)
 
-        if resp.status_code != 201:
-            raise errors.ClientError("Received a %d from POST URL: %s" % (resp.status_code, endpoint),
-                                        code=resp.status_code)
-        else:
-            design = resp.json()
-            return design.get('id', None)
+        self._check_response(resp)
+
+        design = resp.json()
+        return design.get('id', None)
 
     def get_part(self, design_id, kind, key, source='designed'):
         """
@@ -99,13 +91,9 @@ class DrydockClient(object):
 
         resp = self.session.get(endpoint, query={'source': source})
 
-        if resp.status_code == 404:
-            raise errors.ClientError("%s %s in design %s not found" % (key, kind, design_id), code=404)
-        elif resp.status_code != 200:
-            raise errors.ClientError("Received a %d from GET URL: %s" % (resp.status_code, endpoint),
-                                        code=resp.status_code)
-        else:
-            return resp.json()
+        self._check_response(resp)
+
+        return resp.json()
 
     def load_parts(self, design_id, yaml_string=None):
         """
@@ -120,15 +108,10 @@ class DrydockClient(object):
 
         resp = self.session.post(endpoint, query={'ingester': 'yaml'}, body=yaml_string)
 
-        if resp.status_code == 400:
-           raise errors.ClientError("Invalid inputs: %s" % resp.text, code=resp.status_code)
-        elif resp.status_code == 500:
-            raise errors.ClientError("Server error: %s" % resp.text, code=resp.status_code)
-        elif resp.status_code == 201:
-            return resp.json()
-        else:
-            raise errors.ClientError("Uknown error. Received %d" % resp.status_code,
-                                        code=resp.status_code)
+        self._check_response(resp)
+
+        return resp.json()
+
     def get_tasks(self):
         """
         Get a list of all the tasks, completed or running.
@@ -140,10 +123,9 @@ class DrydockClient(object):
 
         resp = self.session.get(endpoint)
 
-        if resp.status_code != 200:
-            raise errors.ClientError("Server error: %s" % resp.text, code=resp.status_code)
-        else:
-            return resp.json()
+        self._check_response(resp)
+
+        return resp.json()
 
     def get_task(self, task_id):
         """
@@ -157,12 +139,9 @@ class DrydockClient(object):
 
         resp = self.session.get(endpoint)
 
-        if resp.status_code == 200:
-            return resp.json()
-        elif resp.status_code == 404:
-            raise errors.ClientError("Task %s not found" % task_id, code=resp.status_code)
-        else:
-            raise errors.ClientError("Server error: %s" % resp.text, code=resp.status_code)
+        self._check_response(resp)
+
+        return resp.json()
 
     def create_task(self, design_id, task_action, node_filter=None):
         """
@@ -185,9 +164,14 @@ class DrydockClient(object):
 
         resp = self.session.post(endpoint, data=task_dict)
 
-        if resp.status_code == 201:
-            return resp.json().get('task_id')
-        elif resp.status_code == 400:
-            raise errors.ClientError("Invalid inputs, received a %d: %s" % (resp.status_code, resp.text),
-                                        code=resp.status_code)
+        self._check_response(resp)
 
+        return resp.json().get('task_id')
+
+    def _check_response(self, resp):
+        if resp.status_code == 401:
+            raise errors.ClientUnauthorizedError("Unauthorized access to %s, include valid token." % resp.url)
+        elif resp.status_code == 403:
+            raise errors.ClientForbiddenError("Forbidden access to %s" % resp.url)
+        elif not resp.ok:
+            raise errors.ClientError("Error - received %d: %s" % (resp.status_code, resp.text), code=resp.status_code)
