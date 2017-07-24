@@ -8,3 +8,4 @@ oauthlib
 uwsgi>1.4
 bson===0.4.7
 oslo.config
+click===6.7

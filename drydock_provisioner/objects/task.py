@@ -79,14 +79,8 @@ class Task(object):
 
 class OrchestratorTask(Task):
 
-    def __init__(self, site=None, design_id=None, **kwargs):
+    def __init__(self, design_id=None, **kwargs):
         super(OrchestratorTask, self).__init__(**kwargs)
-
-        # Validate parameters based on action
-        self.site = site
-
-        if self.site is None:
-            raise ValueError("Orchestration Task requires 'site' parameter")
 
         self.design_id = design_id
 
@@ -99,7 +93,6 @@ class OrchestratorTask(Task):
     def to_dict(self):
         _dict = super(OrchestratorTask, self).to_dict()
 
-        _dict['site'] = self.site
         _dict['design_id'] = self.design_id
         _dict['node_filter'] = getattr(self, 'node_filter', None)
 
@@ -109,16 +102,13 @@ class DriverTask(Task):
     def __init__(self, task_scope={}, **kwargs):
         super(DriverTask, self).__init__(**kwargs)
 
-        self.design_id = kwargs.get('design_id', 0)
-
-        self.site_name = task_scope.get('site', None)
+        self.design_id = kwargs.get('design_id', None)
 
         self.node_list = task_scope.get('node_names', [])
 
     def to_dict(self):
         _dict = super(DriverTask, self).to_dict()
 
-        _dict['site_name'] = self.site_name
         _dict['design_id'] = self.design_id
         _dict['node_list'] = self.node_list
 

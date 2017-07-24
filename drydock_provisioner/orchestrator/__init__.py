@@ -94,7 +94,6 @@ class Orchestrator(object):
                                             % (task_id))
 
         design_id = task.design_id
-        task_site = task.site
 
         # Just for testing now, need to implement with enabled_drivers
         # logic
@@ -157,16 +156,11 @@ class Orchestrator(object):
                         result=hd_fields.ActionResult.Failure)
                 return
 
-            task_scope = {
-                'site': task.site
-            }
-
             worked = failed = False
 
             site_network_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           task_scope=task_scope,
                                            action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
 
             self.logger.info("Starting node driver task %s to create network templates" % (site_network_task.get_id()))
@@ -187,7 +181,6 @@ class Orchestrator(object):
             user_creds_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
                                            design_id=design_id,
-                                           task_scope=task_scope,
                                            action=hd_fields.OrchestratorAction.ConfigureUserCredentials)
 
             self.logger.info("Starting node driver task %s to configure user credentials" % (user_creds_task.get_id()))
@@ -217,8 +210,7 @@ class Orchestrator(object):
                                    result=final_result)
             return
         elif task.action == hd_fields.OrchestratorAction.VerifyNode:
-            self.task_field_update(task_id,
-                                   status=hd_fields.TaskStatus.Running)
+            self.task_field_update(task_id, status=hd_fields.TaskStatus.Running)
 
             site_design = self.get_effective_site(design_id)
 
@@ -253,8 +245,7 @@ class Orchestrator(object):
 
                 target_names = [x.get_name() for x in oob_nodes]
 
-                task_scope = {'site'        : task_site,
-                              'node_names'  : target_names}
+                task_scope = {'node_names'  : target_names}
 
                 oob_driver_task = self.create_task(tasks.DriverTask,
                                            parent_task_id=task.get_id(),
@@ -341,8 +332,7 @@ class Orchestrator(object):
 
                 target_names = [x.get_name() for x in oob_nodes]
 
-                task_scope = {'site'        : task_site,
-                              'node_names'  : target_names}
+                task_scope = {'node_names'  : target_names}
 
                 setboot_task = self.create_task(tasks.DriverTask,
                                         parent_task_id=task.get_id(),
@@ -429,8 +419,7 @@ class Orchestrator(object):
                 node_commission_task = self.create_task(tasks.DriverTask,
                                             parent_task_id=task.get_id(), design_id=design_id,
                                             action=hd_fields.OrchestratorAction.ConfigureHardware,
-                                            task_scope={'site': task_site,
-                                                        'node_names': node_identify_task.result_detail['successful_nodes']})
+                                            task_scope={'node_names': node_identify_task.result_detail['successful_nodes']})
 
                 self.logger.info("Starting node driver task %s to commission nodes." % (node_commission_task.get_id()))
                 node_driver.execute_task(node_commission_task.get_id())
@@ -482,8 +471,7 @@ class Orchestrator(object):
 
             target_names = [x.get_name() for x in target_nodes]
 
-            task_scope = {'site'        : task_site,
-                          'node_names'  : target_names}
+            task_scope = {'node_names'  : target_names}
 
             node_networking_task = self.create_task(tasks.DriverTask,
                                             parent_task_id=task.get_id(), design_id=design_id,
@@ -510,8 +498,7 @@ class Orchestrator(object):
                 node_platform_task = self.create_task(tasks.DriverTask,
                                             parent_task_id=task.get_id(), design_id=design_id,
                                             action=hd_fields.OrchestratorAction.ApplyNodePlatform,
-                                            task_scope={'site': task_site,
-                                                        'node_names': node_networking_task.result_detail['successful_nodes']})
+                                            task_scope={'node_names': node_networking_task.result_detail['successful_nodes']})
                 self.logger.info("Starting node driver task %s to configure node platform." % (node_platform_task.get_id()))
 
                 node_driver.execute_task(node_platform_task.get_id())
@@ -532,8 +519,7 @@ class Orchestrator(object):
                     node_deploy_task = self.create_task(tasks.DriverTask,
                                                 parent_task_id=task.get_id(), design_id=design_id,
                                                 action=hd_fields.OrchestratorAction.DeployNode,
-                                                task_scope={'site': task_site,
-                                                            'node_names': node_platform_task.result_detail['successful_nodes']})
+                                                task_scope={'node_names': node_platform_task.result_detail['successful_nodes']})
 
                     self.logger.info("Starting node driver task %s to deploy nodes." % (node_deploy_task.get_id()))
                     node_driver.execute_task(node_deploy_task.get_id())

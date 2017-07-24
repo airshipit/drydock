@@ -67,11 +67,6 @@ class PyghmiDriver(oob.OobDriver):
             raise errors.DriverError("No design ID specified in task %s" %
                                      (task_id))
 
-
-        if task.site_name is None:
-            raise errors.DriverError("Not site specified for task %s." %
-                                    (task_id))
-
         self.orchestrator.task_field_update(task.get_id(),
                             status=hd_fields.TaskStatus.Running)
 
@@ -98,8 +93,7 @@ class PyghmiDriver(oob.OobDriver):
             subtask = self.orchestrator.create_task(task_model.DriverTask,
                         parent_task_id=task.get_id(), design_id=design_id,
                         action=task.action,
-                        task_scope={'site': task.site_name,
-                                    'node_names': [n.get_name()]})
+                        task_scope={'node_names': [n.get_name()]})
             incomplete_subtasks.append(subtask.get_id())
 
             runner = PyghmiTaskRunner(state_manager=self.state_manager,

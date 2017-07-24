@@ -1,0 +1,6 @@
+pytest-mock
+pytest
+responses
+mock
+tox
+oslo.versionedobjects[fixtures]>=1.23.0

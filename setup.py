@@ -40,7 +40,12 @@ setup(name='drydock_provisioner',
                 'drydock_provisioner.drivers.node',
                 'drydock_provisioner.drivers.node.maasdriver',
                 'drydock_provisioner.drivers.node.maasdriver.models',
-                'drydock_provisioner.control'],
+                'drydock_provisioner.control',
+                'drydock_provisioner.cli',
+                'drydock_provisioner.cli.design',
+                'drydock_provisioner.cli.part',
+                'drydock_provisioner.cli.task',
+                'drydock_provisioner.drydock_client'],
       install_requires=[
         'PyYAML',
         'pyghmi>=1.0.18',
@@ -55,6 +60,7 @@ setup(name='drydock_provisioner',
       ],
       entry_points={
         'oslo.config.opts': 'drydock_provisioner = drydock_provisioner.config:list_opts',
+        'console_scripts': 'drydock = drydock_provisioner.cli.commands:drydock'
       }
      )
 
