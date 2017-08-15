@@ -13,8 +13,10 @@
 # limitations under the License.
 import json
 import requests
+import logging
 
 from drydock_provisioner import error as errors
+
 
 class DrydockClient(object):
     """"
@@ -25,6 +27,7 @@ class DrydockClient(object):
 
     def __init__(self, session):
         self.session = session
+        self.logger = logging.getLogger(__name__)
 
     def get_design_ids(self):
         """
@@ -50,7 +53,6 @@ class DrydockClient(object):
         """
         endpoint = "v1.0/designs/%s" % design_id
 
-
         resp = self.session.get(endpoint, query={'source': source})
 
         self._check_response(resp)
@@ -67,7 +69,8 @@ class DrydockClient(object):
         endpoint = 'v1.0/designs'
 
         if base_design is not None:
-            resp = self.session.post(endpoint, data={'base_design_id': base_design})
+            resp = self.session.post(
+                endpoint, data={'base_design_id': base_design})
         else:
             resp = self.session.post(endpoint)
 
@@ -106,7 +109,8 @@ class DrydockClient(object):
 
         endpoint = "v1.0/designs/%s/parts" % (design_id)
 
-        resp = self.session.post(endpoint, query={'ingester': 'yaml'}, body=yaml_string)
+        resp = self.session.post(
+            endpoint, query={'ingester': 'yaml'}, body=yaml_string)
 
         self._check_response(resp)
 
@@ -157,10 +161,12 @@ class DrydockClient(object):
         endpoint = 'v1.0/tasks'
 
         task_dict = {
-            'action':       task_action,
-            'design_id':    design_id,
-            'node_filter':  node_filter
+            'action': task_action,
+            'design_id': design_id,
+            'node_filter': node_filter,
         }
+
+        self.logger.debug("drydock_client is calling %s API: body is %s" % (endpoint, str(task_dict)))
 
         resp = self.session.post(endpoint, data=task_dict)
 
@@ -170,8 +176,12 @@ class DrydockClient(object):
 
     def _check_response(self, resp):
         if resp.status_code == 401:
-            raise errors.ClientUnauthorizedError("Unauthorized access to %s, include valid token." % resp.url)
+            raise errors.ClientUnauthorizedError(
+                "Unauthorized access to %s, include valid token." % resp.url)
         elif resp.status_code == 403:
-            raise errors.ClientForbiddenError("Forbidden access to %s" % resp.url)
+            raise errors.ClientForbiddenError(
+                "Forbidden access to %s" % resp.url)
         elif not resp.ok:
-            raise errors.ClientError("Error - received %d: %s" % (resp.status_code, resp.text), code=resp.status_code)
+            raise errors.ClientError(
+                "Error - received %d: %s" % (resp.status_code, resp.text),
+                code=resp.status_code)

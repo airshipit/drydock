@@ -19,33 +19,37 @@ import drydock_provisioner.drivers.node.maasdriver.api_client as client
 import drydock_provisioner.drivers.node.maasdriver.models.fabric as maas_fabric
 import drydock_provisioner.drivers.node.maasdriver.models.subnet as maas_subnet
 
+
 class TestClass(object):
-
     def test_maas_fabric(self):
-         client_config = config.DrydockConfig.node_driver['maasdriver']
+        client_config = config.DrydockConfig.node_driver['maasdriver']
 
-         maas_client = client.MaasRequestFactory(client_config['api_url'], client_config['api_key'])
+        maas_client = client.MaasRequestFactory(client_config['api_url'],
+                                                client_config['api_key'])
 
-         fabric_name = str(uuid.uuid4())
+        fabric_name = str(uuid.uuid4())
 
-         fabric_list = maas_fabric.Fabrics(maas_client)
-         fabric_list.refresh()
+        fabric_list = maas_fabric.Fabrics(maas_client)
+        fabric_list.refresh()
 
-         test_fabric = maas_fabric.Fabric(maas_client, name=fabric_name, description='Test Fabric')
-         test_fabric = fabric_list.add(test_fabric)
+        test_fabric = maas_fabric.Fabric(
+            maas_client, name=fabric_name, description='Test Fabric')
+        test_fabric = fabric_list.add(test_fabric)
 
-         assert test_fabric.name == fabric_name
-         assert test_fabric.resource_id is not None
+        assert test_fabric.name == fabric_name
+        assert test_fabric.resource_id is not None
 
-         query_fabric = maas_fabric.Fabric(maas_client, resource_id=test_fabric.resource_id)
-         query_fabric.refresh()
+        query_fabric = maas_fabric.Fabric(
+            maas_client, resource_id=test_fabric.resource_id)
+        query_fabric.refresh()
 
-         assert query_fabric.name == test_fabric.name
+        assert query_fabric.name == test_fabric.name
 
     def test_maas_subnet(self):
         client_config = config.DrydockConfig.node_driver['maasdriver']
 
-        maas_client = client.MaasRequestFactory(client_config['api_url'], client_config['api_key'])
+        maas_client = client.MaasRequestFactory(client_config['api_url'],
+                                                client_config['api_key'])
 
         subnet_list = maas_subnet.Subnets(maas_client)
         subnet_list.refresh()
@@ -53,6 +57,3 @@ class TestClass(object):
         for s in subnet_list:
             print(s.to_dict())
         assert False
-
-
-

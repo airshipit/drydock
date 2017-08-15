@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Single point of entry to generate the sample configuration file.
 
 This module collects all the necessary info from the other modules in this
@@ -40,51 +39,103 @@ import keystoneauth1.loading as loading
 
 IGNORED_MODULES = ('drydock', 'config')
 
+
 class DrydockConfig(object):
     """
     Initialize all the core options
     """
     # Default options
     options = [
-        cfg.IntOpt('poll_interval', default=10, help='Polling interval in seconds for checking subtask or downstream status'),
+        cfg.IntOpt(
+            'poll_interval',
+            default=10,
+            help=
+            'Polling interval in seconds for checking subtask or downstream status'
+        ),
     ]
 
     # Logging options
     logging_options = [
-        cfg.StrOpt('log_level', default='INFO', help='Global log level for Drydock'),
-        cfg.StrOpt('global_logger_name', default='drydock', help='Logger name for the top-level logger'),
-        cfg.StrOpt('oobdriver_logger_name', default='${global_logger_name}.oobdriver', help='Logger name for OOB driver logging'),
-        cfg.StrOpt('nodedriver_logger_name', default='${global_logger_name}.nodedriver', help='Logger name for Node driver logging'),
-        cfg.StrOpt('control_logger_name', default='${global_logger_name}.control', help='Logger name for API server logging'),
+        cfg.StrOpt(
+            'log_level', default='INFO', help='Global log level for Drydock'),
+        cfg.StrOpt(
+            'global_logger_name',
+            default='drydock',
+            help='Logger name for the top-level logger'),
+        cfg.StrOpt(
+            'oobdriver_logger_name',
+            default='${global_logger_name}.oobdriver',
+            help='Logger name for OOB driver logging'),
+        cfg.StrOpt(
+            'nodedriver_logger_name',
+            default='${global_logger_name}.nodedriver',
+            help='Logger name for Node driver logging'),
+        cfg.StrOpt(
+            'control_logger_name',
+            default='${global_logger_name}.control',
+            help='Logger name for API server logging'),
     ]
 
     # Enabled plugins
     plugin_options = [
-        cfg.MultiStrOpt('ingester',
-                        default=['drydock_provisioner.ingester.plugins.yaml.YamlIngester'],
-                        help='Module path string of a input ingester to enable'),
-        cfg.MultiStrOpt('oob_driver',
-                        default=['drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'],
-                        help='Module path string of a OOB driver to enable'),
-        cfg.StrOpt('node_driver',
-                    default='drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
-                    help='Module path string of the Node driver to enable'),
+        cfg.MultiStrOpt(
+            'ingester',
+            default=['drydock_provisioner.ingester.plugins.yaml.YamlIngester'],
+            help='Module path string of a input ingester to enable'),
+        cfg.MultiStrOpt(
+            'oob_driver',
+            default=[
+                'drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'
+            ],
+            help='Module path string of a OOB driver to enable'),
+        cfg.StrOpt(
+            'node_driver',
+            default=
+            'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
+            help='Module path string of the Node driver to enable'),
         # TODO Network driver not yet implemented
-        cfg.StrOpt('network_driver',
-                    default=None,
-                    help='Module path string of the Network driver enable'),
+        cfg.StrOpt(
+            'network_driver',
+            default=None,
+            help='Module path string of the Network driver enable'),
     ]
 
     # Timeouts for various tasks specified in minutes
     timeout_options = [
-        cfg.IntOpt('drydock_timeout', default=5, help='Fallback timeout when a specific one is not configured'),
-        cfg.IntOpt('create_network_template', default=2, help='Timeout in minutes for creating site network templates'),
-        cfg.IntOpt('configure_user_credentials', default=2, help='Timeout in minutes for creating user credentials'),
-        cfg.IntOpt('identify_node', default=10, help='Timeout in minutes for initial node identification'),
-        cfg.IntOpt('configure_hardware', default=30, help='Timeout in minutes for node commissioning and hardware configuration'),
-        cfg.IntOpt('apply_node_networking', default=5, help='Timeout in minutes for configuring node networking'),
-        cfg.IntOpt('apply_node_platform', default=5, help='Timeout in minutes for configuring node platform'),
-        cfg.IntOpt('deploy_node', default=45, help='Timeout in minutes for deploying a node'),
+        cfg.IntOpt(
+            'drydock_timeout',
+            default=5,
+            help='Fallback timeout when a specific one is not configured'),
+        cfg.IntOpt(
+            'create_network_template',
+            default=2,
+            help='Timeout in minutes for creating site network templates'),
+        cfg.IntOpt(
+            'configure_user_credentials',
+            default=2,
+            help='Timeout in minutes for creating user credentials'),
+        cfg.IntOpt(
+            'identify_node',
+            default=10,
+            help='Timeout in minutes for initial node identification'),
+        cfg.IntOpt(
+            'configure_hardware',
+            default=30,
+            help=
+            'Timeout in minutes for node commissioning and hardware configuration'
+        ),
+        cfg.IntOpt(
+            'apply_node_networking',
+            default=5,
+            help='Timeout in minutes for configuring node networking'),
+        cfg.IntOpt(
+            'apply_node_platform',
+            default=5,
+            help='Timeout in minutes for configuring node platform'),
+        cfg.IntOpt(
+            'deploy_node',
+            default=45,
+            help='Timeout in minutes for deploying a node'),
     ]
 
     def __init__(self):
@@ -94,17 +145,23 @@ class DrydockConfig(object):
         self.conf.register_opts(DrydockConfig.options)
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
-        self.conf.register_opts(DrydockConfig.timeout_options, group='timeouts')
-        self.conf.register_opts(loading.get_auth_plugin_conf_options('password'), group='keystone_authtoken')
+        self.conf.register_opts(
+            DrydockConfig.timeout_options, group='timeouts')
+        self.conf.register_opts(
+            loading.get_auth_plugin_conf_options('password'),
+            group='keystone_authtoken')
+
 
 config_mgr = DrydockConfig()
 
+
 def list_opts():
-    opts = {'DEFAULT': DrydockConfig.options,
-            'logging': DrydockConfig.logging_options,
-            'plugins': DrydockConfig.plugin_options,
-            'timeouts': DrydockConfig.timeout_options
-        }
+    opts = {
+        'DEFAULT': DrydockConfig.options,
+        'logging': DrydockConfig.logging_options,
+        'plugins': DrydockConfig.plugin_options,
+        'timeouts': DrydockConfig.timeout_options
+    }
 
     package_path = os.path.dirname(os.path.abspath(__file__))
     parent_module = ".".join(__name__.split('.')[:-1])
@@ -112,12 +169,15 @@ def list_opts():
     imported_modules = _import_modules(module_names)
     _append_config_options(imported_modules, opts)
     # Assume we'll use the password plugin, so include those options in the configuration template
-    opts['keystone_authtoken'] = loading.get_auth_plugin_conf_options('password')
+    opts['keystone_authtoken'] = loading.get_auth_plugin_conf_options(
+        'password')
     return _tupleize(opts)
+
 
 def _tupleize(d):
     """Convert a dict of options to the 2-tuple format."""
     return [(key, value) for key, value in d.items()]
+
 
 def _list_module_names(pkg_path, parent_module):
     module_names = []
@@ -126,10 +186,13 @@ def _list_module_names(pkg_path, parent_module):
             # Skip this module.
             continue
         elif ispkg:
-            module_names.extend(_list_module_names(pkg_path + "/" + module_name, parent_module + "." + module_name))
+            module_names.extend(
+                _list_module_names(pkg_path + "/" + module_name, parent_module
+                                   + "." + module_name))
         else:
             module_names.append(parent_module + "." + module_name)
     return module_names
+
 
 def _import_modules(module_names):
     imported_modules = []
@@ -139,6 +202,7 @@ def _import_modules(module_names):
             print("Pulling options from module %s" % module.__name__)
             imported_modules.append(module)
     return imported_modules
+
 
 def _append_config_options(imported_modules, config_options):
     for module in imported_modules:

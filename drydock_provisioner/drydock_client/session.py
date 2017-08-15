@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import requests
+import logging
 
 class DrydockSession(object):
     """
@@ -23,21 +24,33 @@ class DrydockSession(object):
     :param string marker: (optional) external context marker
     """
 
-    def __init__(self, host, *, port=None, scheme='http', token=None, marker=None):
+    def __init__(self,
+                 host,
+                 *,
+                 port=None,
+                 scheme='http',
+                 token=None,
+                 marker=None):
         self.__session = requests.Session()
-        self.__session.headers.update({'X-Auth-Token': token, 'X-Context-Marker': marker})
+        self.__session.headers.update({
+            'X-Auth-Token': token,
+            'X-Context-Marker': marker
+        })
         self.host = host
         self.scheme = scheme
 
         if port:
             self.port = port
-            self.base_url = "%s://%s:%s/api/" % (self.scheme, self.host, self.port)
+            self.base_url = "%s://%s:%s/api/" % (self.scheme, self.host,
+                                                 self.port)
         else:
             #assume default port for scheme
             self.base_url = "%s://%s/api/" % (self.scheme, self.host)
 
         self.token = token
         self.marker = marker
+
+        self.logger = logging.getLogger(__name__)
 
     # TODO Add keystone authentication to produce a token for this session
     def get(self, endpoint, query=None):
@@ -48,7 +61,8 @@ class DrydockSession(object):
         :param dict query: A dict of k, v pairs to add to the query string
         :return: A requests.Response object
         """
-        resp = self.__session.get(self.base_url + endpoint, params=query, timeout=10)
+        resp = self.__session.get(
+            self.base_url + endpoint, params=query, timeout=10)
 
         return resp
 
@@ -64,10 +78,14 @@ class DrydockSession(object):
         :return: A requests.Response object
         """
 
+        self.logger.debug("Sending POST with drydock_client session")
         if body is not None:
-            resp = self.__session.post(self.base_url + endpoint, params=query, data=body, timeout=10)
+            self.logger.debug("Sending POST with explicit body: \n%s" % body)
+            resp = self.__session.post(
+                self.base_url + endpoint, params=query, data=body, timeout=10)
         else:
-            resp = self.__session.post(self.base_url + endpoint, params=query, json=data, timeout=10)
+            self.logger.debug("Sending POST with JSON body: \n%s" % str(data))
+            resp = self.__session.post(
+                self.base_url + endpoint, params=query, json=data, timeout=10)
 
         return resp
-

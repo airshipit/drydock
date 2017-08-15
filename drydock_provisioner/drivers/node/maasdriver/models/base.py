@@ -21,6 +21,8 @@ A representation of a MaaS REST resource. Should be subclassed
 for different resources and augmented with operations specific
 to those resources
 """
+
+
 class ResourceBase(object):
 
     resource_url = '/{id}'
@@ -38,6 +40,7 @@ class ResourceBase(object):
     """
     Update resource attributes from MaaS
     """
+
     def refresh(self):
         url = self.interpolate_url()
         resp = self.api_client.get(url)
@@ -52,13 +55,14 @@ class ResourceBase(object):
     Parse URL for placeholders and replace them with current
     instance values
     """
+
     def interpolate_url(self):
         pattern = '\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0
         new_url = self.resource_url
 
-        while (start+1) < len(self.resource_url):
+        while (start + 1) < len(self.resource_url):
             match = regex.search(self.resource_url, start)
             if match is None:
                 return new_url
@@ -75,6 +79,7 @@ class ResourceBase(object):
     """
     Update MaaS with current resource attributes
     """
+
     def update(self):
         data_dict = self.to_dict()
         url = self.interpolate_url()
@@ -83,15 +88,17 @@ class ResourceBase(object):
 
         if resp.status_code == 200:
             return True
-        
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s\n%s"
-                % (url, resp.status_code, resp.text))
+
+        raise errors.DriverError(
+            "Failed updating MAAS url %s - return code %s\n%s" %
+            (url, resp.status_code, resp.text))
 
     """
     Set the resource_id for this instance
     Should only be called when creating new instances and MAAS has assigned
     an id
     """
+
     def set_resource_id(self, res_id):
         self.resource_id = res_id
 
@@ -99,6 +106,7 @@ class ResourceBase(object):
     Serialize this resource instance into JSON matching the
     MaaS respresentation of this resource
     """
+
     def to_json(self):
         return json.dumps(self.to_dict())
 
@@ -106,6 +114,7 @@ class ResourceBase(object):
     Serialize this resource instance into a dict matching the
     MAAS representation of the resource
     """
+
     def to_dict(self):
         data_dict = {}
 
@@ -122,6 +131,7 @@ class ResourceBase(object):
     Create a instance of this resource class based on the MaaS
     representation of this resource type
     """
+
     @classmethod
     def from_json(cls, api_client, json_string):
         parsed = json.loads(json_string)
@@ -135,6 +145,7 @@ class ResourceBase(object):
     Create a instance of this resource class based on a dict
     of MaaS type attributes
     """
+
     @classmethod
     def from_dict(cls, api_client, obj_dict):
         refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
@@ -173,7 +184,7 @@ class ResourceCollectionBase(object):
         start = 0
         new_url = self.collection_url
 
-        while (start+1) < len(self.collection_url):
+        while (start + 1) < len(self.collection_url):
             match = regex.search(self.collection_url, start)
             if match is None:
                 return new_url
@@ -190,23 +201,26 @@ class ResourceCollectionBase(object):
     """
     Create a new resource in this collection in MaaS
     """
+
     def add(self, res):
         data_dict = res.to_dict()
         url = self.interpolate_url()
 
         resp = self.api_client.post(url, files=data_dict)
 
-        if resp.status_code in [200,201]:
+        if resp.status_code in [200, 201]:
             resp_json = resp.json()
             res.set_resource_id(resp_json.get('id'))
             return res
-        
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                % (url, resp.status_code))
+
+        raise errors.DriverError(
+            "Failed updating MAAS url %s - return code %s" %
+            (url, resp.status_code))
 
     """
     Append a resource instance to the list locally only
     """
+
     def append(self, res):
         if isinstance(res, self.collection_resource):
             self.resources[res.resource_id] = res
@@ -214,6 +228,7 @@ class ResourceCollectionBase(object):
     """
     Initialize or refresh the collection list from MaaS
     """
+
     def refresh(self):
         url = self.interpolate_url()
         resp = self.api_client.get(url)
@@ -232,6 +247,7 @@ class ResourceCollectionBase(object):
     """
     Check if resource id is in this collection
     """
+
     def contains(self, res_id):
         if res_id in self.resources.keys():
             return True
@@ -241,17 +257,18 @@ class ResourceCollectionBase(object):
     """
     Select a resource based on ID or None if not found
     """
+
     def select(self, res_id):
         return self.resources.get(res_id, None)
 
     """
     Query the collection based on a resource attribute other than primary id
     """
+
     def query(self, query):
         result = list(self.resources.values())
         for (k, v) in query.items():
-            result = [i for i in result
-                      if str(getattr(i, k, None)) == str(v)]
+            result = [i for i in result if str(getattr(i, k, None)) == str(v)]
 
         return result
 
@@ -269,10 +286,11 @@ class ResourceCollectionBase(object):
             return result[0]
 
         return None
-        
+
     """
     If the collection contains a single item, return it
     """
+
     def single(self):
         if self.len() == 1:
             for v in self.resources.values():
@@ -283,11 +301,13 @@ class ResourceCollectionBase(object):
     """
     Iterate over the resources in the collection
     """
+
     def __iter__(self):
         return iter(self.resources.values())
 
     """
     Resource count
     """
+
     def len(self):
         return len(self.resources)

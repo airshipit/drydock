@@ -17,6 +17,7 @@ import drydock_provisioner.error as errors
 
 from drydock_provisioner.drivers import ProviderDriver
 
+
 class OobDriver(ProviderDriver):
 
     oob_types_supported = ['']
@@ -24,13 +25,15 @@ class OobDriver(ProviderDriver):
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
 
-        self.supported_actions = [hd_fields.OrchestratorAction.ValidateOobServices,
-                                  hd_fields.OrchestratorAction.ConfigNodePxe,
-                                  hd_fields.OrchestratorAction.SetNodeBoot,
-                                  hd_fields.OrchestratorAction.PowerOffNode,
-                                  hd_fields.OrchestratorAction.PowerOnNode,
-                                  hd_fields.OrchestratorAction.PowerCycleNode,
-                                  hd_fields.OrchestratorAction.InterrogateOob]
+        self.supported_actions = [
+            hd_fields.OrchestratorAction.ValidateOobServices,
+            hd_fields.OrchestratorAction.ConfigNodePxe,
+            hd_fields.OrchestratorAction.SetNodeBoot,
+            hd_fields.OrchestratorAction.PowerOffNode,
+            hd_fields.OrchestratorAction.PowerOnNode,
+            hd_fields.OrchestratorAction.PowerCycleNode,
+            hd_fields.OrchestratorAction.InterrogateOob
+        ]
 
         self.driver_name = "oob_generic"
         self.driver_key = "oob_generic"
@@ -44,7 +47,7 @@ class OobDriver(ProviderDriver):
             return
         else:
             raise DriverError("Unsupported action %s for driver %s" %
-                (task_action, self.driver_desc))
+                              (task_action, self.driver_desc))
 
     @classmethod
     def oob_type_support(cls, type_string):

@@ -20,10 +20,14 @@ from oslo_config import cfg
 
 from .base import StatefulResource
 
+
 class BootdataResource(StatefulResource):
 
     bootdata_options = [
-        cfg.StrOpt('prom_init', default='/etc/drydock/bootdata/join.sh', help='Path to file to distribute for prom_init.sh')
+        cfg.StrOpt(
+            'prom_init',
+            default='/etc/drydock/bootdata/join.sh',
+            help='Path to file to distribute for prom_init.sh')
     ]
 
     def __init__(self, orchestrator=None, **kwargs):
@@ -31,7 +35,8 @@ class BootdataResource(StatefulResource):
         self.authorized_roles = ['anyone']
         self.orchestrator = orchestrator
 
-        cfg.CONF.register_opts(BootdataResource.bootdata_options, group='bootdata')
+        cfg.CONF.register_opts(
+            BootdataResource.bootdata_options, group='bootdata')
 
         init_file = open(cfg.CONF.bootdata.prom_init, 'r')
         self.prom_init = init_file.read()
@@ -39,7 +44,7 @@ class BootdataResource(StatefulResource):
 
     def on_get(self, req, resp, hostname, data_key):
         if data_key == 'promservice':
-            resp.body = BootdataResource.prom_init_service 
+            resp.body = BootdataResource.prom_init_service
             resp.content_type = 'text/plain'
             return
         elif data_key == 'vfservice':
@@ -60,7 +65,8 @@ class BootdataResource(StatefulResource):
                 resp.content_type = 'text/plain'
 
                 host_design_id = bootdata.get('design_id', None)
-                host_design = self.orchestrator.get_effective_site(host_design_id)
+                host_design = self.orchestrator.get_effective_site(
+                    host_design_id)
 
                 host_model = host_design.get_baremetal_node(hostname)
 
@@ -71,9 +77,12 @@ class BootdataResource(StatefulResource):
 
                 all_configs = host_design.get_promenade_config(part_selectors)
 
-                part_list = [i.document for i in all_configs]  
+                part_list = [i.document for i in all_configs]
 
-                resp.body = "---\n" + "---\n".join([base64.b64decode(i.encode()).decode('utf-8') for i in part_list]) + "\n..."
+                resp.body = "---\n" + "---\n".join([
+                    base64.b64decode(i.encode()).decode('utf-8')
+                    for i in part_list
+                ]) + "\n..."
                 return
 
 
@@ -105,6 +114,7 @@ ExecStart=/bin/sh -c '/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs'
 [Install]
 WantedBy=multi-user.target
 """
+
 
 def list_opts():
     return {'bootdata': BootdataResource.bootdata_options}

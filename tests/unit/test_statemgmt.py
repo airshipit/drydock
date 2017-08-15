@@ -14,15 +14,11 @@
 import pytest
 import shutil
 
-
 import drydock_provisioner.objects as objects
 import drydock_provisioner.statemgmt as statemgmt
 
+
 class TestClass(object):
-
-    def setup_method(self, method):
-        print("Running test {0}".format(method.__name__))
-
     def test_sitedesign_post(self):
         objects.register_all()
 

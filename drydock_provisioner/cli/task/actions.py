@@ -16,9 +16,11 @@
 
 from drydock_provisioner.cli.action import CliAction
 
-class TaskList(CliAction): # pylint: disable=too-few-public-methods
+
+class TaskList(CliAction):  # pylint: disable=too-few-public-methods
     """ Action to list tasks
     """
+
     def __init__(self, api_client):
         """
             :param DrydockClient api_client: The api client used for invocation.
@@ -29,10 +31,18 @@ class TaskList(CliAction): # pylint: disable=too-few-public-methods
     def invoke(self):
         return self.api_client.get_tasks()
 
-class TaskCreate(CliAction): # pylint: disable=too-few-public-methods
+
+class TaskCreate(CliAction):  # pylint: disable=too-few-public-methods
     """ Action to create tasks against a design
     """
-    def __init__(self, api_client, design_id, action_name=None, node_names=None, rack_names=None, node_tags=None):
+
+    def __init__(self,
+                 api_client,
+                 design_id,
+                 action_name=None,
+                 node_names=None,
+                 rack_names=None,
+                 node_tags=None):
         """
             :param DrydockClient api_client: The api client used for invocation.
             :param string design_id: The UUID of the design for which to create a task
@@ -44,7 +54,8 @@ class TaskCreate(CliAction): # pylint: disable=too-few-public-methods
         super().__init__(api_client)
         self.design_id = design_id
         self.action_name = action_name
-        self.logger.debug('TaskCreate action initialized for design=%s', design_id)
+        self.logger.debug('TaskCreate action initialized for design=%s',
+                          design_id)
         self.logger.debug('Action is %s', action_name)
         if node_names is None:
             node_names = []
@@ -57,19 +68,23 @@ class TaskCreate(CliAction): # pylint: disable=too-few-public-methods
         self.logger.debug("Rack names = %s", rack_names)
         self.logger.debug("Node tags = %s", node_tags)
 
-        self.node_filter = {'node_names' : node_names,
-                            'rack_names' : rack_names,
-                            'node_tags' : node_tags
-                           }
+        self.node_filter = {
+            'node_names': node_names,
+            'rack_names': rack_names,
+            'node_tags': node_tags
+        }
 
     def invoke(self):
-        return self.api_client.create_task(design_id=self.design_id,
-                                           task_action=self.action_name,
-                                           node_filter=self.node_filter)
+        return self.api_client.create_task(
+            design_id=self.design_id,
+            task_action=self.action_name,
+            node_filter=self.node_filter)
 
-class TaskShow(CliAction): # pylint: disable=too-few-public-methods
+
+class TaskShow(CliAction):  # pylint: disable=too-few-public-methods
     """ Action to show a task's detial.
     """
+
     def __init__(self, api_client, task_id):
         """
             :param DrydockClient api_client: The api client used for invocation.
@@ -77,7 +92,8 @@ class TaskShow(CliAction): # pylint: disable=too-few-public-methods
         """
         super().__init__(api_client)
         self.task_id = task_id
-        self.logger.debug('TaskShow action initialized for task_id=%s,', task_id)
+        self.logger.debug('TaskShow action initialized for task_id=%s,',
+                          task_id)
 
     def invoke(self):
         return self.api_client.get_task(task_id=self.task_id)

@@ -21,11 +21,8 @@ import shutil
 import os
 import drydock_provisioner.ingester.plugins.yaml
 
+
 class TestClass(object):
-
-    def setup_method(self, method):
-        print("Running test {0}".format(method.__name__))
-
     def test_ingest_full_site(self, input_files):
         objects.register_all()
 
@@ -37,13 +34,17 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state,
-                             filenames=[str(input_file)], design_id=design_id)
+        ingester.enable_plugins(
+            ['drydock_provisioner.ingester.plugins.yaml.YamlIngester'])
+        ingester.ingest_data(
+            plugin_name='yaml',
+            design_state=design_state,
+            filenames=[str(input_file)],
+            design_id=design_id)
 
         design_data = design_state.get_design(design_id)
 
-        assert len(design_data.host_profiles) == 3
+        assert len(design_data.host_profiles) == 2
         assert len(design_data.baremetal_nodes) == 2
 
     def test_ingest_federated_design(self, input_files):
@@ -59,18 +60,27 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state, design_id=design_id,
-                    filenames=[str(profiles_file), str(networks_file), str(nodes_file)])
+        ingester.enable_plugins(
+            ['drydock_provisioner.ingester.plugins.yaml.YamlIngester'])
+        ingester.ingest_data(
+            plugin_name='yaml',
+            design_state=design_state,
+            design_id=design_id,
+            filenames=[
+                str(profiles_file),
+                str(networks_file),
+                str(nodes_file)
+            ])
 
         design_data = design_state.get_design(design_id)
 
-        assert len(design_data.host_profiles) == 3
+        assert len(design_data.host_profiles) == 2
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "../yaml_samples"
+        samples_dir = os.path.dirname(
+            str(request.fspath)) + "/" + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

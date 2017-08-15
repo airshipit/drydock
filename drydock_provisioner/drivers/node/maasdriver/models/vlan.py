@@ -16,12 +16,18 @@ import json
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
+
 class Vlan(model_base.ResourceBase):
 
     resource_url = 'fabrics/{fabric_id}/vlans/{api_id}/'
-    fields = ['resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on', 'mtu',
-             'primary_rack', 'secondary_rack']
-    json_fields = ['name', 'description', 'vid', 'dhcp_on', 'mtu', 'primary_rack', 'secondary_rack']
+    fields = [
+        'resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on',
+        'mtu', 'primary_rack', 'secondary_rack'
+    ]
+    json_fields = [
+        'name', 'description', 'vid', 'dhcp_on', 'mtu', 'primary_rack',
+        'secondary_rack'
+    ]
 
     def __init__(self, api_client, **kwargs):
         super(Vlan, self).__init__(api_client, **kwargs)
@@ -30,7 +36,7 @@ class Vlan(model_base.ResourceBase):
             self.vid = 0
 
         # the MaaS API decided that the URL endpoint for VLANs should use
-        # the VLAN tag (vid) rather than the resource ID. So to update the 
+        # the VLAN tag (vid) rather than the resource ID. So to update the
         # vid, we have to keep two copies so that the resource_url
         # is accurate for updates
         self.api_id = self.vid
@@ -46,6 +52,7 @@ class Vlan(model_base.ResourceBase):
         else:
             self.vid = int(new_vid)
 
+
 class Vlans(model_base.ResourceCollectionBase):
 
     collection_url = 'fabrics/{fabric_id}/vlans/'
@@ -55,6 +62,7 @@ class Vlans(model_base.ResourceCollectionBase):
         super(Vlans, self).__init__(api_client)
 
         self.fabric_id = kwargs.get('fabric_id', None)
+
     """
     Create a new resource in this collection in MaaS
     def add(self, res):

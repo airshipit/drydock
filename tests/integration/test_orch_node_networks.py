@@ -28,17 +28,22 @@ import drydock_provisioner.objects.task as task
 import drydock_provisioner.drivers as drivers
 from drydock_provisioner.ingester import Ingester
 
-class TestClass(object):
 
+class TestClass(object):
     def test_client_verify(self):
         design_state = statemgmt.DesignState()
-        orchestrator = orch.Orchestrator(state_manager=design_state,
-                                    enabled_drivers={'node': 'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'})
+        orchestrator = orch.Orchestrator(
+            state_manager=design_state,
+            enabled_drivers={
+                'node':
+                'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'
+            })
 
-        orch_task = orchestrator.create_task(task.OrchestratorTask,
-                                             site='sitename',
-                                             design_id=None,
-                                             action=hd_fields.OrchestratorAction.VerifySite)
+        orch_task = orchestrator.create_task(
+            task.OrchestratorTask,
+            site='sitename',
+            design_id=None,
+            action=hd_fields.OrchestratorAction.VerifySite)
 
         orchestrator.execute_task(orch_task.get_id())
 
@@ -57,28 +62,34 @@ class TestClass(object):
         design_state.post_design(design_data)
 
         ingester = Ingester()
-        ingester.enable_plugins([drydock_provisioner.ingester.plugins.yaml.YamlIngester])
-        ingester.ingest_data(plugin_name='yaml', design_state=design_state,
-                             filenames=[str(input_file)], design_id=design_id)
+        ingester.enable_plugins(
+            [drydock_provisioner.ingester.plugins.yaml.YamlIngester])
+        ingester.ingest_data(
+            plugin_name='yaml',
+            design_state=design_state,
+            filenames=[str(input_file)],
+            design_id=design_id)
 
         design_data = design_state.get_design(design_id)
 
-        orchestrator = orch.Orchestrator(state_manager=design_state,
-                                    enabled_drivers={'node': 'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'})
+        orchestrator = orch.Orchestrator(
+            state_manager=design_state,
+            enabled_drivers={
+                'node':
+                'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'
+            })
 
-        orch_task = orchestrator.create_task(task.OrchestratorTask,
-                                             site='sitename',
-                                             design_id=design_id,
-                                             action=hd_fields.OrchestratorAction.PrepareSite)
+        orch_task = orchestrator.create_task(
+            task.OrchestratorTask,
+            site='sitename',
+            design_id=design_id,
+            action=hd_fields.OrchestratorAction.PrepareSite)
 
         orchestrator.execute_task(orch_task.get_id())
 
         orch_task = design_state.get_task(orch_task.get_id())
 
         assert orch_task.result == hd_fields.ActionResult.Success
-
-
-    
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

@@ -17,11 +17,12 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
 import yaml
 
+
 class Tag(model_base.ResourceBase):
 
     resource_url = 'tags/{resource_id}/'
     fields = ['resource_id', 'name', 'defintion', 'kernel_opts']
-    json_fields = ['name','kernel_opts', 'comment', 'definition']
+    json_fields = ['name', 'kernel_opts', 'comment', 'definition']
 
     def __init__(self, api_client, **kwargs):
         super(Tag, self).__init__(api_client, **kwargs)
@@ -48,9 +49,13 @@ class Tag(model_base.ResourceBase):
 
             return system_id_list
         else:
-            self.logger.error("Error retrieving node/tag pairs, received HTTP %s from MaaS" % resp.status_code)
+            self.logger.error(
+                "Error retrieving node/tag pairs, received HTTP %s from MaaS" %
+                resp.status_code)
             self.logger.debug("MaaS response: %s" % resp.text)
-            raise errors.DriverError("Error retrieving node/tag pairs, received HTTP %s from MaaS" % resp.status_code)
+            raise errors.DriverError(
+                "Error retrieving node/tag pairs, received HTTP %s from MaaS" %
+                resp.status_code)
 
     def apply_to_node(self, system_id):
         """
@@ -60,16 +65,22 @@ class Tag(model_base.ResourceBase):
         """
 
         if system_id in self.get_applied_nodes():
-            self.logger.debug("Tag %s already applied to node %s" % (self.name, system_id))
+            self.logger.debug("Tag %s already applied to node %s" %
+                              (self.name, system_id))
         else:
             url = self.interpolate_url()
 
-            resp = self.api_client.post(url, op='update_nodes', files={'add': system_id})
+            resp = self.api_client.post(
+                url, op='update_nodes', files={'add': system_id})
 
             if not resp.ok:
-                self.logger.error("Error applying tag to node, received HTTP %s from MaaS" % resp.status_code)
+                self.logger.error(
+                    "Error applying tag to node, received HTTP %s from MaaS" %
+                    resp.status_code)
                 self.logger.debug("MaaS response: %s" % resp.text)
-                raise errors.DriverError("Error applying tag to node, received HTTP %s from MaaS" % resp.status_code)
+                raise errors.DriverError(
+                    "Error applying tag to node, received HTTP %s from MaaS" %
+                    resp.status_code)
 
     def to_dict(self):
         """
@@ -108,6 +119,7 @@ class Tag(model_base.ResourceBase):
         i = cls(api_client, **refined_dict)
         return i
 
+
 class Tags(model_base.ResourceCollectionBase):
 
     collection_url = 'tags/'
@@ -133,9 +145,10 @@ class Tags(model_base.ResourceCollectionBase):
             resp_json = resp.json()
             res.set_resource_id(resp_json.get('name'))
             return res
-        elif resp.status_code == 400 and resp.text.find('Tag with this Name already exists.') != -1:
+        elif resp.status_code == 400 and resp.text.find(
+                'Tag with this Name already exists.') != -1:
             raise errors.DriverError("Tag %s already exists" % res.name)
         else:
-            raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                      % (url, resp.status_code))
-
+            raise errors.DriverError(
+                "Failed updating MAAS url %s - return code %s" %
+                (url, resp.status_code))

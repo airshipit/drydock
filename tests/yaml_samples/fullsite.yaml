@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+#Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,16 +18,27 @@
 ####################
 # version the schema in this file so consumers can rationally parse it
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Region
 metadata:
   name: sitename
   date: 17-FEB-2017
   description: Sample site design
   author: sh8121@att.com
-# Not sure if we have site wide data that doesn't fall into another 'Kind'
+spec:
+  tag_definitions:
+    - tag: test
+      definition_type: lshw_xpath
+      definition: "//node[@id=\"display\"]/'clock units=\"Hz\"' > 1000000000"
+  authorized_keys:
+    - |
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDENeyO5hLPbLLQRZ0oafTYWs1ieo5Q+XgyZQs51Ju
+      jDGc8lKlWsg1/6yei2JewKMgcwG2Buu1eqU92Xn1SvMZLyt9GZURuBkyjcfVc/8GiU5QP1Of8B7CV0c
+      kfUpHWYJ17olTzT61Hgz10ioicBF6cjgQrLNcyn05xoaJHD2Vpf8Unxzi0YzA2e77yRqBo9jJVRaX2q
+      wUJuZrzb62x3zw8Knz6GGSZBn8xRKLaw1SKFpd1hwvL62GfqX5ZBAT1AYTZP1j8GcAoK8AFVn193SEU
+      vjSdUFa+RNWuJhkjBRfylJczIjTIFb5ls0jpbA3bMA9DE7lFKVQl6vVwFmiIVBI1 samplekey
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: NetworkLink
 metadata:
   name: oob
@@ -43,11 +54,13 @@ spec:
   trunking:
     mode: disabled
     default_network: oob
+  allowed_networks:
+    - oob
 ---
 # pxe is a bit of 'magic' indicating the link config used when PXE booting
 # a node. All other links indicate network configs applied when the node
 # is deployed.
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: NetworkLink
 metadata:
   name: pxe
@@ -67,8 +80,10 @@ spec:
     mode: disabled
     # use name, will translate to VLAN ID
     default_network: pxe
+  allowed_networks:
+    - pxe
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: NetworkLink
 metadata:
   name: gp
@@ -97,8 +112,11 @@ spec:
   trunking:
     mode: 802.1q
     default_network: mgmt
+  allowed_networks:
+    - public
+    - mgmt
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: oob
@@ -117,7 +135,7 @@ spec:
      domain: ilo.sitename.att.com
      servers: 172.16.100.10
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: pxe
@@ -146,7 +164,7 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.0.10
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: mgmt
@@ -181,7 +199,7 @@ spec:
       # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.1.9,172.16.1.10
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: private
@@ -205,7 +223,7 @@ spec:
     domain: priv.sitename.example.com
     servers: 172.16.2.9,172.16.2.10
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: public
@@ -228,12 +246,12 @@ spec:
   routes:
   - subnet: 0.0.0.0/0
     gateway: 172.16.3.1
-    metric: 9
+    metric: 10
   dns:
     domain: sitename.example.com
     servers: 8.8.8.8
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: HostProfile
 metadata:
   name: defaults
@@ -285,14 +303,20 @@ spec:
       fs_label: logs
   # Platform (Operating System) settings
   platform:
-    image: ubuntu_16.04_hwe
-    kernel_params: default
+    image: ubuntu_16.04
+    kernel: generic
+    kernel_params:
+      quiet: true
+      console: ttyS2
   # Additional metadata to apply to a node
   metadata:
-    # Base URL of the introspection service - may go in curtin data
-    introspection_url: http://172.16.1.10:9090
+    # Freeform tags to be applied to the host
+    tags:
+      - deployment=initial
+    owner_data:
+      foo: bar
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: HostProfile
 metadata:
   name: k8-node
@@ -314,56 +338,37 @@ spec:
   # settings of the host_profile
   hardware_profile: HPGen9v3
   # Network interfaces.
+  primary_network: mgmt
   interfaces:
   # Keyed on device_name
   # pxe is a special marker indicating which device should be used for pxe boot
   - device_name: pxe
     # The network link attached to this 
-    network_link: pxe
+    device_link: pxe
     # Slaves will specify aliases from hwdefinition.yaml
     slaves:
-    - prim_nic01
+      - prim_nic01
     # Which networks will be configured on this interface
     networks: 
-    - pxe
+      - pxe
   - device_name: bond0
     network_link: gp
     # If multiple slaves are specified, but no bonding config
     # is applied to the link, design validation will fail
     slaves:
-    - prim_nic01
-    - prim_nic02
+      - prim_nic01
+      - prim_nic02
     # If multiple networks are specified, but no trunking
     # config is applied to the link, design validation will fail
     networks:
-    - mgmt
-    - private
+      - mgmt
+      - private
   metadata:
     # Explicit tag assignment
     tags:
     - 'test'
-    # MaaS supports key/value pairs. Not sure of the use yet
-    owner_data:
-      foo: bar
 ---
-apiVersion: 'v1.0'
-kind: HostProfile
-metadata:
-  name: k8-node-public
-  region: sitename
-  date: 17-FEB-2017
-  author: sh8121@att.com
-  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
-spec:
-  host_profile: k8-node
-  interfaces:
-    - device_name: bond0
-      networks:
-        # This is additive, so adds a network to those defined in the host_profile
-        # inheritance chain
-      - public
----
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: BaremetalNode
 metadata:
   name: controller01
@@ -372,7 +377,7 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  host_profile: k8-node-public
+  host_profile: k8-node
   # the hostname for a server, could be used in multiple DNS domains to
   # represent different interfaces
   interfaces:
@@ -395,10 +400,9 @@ spec:
   - network: oob
     address: 172.16.100.20
   metadata:
-    roles: os_ctl
     rack: rack01
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: BaremetalNode
 metadata:
   name: compute01
@@ -417,8 +421,10 @@ spec:
     address: 172.16.2.21
   - network: oob
     address: 172.16.100.21
+  metadata:
+    rack: rack02
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: HardwareProfile
 metadata:
   name: HPGen9v3
@@ -456,4 +462,4 @@ spec:
     alias: primary_boot
     dev_type: 'VBOX HARDDISK'
     bus_type: 'scsi'
-
+...

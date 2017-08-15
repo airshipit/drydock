@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+#Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,16 +18,27 @@
 ####################
 # version the schema in this file so consumers can rationally parse it
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: Region
 metadata:
   name: sitename
   date: 17-FEB-2017
   description: Sample site design
   author: sh8121@att.com
-# Not sure if we have site wide data that doesn't fall into another 'Kind'
+spec:
+  tag_definitions:
+    - tag: test
+      definition_type: lshw_xpath
+      definition: "//node[@id=\"display\"]/'clock units=\"Hz\"' > 1000000000"
+  authorized_keys:
+    - |
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDENeyO5hLPbLLQRZ0oafTYWs1ieo5Q+XgyZQs51Ju
+      jDGc8lKlWsg1/6yei2JewKMgcwG2Buu1eqU92Xn1SvMZLyt9GZURuBkyjcfVc/8GiU5QP1Of8B7CV0c
+      kfUpHWYJ17olTzT61Hgz10ioicBF6cjgQrLNcyn05xoaJHD2Vpf8Unxzi0YzA2e77yRqBo9jJVRaX2q
+      wUJuZrzb62x3zw8Knz6GGSZBn8xRKLaw1SKFpd1hwvL62GfqX5ZBAT1AYTZP1j8GcAoK8AFVn193SEU
+      vjSdUFa+RNWuJhkjBRfylJczIjTIFb5ls0jpbA3bMA9DE7lFKVQl6vVwFmiIVBI1 samplekey
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: HostProfile
 metadata:
   name: defaults
@@ -79,14 +90,20 @@ spec:
       fs_label: logs
   # Platform (Operating System) settings
   platform:
-    image: ubuntu_16.04_hwe
-    kernel_params: default
+    image: ubuntu_16.04
+    kernel: generic
+    kernel_params:
+      quiet: true
+      console: ttyS2
   # Additional metadata to apply to a node
   metadata:
-    # Base URL of the introspection service - may go in curtin data
-    introspection_url: http://172.16.1.10:9090
+    # Freeform tags to be applied to the host
+    tags:
+      - deployment=initial
+    owner_data:
+      foo: bar
 ---
-apiVersion: 'v1.0'
+apiVersion: 'drydock/v1'
 kind: HostProfile
 metadata:
   name: k8-node
@@ -108,90 +125,33 @@ spec:
   # settings of the host_profile
   hardware_profile: HPGen9v3
   # Network interfaces.
+  primary_network: mgmt
   interfaces:
   # Keyed on device_name
   # pxe is a special marker indicating which device should be used for pxe boot
   - device_name: pxe
     # The network link attached to this 
-    network_link: pxe
+    device_link: pxe
     # Slaves will specify aliases from hwdefinition.yaml
     slaves:
-    - prim_nic01
+      - prim_nic01
     # Which networks will be configured on this interface
     networks: 
-    - pxe
+      - pxe
   - device_name: bond0
     network_link: gp
     # If multiple slaves are specified, but no bonding config
     # is applied to the link, design validation will fail
     slaves:
-    - prim_nic01
-    - prim_nic02
+      - prim_nic01
+      - prim_nic02
     # If multiple networks are specified, but no trunking
     # config is applied to the link, design validation will fail
     networks:
-    - mgmt
-    - private
+      - mgmt
+      - private
   metadata:
     # Explicit tag assignment
     tags:
     - 'test'
-    # MaaS supports key/value pairs. Not sure of the use yet
-    owner_data:
-      foo: bar
----
-apiVersion: 'v1.0'
-kind: HostProfile
-metadata:
-  name: k8-node-public
-  region: sitename
-  date: 17-FEB-2017
-  author: sh8121@att.com
-  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
-spec:
-  host_profile: k8-node
-  interfaces:
-    - device_name: bond0
-      networks:
-        # This is additive, so adds a network to those defined in the host_profile
-        # inheritance chain
-      - public
----
-apiVersion: 'v1.0'
-kind: HardwareProfile
-metadata:
-  name: HPGen9v3
-  region: sitename
-  date: 17-FEB-2017
-  author: Scott Hussey
-spec:
-  # Vendor of the server chassis
-  vendor: HP
-  # Generation of the chassis model
-  generation: '8'
-  # Version of the chassis model within its generation - not version of the hardware definition
-  hw_version: '3'
-  # The certified version of the chassis BIOS
-  bios_version: '2.2.3'
-  # Mode of the default boot of hardware - bios, uefi
-  boot_mode: bios
-  # Protocol of boot of the hardware - pxe, usb, hdd
-  bootstrap_protocol: pxe
-  # Which interface to use for network booting within the OOB manager, not OS device
-  pxe_interface: 0
-  # Map hardware addresses to aliases/roles to allow a mix of hardware configs
-  # in a site to result in a consistent configuration
-  device_aliases:
-  - address: 0000:00:03.0
-    alias: prim_nic01
-      # type could identify expected hardware - used for hardware manifest validation
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: 0000:00:04.0
-    alias: prim_nic02
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: 2:0.0.0
-    alias: primary_boot
-    dev_type: 'VBOX HARDDISK'
-    bus_type: 'scsi'
+...

@@ -25,12 +25,14 @@ import drydock_provisioner.statemgmt as statemgmt
 import drydock_provisioner.orchestrator as orch
 import drydock_provisioner.control.api as api
 
+
 def start_drydock():
     objects.register_all()
 
     # Setup configuration parsing
     cli_options = [
-        cfg.BoolOpt('debug', short='d', default=False, help='Enable debug logging'),
+        cfg.BoolOpt(
+            'debug', short='d', default=False, help='Enable debug logging'),
     ]
 
     cfg.CONF.register_cli_opts(cli_options)
@@ -38,21 +40,26 @@ def start_drydock():
     cfg.CONF(sys.argv[1:])
 
     if cfg.CONF.debug:
-        cfg.CONF.set_override(name='log_level', override='DEBUG', group='logging')
+        cfg.CONF.set_override(
+            name='log_level', override='DEBUG', group='logging')
 
     # Setup root logger
     logger = logging.getLogger(cfg.CONF.logging.global_logger_name)
 
     logger.setLevel(cfg.CONF.logging.log_level)
     ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s'
+    )
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
     # Specalized format for API logging
     logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
     logger.propagate = False
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(user)s - %(req_id)s - %(external_ctx)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(user)s - %(req_id)s - %(external_ctx)s - %(message)s'
+    )
 
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
@@ -67,25 +74,32 @@ def start_drydock():
     # Check if we have an API key in the environment
     # Hack around until we move MaaS configs to the YAML schema
     if 'MAAS_API_KEY' in os.environ:
-        cfg.CONF.set_override(name='maas_api_key', override=os.environ['MAAS_API_KEY'], group='maasdriver')
+        cfg.CONF.set_override(
+            name='maas_api_key',
+            override=os.environ['MAAS_API_KEY'],
+            group='maasdriver')
 
     # Setup the RBAC policy enforcer
     policy.policy_engine = policy.DrydockPolicy()
     policy.policy_engine.register_policy()
 
     # Ensure that the policy_engine is initialized before starting the API
-    wsgi_callable = api.start_api(state_manager=state, ingester=input_ingester,
-                                  orchestrator=orchestrator)
+    wsgi_callable = api.start_api(
+        state_manager=state,
+        ingester=input_ingester,
+        orchestrator=orchestrator)
 
     # Now that loggers are configured, log the effective config
-    cfg.CONF.log_opt_values(logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
+    cfg.CONF.log_opt_values(
+        logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
 
     return wsgi_callable
+
 
 # Initialization compatible with PasteDeploy
 def paste_start_drydock(global_conf, **kwargs):
     # At this time just ignore everything in the paste configuration and rely on oslo_config
     return drydock
 
-drydock = start_drydock()
 
+drydock = start_drydock()

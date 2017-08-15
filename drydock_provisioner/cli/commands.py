@@ -24,18 +24,20 @@ from .design import commands as design
 from .part import commands as part
 from .task import commands as task
 
+
 @click.group()
-@click.option('--debug/--no-debug',
-              help='Enable or disable debugging',
-              default=False)
-@click.option('--token',
-              '-t',
-              help='The auth token to be used',
-              default=lambda: os.environ.get('DD_TOKEN', ''))
-@click.option('--url',
-              '-u',
-              help='The url of the running drydock instance',
-              default=lambda: os.environ.get('DD_URL', ''))
+@click.option(
+    '--debug/--no-debug', help='Enable or disable debugging', default=False)
+@click.option(
+    '--token',
+    '-t',
+    help='The auth token to be used',
+    default=lambda: os.environ.get('DD_TOKEN', ''))
+@click.option(
+    '--url',
+    '-u',
+    help='The url of the running drydock instance',
+    default=lambda: os.environ.get('DD_URL', ''))
 @click.pass_context
 def drydock(ctx, debug, token, url):
     """ Drydock CLI to invoke the running instance of the drydock API
@@ -70,9 +72,12 @@ def drydock(ctx, debug, token, url):
     logger.debug(url_parse_result)
     if not url_parse_result.scheme:
         ctx.fail('URL must specify a scheme and hostname, optionally a port')
-    ctx.obj['CLIENT'] = DrydockClient(DrydockSession(scheme=url_parse_result.scheme,
-                                                     host=url_parse_result.netloc,
-                                                     token=token))
+    ctx.obj['CLIENT'] = DrydockClient(
+        DrydockSession(
+            scheme=url_parse_result.scheme,
+            host=url_parse_result.netloc,
+            token=token))
+
 
 drydock.add_command(design.design)
 drydock.add_command(part.part)

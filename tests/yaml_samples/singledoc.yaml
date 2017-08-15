@@ -1,40 +1,19 @@
 ---
-apiVersion: 'v1.0'
-kind: HardwareProfile
+apiVersion: 'drydock/v1'
+kind: Network
 metadata:
-  name: HPGen8v3
+  name: oob
   region: sitename
   date: 17-FEB-2017
-  name: Sample hardware definition
-  author: Scott Hussey
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  # Vendor of the server chassis
-  vendor: HP
-  # Generation of the chassis model
-  generation: '8'
-  # Version of the chassis model within its generation - not version of the hardware definition
-  hw_version: '3'
-  # The certified version of the chassis BIOS
-  bios_version: '2.2.3'
-  # Mode of the default boot of hardware - bios, uefi
-  boot_mode: bios
-  # Protocol of boot of the hardware - pxe, usb, hdd
-  bootstrap_protocol: pxe
-  # Which interface to use for network booting within the OOB manager, not OS device
-  pxe_interface: 0
-  # Map hardware addresses to aliases/roles to allow a mix of hardware configs
-  # in a site to result in a consistent configuration
-  device_aliases:
-  - address: 0000:00:03.0
-    alias: prim_nic01
-      # type could identify expected hardware - used for hardware manifest validation
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: 0000:00:04.0
-    alias: prim_nic02
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: 2:0.0.0
-    alias: primary_boot
-    dev_type: 'VBOX HARDDISK'
-    bus_type: 'scsi'
+  allocation: static
+  cidr: 172.16.100.0/24
+  ranges:
+  - type: static
+    start: 172.16.100.15
+    end: 172.16.100.254
+  dns:
+     domain: ilo.sitename.att.com
+     servers: 172.16.100.10

@@ -18,13 +18,15 @@ from oslo_versionedobjects import fields as obj_fields
 
 import drydock_provisioner.objects as objects
 
+
 class DrydockObjectRegistry(base.VersionedObjectRegistry):
-    
+
     # Steal this from Cinder to bring all registered objects
     # into the drydock_provisioner.objects namespace
 
     def registration_hook(self, cls, index):
         setattr(objects, cls.obj_name(), cls)
+
 
 class DrydockObject(base.VersionedObject):
 
@@ -54,8 +56,8 @@ class DrydockObject(base.VersionedObject):
         for name, field in self.fields.items():
             if self.obj_attr_is_set(name):
                 value = getattr(self, name)
-                if (hasattr(value, 'obj_to_simple') and
-                    callable(value.obj_to_simple)):
+                if (hasattr(value, 'obj_to_simple')
+                        and callable(value.obj_to_simple)):
                     primitive[name] = value.obj_to_simple()
                 else:
                     value = field.to_primitive(self, name, value)
@@ -84,7 +86,6 @@ class DrydockPersistentObject(base.VersionedObject):
 
 
 class DrydockObjectListBase(base.ObjectListBase):
-    
     def __init__(self, **kwargs):
         super(DrydockObjectListBase, self).__init__(**kwargs)
 
@@ -92,7 +93,7 @@ class DrydockObjectListBase(base.ObjectListBase):
         self.objects.append(obj)
 
     def replace_by_id(self, obj):
-        i = 0;
+        i = 0
         while i < len(self.objects):
             if self.objects[i].get_id() == obj.get_id():
                 objects[i] = obj

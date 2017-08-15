@@ -21,9 +21,9 @@ import pytest
 
 logging.basicConfig(level=logging.DEBUG)
 
-class TestEnforcerDecorator():
 
-    def test_apienforcer_decorator(self,mocker):
+class TestEnforcerDecorator():
+    def test_apienforcer_decorator(self, mocker):
         ''' DrydockPolicy.authorized() should correctly use oslo_policy to enforce
             RBAC policy based on a DrydockRequestContext instance. authorized() is
             called via the policy.ApiEnforcer decorator.
@@ -49,8 +49,12 @@ class TestEnforcerDecorator():
 
         self.target_function(req, resp)
 
-        expected_calls = [mocker.call.authorize('physical_provisioner:read_task', {'project_id': project_id, 'user_id': user_id},
-                                              ctx.to_policy_view())]
+        expected_calls = [
+            mocker.call.authorize('physical_provisioner:read_task', {
+                'project_id': project_id,
+                'user_id': user_id
+            }, ctx.to_policy_view())
+        ]
 
         policy_engine.enforcer.assert_has_calls(expected_calls)
 

@@ -16,6 +16,7 @@ import json
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.vlan as model_vlan
 
+
 class Fabric(model_base.ResourceBase):
 
     resource_url = 'fabrics/{resource_id}/'
@@ -30,19 +31,20 @@ class Fabric(model_base.ResourceBase):
 
     def refresh(self):
         super(Fabric, self).refresh()
-        
+
         self.refresh_vlans()
 
         return
 
     def refresh_vlans(self):
-        self.vlans = model_vlan.Vlans(self.api_client, fabric_id=self.resource_id)
+        self.vlans = model_vlan.Vlans(
+            self.api_client, fabric_id=self.resource_id)
         self.vlans.refresh()
-        
 
     def set_resource_id(self, res_id):
         self.resource_id = res_id
         self.refresh_vlans()
+
 
 class Fabrics(model_base.ResourceCollectionBase):
 

@@ -14,8 +14,8 @@
 
 #
 # AIC YAML Ingester - This data ingester will consume a AIC YAML design
-#                   file 
-#   
+#                   file
+#
 import yaml
 import logging
 import base64
@@ -25,8 +25,8 @@ import drydock_provisioner.objects.fields as hd_fields
 from drydock_provisioner import objects
 from drydock_provisioner.ingester.plugins import IngesterPlugin
 
-class YamlIngester(IngesterPlugin):
 
+class YamlIngester(IngesterPlugin):
     def __init__(self):
         super(YamlIngester, self).__init__()
         self.logger = logging.getLogger('drydock.ingester.yaml')
@@ -42,39 +42,43 @@ class YamlIngester(IngesterPlugin):
     returns an array of objects from drydock_provisioner.model
 
     """
+
     def ingest_data(self, **kwargs):
         models = []
 
         if 'filenames' in kwargs:
-            # TODO validate filenames is array
+            # TODO(sh8121att): validate filenames is array
             for f in kwargs.get('filenames'):
                 try:
-                    file = open(f,'rt')
+                    file = open(f, 'rt')
                     contents = file.read()
                     file.close()
                     models.extend(self.parse_docs(contents))
                 except OSError as err:
                     self.logger.error(
-                        "Error opening input file %s for ingestion: %s" 
-                        % (filename, err))
+                        "Error opening input file %s for ingestion: %s" %
+                        (f, err))
                     continue
         elif 'content' in kwargs:
             models.extend(self.parse_docs(kwargs.get('content')))
         else:
             raise ValueError('Missing parameter "filename"')
-        
+
         return models
 
     """
     Translate a YAML string into the internal Drydock model
     """
+
     def parse_docs(self, yaml_string):
         models = []
-        self.logger.debug("yamlingester:parse_docs - Parsing YAML string \n%s" % (yaml_string))
+        self.logger.debug(
+            "yamlingester:parse_docs - Parsing YAML string \n%s" %
+            (yaml_string))
         try:
             parsed_data = yaml.load_all(yaml_string)
         except yaml.YAMLError as err:
-            raise ValueError("Error parsing YAML in %s: %s" % (f,err))
+            raise ValueError("Error parsing YAML: %s" % (err))
 
         for d in parsed_data:
             kind = d.get('kind', '')
@@ -96,7 +100,8 @@ class YamlIngester(IngesterPlugin):
 
                             spec = d.get('spec', {})
 
-                            model.tag_definitions = objects.NodeTagDefinitionList()
+                            model.tag_definitions = objects.NodeTagDefinitionList(
+                            )
 
                             tag_defs = spec.get('tag_definitions', [])
 
@@ -107,8 +112,8 @@ class YamlIngester(IngesterPlugin):
                                 tag_model.definition = t.get('definition', '')
 
                                 if tag_model.type not in ['lshw_xpath']:
-                                    raise ValueError('Unknown definition type in ' \
-                                        'NodeTagDefinition: %s' % (self.definition_type))
+                                    raise ValueError('Unknown definition type in '
+                                                     'NodeTagDefinition: %s' % (t.definition_type))
                                 model.tag_definitions.append(tag_model)
 
                             auth_keys = spec.get('authorized_keys', [])
@@ -117,7 +122,9 @@ class YamlIngester(IngesterPlugin):
 
                             models.append(model)
                         else:
-                            raise ValueError('Unknown API version %s of Region kind' %s (api_version))
+                            raise ValueError(
+                                'Unknown API version %s of Region kind' %
+                                (api_version))
                     elif kind == 'NetworkLink':
                         if api_version == "v1":
                             model = objects.NetworkLink()
@@ -136,27 +143,36 @@ class YamlIngester(IngesterPlugin):
                                 else:
                                     model.metalabels.append(l)
 
-
                             bonding = spec.get('bonding', {})
-                            model.bonding_mode = bonding.get('mode',
-                                                            hd_fields.NetworkLinkBondingMode.Disabled)
+                            model.bonding_mode = bonding.get(
+                                'mode',
+                                hd_fields.NetworkLinkBondingMode.Disabled)
 
                             # How should we define defaults for CIs not in the input?
                             if model.bonding_mode == hd_fields.NetworkLinkBondingMode.LACP:
-                                model.bonding_xmit_hash = bonding.get('hash', 'layer3+4')
-                                model.bonding_peer_rate = bonding.get('peer_rate', 'fast')
-                                model.bonding_mon_rate = bonding.get('mon_rate', '100')
-                                model.bonding_up_delay = bonding.get('up_delay', '200')
-                                model.bonding_down_delay = bonding.get('down_delay', '200')
+                                model.bonding_xmit_hash = bonding.get(
+                                    'hash', 'layer3+4')
+                                model.bonding_peer_rate = bonding.get(
+                                    'peer_rate', 'fast')
+                                model.bonding_mon_rate = bonding.get(
+                                    'mon_rate', '100')
+                                model.bonding_up_delay = bonding.get(
+                                    'up_delay', '200')
+                                model.bonding_down_delay = bonding.get(
+                                    'down_delay', '200')
 
                             model.mtu = spec.get('mtu', None)
                             model.linkspeed = spec.get('linkspeed', None)
 
                             trunking = spec.get('trunking', {})
-                            model.trunk_mode = trunking.get('mode', hd_fields.NetworkLinkTrunkingMode.Disabled)
-                            model.native_network = trunking.get('default_network', None)
+                            model.trunk_mode = trunking.get(
+                                'mode',
+                                hd_fields.NetworkLinkTrunkingMode.Disabled)
+                            model.native_network = trunking.get(
+                                'default_network', None)
 
-                            model.allowed_networks = spec.get('allowed_networks', None)
+                            model.allowed_networks = spec.get(
+                                'allowed_networks', None)
 
                             models.append(model)
                         else:
@@ -178,9 +194,10 @@ class YamlIngester(IngesterPlugin):
                                     model.metalabels = [l]
                                 else:
                                     model.metalabels.append(l)
-                                    
+
                             model.cidr = spec.get('cidr', None)
-                            model.allocation_strategy = spec.get('allocation', 'static')
+                            model.allocation_strategy = spec.get(
+                                'allocation', 'static')
                             model.vlan_id = spec.get('vlan', None)
                             model.mtu = spec.get('mtu', None)
 
@@ -192,19 +209,27 @@ class YamlIngester(IngesterPlugin):
                             model.ranges = []
 
                             for r in ranges:
-                                model.ranges.append({'type':    r.get('type', None),
-                                                     'start':   r.get('start', None),
-                                                     'end':     r.get('end', None),
-                                                    })
+                                model.ranges.append({
+                                    'type':
+                                    r.get('type', None),
+                                    'start':
+                                    r.get('start', None),
+                                    'end':
+                                    r.get('end', None),
+                                })
 
                             routes = spec.get('routes', [])
                             model.routes = []
 
                             for r in routes:
-                                model.routes.append({'subnet':  r.get('subnet', None),
-                                                     'gateway': r.get('gateway', None),
-                                                     'metric':  r.get('metric', None),
-                                                    })
+                                model.routes.append({
+                                    'subnet':
+                                    r.get('subnet', None),
+                                    'gateway':
+                                    r.get('gateway', None),
+                                    'metric':
+                                    r.get('metric', None),
+                                })
                             models.append(model)
                     elif kind == 'HardwareProfile':
                         if api_version == 'v1':
@@ -224,9 +249,11 @@ class YamlIngester(IngesterPlugin):
                             model.hw_version = spec.get('hw_version', None)
                             model.bios_version = spec.get('bios_version', None)
                             model.boot_mode = spec.get('boot_mode', None)
-                            model.bootstrap_protocol = spec.get('bootstrap_protocol', None)
-                            model.pxe_interface = spec.get('pxe_interface', None)
-                        
+                            model.bootstrap_protocol = spec.get(
+                                'bootstrap_protocol', None)
+                            model.pxe_interface = spec.get(
+                                'pxe_interface', None)
+
                             model.devices = objects.HardwareDeviceAliasList()
 
                             device_aliases = spec.get('device_aliases', {})
@@ -257,13 +284,15 @@ class YamlIngester(IngesterPlugin):
                             model.site = metadata.get('region', '')
                             model.source = hd_fields.ModelSource.Designed
 
-                            model.parent_profile = spec.get('host_profile', None)
-                            model.hardware_profile = spec.get('hardware_profile', None)
+                            model.parent_profile = spec.get(
+                                'host_profile', None)
+                            model.hardware_profile = spec.get(
+                                'hardware_profile', None)
 
                             oob = spec.get('oob', {})
 
                             model.oob_parameters = {}
-                            for k,v in oob.items():
+                            for k, v in oob.items():
                                 if k == 'type':
                                     model.oob_type = oob.get('type', None)
                                 else:
@@ -273,9 +302,12 @@ class YamlIngester(IngesterPlugin):
                             model.storage_layout = storage.get('layout', 'lvm')
 
                             bootdisk = storage.get('bootdisk', {})
-                            model.bootdisk_device = bootdisk.get('device', None)
-                            model.bootdisk_root_size = bootdisk.get('root_size', None)
-                            model.bootdisk_boot_size = bootdisk.get('boot_size', None)
+                            model.bootdisk_device = bootdisk.get(
+                                'device', None)
+                            model.bootdisk_root_size = bootdisk.get(
+                                'root_size', None)
+                            model.bootdisk_boot_size = bootdisk.get(
+                                'boot_size', None)
 
                             partitions = storage.get('partitions', [])
                             model.partitions = objects.HostPartitionList()
@@ -288,9 +320,11 @@ class YamlIngester(IngesterPlugin):
                                 part_model.device = p.get('device', None)
                                 part_model.part_uuid = p.get('part_uuid', None)
                                 part_model.size = p.get('size', None)
-                                part_model.mountpoint = p.get('mountpoint', None)
+                                part_model.mountpoint = p.get(
+                                    'mountpoint', None)
                                 part_model.fstype = p.get('fstype', 'ext4')
-                                part_model.mount_options = p.get('mount_options', 'defaults')
+                                part_model.mount_options = p.get(
+                                    'mount_options', 'defaults')
                                 part_model.fs_uuid = p.get('fs_uuid', None)
                                 part_model.fs_label = p.get('fs_label', None)
 
@@ -302,8 +336,10 @@ class YamlIngester(IngesterPlugin):
                             for i in interfaces:
                                 int_model = objects.HostInterface()
 
-                                int_model.device_name = i.get('device_name', None)
-                                int_model.network_link = i.get('device_link', None)
+                                int_model.device_name = i.get(
+                                    'device_name', None)
+                                int_model.network_link = i.get(
+                                    'device_link', None)
 
                                 int_model.hardware_slaves = []
                                 slaves = i.get('slaves', [])
@@ -316,7 +352,7 @@ class YamlIngester(IngesterPlugin):
 
                                 for n in networks:
                                     int_model.networks.append(n)
-                                
+
                                 model.interfaces.append(int_model)
 
                             platform = spec.get('platform', {})
@@ -325,11 +361,13 @@ class YamlIngester(IngesterPlugin):
                             model.kernel = platform.get('kernel', None)
 
                             model.kernel_params = {}
-                            for k,v in platform.get('kernel_params', {}).items():
+                            for k, v in platform.get('kernel_params',
+                                                     {}).items():
                                 model.kernel_params[k] = v
 
-                            model.primary_network = spec.get('primary_network', None)
-                            
+                            model.primary_network = spec.get(
+                                'primary_network', None)
+
                             node_metadata = spec.get('metadata', {})
                             metadata_tags = node_metadata.get('tags', [])
 
@@ -344,16 +382,18 @@ class YamlIngester(IngesterPlugin):
                             model.rack = node_metadata.get('rack', None)
 
                             if kind == 'BaremetalNode':
-                                model.boot_mac = node_metadata.get('boot_mac', None)
+                                model.boot_mac = node_metadata.get(
+                                    'boot_mac', None)
 
                                 addresses = spec.get('addressing', [])
 
                                 if len(addresses) == 0:
-                                    raise ValueError('BaremetalNode needs at least' \
+                                    raise ValueError('BaremetalNode needs at least'
                                                      ' 1 assigned address')
 
-                                model.addressing = objects.IpAddressAssignmentList()
-                                
+                                model.addressing = objects.IpAddressAssignmentList(
+                                )
+
                                 for a in addresses:
                                     assignment = objects.IpAddressAssignment()
 
@@ -371,15 +411,17 @@ class YamlIngester(IngesterPlugin):
 
                                         model.addressing.append(assignment)
                                     else:
-                                        self.log.error("Invalid address assignment %s on Node %s" 
-                                                        % (address, self.name))
+                                        self.log.error(
+                                            "Invalid address assignment %s on Node %s"
+                                            % (address, self.name))
                             models.append(model)
                         else:
-                            raise ValueError('Unknown API version %s of Kind HostProfile' % (api_version))
+                            raise ValueError(
+                                'Unknown API version %s of Kind HostProfile' %
+                                (api_version))
                 else:
                     self.log.error(
-                        "Error processing document in %s, no kind field"
-                        % (f))
+                        "Error processing document, no kind field")
                     continue
             elif api.startswith('promenade/'):
                 (foo, api_version) = api.split('/')
@@ -389,7 +431,12 @@ class YamlIngester(IngesterPlugin):
                     target = metadata.get('target', 'all')
                     name = metadata.get('name', None)
 
-                    model = objects.PromenadeConfig(target=target, name=name, kind=kind,
-                                document=base64.b64encode(bytearray(yaml.dump(d), encoding='utf-8')).decode('ascii'))
+                    model = objects.PromenadeConfig(
+                        target=target,
+                        name=name,
+                        kind=kind,
+                        document=base64.b64encode(
+                            bytearray(yaml.dump(d), encoding='utf-8')).decode(
+                                'ascii'))
                     models.append(model)
         return models

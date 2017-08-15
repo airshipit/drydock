@@ -20,8 +20,8 @@ from oslo_config import cfg
 
 from drydock_provisioner import policy
 
-class AuthMiddleware(object):
 
+class AuthMiddleware(object):
     def __init__(self):
         self.logger = logging.getLogger('drydock')
 
@@ -44,11 +44,21 @@ class AuthMiddleware(object):
         if auth_status == 'Confirmed':
             # Process account and roles
             ctx.authenticated = True
-            ctx.user = req.get_header('X-SERVICE-USER-NAME') if service else req.get_header('X-USER-NAME')
-            ctx.user_id = req.get_header('X-SERVICE-USER-ID') if service else req.get_header('X-USER-ID')
-            ctx.user_domain_id = req.get_header('X-SERVICE-USER-DOMAIN-ID') if service else req.get_header('X-USER-DOMAIN-ID')
-            ctx.project_id = req.get_header('X-SERVICE-PROJECT-ID') if service else req.get_header('X-PROJECT-ID')
-            ctx.project_domain_id = req.get_header('X-SERVICE-PROJECT-DOMAIN-ID') if service else req.get_header('X-PROJECT-DOMAIN-NAME')
+            ctx.user = req.get_header(
+                'X-SERVICE-USER-NAME') if service else req.get_header(
+                    'X-USER-NAME')
+            ctx.user_id = req.get_header(
+                'X-SERVICE-USER-ID') if service else req.get_header(
+                    'X-USER-ID')
+            ctx.user_domain_id = req.get_header(
+                'X-SERVICE-USER-DOMAIN-ID') if service else req.get_header(
+                    'X-USER-DOMAIN-ID')
+            ctx.project_id = req.get_header(
+                'X-SERVICE-PROJECT-ID') if service else req.get_header(
+                    'X-PROJECT-ID')
+            ctx.project_domain_id = req.get_header(
+                'X-SERVICE-PROJECT-DOMAIN-ID') if service else req.get_header(
+                    'X-PROJECT-DOMAIN-NAME')
             if service:
                 ctx.add_roles(req.get_header('X-SERVICE-ROLES').split(','))
             else:
@@ -59,16 +69,17 @@ class AuthMiddleware(object):
             else:
                 ctx.is_admin_project = False
 
-            self.logger.debug('Request from authenticated user %s with roles %s' % (ctx.user, ','.join(ctx.roles)))
+            self.logger.debug(
+                'Request from authenticated user %s with roles %s' %
+                (ctx.user, ','.join(ctx.roles)))
         else:
             ctx.authenticated = False
 
 
 class ContextMiddleware(object):
-
     def __init__(self):
         # Setup validation pattern for external marker
-        UUIDv4_pattern = '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$';
+        UUIDv4_pattern = '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$'
         self.marker_re = re.compile(UUIDv4_pattern, re.I)
 
     def process_request(self, req, resp):
@@ -81,7 +92,6 @@ class ContextMiddleware(object):
 
 
 class LoggingMiddleware(object):
-
     def __init__(self):
         self.logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
 

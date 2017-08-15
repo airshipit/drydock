@@ -16,15 +16,17 @@ import json
 import drydock_provisioner.config as config
 import drydock_provisioner.drivers.node.maasdriver.api_client as client
 
-class TestClass(object):
 
+class TestClass(object):
     def test_client_authenticate(self):
         client_config = config.DrydockConfig.node_driver['maasdriver']
 
-        maas_client = client.MaasRequestFactory(client_config['api_url'], client_config['api_key'])
+        maas_client = client.MaasRequestFactory(client_config['api_url'],
+                                                client_config['api_key'])
 
-        resp = maas_client.get('account/', params={'op': 'list_authorisation_tokens'})
+        resp = maas_client.get(
+            'account/', params={'op': 'list_authorisation_tokens'})
 
         parsed = resp.json()
-        
+
         assert len(parsed) > 0

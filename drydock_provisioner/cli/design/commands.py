@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" cli.design.commands
-    Contains commands related to designs
+"""cli.design.commands.
+
+Contains commands related to designs
 """
 import click
 
@@ -20,37 +21,36 @@ from drydock_provisioner.cli.design.actions import DesignList
 from drydock_provisioner.cli.design.actions import DesignShow
 from drydock_provisioner.cli.design.actions import DesignCreate
 
+
 @click.group()
 def design():
-    """ Drydock design commands
-    """
+    """Drydock design commands."""
     pass
 
+
 @design.command(name='create')
-@click.option('--base-design',
-              '-b',
-              help='The base design to model this new design after')
+@click.option(
+    '--base-design',
+    '-b',
+    help='The base design to model this new design after')
 @click.pass_context
 def design_create(ctx, base_design=None):
-    """ Create a design
-    """
+    """Create a design."""
     click.echo(DesignCreate(ctx.obj['CLIENT'], base_design).invoke())
+
 
 @design.command(name='list')
 @click.pass_context
 def design_list(ctx):
-    """ List designs
-    """
+    """List designs."""
     click.echo(DesignList(ctx.obj['CLIENT']).invoke())
 
+
 @design.command(name='show')
-@click.option('--design-id',
-              '-i',
-              help='The design id to show')
+@click.option('--design-id', '-i', help='The design id to show')
 @click.pass_context
 def design_show(ctx, design_id):
-    """ show designs
-    """
+    """show designs."""
     if not design_id:
         ctx.fail('The design id must be specified by --design-id')
 

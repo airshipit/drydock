@@ -25,14 +25,15 @@ import drydock_provisioner.objects.hostprofile
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
 
+
 @base.DrydockObjectRegistry.register
 class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
     VERSION = '1.0'
 
     fields = {
-        'addressing':   ovo_fields.ObjectField('IpAddressAssignmentList'),
-        'boot_mac':     ovo_fields.StringField(nullable=True),
+        'addressing': ovo_fields.ObjectField('IpAddressAssignmentList'),
+        'boot_mac': ovo_fields.StringField(nullable=True),
     }
 
     # A BaremetalNode is really nothing more than a physical
@@ -76,7 +77,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             if selector is None:
                 selector = objects.HardwareDeviceSelector()
                 selector.selector_type = 'name'
-                selector.address =  p.get_device()
+                selector.address = p.get_device()
             p.set_selector(selector)
 
         return
@@ -88,10 +89,9 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
         return None
 
-
     def get_network_address(self, network_name):
         for a in getattr(self, 'addressing', []):
-            if a.network  == network_name:
+            if a.network == network_name:
                 return a.address
 
         return None
@@ -102,9 +102,7 @@ class BaremetalNodeList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  ovo_fields.ListOfObjectsField('BaremetalNode')
-    }
+    fields = {'objects': ovo_fields.ListOfObjectsField('BaremetalNode')}
 
 
 @base.DrydockObjectRegistry.register
@@ -113,9 +111,9 @@ class IpAddressAssignment(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'type':     ovo_fields.StringField(),
-        'address':  ovo_fields.StringField(nullable=True),
-        'network':  ovo_fields.StringField(),
+        'type': ovo_fields.StringField(),
+        'address': ovo_fields.StringField(nullable=True),
+        'network': ovo_fields.StringField(),
     }
 
     def __init__(self, **kwargs):
@@ -125,11 +123,10 @@ class IpAddressAssignment(base.DrydockObject):
     def get_id(self):
         return self.network
 
+
 @base.DrydockObjectRegistry.register
 class IpAddressAssignmentList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  ovo_fields.ListOfObjectsField('IpAddressAssignment')
-    }
+    fields = {'objects': ovo_fields.ListOfObjectsField('IpAddressAssignment')}

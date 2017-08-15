@@ -15,14 +15,14 @@ import pytest
 import shutil
 import os
 import uuid
+import logging
 
 from drydock_provisioner.ingester.plugins.yaml import YamlIngester
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 class TestClass(object):
-
-    def setup_method(self, method):
-        print("Running test {0}".format(method.__name__))
-
     def test_ingest_singledoc(self, input_files):
         input_file = input_files.join("singledoc.yaml")
 
@@ -44,7 +44,8 @@ class TestClass(object):
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(request.fspath)) + "../yaml_samples"
+        samples_dir = os.path.dirname(
+            str(request.fspath)) + "/" + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

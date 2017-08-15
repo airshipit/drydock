@@ -20,8 +20,8 @@ import falcon.request
 
 import drydock_provisioner.error as errors
 
-class BaseResource(object):
 
+class BaseResource(object):
     def __init__(self):
         self.logger = logging.getLogger('control')
 
@@ -41,7 +41,8 @@ class BaseResource(object):
         if req.content_length is None or req.content_length == 0:
             return None
 
-        if req.content_type is not None and req.content_type.lower() == 'application/json':
+        if req.content_type is not None and req.content_type.lower(
+        ) == 'application/json':
             raw_body = req.stream.read(req.content_length or 0)
 
             if raw_body is None:
@@ -51,20 +52,23 @@ class BaseResource(object):
                 json_body = json.loads(raw_body.decode('utf-8'))
                 return json_body
             except json.JSONDecodeError as jex:
-                raise errors.InvalidFormat("%s: Invalid JSON in body: %s" % (req.path, jex))
+                print("Invalid JSON in request: \n%s" % raw_body.decode('utf-8'))
+                self.error(req.context, "Invalid JSON in request: \n%s" % raw_body.decode('utf-8'))
+                raise errors.InvalidFormat("%s: Invalid JSON in body: %s" %
+                                           (req.path, jex))
         else:
             raise errors.InvalidFormat("Requires application/json payload")
 
     def return_error(self, resp, status_code, message="", retry=False):
-        resp.body = json.dumps({'type': 'error', 'message': message, 'retry': retry})
+        resp.body = json.dumps({
+            'type': 'error',
+            'message': message,
+            'retry': retry
+        })
         resp.status = status_code
 
     def log_error(self, ctx, level, msg):
-        extra = {
-            'user': 'N/A',
-            'req_id': 'N/A',
-            'external_ctx': 'N/A'
-        }
+        extra = {'user': 'N/A', 'req_id': 'N/A', 'external_ctx': 'N/A'}
 
         if ctx is not None:
             extra = {
@@ -89,27 +93,29 @@ class BaseResource(object):
 
 
 class StatefulResource(BaseResource):
-
     def __init__(self, state_manager=None, **kwargs):
         super(StatefulResource, self).__init__(**kwargs)
 
         if state_manager is None:
-            self.error(None, "StatefulResource:init - StatefulResources require a state manager be set")
-            raise ValueError("StatefulResources require a state manager be set")
+            self.error(
+                None,
+                "StatefulResource:init - StatefulResources require a state manager be set"
+            )
+            raise ValueError(
+                "StatefulResources require a state manager be set")
 
         self.state_manager = state_manager
 
 
 class DrydockRequestContext(object):
-
     def __init__(self):
         self.log_level = 'ERROR'
-        self.user = None    # Username
-        self.user_id = None # User ID (UUID)
-        self.user_domain_id = None # Domain owning user
+        self.user = None  # Username
+        self.user_id = None  # User ID (UUID)
+        self.user_domain_id = None  # Domain owning user
         self.roles = []
         self.project_id = None
-        self.project_domain_id = None # Domain owning project
+        self.project_domain_id = None  # Domain owning project
         self.is_admin_project = False
         self.authenticated = False
         self.request_id = str(uuid.uuid4())
@@ -133,8 +139,7 @@ class DrydockRequestContext(object):
         self.roles.extend(roles)
 
     def remove_role(self, role):
-        self.roles = [x for x in self.roles
-                      if x != role]
+        self.roles = [x for x in self.roles if x != role]
 
     def set_external_marker(self, marker):
         self.external_marker = marker

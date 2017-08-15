@@ -17,8 +17,8 @@ from drydock_provisioner.control.base import DrydockRequestContext
 
 import pytest
 
-class TestDefaultRules():
 
+class TestDefaultRules():
     def test_register_policy(self, mocker):
         ''' DrydockPolicy.register_policy() should correctly register all default
             policy rules
@@ -28,14 +28,16 @@ class TestDefaultRules():
         policy_engine = DrydockPolicy()
         policy_engine.register_policy()
 
-        expected_calls = [mocker.call.register_defaults(DrydockPolicy.base_rules),
-                          mocker.call.register_defaults(DrydockPolicy.task_rules),
-                          mocker.call.register_defaults(DrydockPolicy.data_rules)]
+        expected_calls = [
+            mocker.call.register_defaults(DrydockPolicy.base_rules),
+            mocker.call.register_defaults(DrydockPolicy.task_rules),
+            mocker.call.register_defaults(DrydockPolicy.data_rules)
+        ]
 
         # Validate the oslo_policy Enforcer was loaded with expected default policy rules
         policy_engine.enforcer.assert_has_calls(expected_calls, any_order=True)
 
-    def test_authorize_context(self,mocker):
+    def test_authorize_context(self, mocker):
         ''' DrydockPolicy.authorized() should correctly use oslo_policy to enforce
             RBAC policy based on a DrydockRequestContext instance
         '''
@@ -56,8 +58,10 @@ class TestDefaultRules():
         policy_engine = DrydockPolicy()
         policy_engine.authorize(policy_action, ctx)
 
-        expected_calls = [mocker.call.authorize(policy_action, {'project_id': project_id, 'user_id': user_id},
-                                              ctx.to_policy_view())]
+        expected_calls = [
+            mocker.call.authorize(
+                policy_action, {'project_id': project_id,
+                                'user_id': user_id}, ctx.to_policy_view())
+        ]
 
         policy_engine.enforcer.assert_has_calls(expected_calls)
-

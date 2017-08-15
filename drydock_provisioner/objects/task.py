@@ -19,8 +19,8 @@ import drydock_provisioner.error as errors
 
 import drydock_provisioner.objects.fields as hd_fields
 
-class Task(object):
 
+class Task(object):
     def __init__(self, **kwargs):
         self.task_id = uuid.uuid4()
         self.status = hd_fields.TaskStatus.Created
@@ -31,7 +31,7 @@ class Task(object):
         self.result_detail = None
         self.action = kwargs.get('action', hd_fields.OrchestratorAction.Noop)
 
-        self.parent_task_id = kwargs.get('parent_task_id','')
+        self.parent_task_id = kwargs.get('parent_task_id', '')
 
     def get_id(self):
         return self.task_id
@@ -68,26 +68,28 @@ class Task(object):
 
     def to_dict(self):
         return {
-            'task_id':  str(self.task_id),
-            'action':   self.action,
+            'task_id': str(self.task_id),
+            'action': self.action,
             'parent_task': str(self.parent_task_id),
-            'status':   self.status,
-            'result':   self.result,
+            'status': self.status,
+            'result': self.result,
             'result_detail': self.result_detail,
             'subtasks': [str(x) for x in self.subtasks],
         }
 
-class OrchestratorTask(Task):
 
+class OrchestratorTask(Task):
     def __init__(self, design_id=None, **kwargs):
         super(OrchestratorTask, self).__init__(**kwargs)
 
         self.design_id = design_id
 
-        if self.action in [hd_fields.OrchestratorAction.VerifyNode,
-                      hd_fields.OrchestratorAction.PrepareNode,
-                      hd_fields.OrchestratorAction.DeployNode,
-                      hd_fields.OrchestratorAction.DestroyNode]:
+        if self.action in [
+                hd_fields.OrchestratorAction.VerifyNode,
+                hd_fields.OrchestratorAction.PrepareNode,
+                hd_fields.OrchestratorAction.DeployNode,
+                hd_fields.OrchestratorAction.DestroyNode
+        ]:
             self.node_filter = kwargs.get('node_filter', None)
 
     def to_dict(self):
@@ -97,6 +99,7 @@ class OrchestratorTask(Task):
         _dict['node_filter'] = getattr(self, 'node_filter', None)
 
         return _dict
+
 
 class DriverTask(Task):
     def __init__(self, task_scope={}, **kwargs):

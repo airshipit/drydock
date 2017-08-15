@@ -21,8 +21,8 @@ import drydock_provisioner.error as errors
 
 from .base import StatefulResource
 
-class DesignsResource(StatefulResource):
 
+class DesignsResource(StatefulResource):
     def __init__(self, **kwargs):
         super(DesignsResource, self).__init__(**kwargs)
 
@@ -38,7 +38,11 @@ class DesignsResource(StatefulResource):
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Exception raised: %s" % str(ex))
-            self.return_error(resp, falcon.HTTP_500, message="Error accessing design list", retry=True)
+            self.return_error(
+                resp,
+                falcon.HTTP_500,
+                message="Error accessing design list",
+                retry=True)
 
     @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_post(self, req, resp):
@@ -52,7 +56,8 @@ class DesignsResource(StatefulResource):
 
                 if base_design is not None:
                     base_design = uuid.UUID(base_design)
-                    design = hd_objects.SiteDesign(base_design_id=base_design_uuid)
+                    design = hd_objects.SiteDesign(
+                        base_design_id=base_design_uuid)
             else:
                 design = hd_objects.SiteDesign()
             design.assign_id()
@@ -62,14 +67,18 @@ class DesignsResource(StatefulResource):
             resp.status = falcon.HTTP_201
         except errors.StateError as stex:
             self.error(req.context, "Error updating persistence")
-            self.return_error(resp, falcon.HTTP_500, message="Error updating persistence", retry=True)
+            self.return_error(
+                resp,
+                falcon.HTTP_500,
+                message="Error updating persistence",
+                retry=True)
         except errors.InvalidFormat as fex:
             self.error(req.context, str(fex))
-            self.return_error(resp, falcon.HTTP_400, message=str(fex), retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=str(fex), retry=False)
 
 
 class DesignResource(StatefulResource):
-
     def __init__(self, orchestrator=None, **kwargs):
         super(DesignResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
@@ -90,47 +99,81 @@ class DesignResource(StatefulResource):
             resp.body = json.dumps(design.obj_to_simple())
         except errors.DesignError:
             self.error(req.context, "Design %s not found" % design_id)
-            self.return_error(resp, falcon.HTTP_404, message="Design %s not found" % design_id, retry=False)
+            self.return_error(
+                resp,
+                falcon.HTTP_404,
+                message="Design %s not found" % design_id,
+                retry=False)
+
 
 class DesignsPartsResource(StatefulResource):
-
     def __init__(self, ingester=None, **kwargs):
         super(DesignsPartsResource, self).__init__(**kwargs)
         self.ingester = ingester
         self.authorized_roles = ['user']
 
         if ingester is None:
-            self.error(None, "DesignsPartsResource requires a configured Ingester instance")
-            raise ValueError("DesignsPartsResource requires a configured Ingester instance")
+            self.error(
+                None,
+                "DesignsPartsResource requires a configured Ingester instance")
+            raise ValueError(
+                "DesignsPartsResource requires a configured Ingester instance")
 
     @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_post(self, req, resp, design_id):
         ingester_name = req.params.get('ingester', None)
 
         if ingester_name is None:
-            self.error(None, "DesignsPartsResource POST requires parameter 'ingester'")
-            self.return_error(resp, falcon.HTTP_400, message="POST requires parameter 'ingester'", retry=False)
+            self.error(
+                None,
+                "DesignsPartsResource POST requires parameter 'ingester'")
+            self.return_error(
+                resp,
+                falcon.HTTP_400,
+                message="POST requires parameter 'ingester'",
+                retry=False)
         else:
             try:
                 raw_body = req.stream.read(req.content_length or 0)
                 if raw_body is not None and len(raw_body) > 0:
-                    parsed_items = self.ingester.ingest_data(plugin_name=ingester_name, design_state=self.state_manager,
-                                                             content=raw_body, design_id=design_id, context=req.context)
+                    parsed_items = self.ingester.ingest_data(
+                        plugin_name=ingester_name,
+                        design_state=self.state_manager,
+                        content=raw_body,
+                        design_id=design_id,
+                        context=req.context)
                     resp.status = falcon.HTTP_201
-                    resp.body = json.dumps([x.obj_to_simple() for x in parsed_items])
+                    resp.body = json.dumps(
+                        [x.obj_to_simple() for x in parsed_items])
                 else:
-                    self.return_error(resp, falcon.HTTP_400, message="Empty body not supported", retry=False)
+                    self.return_error(
+                        resp,
+                        falcon.HTTP_400,
+                        message="Empty body not supported",
+                        retry=False)
             except ValueError:
-                self.return_error(resp, falcon.HTTP_500, message="Error processing input", retry=False)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_500,
+                    message="Error processing input",
+                    retry=False)
             except LookupError:
-                self.return_error(resp, falcon.HTTP_400, message="Ingester %s not registered" % ingester_name, retry=False)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_400,
+                    message="Ingester %s not registered" % ingester_name,
+                    retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_get(self, req, resp, design_id):
         try:
             design = self.state_manager.get_design(design_id)
         except DesignError:
-            self.return_error(resp, falcon.HTTP_404, message="Design %s nout found" % design_id, retry=False)
+            self.return_error(
+                resp,
+                falcon.HTTP_404,
+                message="Design %s nout found" % design_id,
+                retry=False)
 
         part_catalog = []
 
@@ -138,15 +181,30 @@ class DesignsPartsResource(StatefulResource):
 
         part_catalog.append({'kind': 'Region', 'key': site.get_id()})
 
-        part_catalog.extend([{'kind': 'Network', 'key': n.get_id()} for n in design.networks])
+        part_catalog.extend([{
+            'kind': 'Network',
+            'key': n.get_id()
+        } for n in design.networks])
 
-        part_catalog.extend([{'kind': 'NetworkLink', 'key': l.get_id()} for l in design.network_links])
+        part_catalog.extend([{
+            'kind': 'NetworkLink',
+            'key': l.get_id()
+        } for l in design.network_links])
 
-        part_catalog.extend([{'kind': 'HostProfile', 'key': p.get_id()} for p in design.host_profiles])
+        part_catalog.extend([{
+            'kind': 'HostProfile',
+            'key': p.get_id()
+        } for p in design.host_profiles])
 
-        part_catalog.extend([{'kind': 'HardwareProfile', 'key': p.get_id()} for p in design.hardware_profiles])
+        part_catalog.extend([{
+            'kind': 'HardwareProfile',
+            'key': p.get_id()
+        } for p in design.hardware_profiles])
 
-        part_catalog.extend([{'kind': 'BaremetalNode', 'key': n.get_id()} for n in design.baremetal_nodes])
+        part_catalog.extend([{
+            'kind': 'BaremetalNode',
+            'key': n.get_id()
+        } for n in design.baremetal_nodes])
 
         resp.body = json.dumps(part_catalog)
         resp.status = falcon.HTTP_200
@@ -154,7 +212,6 @@ class DesignsPartsResource(StatefulResource):
 
 
 class DesignsPartsKindsResource(StatefulResource):
-
     def __init__(self, **kwargs):
         super(DesignsPartsKindsResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
@@ -165,15 +222,15 @@ class DesignsPartsKindsResource(StatefulResource):
 
         resp.status = falcon.HTTP_200
 
-class DesignsPartResource(StatefulResource):
 
+class DesignsPartResource(StatefulResource):
     def __init__(self, orchestrator=None, **kwargs):
         super(DesignsPartResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
         self.orchestrator = orchestrator
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
-    def on_get(self, req , resp, design_id, kind, name):
+    def on_get(self, req, resp, design_id, kind, name):
         ctx = req.context
         source = req.params.get('source', 'designed')
 
@@ -199,13 +256,19 @@ class DesignsPartResource(StatefulResource):
                 part = design.get_baremetal_node(name)
             else:
                 self.error(req.context, "Kind %s unknown" % kind)
-                self.return_error(resp, falcon.HTTP_404, message="Kind %s unknown" % kind, retry=False)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_404,
+                    message="Kind %s unknown" % kind,
+                    retry=False)
                 return
 
             resp.body = json.dumps(part.obj_to_simple())
         except errors.DesignError as dex:
             self.error(req.context, str(dex))
-            self.return_error(resp, falcon.HTTP_404, message=str(dex), retry=False)
+            self.return_error(
+                resp, falcon.HTTP_404, message=str(dex), retry=False)
         except Exception as exc:
             self.error(req.context, str(exc))
-            self.return_error(resp. falcon.HTTP_500, message=str(exc), retry=False)
+            self.return_error(
+                resp.falcon.HTTP_500, message=str(exc), retry=False)

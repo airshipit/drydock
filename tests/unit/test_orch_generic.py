@@ -26,13 +26,13 @@ import drydock_provisioner.drivers as drivers
 
 
 class TestClass(object):
-
     def test_task_complete(self):
         state_mgr = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
-        orch_task = orchestrator.create_task(task.OrchestratorTask,
-                                             site='default',
-                                             action=hd_fields.OrchestratorAction.Noop)
+        orch_task = orchestrator.create_task(
+            task.OrchestratorTask,
+            site='default',
+            action=hd_fields.OrchestratorAction.Noop)
 
         orchestrator.execute_task(orch_task.get_id())
 
@@ -47,12 +47,13 @@ class TestClass(object):
     def test_task_termination(self):
         state_mgr = statemgmt.DesignState()
         orchestrator = orch.Orchestrator(state_manager=state_mgr)
-        orch_task = orchestrator.create_task(task.OrchestratorTask,
-                                             site='default',
-                                             action=hd_fields.OrchestratorAction.Noop)
+        orch_task = orchestrator.create_task(
+            task.OrchestratorTask,
+            site='default',
+            action=hd_fields.OrchestratorAction.Noop)
 
-        orch_thread = threading.Thread(target=orchestrator.execute_task,
-                                       args=(orch_task.get_id(),))
+        orch_thread = threading.Thread(
+            target=orchestrator.execute_task, args=(orch_task.get_id(), ))
         orch_thread.start()
 
         time.sleep(1)

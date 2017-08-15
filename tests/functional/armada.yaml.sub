@@ -1,0 +1,354 @@
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: helm-toolkit
+data:
+  chart_name: helm-toolkit
+  release: helm-toolkit
+  namespace: helm-toolkit
+  timeout: 100
+  values: {}
+  source:
+    type: git
+    location: https://git.openstack.org/openstack/openstack-helm
+    subpath: helm-toolkit
+    reference: master
+  dependencies: []
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ceph
+data:
+  chart_name: ceph
+  release: ceph
+  namespace: ceph
+  timeout: 3600
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    manifests_enabled:
+      client_secrets: false
+    bootstrap:
+      enabled: true
+    network:
+      public: ${CEPH_PUBLIC_NET}
+      cluster: ${CEPH_CLUSTER_NET}
+    endpoints:
+      fqdn: ceph.svc.cluster.local
+    conf:
+      ceph:
+        config:
+          global:
+            mon_host: ceph-mon.ceph.svc.cluster.local
+  source:
+    type: git
+    location: ${CEPH_CHART_REPO}
+    subpath: ceph
+    reference: ${CEPH_CHART_BRANCH}
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-ceph-config
+data:
+  chart_name: ucp-ceph-config
+  release: ucp-ceph-config
+  namespace: ucp
+  timeout: 3600
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    ceph:
+      namespace: ceph
+    manifests_enabled:
+      deployment: False
+      storage_secrets: False
+      rbd_provisioner: False
+    network:
+      public: ${CEPH_PUBLIC_NET}
+      cluster: ${CEPH_CLUSTER_NET}
+    endpoints:
+      fqdn: ceph.svc.cluster.local
+    conf:
+      ceph:
+        config:
+          global:
+            mon_host: ceph-mon.ceph.svc.cluster.local
+  source:
+    type: git
+    location: ${CEPH_CHART_REPO}
+    subpath: ceph
+    reference: ${CEPH_CHART_BRANCH}
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-mariadb
+data:
+  chart_name: ucp-mariadb
+  release: ucp-mariadb
+  namespace: ucp
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    labels:
+      node_selector_key: ucp-control-plane
+      node_selector_value: enabled
+  source:
+    type: git
+    location: https://git.openstack.org/openstack/openstack-helm
+    subpath: mariadb
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-memcached
+data:
+  chart_name: ucp-memcached
+  release: ucp-memcached
+  namespace: ucp
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    labels:
+      node_selector_key: ucp-control-plane
+      node_selector_value: enabled
+  source:
+    type: git
+    location: https://git.openstack.org/openstack/openstack-helm
+    subpath: memcached
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-keystone
+data:
+  chart_name: ucp-keystone
+  release: keystone
+  namespace: ucp
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  pre:
+    delete:
+      - name: keystone-db-sync
+        type: job
+        labels:
+          - job-name: keystone-db-sync
+      - name: keystone-db-init
+        type: job
+        labels:
+          - job-name: keystone-db-init
+  post:
+    delete: []
+    create: []
+  values:
+    conf:
+      keystone:
+        override:
+      paste:
+        override:
+    replicas: 2
+    labels:
+      node_selector_key: ucp-control-plane
+      node_selector_value: enabled
+  source:
+    type: git
+    location: https://git.openstack.org/openstack/openstack-helm
+    subpath: keystone
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: maas-postgresql
+data:
+  chart_name: maas-postgresql
+  release: maas-postgresql
+  namespace: ucp 
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  pre:
+    delete: []
+    create: []
+  post:
+    delete: []
+    create: []
+  values:
+    development:
+      enabled: false
+    labels:
+      node_selector_key: ucp-control-plane
+      node_selector_value: enabled
+  source:
+    type: git
+    location: https://git.openstack.org/openstack/openstack-helm-addons
+    subpath: postgresql
+    reference: master
+  dependencies: []
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: maas
+data:
+  chart_name: maas
+  release: maas
+  namespace: ucp
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    bootdata_url: http://${DRYDOCK_NODE_IP}:${DRYDOCK_NODE_PORT}/api/v1.0/bootdata/
+    labels:
+      rack:
+        node_selector_key: ucp-control-plane
+        node_selector_value: enabled
+      region:
+        node_selector_key: ucp-control-plane
+        node_selector_value: enabled
+    network:
+      proxy:
+        node_port:
+          enabled: true
+          port: 31800
+      gui:
+        node_port:
+          enabled: true
+          port: 31900
+    conf:
+      maas:
+        credentials:
+          secret:
+            namespace: ucp
+        url:
+          maas_url: http://${MAAS_NODE_IP}:${MAAS_NODE_PORT}/MAAS
+        proxy:
+          enabled: '${PROXY_ENABLED}'
+          server: ${PROXY_ADDRESS}
+        ntp:
+          servers: ntp.ubuntu.com
+        dns:
+          upstream_servers: 8.8.8.8
+    secrets:
+      maas_region:
+        value: 3858a12230ac3c915f300c664f12063f
+  source:
+    type: git
+    location: ${MAAS_CHART_REPO}
+    subpath: maas
+    reference: ${MAAS_CHART_BRANCH}
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: drydock
+data:
+  chart_name: drydock
+  release: drydock
+  namespace: ucp
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      drydock: ${DRYDOCK_IMAGE}
+    labels:
+      node_selector_key: ucp-control-plane
+      node_selector_value: enabled
+    network:
+      drydock:
+        node_port:
+          enabled: true
+          port: ${DRYDOCK_NODE_PORT}
+    conf:
+      drydock:
+        maasdriver:
+          drydock_provisioner:
+            maas_api_url: http://${MAAS_NODE_IP}:${MAAS_NODE_PORT}/MAAS/api/2.0/
+  source:
+    type: git
+    location: ${DRYDOCK_CHART_REPO}
+    subpath: drydock
+    reference: ${DRYDOCK_CHART_BRANCH}
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Manifest/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-basic
+data:
+  release_prefix: armada-ucp
+  chart_groups:
+    - ceph
+    - ceph-bootstrap
+    - ucp-infra
+    - ucp-services
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ceph
+data:
+  description: 'Storage Backend'
+  chart_group:
+    - ceph
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ceph-bootstrap
+data:
+  description: 'Storage Backend Config'
+  chart_group:
+    - ucp-ceph-config
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-infra
+data:
+  description: 'UCP Infrastructure'
+  chart_group:
+    - ucp-mariadb
+    - ucp-memcached
+    - maas-postgresql
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ucp-services
+data:
+  description: 'UCP Services'
+  chart_group:
+    - maas
+    - drydock
+    - ucp-keystone
+...

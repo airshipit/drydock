@@ -17,58 +17,69 @@ import pytest
 import drydock_provisioner.objects as objects
 from drydock_provisioner.objects import fields
 
-class TestClass(object):
 
+class TestClass(object):
     def test_hardwareprofile(self):
         objects.register_all()
 
         model_attr = {
-            'versioned_object.namespace':            'drydock_provisioner.objects',
-            'versioned_object.name':                 'HardwareProfile',
-            'versioned_object.version':              '1.0',
+            'versioned_object.namespace': 'drydock_provisioner.objects',
+            'versioned_object.name': 'HardwareProfile',
+            'versioned_object.version': '1.0',
             'versioned_object.data': {
-                'name':                 'server',
-                'source':               fields.ModelSource.Designed,
-                'site':                 'test_site',
-                'vendor':               'Acme',
-                'generation':           '9',
-                'hw_version':           '3',
-                'bios_version':         '2.1.1',
-                'boot_mode':            'bios',
-                'bootstrap_protocol':   'pxe',
-                'pxe_interface':        '0',
-                'devices':  {
-                    'versioned_object.namespace':    'drydock_provisioner.objects',
-                    'versioned_object.name':         'HardwareDeviceAliasList',
-                    'versioned_object.version':      '1.0',
+                'name': 'server',
+                'source': fields.ModelSource.Designed,
+                'site': 'test_site',
+                'vendor': 'Acme',
+                'generation': '9',
+                'hw_version': '3',
+                'bios_version': '2.1.1',
+                'boot_mode': 'bios',
+                'bootstrap_protocol': 'pxe',
+                'pxe_interface': '0',
+                'devices': {
+                    'versioned_object.namespace':
+                    'drydock_provisioner.objects',
+                    'versioned_object.name': 'HardwareDeviceAliasList',
+                    'versioned_object.version': '1.0',
                     'versioned_object.data': {
                         'objects': [
                             {
-                                'versioned_object.namespace':    'drydock_provisioner.objects',
-                                'versioned_object.name':         'HardwareDeviceAlias',
-                                'versioned_object.version':      '1.0',
+                                'versioned_object.namespace':
+                                'drydock_provisioner.objects',
+                                'versioned_object.name':
+                                'HardwareDeviceAlias',
+                                'versioned_object.version':
+                                '1.0',
                                 'versioned_object.data': {
-                                    'alias':    'nic',
-                                    'source':   fields.ModelSource.Designed,
-                                    'address':  '0000:00:03.0',
-                                    'bus_type': 'pci',
-                                    'dev_type': '82540EM Gigabit Ethernet Controller',
+                                    'alias':
+                                    'nic',
+                                    'source':
+                                    fields.ModelSource.Designed,
+                                    'address':
+                                    '0000:00:03.0',
+                                    'bus_type':
+                                    'pci',
+                                    'dev_type':
+                                    '82540EM Gigabit Ethernet Controller',
                                 }
                             },
                             {
-                                'versioned_object.namespace':    'drydock_provisioner.objects',
-                                'versioned_object.name':         'HardwareDeviceAlias',
-                                'versioned_object.version':      '1.0',
+                                'versioned_object.namespace':
+                                'drydock_provisioner.objects',
+                                'versioned_object.name':
+                                'HardwareDeviceAlias',
+                                'versioned_object.version':
+                                '1.0',
                                 'versioned_object.data': {
-                                    'alias':    'bootdisk',
-                                    'source':   fields.ModelSource.Designed,
-                                    'address':  '2:0.0.0',
+                                    'alias': 'bootdisk',
+                                    'source': fields.ModelSource.Designed,
+                                    'address': '2:0.0.0',
                                     'bus_type': 'scsi',
                                     'dev_type': 'SSD',
                                 }
                             },
                         ]
-
                     }
                 }
             }
@@ -77,9 +88,8 @@ class TestClass(object):
         hwprofile = objects.HardwareProfile.obj_from_primitive(model_attr)
 
         assert getattr(hwprofile, 'bootstrap_protocol') == 'pxe'
-        
+
         hwprofile.bootstrap_protocol = 'network'
 
         assert 'bootstrap_protocol' in hwprofile.obj_what_changed()
         assert 'bios_version' not in hwprofile.obj_what_changed()
-

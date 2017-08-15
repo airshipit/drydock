@@ -28,8 +28,6 @@ The service account must then be included in the drydock.conf::
     delay_auth_decision = true
     auth_type = password
     auth_section = keystone_authtoken_password
-
-    [keystone_authtoken_password]
     auth_url = http://<keystone_ip>:5000
     project_name = service
     project_domain_name = ucp

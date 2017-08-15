@@ -18,6 +18,7 @@ import drydock_provisioner.error as errors
 
 from drydock_provisioner.drivers import ProviderDriver
 
+
 class NodeDriver(ProviderDriver):
 
     driver_name = "node_generic"
@@ -27,20 +28,22 @@ class NodeDriver(ProviderDriver):
     def __init__(self, **kwargs):
         super(NodeDriver, self).__init__(**kwargs)
 
-        self.supported_actions = [hd_fields.OrchestratorAction.ValidateNodeServices,
-                                  hd_fields.OrchestratorAction.CreateNetworkTemplate,
-                                  hd_fields.OrchestratorAction.CreateStorageTemplate,
-                                  hd_fields.OrchestratorAction.CreateBootMedia,
-                                  hd_fields.OrchestratorAction.PrepareHardwareConfig,
-                                  hd_fields.OrchestratorAction.IdentifyNode,
-                                  hd_fields.OrchestratorAction.ConfigureHardware,
-                                  hd_fields.OrchestratorAction.InterrogateNode,
-                                  hd_fields.OrchestratorAction.ApplyNodeNetworking,
-                                  hd_fields.OrchestratorAction.ApplyNodeStorage,
-                                  hd_fields.OrchestratorAction.ApplyNodePlatform,
-                                  hd_fields.OrchestratorAction.DeployNode,
-                                  hd_fields.OrchestratorAction.DestroyNode,
-                                  hd_fields.OrchestratorAction.ConfigureUserCredentials]
+        self.supported_actions = [
+            hd_fields.OrchestratorAction.ValidateNodeServices,
+            hd_fields.OrchestratorAction.CreateNetworkTemplate,
+            hd_fields.OrchestratorAction.CreateStorageTemplate,
+            hd_fields.OrchestratorAction.CreateBootMedia,
+            hd_fields.OrchestratorAction.PrepareHardwareConfig,
+            hd_fields.OrchestratorAction.IdentifyNode,
+            hd_fields.OrchestratorAction.ConfigureHardware,
+            hd_fields.OrchestratorAction.InterrogateNode,
+            hd_fields.OrchestratorAction.ApplyNodeNetworking,
+            hd_fields.OrchestratorAction.ApplyNodeStorage,
+            hd_fields.OrchestratorAction.ApplyNodePlatform,
+            hd_fields.OrchestratorAction.DeployNode,
+            hd_fields.OrchestratorAction.DestroyNode,
+            hd_fields.OrchestratorAction.ConfigureUserCredentials
+        ]
 
     def execute_task(self, task_id):
         task = self.state_manager.get_task(task_id)
@@ -50,10 +53,4 @@ class NodeDriver(ProviderDriver):
             return
         else:
             raise DriverError("Unsupported action %s for driver %s" %
-                (task_action, self.driver_desc))
-
-
-
-
-
-	
+                              (task_action, self.driver_desc))

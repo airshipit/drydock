@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
 
+
 @base.DrydockObjectRegistry.register
 class PromenadeConfig(base.DrydockPersistentObject, base.DrydockObject):
 
@@ -42,14 +43,15 @@ class PromenadeConfig(base.DrydockPersistentObject, base.DrydockObject):
     def get_name(self):
         return self.name
 
+
 @base.DrydockObjectRegistry.register
 class PromenadeConfigList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
     fields = {
-             'objects':  ovo_fields.ListOfObjectsField('PromenadeConfig'),
-             }
+        'objects': ovo_fields.ListOfObjectsField('PromenadeConfig'),
+    }
 
     def select_for_target(self, target):
         """
@@ -59,4 +61,3 @@ class PromenadeConfigList(base.DrydockObjectListBase, base.DrydockObject):
         """
 
         return [x for x in self.objects if x.target == target]
-

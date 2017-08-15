@@ -13,6 +13,7 @@
 # limitations under the License.
 import json
 
+
 class DesignError(Exception):
     pass
 
@@ -64,6 +65,7 @@ class InvalidFormat(ApiError):
 class ClientError(ApiError):
     def __init__(self, msg, code=500):
         super().__init__(msg)
+
 
 
 class ClientUnauthorizedError(ClientError):

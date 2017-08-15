@@ -20,57 +20,60 @@ from drydock_provisioner.control.middleware import AuthMiddleware
 
 import pytest
 
+
 class TestAuthMiddleware():
 
     # the WSGI env for a request processed by keystone middleware
     # with user token
-    ks_user_env = { 'REQUEST_METHOD': 'GET',
-                    'SCRIPT_NAME': '/foo',
-                    'PATH_INFO': '',
-                    'QUERY_STRING': '',
-                    'CONTENT_TYPE': '',
-                    'CONTENT_LENGTH': 0,
-                    'SERVER_NAME': 'localhost',
-                    'SERVER_PORT': '9000',
-                    'SERVER_PROTOCOL': 'HTTP/1.1',
-                    'HTTP_X_IDENTITY_STATUS': 'Confirmed',
-                    'HTTP_X_PROJECT_ID': '',
-                    'HTTP_X_USER_ID': '',
-                    'HTTP_X_AUTH_TOKEN': '',
-                    'HTTP_X_ROLES': '',
-                    'wsgi.version': (1,0),
-                    'wsgi.url_scheme': 'http',
-                    'wsgi.input': sys.stdin,
-                    'wsgi.errors': sys.stderr,
-                    'wsgi.multithread': False,
-                    'wsgi.multiprocess': False,
-                    'wsgi.run_once': False,
-                }
+    ks_user_env = {
+        'REQUEST_METHOD': 'GET',
+        'SCRIPT_NAME': '/foo',
+        'PATH_INFO': '',
+        'QUERY_STRING': '',
+        'CONTENT_TYPE': '',
+        'CONTENT_LENGTH': 0,
+        'SERVER_NAME': 'localhost',
+        'SERVER_PORT': '9000',
+        'SERVER_PROTOCOL': 'HTTP/1.1',
+        'HTTP_X_IDENTITY_STATUS': 'Confirmed',
+        'HTTP_X_PROJECT_ID': '',
+        'HTTP_X_USER_ID': '',
+        'HTTP_X_AUTH_TOKEN': '',
+        'HTTP_X_ROLES': '',
+        'wsgi.version': (1, 0),
+        'wsgi.url_scheme': 'http',
+        'wsgi.input': sys.stdin,
+        'wsgi.errors': sys.stderr,
+        'wsgi.multithread': False,
+        'wsgi.multiprocess': False,
+        'wsgi.run_once': False,
+    }
 
     # the WSGI env for a request processed by keystone middleware
     # with service token
-    ks_service_env = { 'REQUEST_METHOD': 'GET',
-                    'SCRIPT_NAME': '/foo',
-                    'PATH_INFO': '',
-                    'QUERY_STRING': '',
-                    'CONTENT_TYPE': '',
-                    'CONTENT_LENGTH': 0,
-                    'SERVER_NAME': 'localhost',
-                    'SERVER_PORT': '9000',
-                    'SERVER_PROTOCOL': 'HTTP/1.1',
-                    'HTTP_X_SERVICE_IDENTITY_STATUS': 'Confirmed',
-                    'HTTP_X_SERVICE_PROJECT_ID': '',
-                    'HTTP_X_SERVICE_USER_ID': '',
-                    'HTTP_X_SERVICE_TOKEN': '',
-                    'HTTP_X_ROLES': '',
-                    'wsgi.version': (1,0),
-                    'wsgi.url_scheme': 'http',
-                    'wsgi.input': sys.stdin,
-                    'wsgi.errors': sys.stderr,
-                    'wsgi.multithread': False,
-                    'wsgi.multiprocess': False,
-                    'wsgi.run_once': False,
-                }
+    ks_service_env = {
+        'REQUEST_METHOD': 'GET',
+        'SCRIPT_NAME': '/foo',
+        'PATH_INFO': '',
+        'QUERY_STRING': '',
+        'CONTENT_TYPE': '',
+        'CONTENT_LENGTH': 0,
+        'SERVER_NAME': 'localhost',
+        'SERVER_PORT': '9000',
+        'SERVER_PROTOCOL': 'HTTP/1.1',
+        'HTTP_X_SERVICE_IDENTITY_STATUS': 'Confirmed',
+        'HTTP_X_SERVICE_PROJECT_ID': '',
+        'HTTP_X_SERVICE_USER_ID': '',
+        'HTTP_X_SERVICE_TOKEN': '',
+        'HTTP_X_ROLES': '',
+        'wsgi.version': (1, 0),
+        'wsgi.url_scheme': 'http',
+        'wsgi.input': sys.stdin,
+        'wsgi.errors': sys.stderr,
+        'wsgi.multithread': False,
+        'wsgi.multiprocess': False,
+        'wsgi.run_once': False,
+    }
 
     def test_process_request_user(self):
         ''' AuthMiddleware is expected to correctly identify the headers

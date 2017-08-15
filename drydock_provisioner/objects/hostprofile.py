@@ -39,14 +39,14 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         # Consider a custom field for storage size
         'bootdisk_root_size': obj_fields.StringField(nullable=True),
         'bootdisk_boot_size': obj_fields.StringField(nullable=True),
-        'partitions': obj_fields.ObjectField('HostPartitionList',
-                                         nullable=True),
-        'interfaces': obj_fields.ObjectField('HostInterfaceList',
-                                         nullable=True),
+        'partitions': obj_fields.ObjectField(
+            'HostPartitionList', nullable=True),
+        'interfaces': obj_fields.ObjectField(
+            'HostInterfaceList', nullable=True),
         'tags': obj_fields.ListOfStringsField(nullable=True),
         'owner_data': obj_fields.DictOfStringsField(nullable=True),
         'rack': obj_fields.StringField(nullable=True),
-        'base_os':  obj_fields.StringField(nullable=True),
+        'base_os': obj_fields.StringField(nullable=True),
         'image': obj_fields.StringField(nullable=True),
         'kernel': obj_fields.StringField(nullable=True),
         'kernel_params': obj_fields.DictOfStringsField(nullable=True),
@@ -55,7 +55,6 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
 
     def __init__(self, **kwargs):
         super(HostProfile, self).__init__(**kwargs)
-
 
     def get_rack(self):
         return self.rack
@@ -70,7 +69,7 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
     def has_tag(self, tag):
         if tag in self.tags:
             return True
-        
+
         return False
 
     def apply_inheritance(self, site_design):
@@ -83,8 +82,8 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         parent = site_design.get_host_profile(self.parent_profile)
 
         if parent is None:
-            raise NameError("Cannot find parent profile %s for %s"
-                            % (self.design['parent_profile'], self.name))
+            raise NameError("Cannot find parent profile %s for %s" %
+                            (self.design['parent_profile'], self.name))
 
         parent.apply_inheritance(site_design)
 
@@ -92,43 +91,47 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         inheritable_field_list = [
             'hardware_profile', 'oob_type', 'storage_layout',
             'bootdisk_device', 'bootdisk_root_size', 'bootdisk_boot_size',
-            'rack', 'base_os', 'image', 'kernel', 'primary_network']
+            'rack', 'base_os', 'image', 'kernel', 'primary_network'
+        ]
 
         # Create applied data from self design values and parent
         # applied values
 
         for f in inheritable_field_list:
-            setattr(self, f, objects.Utils.apply_field_inheritance(
-                                getattr(self, f, None),
-                                getattr(parent, f, None)))
+            setattr(self, f,
+                    objects.Utils.apply_field_inheritance(
+                        getattr(self, f, None), getattr(parent, f, None)))
 
         # Now compute inheritance for complex types
-        self.oob_parameters = objects.Utils.merge_dicts(self.oob_parameters, parent.oob_parameters)
+        self.oob_parameters = objects.Utils.merge_dicts(
+            self.oob_parameters, parent.oob_parameters)
 
         self.tags = objects.Utils.merge_lists(self.tags, parent.tags)
 
-        self.owner_data = objects.Utils.merge_dicts(self.owner_data, parent.owner_data)
+        self.owner_data = objects.Utils.merge_dicts(self.owner_data,
+                                                    parent.owner_data)
 
-        self.kernel_params = objects.Utils.merge_dicts(self.kernel_params, parent.kernel_params)
+        self.kernel_params = objects.Utils.merge_dicts(self.kernel_params,
+                                                       parent.kernel_params)
 
         self.interfaces = HostInterfaceList.from_basic_list(
-                            HostInterface.merge_lists(self.interfaces, parent.interfaces))
+            HostInterface.merge_lists(self.interfaces, parent.interfaces))
 
         self.partitions = HostPartitionList.from_basic_list(
-                            HostPartition.merge_lists(self.partitions, parent.partitions))
+            HostPartition.merge_lists(self.partitions, parent.partitions))
 
         self.source = hd_fields.ModelSource.Compiled
 
         return
+
 
 @base.DrydockObjectRegistry.register
 class HostProfileList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  obj_fields.ListOfObjectsField('HostProfile')
-    }
+    fields = {'objects': obj_fields.ListOfObjectsField('HostProfile')}
+
 
 @base.DrydockObjectRegistry.register
 class HostInterface(base.DrydockObject):
@@ -136,13 +139,18 @@ class HostInterface(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'device_name':  obj_fields.StringField(),
-        'source':   hd_fields.ModelSourceField(),
-        'network_link': obj_fields.StringField(nullable=True),
-        'hardware_slaves':  obj_fields.ListOfStringsField(nullable=True),
-        'slave_selectors':  obj_fields.ObjectField('HardwareDeviceSelectorList',
-                                                nullable=True),
-        'networks': obj_fields.ListOfStringsField(nullable=True),
+        'device_name':
+        obj_fields.StringField(),
+        'source':
+        hd_fields.ModelSourceField(),
+        'network_link':
+        obj_fields.StringField(nullable=True),
+        'hardware_slaves':
+        obj_fields.ListOfStringsField(nullable=True),
+        'slave_selectors':
+        obj_fields.ObjectField('HardwareDeviceSelectorList', nullable=True),
+        'networks':
+        obj_fields.ListOfStringsField(nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -214,31 +222,34 @@ class HostInterface(base.DrydockObject):
                     elif j.get_name() == parent_name:
                         m = objects.HostInterface()
                         m.device_name = j.get_name()
-                            
+
                         m.network_link = \
                             objects.Utils.apply_field_inheritance(
                                 getattr(j, 'network_link', None),
                                 getattr(i, 'network_link', None))
 
-                        s = [x for x 
-                             in getattr(i, 'hardware_slaves', [])
-                             if ("!" + x) not in getattr(j, 'hardware_slaves', [])]
+                        s = [
+                            x for x in getattr(i, 'hardware_slaves', [])
+                            if ("!" + x
+                                ) not in getattr(j, 'hardware_slaves', [])
+                        ]
 
-                        s.extend(
-                            [x for x
-                             in getattr(j, 'hardware_slaves', [])
-                             if not x.startswith("!")])
+                        s.extend([
+                            x for x in getattr(j, 'hardware_slaves', [])
+                            if not x.startswith("!")
+                        ])
 
                         m.hardware_slaves = s
 
-                        n = [x for x
-                             in getattr(i, 'networks',[])
-                             if ("!" + x) not in getattr(j, 'networks', [])]
+                        n = [
+                            x for x in getattr(i, 'networks', [])
+                            if ("!" + x) not in getattr(j, 'networks', [])
+                        ]
 
-                        n.extend(
-                            [x for x
-                             in getattr(j, 'networks', [])
-                             if not x.startswith("!")])
+                        n.extend([
+                            x for x in getattr(j, 'networks', [])
+                            if not x.startswith("!")
+                        ])
 
                         m.networks = n
                         m.source = hd_fields.ModelSource.Compiled
@@ -254,21 +265,21 @@ class HostInterface(base.DrydockObject):
 
             for j in child_list:
                 if (j.device_name not in parent_interfaces
-                    and not j.get_name().startswith("!")):
+                        and not j.get_name().startswith("!")):
                     jj = deepcopy(j)
                     jj.source = hd_fields.ModelSource.Compiled
                     effective_list.append(jj)
 
         return effective_list
 
+
 @base.DrydockObjectRegistry.register
 class HostInterfaceList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  obj_fields.ListOfObjectsField('HostInterface')
-    }
+    fields = {'objects': obj_fields.ListOfObjectsField('HostInterface')}
+
 
 @base.DrydockObjectRegistry.register
 class HostPartition(base.DrydockObject):
@@ -276,18 +287,28 @@ class HostPartition(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'name':         obj_fields.StringField(),
-        'source':       hd_fields.ModelSourceField(),
-        'device':       obj_fields.StringField(nullable=True),
-        'part_uuid':    obj_fields.UUIDField(nullable=True),
-        'size':         obj_fields.StringField(nullable=True),
-        'mountpoint':   obj_fields.StringField(nullable=True),
-        'fstype':       obj_fields.StringField(nullable=True, default='ext4'),
-        'mount_options': obj_fields.StringField(nullable=True, default='defaults'),
-        'fs_uuid':      obj_fields.UUIDField(nullable=True),
-        'fs_label':     obj_fields.StringField(nullable=True),
-        'selector':     obj_fields.ObjectField('HardwareDeviceSelector',
-                                           nullable=True),
+        'name':
+        obj_fields.StringField(),
+        'source':
+        hd_fields.ModelSourceField(),
+        'device':
+        obj_fields.StringField(nullable=True),
+        'part_uuid':
+        obj_fields.UUIDField(nullable=True),
+        'size':
+        obj_fields.StringField(nullable=True),
+        'mountpoint':
+        obj_fields.StringField(nullable=True),
+        'fstype':
+        obj_fields.StringField(nullable=True, default='ext4'),
+        'mount_options':
+        obj_fields.StringField(nullable=True, default='defaults'),
+        'fs_uuid':
+        obj_fields.UUIDField(nullable=True),
+        'fs_label':
+        obj_fields.StringField(nullable=True),
+        'selector':
+        obj_fields.ObjectField('HardwareDeviceSelector', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -299,7 +320,7 @@ class HostPartition(base.DrydockObject):
     # HostPartition keyed by name
     def get_id(self):
         return self.get_name()
-        
+
     def get_name(self):
         return self.name
 
@@ -340,9 +361,10 @@ class HostPartition(base.DrydockObject):
                     ii.source = hd_fields.ModelSource.Compiled
                     effective_list.append(ii)
         elif len(parent_list) > 0 and len(child_list) > 0:
-            inherit_field_list = ["device", "part_uuid", "size",
-                                  "mountpoint", "fstype", "mount_options",
-                                  "fs_uuid", "fs_label"]
+            inherit_field_list = [
+                "device", "part_uuid", "size", "mountpoint", "fstype",
+                "mount_options", "fs_uuid", "fs_label"
+            ]
             parent_partitions = []
             for i in parent_list:
                 parent_name = i.get_name()
@@ -358,8 +380,9 @@ class HostPartition(base.DrydockObject):
 
                         for f in inherit_field_list:
                             setattr(p, f,
-                                objects.Utils.apply_field_inheritance(getattr(j, f, None),
-                                                                      getattr(i, f, None)))
+                                    objects.Utils.apply_field_inheritance(
+                                        getattr(j, f, None),
+                                        getattr(i, f, None)))
                         add = False
                         p.source = hd_fields.ModelSource.Compiled
                         effective_list.append(p)
@@ -369,8 +392,8 @@ class HostPartition(base.DrydockObject):
                 effective_list.append(ii)
 
         for j in child_list:
-            if (j.get_name() not in parent_list and
-                not j.get_name().startswith("!")):
+            if (j.get_name() not in parent_list
+                    and not j.get_name().startswith("!")):
                 jj = deepcopy(j)
                 jj.source = hd_fields.ModelSource.Compiled
                 effective_list.append(jj)
@@ -383,6 +406,4 @@ class HostPartitionList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  obj_fields.ListOfObjectsField('HostPartition')
-    }
+    fields = {'objects': obj_fields.ListOfObjectsField('HostPartition')}

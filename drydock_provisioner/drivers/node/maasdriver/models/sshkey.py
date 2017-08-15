@@ -15,6 +15,7 @@
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
+
 class SshKey(model_base.ResourceBase):
 
     resource_url = 'account/prefs/sshkeys/{resource_id}/'
@@ -25,7 +26,8 @@ class SshKey(model_base.ResourceBase):
         super(SshKey, self).__init__(api_client, **kwargs)
 
         #Keys should never have newlines, but sometimes they get added
-        self.key = self.key.replace("\n","")
+        self.key = self.key.replace("\n", "")
+
 
 class SshKeys(model_base.ResourceCollectionBase):
 
@@ -34,4 +36,3 @@ class SshKeys(model_base.ResourceCollectionBase):
 
     def __init__(self, api_client, **kwargs):
         super(SshKeys, self).__init__(api_client)
-

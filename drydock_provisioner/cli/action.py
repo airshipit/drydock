@@ -15,13 +15,16 @@
 """
 import logging
 
-class CliAction: # pylint: disable=too-few-public-methods
+
+class CliAction:  # pylint: disable=too-few-public-methods
     """ Action base for CliActions
     """
+
     def __init__(self, api_client):
         self.logger = logging.getLogger('drydock_cli')
         self.api_client = api_client
-        self.logger.debug("Action initialized with client %s", self.api_client.session.host)
+        self.logger.debug("Action initialized with client %s",
+                          self.api_client.session.host)
 
     def invoke(self):
         """ The action to be taken. By default, this is not implemented

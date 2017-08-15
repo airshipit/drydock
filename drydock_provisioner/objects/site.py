@@ -20,6 +20,7 @@ import datetime
 
 import oslo_versionedobjects.fields as ovo_fields
 
+import drydock_provisioner.error as errors
 import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
@@ -31,13 +32,18 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'name': ovo_fields.StringField(),
-        'status': hd_fields.SiteStatusField(default=hd_fields.SiteStatus.Unknown),
-        'source': hd_fields.ModelSourceField(),
-        'tag_definitions': ovo_fields.ObjectField('NodeTagDefinitionList',
-                                               nullable=True),
-        'repositories': ovo_fields.ObjectField('RepositoryList', nullable=True),
-        'authorized_keys': ovo_fields.ListOfStringsField(nullable=True),
+        'name':
+        ovo_fields.StringField(),
+        'status':
+        hd_fields.SiteStatusField(default=hd_fields.SiteStatus.Unknown),
+        'source':
+        hd_fields.ModelSourceField(),
+        'tag_definitions':
+        ovo_fields.ObjectField('NodeTagDefinitionList', nullable=True),
+        'repositories':
+        ovo_fields.ObjectField('RepositoryList', nullable=True),
+        'authorized_keys':
+        ovo_fields.ListOfStringsField(nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -55,6 +61,7 @@ class Site(base.DrydockPersistentObject, base.DrydockObject):
     def add_key(self, key_string):
         self.authorized_keys.append(key_string)
 
+
 @base.DrydockObjectRegistry.register
 class NodeTagDefinition(base.DrydockObject):
 
@@ -64,7 +71,7 @@ class NodeTagDefinition(base.DrydockObject):
         'tag': ovo_fields.StringField(),
         'type': ovo_fields.StringField(),
         'definition': ovo_fields.StringField(),
-        'source':   hd_fields.ModelSourceField(),
+        'source': hd_fields.ModelSourceField(),
     }
 
     def __init__(self, **kwargs):
@@ -74,6 +81,7 @@ class NodeTagDefinition(base.DrydockObject):
     def get_id(self):
         return self.tag
 
+
 @base.DrydockObjectRegistry.register
 class NodeTagDefinitionList(base.DrydockObjectListBase, base.DrydockObject):
 
@@ -82,6 +90,7 @@ class NodeTagDefinitionList(base.DrydockObjectListBase, base.DrydockObject):
     fields = {
         'objects': ovo_fields.ListOfObjectsField('NodeTagDefinition'),
     }
+
 
 # Need to determine how best to define a repository that can encompass
 # all repositories needed
@@ -101,6 +110,7 @@ class Repository(base.DrydockObject):
     def get_id(self):
         return self.name
 
+
 @base.DrydockObjectRegistry.register
 class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
 
@@ -110,23 +120,34 @@ class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
         'objects': ovo_fields.ListOfObjectsField('Repository'),
     }
 
+
 @base.DrydockObjectRegistry.register
 class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
     VERSION = '1.0'
 
     fields = {
-        'id':               ovo_fields.UUIDField(),
+        'id':
+        ovo_fields.UUIDField(),
         # if null, indicates this is the site base design
-        'base_design_id':   ovo_fields.UUIDField(nullable=True),
-        'source':           hd_fields.ModelSourceField(),
-        'site':             ovo_fields.ObjectField('Site', nullable=True),
-        'networks':         ovo_fields.ObjectField('NetworkList', nullable=True),
-        'network_links':    ovo_fields.ObjectField('NetworkLinkList', nullable=True),
-        'host_profiles':    ovo_fields.ObjectField('HostProfileList', nullable=True),
-        'hardware_profiles':    ovo_fields.ObjectField('HardwareProfileList', nullable=True),
-        'baremetal_nodes':  ovo_fields.ObjectField('BaremetalNodeList', nullable=True),
-        'prom_configs':     ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
+        'base_design_id':
+        ovo_fields.UUIDField(nullable=True),
+        'source':
+        hd_fields.ModelSourceField(),
+        'site':
+        ovo_fields.ObjectField('Site', nullable=True),
+        'networks':
+        ovo_fields.ObjectField('NetworkList', nullable=True),
+        'network_links':
+        ovo_fields.ObjectField('NetworkLinkList', nullable=True),
+        'host_profiles':
+        ovo_fields.ObjectField('HostProfileList', nullable=True),
+        'hardware_profiles':
+        ovo_fields.ObjectField('HardwareProfileList', nullable=True),
+        'baremetal_nodes':
+        ovo_fields.ObjectField('BaremetalNodeList', nullable=True),
+        'prom_configs':
+        ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -143,13 +164,13 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
     def get_site(self):
         return self.site
-        
+
     def set_site(self, site):
         self.site = site
 
     def add_network(self, new_network):
         if new_network is None:
-            raise DesignError("Invalid Network model")
+            raise errors.DesignError("Invalid Network model")
 
         if self.networks is None:
             self.networks = objects.NetworkList()
@@ -161,12 +182,11 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if n.get_id() == network_key:
                 return n
 
-        raise DesignError("Network %s not found in design state"
-                          % network_key)
+        raise errors.DesignError("Network %s not found in design state" % network_key)
 
     def add_network_link(self, new_network_link):
         if new_network_link is None:
-            raise DesignError("Invalid NetworkLink model")
+            raise errors.DesignError("Invalid NetworkLink model")
 
         if self.network_links is None:
             self.network_links = objects.NetworkLinkList()
@@ -178,12 +198,12 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if l.get_id() == link_key:
                 return l
 
-        raise DesignError("NetworkLink %s not found in design state"
-                          % link_key)
+        raise errors.DesignError(
+            "NetworkLink %s not found in design state" % link_key)
 
     def add_host_profile(self, new_host_profile):
         if new_host_profile is None:
-            raise DesignError("Invalid HostProfile model")
+            raise errors.DesignError("Invalid HostProfile model")
 
         if self.host_profiles is None:
             self.host_profiles = objects.HostProfileList()
@@ -195,12 +215,12 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if p.get_id() == profile_key:
                 return p
 
-        raise DesignError("HostProfile %s not found in design state"
-                          % profile_key)
+        raise errors.DesignError(
+            "HostProfile %s not found in design state" % profile_key)
 
     def add_hardware_profile(self, new_hardware_profile):
         if new_hardware_profile is None:
-            raise DesignError("Invalid HardwareProfile model")
+            raise errors.DesignError("Invalid HardwareProfile model")
 
         if self.hardware_profiles is None:
             self.hardware_profiles = objects.HardwareProfileList()
@@ -212,12 +232,12 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if p.get_id() == profile_key:
                 return p
 
-        raise DesignError("HardwareProfile %s not found in design state"
-                          % profile_key)
+        raise errors.DesignError(
+            "HardwareProfile %s not found in design state" % profile_key)
 
     def add_baremetal_node(self, new_baremetal_node):
         if new_baremetal_node is None:
-            raise DesignError("Invalid BaremetalNode model")
+            raise errors.DesignError("Invalid BaremetalNode model")
 
         if self.baremetal_nodes is None:
             self.baremetal_nodes = objects.BaremetalNodeList()
@@ -229,8 +249,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if n.get_id() == node_key:
                 return n
 
-        raise DesignError("BaremetalNode %s not found in design state"
-                          % node_key)
+        raise errors.DesignError(
+            "BaremetalNode %s not found in design state" % node_key)
 
     def add_promenade_config(self, prom_conf):
         if self.prom_configs is None:
@@ -270,6 +290,7 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
     values. The final result is an intersection of all the
     filters
     """
+
     def get_filtered_nodes(self, node_filter):
         effective_nodes = self.baremetal_nodes
 
@@ -278,26 +299,24 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
         if rack_filter is not None:
             rack_list = rack_filter.split(',')
-            effective_nodes = [x 
-                               for x in effective_nodes
-                               if x.get_rack() in rack_list]
+            effective_nodes = [
+                x for x in effective_nodes if x.get_rack() in rack_list
+            ]
         # filter by name
         name_filter = node_filter.get('nodename', None)
 
         if name_filter is not None:
             name_list = name_filter.split(',')
-            effective_nodes = [x
-                               for x in effective_nodes
-                               if x.get_name() in name_list]
+            effective_nodes = [
+                x for x in effective_nodes if x.get_name() in name_list
+            ]
         # filter by tag
         tag_filter = node_filter.get('tags', None)
 
         if tag_filter is not None:
             tag_list = tag_filter.split(',')
-            effective_nodes = [x
-                               for x in effective_nodes
-                               for t in tag_list
-                               if x.has_tag(t)]
+            effective_nodes = [
+                x for x in effective_nodes for t in tag_list if x.has_tag(t)
+            ]
 
         return effective_nodes
-

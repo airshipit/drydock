@@ -23,8 +23,8 @@ import drydock_provisioner.objects.task as tasks
 
 from drydock_provisioner.error import DesignError, StateError
 
-class DesignState(object):
 
+class DesignState(object):
     def __init__(self):
         self.designs = {}
         self.designs_lock = Lock()
@@ -54,8 +54,7 @@ class DesignState(object):
 
     def post_design(self, site_design):
         if site_design is not None:
-            my_lock = self.designs_lock.acquire(blocking=True,
-                timeout=10)
+            my_lock = self.designs_lock.acquire(blocking=True, timeout=10)
             if my_lock:
                 design_id = site_design.id
                 if design_id not in self.designs.keys():
@@ -71,8 +70,7 @@ class DesignState(object):
 
     def put_design(self, site_design):
         if site_design is not None:
-            my_lock = self.designs_lock.acquire(blocking=True,
-                timeout=10)
+            my_lock = self.designs_lock.acquire(blocking=True, timeout=10)
             if my_lock:
                 design_id = site_design.id
                 if design_id not in self.designs.keys():
@@ -108,13 +106,14 @@ class DesignState(object):
         if site_build is not None and isinstance(site_build, SiteBuild):
             my_lock = self.builds_lock.acquire(block=True, timeout=10)
             if my_lock:
-                exists = [b for b in self.builds
-                          if b.build_id == site_build.build_id]
+                exists = [
+                    b for b in self.builds if b.build_id == site_build.build_id
+                ]
 
                 if len(exists) > 0:
                     self.builds_lock.release()
                     raise DesignError("Already a site build with ID %s" %
-                        (str(site_build.build_id)))
+                                      (str(site_build.build_id)))
                 self.builds.append(deepcopy(site_build))
                 self.builds_lock.release()
                 return True
@@ -149,8 +148,9 @@ class DesignState(object):
             my_lock = self.tasks_lock.acquire(blocking=True, timeout=10)
             if my_lock:
                 task_id = task.get_id()
-                matching_tasks = [t for t in self.tasks
-                                  if t.get_id() == task_id]
+                matching_tasks = [
+                    t for t in self.tasks if t.get_id() == task_id
+                ]
                 if len(matching_tasks) > 0:
                     self.tasks_lock.release()
                     raise StateError("Task %s already created" % task_id)
@@ -174,10 +174,10 @@ class DesignState(object):
                     raise StateError("Task locked for updates")
 
                 task.lock_id = lock_id
-                self.tasks = [i
-                              if i.get_id() != task_id
-                              else deepcopy(task)
-                              for i in self.tasks]
+                self.tasks = [
+                    i if i.get_id() != task_id else deepcopy(task)
+                    for i in self.tasks
+                ]
 
                 self.tasks_lock.release()
                 return True
@@ -223,13 +223,15 @@ class DesignState(object):
             self.promenade_lock.release()
             return None
         else:
-            raise StateError("Could not acquire lock")        
-    
+            raise StateError("Could not acquire lock")
+
     def get_promenade_parts(self, target):
         parts = self.promenade.get(target, None)
 
         if parts is not None:
-            return [objects.PromenadeConfig.obj_from_primitive(p) for p in parts]
+            return [
+                objects.PromenadeConfig.obj_from_primitive(p) for p in parts
+            ]
         else:
             # Return an empty list just to play nice with extend
             return []

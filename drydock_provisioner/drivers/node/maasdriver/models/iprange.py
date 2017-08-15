@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
+
 
 class IpRange(model_base.ResourceBase):
 
     resource_url = 'iprange/{resource_id}/'
     fields = ['resource_id', 'comment', 'subnet', 'type', 'start_ip', 'end_ip']
-    json_fields = ['comment','start_ip', 'end_ip']
+    json_fields = ['comment', 'start_ip', 'end_ip']
 
     def __init__(self, api_client, **kwargs):
         super(IpRange, self).__init__(api_client, **kwargs)
@@ -31,9 +33,10 @@ class IpRange(model_base.ResourceBase):
 
         if isinstance(refined_dict.get('subnet', None), dict):
             refined_dict['subnet'] = refined_dict['subnet']['id']
-            
+
         i = cls(api_client, **refined_dict)
         return i
+
 
 class IpRanges(model_base.ResourceCollectionBase):
 
@@ -59,7 +62,7 @@ class IpRanges(model_base.ResourceCollectionBase):
 
         if range_type is not None:
             data_dict['type'] = range_type
-            
+
         url = self.interpolate_url()
 
         resp = self.api_client.post(url, files=data_dict)
@@ -68,6 +71,7 @@ class IpRanges(model_base.ResourceCollectionBase):
             resp_json = resp.json()
             res.set_resource_id(resp_json.get('id'))
             return res
-        
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                % (url, resp.status_code))
+
+        raise errors.DriverError(
+            "Failed updating MAAS url %s - return code %s" %
+            (url, resp.status_code))

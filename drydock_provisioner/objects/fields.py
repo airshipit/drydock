@@ -14,9 +14,11 @@
 
 from oslo_versionedobjects import fields
 
+
 class BaseDrydockEnum(fields.Enum):
     def __init__(self):
         super(BaseDrydockEnum, self).__init__(valid_values=self.__class__.ALL)
+
 
 class OrchestratorAction(BaseDrydockEnum):
     # Orchestrator actions
@@ -61,15 +63,17 @@ class OrchestratorAction(BaseDrydockEnum):
     ConfigurePortProduction = 'config_port_production'
 
     ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNode,
-           PrepareNode, DeployNode, DestroyNode, ConfigNodePxe,
-           SetNodeBoot, PowerOffNode, PowerOnNode, PowerCycleNode,
-           InterrogateOob, CreateNetworkTemplate, CreateStorageTemplate,
-           CreateBootMedia, PrepareHardwareConfig, ConfigureHardware,
-           InterrogateNode, ApplyNodeNetworking, ApplyNodeStorage,
-           ApplyNodePlatform, DeployNode, DestroyNode)
+           PrepareNode, DeployNode, DestroyNode, ConfigNodePxe, SetNodeBoot,
+           PowerOffNode, PowerOnNode, PowerCycleNode, InterrogateOob,
+           CreateNetworkTemplate, CreateStorageTemplate, CreateBootMedia,
+           PrepareHardwareConfig, ConfigureHardware, InterrogateNode,
+           ApplyNodeNetworking, ApplyNodeStorage, ApplyNodePlatform,
+           DeployNode, DestroyNode)
+
 
 class OrchestratorActionField(fields.BaseEnumField):
     AUTO_TYPE = OrchestratorAction()
+
 
 class ActionResult(BaseDrydockEnum):
     Incomplete = 'incomplete'
@@ -80,8 +84,10 @@ class ActionResult(BaseDrydockEnum):
 
     ALL = (Incomplete, Success, PartialSuccess, Failure, DependentFailure)
 
+
 class ActionResultField(fields.BaseEnumField):
     AUTO_TYPE = ActionResult()
+
 
 class TaskStatus(BaseDrydockEnum):
     Created = 'created'
@@ -93,11 +99,13 @@ class TaskStatus(BaseDrydockEnum):
     Complete = 'complete'
     Stopped = 'stopped'
 
-    ALL = (Created, Waiting, Running, Stopping, Terminated,
-           Errored, Complete, Stopped)
+    ALL = (Created, Waiting, Running, Stopping, Terminated, Errored, Complete,
+           Stopped)
+
 
 class TaskStatusField(fields.BaseEnumField):
     AUTO_TYPE = TaskStatus()
+
 
 class ModelSource(BaseDrydockEnum):
     Designed = 'designed'
@@ -106,9 +114,11 @@ class ModelSource(BaseDrydockEnum):
 
     ALL = (Designed, Compiled, Build)
 
+
 class ModelSourceField(fields.BaseEnumField):
     AUTO_TYPE = ModelSource()
-    
+
+
 class SiteStatus(BaseDrydockEnum):
     Unknown = 'unknown'
     DesignStarted = 'design_started'
@@ -120,39 +130,43 @@ class SiteStatus(BaseDrydockEnum):
 
     ALL = (Unknown, Deploying, Deployed)
 
+
 class SiteStatusField(fields.BaseEnumField):
     AUTO_TYPE = SiteStatus()
+
 
 class NodeStatus(BaseDrydockEnum):
     Unknown = 'unknown'
     Designed = 'designed'
-    Compiled = 'compiled' # Node attributes represent effective config after inheritance/merge
-    Present = 'present' # IPMI access verified
-    BasicVerifying = 'basic_verifying' # Base node verification in process
-    FailedBasicVerify = 'failed_basic_verify' # Base node verification failed
-    BasicVerified = 'basic_verified' # Base node verification successful
-    Preparing = 'preparing' # Node preparation in progress
-    FailedPrepare = 'failed_prepare' # Node preparation failed
-    Prepared = 'prepared' # Node preparation complete
-    FullyVerifying = 'fully_verifying' # Node full verification in progress
-    FailedFullVerify = 'failed_full_verify' # Node full verification failed
-    FullyVerified = 'fully_verified' # Deeper verification successful
-    Deploying  = 'deploy' # Node deployment in progress
-    FailedDeploy = 'failed_deploy' # Node deployment failed
-    Deployed = 'deployed' # Node deployed successfully
-    Bootstrapping = 'bootstrapping' # Node bootstrapping
-    FailedBootstrap = 'failed_bootstrap' # Node bootstrapping failed
-    Bootstrapped = 'bootstrapped' # Node fully bootstrapped
-    Complete = 'complete' # Node is complete
+    Compiled = 'compiled'  # Node attributes represent effective config after inheritance/merge
+    Present = 'present'  # IPMI access verified
+    BasicVerifying = 'basic_verifying'  # Base node verification in process
+    FailedBasicVerify = 'failed_basic_verify'  # Base node verification failed
+    BasicVerified = 'basic_verified'  # Base node verification successful
+    Preparing = 'preparing'  # Node preparation in progress
+    FailedPrepare = 'failed_prepare'  # Node preparation failed
+    Prepared = 'prepared'  # Node preparation complete
+    FullyVerifying = 'fully_verifying'  # Node full verification in progress
+    FailedFullVerify = 'failed_full_verify'  # Node full verification failed
+    FullyVerified = 'fully_verified'  # Deeper verification successful
+    Deploying = 'deploy'  # Node deployment in progress
+    FailedDeploy = 'failed_deploy'  # Node deployment failed
+    Deployed = 'deployed'  # Node deployed successfully
+    Bootstrapping = 'bootstrapping'  # Node bootstrapping
+    FailedBootstrap = 'failed_bootstrap'  # Node bootstrapping failed
+    Bootstrapped = 'bootstrapped'  # Node fully bootstrapped
+    Complete = 'complete'  # Node is complete
 
-    ALL = (Unknown, Designed, Compiled, Present, BasicVerifying, FailedBasicVerify,
-           BasicVerified, Preparing, FailedPrepare, Prepared, FullyVerifying,
-           FailedFullVerify, FullyVerified, Deploying, FailedDeploy, Deployed,
-           Bootstrapping, FailedBootstrap, Bootstrapped, Complete)
+    ALL = (Unknown, Designed, Compiled, Present, BasicVerifying,
+           FailedBasicVerify, BasicVerified, Preparing, FailedPrepare,
+           Prepared, FullyVerifying, FailedFullVerify, FullyVerified,
+           Deploying, FailedDeploy, Deployed, Bootstrapping, FailedBootstrap,
+           Bootstrapped, Complete)
 
 
 class NodeStatusField(fields.BaseEnumField):
     AUTO_TYPE = NodeStatus()
+
 
 class NetworkLinkBondingMode(BaseDrydockEnum):
     Disabled = 'disabled'
@@ -162,14 +176,17 @@ class NetworkLinkBondingMode(BaseDrydockEnum):
 
     ALL = (Disabled, LACP, RoundRobin, Standby)
 
+
 class NetworkLinkBondingModeField(fields.BaseEnumField):
     AUTO_TYPE = NetworkLinkBondingMode()
+
 
 class NetworkLinkTrunkingMode(BaseDrydockEnum):
     Disabled = 'disabled'
     Tagged = '802.1q'
 
     ALL = (Disabled, Tagged)
+
 
 class NetworkLinkTrunkingModeField(fields.BaseEnumField):
     AUTO_TYPE = NetworkLinkTrunkingMode()

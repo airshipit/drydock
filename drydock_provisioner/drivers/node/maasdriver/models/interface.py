@@ -20,12 +20,17 @@ import drydock_provisioner.drivers.node.maasdriver.models.vlan as maas_vlan
 
 import drydock_provisioner.error as errors
 
+
 class Interface(model_base.ResourceBase):
 
     resource_url = 'nodes/{system_id}/interfaces/{resource_id}/'
-    fields = ['resource_id', 'system_id', 'name', 'type', 'mac_address', 'vlan',
-              'links', 'effective_mtu', 'fabric_id']
-    json_fields = ['name', 'type', 'mac_address', 'vlan', 'links', 'effective_mtu']
+    fields = [
+        'resource_id', 'system_id', 'name', 'type', 'mac_address', 'vlan',
+        'links', 'effective_mtu', 'fabric_id'
+    ]
+    json_fields = [
+        'name', 'type', 'mac_address', 'vlan', 'links', 'effective_mtu'
+    ]
 
     def __init__(self, api_client, **kwargs):
         super(Interface, self).__init__(api_client, **kwargs)
@@ -41,7 +46,7 @@ class Interface(model_base.ResourceBase):
         """
 
         fabric = None
-        
+
         fabrics = maas_fabric.Fabrics(self.api_client)
         fabrics.refresh()
 
@@ -54,21 +59,27 @@ class Interface(model_base.ResourceBase):
             raise ValueError("Must specify fabric_id or fabric_name")
 
         if fabric is None:
-            self.logger.warning("Fabric not found in MaaS for fabric_id %s, fabric_name %s" %
-                                 (fabric_id, fabric_name))
-            raise errors.DriverError("Fabric not found in MaaS for fabric_id %s, fabric_name %s" %
-                                    (fabric_id, fabric_name))
+            self.logger.warning(
+                "Fabric not found in MaaS for fabric_id %s, fabric_name %s" %
+                (fabric_id, fabric_name))
+            raise errors.DriverError(
+                "Fabric not found in MaaS for fabric_id %s, fabric_name %s" %
+                (fabric_id, fabric_name))
 
         # Locate the untagged VLAN for this fabric.
         fabric_vlan = fabric.vlans.singleton({'vid': 0})
 
         if fabric_vlan is None:
-            self.logger.warning("Cannot locate untagged VLAN on fabric %s" % (fabric_id))
-            raise errors.DriverError("Cannot locate untagged VLAN on fabric %s" % (fabric_id))
+            self.logger.warning("Cannot locate untagged VLAN on fabric %s" %
+                                (fabric_id))
+            raise errors.DriverError(
+                "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
 
         self.vlan = fabric_vlan.resource_id
-        self.logger.info("Attaching interface %s on system %s to VLAN %s on fabric %s" %
-                         (self.resource_id, self.system_id, fabric_vlan.resource_id, fabric.resource_id))
+        self.logger.info(
+            "Attaching interface %s on system %s to VLAN %s on fabric %s" %
+            (self.resource_id, self.system_id, fabric_vlan.resource_id,
+             fabric.resource_id))
         self.update()
 
     def is_linked(self, subnet_id):
@@ -83,16 +94,25 @@ class Interface(model_base.ResourceBase):
             if l.get('subnet_id', None) == subnet_id:
                 url = self.interpolate_url()
 
-                resp = self.api_client.post(url, op='unlink_subnet', files={'id': l.get('resource_id')})
+                resp = self.api_client.post(
+                    url,
+                    op='unlink_subnet',
+                    files={'id': l.get('resource_id')})
 
                 if not resp.ok:
                     raise errors.DriverError("Error unlinking subnet")
                 else:
                     return
 
-        raise errors.DriverError("Error unlinking interface, Link to subnet_id %s not found." % subnet_id)
+        raise errors.DriverError(
+            "Error unlinking interface, Link to subnet_id %s not found." %
+            subnet_id)
 
-    def link_subnet(self, subnet_id=None, subnet_cidr=None, ip_address=None, primary=False):
+    def link_subnet(self,
+                    subnet_id=None,
+                    subnet_cidr=None,
+                    ip_address=None,
+                    primary=False):
         """
         Link this interface to a MaaS subnet. One of subnet_id or subnet_cidr
         should be specified. If both are, subnet_id rules.
@@ -119,23 +139,26 @@ class Interface(model_base.ResourceBase):
             raise ValueError("Must specify subnet_id or subnet_cidr")
 
         if subnet is None:
-            self.logger.warning("Subnet not found in MaaS for subnet_id %s, subnet_cidr %s" %
-                                 (subnet_id, subnet_cidr))
-            raise errors.DriverError("Subnet not found in MaaS for subnet_id %s, subnet_cidr %s" %
-                                 (subnet_id, subnet_cidr))
+            self.logger.warning(
+                "Subnet not found in MaaS for subnet_id %s, subnet_cidr %s" %
+                (subnet_id, subnet_cidr))
+            raise errors.DriverError(
+                "Subnet not found in MaaS for subnet_id %s, subnet_cidr %s" %
+                (subnet_id, subnet_cidr))
 
         url = self.interpolate_url()
 
         if self.is_linked(subnet.resource_id):
-            self.logger.info("Interface %s already linked to subnet %s, unlinking." %
-                            (self.resource_id, subnet.resource_id))
+            self.logger.info(
+                "Interface %s already linked to subnet %s, unlinking." %
+                (self.resource_id, subnet.resource_id))
             self.unlink_subnet(subnet.resource_id)
 
-
         # TODO Probably need to enumerate link mode
-        options = { 'subnet': subnet.resource_id,
-                    'default_gateway': primary,
-                  }
+        options = {
+            'subnet': subnet.resource_id,
+            'default_gateway': primary,
+        }
 
         if ip_address == 'dhcp':
             options['mode'] = 'dhcp'
@@ -145,16 +168,21 @@ class Interface(model_base.ResourceBase):
         else:
             options['mode'] = 'link_up'
 
-        self.logger.debug("Linking interface %s to subnet: subnet=%s, mode=%s, address=%s, primary=%s" %
-                          (self.resource_id, subnet.resource_id, options['mode'], ip_address, primary))
-        
+        self.logger.debug(
+            "Linking interface %s to subnet: subnet=%s, mode=%s, address=%s, primary=%s"
+            % (self.resource_id, subnet.resource_id, options['mode'],
+               ip_address, primary))
+
         resp = self.api_client.post(url, op='link_subnet', files=options)
 
         if not resp.ok:
-            self.logger.error("Error linking interface %s to subnet %s - MaaS response %s: %s" %
-                              (self.resouce_id, subnet.resource_id, resp.status_code, resp.text))
-            raise errors.DriverError("Error linking interface %s to subnet %s - MaaS response %s" %
-                              (self.resouce_id, subnet.resource_id, resp.status_code))
+            self.logger.error(
+                "Error linking interface %s to subnet %s - MaaS response %s: %s"
+                % (self.resouce_id, subnet.resource_id, resp.status_code,
+                   resp.text))
+            raise errors.DriverError(
+                "Error linking interface %s to subnet %s - MaaS response %s" %
+                (self.resouce_id, subnet.resource_id, resp.status_code))
 
         self.refresh()
 
@@ -174,14 +202,12 @@ class Interface(model_base.ResourceBase):
         if isinstance(refined_dict.get('vlan', None), dict):
             refined_dict['fabric_id'] = refined_dict['vlan']['fabric_id']
             refined_dict['vlan'] = refined_dict['vlan']['id']
-        
+
         link_list = []
         if isinstance(refined_dict.get('links', None), list):
             for l in refined_dict['links']:
                 if isinstance(l, dict):
-                    link = { 'resource_id': l['id'],
-                             'mode':    l['mode']
-                        }
+                    link = {'resource_id': l['id'], 'mode': l['mode']}
 
                     if l.get('subnet', None) is not None:
                         link['subnet_id'] = l['subnet']['id']
@@ -193,6 +219,7 @@ class Interface(model_base.ResourceBase):
 
         i = cls(api_client, **refined_dict)
         return i
+
 
 class Interfaces(model_base.ResourceCollectionBase):
 
@@ -218,60 +245,76 @@ class Interfaces(model_base.ResourceCollectionBase):
         parent_iface = self.singleton({'name': parent_name})
 
         if parent_iface is None:
-            self.logger.error("Cannot locate parent interface %s" % (parent_name))
-            raise errors.DriverError("Cannot locate parent interface %s" % (parent_name))
+            self.logger.error("Cannot locate parent interface %s" %
+                              (parent_name))
+            raise errors.DriverError("Cannot locate parent interface %s" %
+                                     (parent_name))
 
         if parent_iface.type != 'physical':
-            self.logger.error("Cannot create VLAN interface on parent of type %s" % (parent_iface.type))
-            raise errors.DriverError("Cannot create VLAN interface on parent of type %s" % (parent_iface.type))
+            self.logger.error(
+                "Cannot create VLAN interface on parent of type %s" %
+                (parent_iface.type))
+            raise errors.DriverError(
+                "Cannot create VLAN interface on parent of type %s" %
+                (parent_iface.type))
 
         if parent_iface.vlan is None:
-            self.logger.error("Cannot create VLAN interface on disconnected parent %s" % (parent_iface.resource_id))
-            raise errors.DriverError("Cannot create VLAN interface on disconnected parent %s" % (parent_iface.resource_id))
+            self.logger.error(
+                "Cannot create VLAN interface on disconnected parent %s" %
+                (parent_iface.resource_id))
+            raise errors.DriverError(
+                "Cannot create VLAN interface on disconnected parent %s" %
+                (parent_iface.resource_id))
 
-        vlans = maas_vlan.Vlans(self.api_client, fabric_id=parent_iface.fabric_id)
+        vlans = maas_vlan.Vlans(
+            self.api_client, fabric_id=parent_iface.fabric_id)
         vlans.refresh()
 
         vlan = vlans.singleton({'vid': vlan_tag})
 
         if vlan is None:
-            self.logger.error("Cannot locate VLAN %s on fabric %s to attach interface" %
-                              (vlan_tag, parent_iface.fabric_id))
+            self.logger.error(
+                "Cannot locate VLAN %s on fabric %s to attach interface" %
+                (vlan_tag, parent_iface.fabric_id))
 
         exists = self.singleton({'vlan': vlan.resource_id})
 
         if exists is not None:
-            self.logger.info("Interface for VLAN %s already exists on node %s, skipping" %
-                             (vlan_tag, self.system_id))
+            self.logger.info(
+                "Interface for VLAN %s already exists on node %s, skipping" %
+                (vlan_tag, self.system_id))
             return exists
 
         url = self.interpolate_url()
 
-        
-        options = { 'tags': ','.join(tags),
-                    'vlan': vlan.resource_id,
-                    'parent': parent_iface.resource_id,
-                  }
+        options = {
+            'tags': ','.join(tags),
+            'vlan': vlan.resource_id,
+            'parent': parent_iface.resource_id,
+        }
 
         if mtu is not None:
             options['mtu'] = mtu
 
         resp = self.api_client.post(url, op='create_vlan', files=options)
 
-
         if resp.status_code == 200:
             resp_json = resp.json()
             vlan_iface = Interface.from_dict(self.api_client, resp_json)
-            self.logger.debug("Created VLAN interface %s for parent %s attached to VLAN %s" %
-                              (vlan_iface.resource_id, parent_iface.resource_id, vlan.resource_id))
+            self.logger.debug(
+                "Created VLAN interface %s for parent %s attached to VLAN %s" %
+                (vlan_iface.resource_id, parent_iface.resource_id,
+                 vlan.resource_id))
             return vlan_iface
         else:
-            self.logger.error("Error creating VLAN interface to VLAN %s on system %s - MaaS response %s: %s" %
-                              (vlan.resource_id, self.system_id, resp.status_code, resp.text))
-            raise errors.DriverError("Error creating VLAN interface to VLAN %s on system %s - MaaS response %s" %
-                              (vlan.resource_id, self.system_id, resp.status_code))
+            self.logger.error(
+                "Error creating VLAN interface to VLAN %s on system %s - MaaS response %s: %s"
+                % (vlan.resource_id, self.system_id, resp.status_code,
+                   resp.text))
+            raise errors.DriverError(
+                "Error creating VLAN interface to VLAN %s on system %s - MaaS response %s"
+                % (vlan.resource_id, self.system_id, resp.status_code))
 
         self.refresh()
-        
-        return
 
+        return

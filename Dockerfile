@@ -32,8 +32,8 @@ RUN apt -qq update && \
                    libssl-dev --no-install-recommends
 
 # Copy direct dependency requirements only to build a dependency layer
-COPY ./requirements-direct.txt /tmp/drydock/
-RUN pip3 install -r /tmp/drydock/requirements-direct.txt
+COPY ./requirements-lock.txt /tmp/drydock/
+RUN pip3 install -r /tmp/drydock/requirements-lock.txt
 
 COPY . /tmp/drydock
 

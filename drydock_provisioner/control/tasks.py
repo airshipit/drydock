@@ -22,8 +22,8 @@ from drydock_provisioner import error as errors
 import drydock_provisioner.objects.task as obj_task
 from .base import StatefulResource
 
-class TasksResource(StatefulResource):
 
+class TasksResource(StatefulResource):
     def __init__(self, orchestrator=None, **kwargs):
         super(TasksResource, self).__init__(**kwargs)
         self.orchestrator = orchestrator
@@ -35,162 +35,204 @@ class TasksResource(StatefulResource):
             resp.body = json.dumps(task_id_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:
-            self.error(req.context, "Unknown error: %s\n%s" % (str(ex), traceback.format_exc()))
-            self.return_error(resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.error(req.context, "Unknown error: %s\n%s" %
+                       (str(ex), traceback.format_exc()))
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:create_task')
     def on_post(self, req, resp):
         # A map of supported actions to the handlers for tasks for those actions
         supported_actions = {
-               'validate_design':   TasksResource.task_validate_design,
-               'verify_site':       TasksResource.task_verify_site,
-               'prepare_site':      TasksResource.task_prepare_site,
-               'verify_node':       TasksResource.task_verify_node,
-               'prepare_node':      TasksResource.task_prepare_node,
-               'deploy_node':       TasksResource.task_deploy_node,
-               'destroy_node':      TasksResource.task_destroy_node,
-            }
+            'validate_design': TasksResource.task_validate_design,
+            'verify_site': TasksResource.task_verify_site,
+            'prepare_site': TasksResource.task_prepare_site,
+            'verify_node': TasksResource.task_verify_node,
+            'prepare_node': TasksResource.task_prepare_node,
+            'deploy_node': TasksResource.task_deploy_node,
+            'destroy_node': TasksResource.task_destroy_node,
+        }
 
         try:
             ctx = req.context
             json_data = self.req_json(req)
 
             action = json_data.get('action', None)
-            if action not in supported_actions:
-                self.error(req,context, "Unsupported action %s" % action)
-                self.return_error(resp, falcon.HTTP_400, message="Unsupported action %s" % action, retry=False)
+            if supported_actions.get(action, None) is None:
+                self.error(req.context, "Unsupported action %s" % action)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_400,
+                    message="Unsupported action %s" % action,
+                    retry=False)
             else:
-                supported_actions.get(action)(self, req, resp)
-
+                supported_actions.get(action)(self, req, resp, json_data)
         except Exception as ex:
-            self.error(req.context, "Unknown error: %s\n%s" % (str(ex), traceback.format_exc()))
-            self.return_error(resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.error(req.context, "Unknown error: %s\n%s" %
+                       (str(ex), traceback.format_exc()))
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:validate_design')
-    def task_validate_design(self, req, resp):
-        json_data = self.req_json(req)
+    def task_validate_design(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'validate_design':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_validate_design" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_validate_design"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:verify_site')
-    def task_verify_site(self, req, resp):
-        json_data = self.req_json(req)
+    def task_verify_site(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'verify_site':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_verify_site" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_verify_site"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:prepare_site')
-    def task_prepare_site(self, req, resp):
-        json_data = self.req_json(req)
+    def task_prepare_site(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'prepare_site':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_prepare_site" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_prepare_site"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:verify_node')
-    def task_verify_node(self, req, resp):
-        json_data = self.req_json(req)
+    def task_verify_node(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'verify_node':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_verify_node" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_verify_node"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:prepare_node')
-    def task_prepare_node(self, req, resp):
-        json_data = self.req_json(req)
+    def task_prepare_node(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'prepare_node':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_prepare_node" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_prepare_node"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:deploy_node')
-    def task_deploy_node(self, req, resp):
-        json_data = self.req_json(req)
+    def task_deploy_node(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'deploy_node':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_deploy_node" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_deploy_node"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     @policy.ApiEnforcer('physical_provisioner:destroy_node')
-    def task_destroy_node(self, req, resp):
-        json_data = self.req_json(req)
+    def task_destroy_node(self, req, resp, json_data):
         action = json_data.get('action', None)
 
         if action != 'destroy_node':
-            self.error(req.context, "Task body ended up in wrong handler: action %s in task_destroy_node" % action)
-            self.return_error(resp, falcon.HTTP_500, message="Error - misrouted request", retry=False)
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_destroy_node"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
             task = self.create_task(json_data)
             resp.body = json.dumps(task.to_dict())
-            resp.append_header('Location', "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
             resp.status = falcon.HTTP_201
         except errors.InvalidFormat as ex:
             self.error(req.context, ex.msg)
-            self.return_error(resp, falcon.HTTP_400, message=ex.msg, retry=False)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
     def create_task(self, task_body):
         """
@@ -214,41 +256,47 @@ class TasksResource(StatefulResource):
         action = task_body.get('action', None)
 
         if design_id is None or action is None:
-            raise errors.InvalidFormat('Task creation requires fields design_id, action')
+            raise errors.InvalidFormat(
+                'Task creation requires fields design_id, action')
 
-        task = self.orchestrator.create_task(obj_task.OrchestratorTask, design_id=design_id,
-                                               action=action, node_filter=node_filter)
+        task = self.orchestrator.create_task(
+            obj_task.OrchestratorTask,
+            design_id=design_id,
+            action=action,
+            node_filter=node_filter)
 
-        task_thread = threading.Thread(target=self.orchestrator.execute_task, args=[task.get_id()])
+        task_thread = threading.Thread(
+            target=self.orchestrator.execute_task, args=[task.get_id()])
         task_thread.start()
 
         return task
 
-class TaskResource(StatefulResource):
 
+class TaskResource(StatefulResource):
     def __init__(self, orchestrator=None, **kwargs):
         super(TaskResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
         self.orchestrator = orchestrator
 
+    @policy.ApiEnforcer('physical_provisioner:read_task')
     def on_get(self, req, resp, task_id):
         ctx = req.context
-        policy_action = 'physical_provisioner:read_task'
 
         try:
-            if not self.check_policy(policy_action, ctx):
-                self.access_denied(req, resp, policy_action)
-                return
-
             task = self.state_manager.get_task(task_id)
 
             if task is None:
-                self.info(req.context, "Task %s does not exist" % task_id )
-                self.return_error(resp, falcon.HTTP_404, message="Task %s does not exist" % task_id, retry=False)
+                self.info(req.context, "Task %s does not exist" % task_id)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_404,
+                    message="Task %s does not exist" % task_id,
+                    retry=False)
                 return
 
             resp.body = json.dumps(task.to_dict())
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % (str(ex)))
-            self.return_error(resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)

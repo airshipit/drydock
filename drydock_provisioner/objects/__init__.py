@@ -31,10 +31,11 @@ def register_all():
     importlib.import_module('drydock_provisioner.objects.site')
     importlib.import_module('drydock_provisioner.objects.promenade')
 
+
 # Utility class for calculating inheritance
 
-class Utils(object):
 
+class Utils(object):
     """
     apply_field_inheritance - apply inheritance rules to a single field value
 
@@ -84,6 +85,7 @@ class Utils(object):
 
     3. All remaining members of the parent list
     """
+
     @staticmethod
     def merge_lists(child_list, parent_list):
 
@@ -117,6 +119,7 @@ class Utils(object):
 
     3. All remaining members of the parent dict
     """
+
     @staticmethod
     def merge_dicts(child_dict, parent_dict):
 
@@ -136,5 +139,5 @@ class Utils(object):
                 effective_dict[k] = deepcopy(child_dict[k])
         except TypeError:
             raise TypeError("Error iterating dict argument")
-            
+
         return effective_dict

@@ -18,14 +18,20 @@ import requests
 import requests.auth as req_auth
 import base64
 
+
 class MaasOauth(req_auth.AuthBase):
     def __init__(self, apikey):
-        self.consumer_key, self.token_key, self.token_secret = apikey.split(':')
+        self.consumer_key, self.token_key, self.token_secret = apikey.split(
+            ':')
         self.consumer_secret = ""
         self.realm = "OAuth"
 
-        self.oauth_client = oauth1.Client(self.consumer_key, self.consumer_secret,
-            self.token_key, self.token_secret, signature_method=oauth1.SIGNATURE_PLAINTEXT,
+        self.oauth_client = oauth1.Client(
+            self.consumer_key,
+            self.consumer_secret,
+            self.token_key,
+            self.token_secret,
+            signature_method=oauth1.SIGNATURE_PLAINTEXT,
             realm=self.realm)
 
     def __call__(self, req):
@@ -34,14 +40,15 @@ class MaasOauth(req_auth.AuthBase):
         method = req.method
         body = None if req.body is None or len(req.body) == 0 else req.body
 
-        new_url, signed_headers, new_body = self.oauth_client.sign(url, method, body, headers)
+        new_url, signed_headers, new_body = self.oauth_client.sign(
+            url, method, body, headers)
 
         req.headers['Authorization'] = signed_headers['Authorization']
 
         return req
 
-class MaasRequestFactory(object):
 
+class MaasRequestFactory(object):
     def __init__(self, base_url, apikey):
         self.base_url = base_url
         self.apikey = apikey
@@ -63,7 +70,7 @@ class MaasRequestFactory(object):
 
     def put(self, endpoint, **kwargs):
         return self._send_request('PUT', endpoint, **kwargs)
-        
+
     def test_connectivity(self):
         try:
             resp = self.get('version/')
@@ -74,10 +81,11 @@ class MaasRequestFactory(object):
             raise errors.TransientDriverError("Received 50x error from MaaS")
 
         if resp.status_code != 200:
-            raise errors.PersistentDriverError("Received unexpected error from MaaS")
-        
+            raise errors.PersistentDriverError(
+                "Received unexpected error from MaaS")
+
         return True
-        
+
     def test_authentication(self):
         try:
             resp = self.get('account/', op='list_authorisation_tokens')
@@ -86,15 +94,17 @@ class MaasRequestFactory(object):
         except:
             raise errors.PersistentDriverError("Error accessing MaaS")
 
-        if resp.status_code in [401, 403] :
-            raise errors.PersistentDriverError("MaaS API Authentication Failed")
+        if resp.status_code in [401, 403]:
+            raise errors.PersistentDriverError(
+                "MaaS API Authentication Failed")
 
         if resp.status_code in [500, 503]:
             raise errors.TransientDriverError("Received 50x error from MaaS")
 
         if resp.status_code != 200:
-            raise errors.PersistentDriverError("Received unexpected error from MaaS")
-            
+            raise errors.PersistentDriverError(
+                "Received unexpected error from MaaS")
+
         return True
 
     def _send_request(self, method, endpoint, **kwargs):
@@ -114,14 +124,19 @@ class MaasRequestFactory(object):
             for (k, v) in files.items():
                 if v is None:
                     continue
-                files_tuples[k] = (None, base64.b64encode(str(v).encode('utf-8')).decode('utf-8'), 'text/plain; charset="utf-8"', {'Content-Transfer-Encoding': 'base64'})
+                files_tuples[k] = (
+                    None,
+                    base64.b64encode(str(v).encode('utf-8')).decode('utf-8'),
+                    'text/plain; charset="utf-8"', {
+                        'Content-Transfer-Encoding': 'base64'
+                    })
+
     #            elif isinstance(v, str):
     #                files_tuples[k] = (None, base64.b64encode(v.encode('utf-8')).decode('utf-8'), 'text/plain; charset="utf-8"', {'Content-Transfer-Encoding': 'base64'})
     #            elif isinstance(v, int) or isinstance(v, bool):
     #                if isinstance(v, bool):
     #                    v = int(v)
     #                files_tuples[k] = (None, base64.b64encode(v.to_bytes(2, byteorder='big')), 'application/octet-stream', {'Content-Transfer-Encoding': 'base64'})
-
 
             kwargs['files'] = files_tuples
 
@@ -139,15 +154,22 @@ class MaasRequestFactory(object):
         if timeout is None:
             timeout = (2, 30)
 
-        request = requests.Request(method=method, url=self.base_url + endpoint, auth=self.signer,
-                            headers=headers, params=params, **kwargs)
+        request = requests.Request(
+            method=method,
+            url=self.base_url + endpoint,
+            auth=self.signer,
+            headers=headers,
+            params=params,
+            **kwargs)
 
         prepared_req = self.http_session.prepare_request(request)
 
         resp = self.http_session.send(prepared_req, timeout=timeout)
 
         if resp.status_code >= 400:
-            self.logger.debug("FAILED API CALL:\nURL: %s %s\nBODY:\n%s\nRESPONSE: %s\nBODY:\n%s" %
-                (prepared_req.method, prepared_req.url, str(prepared_req.body).replace('\\r\\n','\n'),
-                 resp.status_code, resp.text))
+            self.logger.debug(
+                "FAILED API CALL:\nURL: %s %s\nBODY:\n%s\nRESPONSE: %s\nBODY:\n%s"
+                % (prepared_req.method, prepared_req.url,
+                   str(prepared_req.body).replace('\\r\\n', '\n'),
+                   resp.status_code, resp.text))
         return resp

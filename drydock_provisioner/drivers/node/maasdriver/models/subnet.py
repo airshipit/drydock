@@ -14,13 +14,18 @@
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.iprange as maas_iprange
 
+
 class Subnet(model_base.ResourceBase):
 
     resource_url = 'subnets/{resource_id}/'
-    fields = ['resource_id', 'name', 'description', 'fabric', 'vlan', 'vid',
-              'cidr', 'gateway_ip', 'rdns_mode', 'allow_proxy', 'dns_servers']
-    json_fields = ['name', 'description','vlan', 'cidr', 'gateway_ip', 'rdns_mode',
-                   'allow_proxy', 'dns_servers']
+    fields = [
+        'resource_id', 'name', 'description', 'fabric', 'vlan', 'vid', 'cidr',
+        'gateway_ip', 'rdns_mode', 'allow_proxy', 'dns_servers'
+    ]
+    json_fields = [
+        'name', 'description', 'vlan', 'cidr', 'gateway_ip', 'rdns_mode',
+        'allow_proxy', 'dns_servers'
+    ]
 
     def __init__(self, api_client, **kwargs):
         super(Subnet, self).__init__(api_client, **kwargs)
@@ -36,28 +41,36 @@ class Subnet(model_base.ResourceBase):
         current_ranges = maas_iprange.IpRanges(self.api_client)
         current_ranges.refresh()
 
-        exists = current_ranges.query({'start_ip': addr_range.get('start', None),
-                                       'end_ip': addr_range.get('end', None)})
+        exists = current_ranges.query({
+            'start_ip':
+            addr_range.get('start', None),
+            'end_ip':
+            addr_range.get('end', None)
+        })
 
         if len(exists) > 0:
-            self.logger.info('Address range from %s to %s already exists, skipping.' %
-                            (addr_range.get('start', None), addr_range.get('end', None)))
+            self.logger.info(
+                'Address range from %s to %s already exists, skipping.' %
+                (addr_range.get('start', None), addr_range.get('end', None)))
             return
 
         # Static ranges are what is left after reserved (not assigned by MaaS)
         # and DHCP ranges are removed from a subnet
-        if addr_range.get('type', None) in ['reserved','dhcp']:
+        if addr_range.get('type', None) in ['reserved', 'dhcp']:
             range_type = addr_range.get('type', None)
 
             if range_type == 'dhcp':
                 range_type = 'dynamic'
 
-            maas_range = maas_iprange.IpRange(self.api_client, comment="Configured by Drydock", subnet=self.resource_id,
-                                          type=range_type, start_ip=addr_range.get('start', None),
-                                          end_ip=addr_range.get('end', None))
+            maas_range = maas_iprange.IpRange(
+                self.api_client,
+                comment="Configured by Drydock",
+                subnet=self.resource_id,
+                type=range_type,
+                start_ip=addr_range.get('start', None),
+                end_ip=addr_range.get('end', None))
             maas_ranges = maas_iprange.IpRanges(self.api_client)
             maas_ranges.add(maas_range)
-
 
     @classmethod
     def from_dict(cls, api_client, obj_dict):
@@ -73,9 +86,10 @@ class Subnet(model_base.ResourceBase):
         if isinstance(refined_dict.get('vlan', None), dict):
             refined_dict['fabric'] = refined_dict['vlan']['fabric_id']
             refined_dict['vlan'] = refined_dict['vlan']['id']
-            
+
         i = cls(api_client, **refined_dict)
         return i
+
 
 class Subnets(model_base.ResourceCollectionBase):
 

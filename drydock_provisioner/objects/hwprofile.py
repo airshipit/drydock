@@ -20,24 +20,35 @@ import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
 
+
 @base.DrydockObjectRegistry.register
 class HardwareProfile(base.DrydockPersistentObject, base.DrydockObject):
 
     VERSION = '1.0'
 
     fields = {
-        'name': ovo_fields.StringField(),
-        'source':   hd_fields.ModelSourceField(),
-        'site': ovo_fields.StringField(),
-        'vendor': ovo_fields.StringField(nullable=True),
-        'generation': ovo_fields.StringField(nullable=True),
-        'hw_version':   ovo_fields.StringField(nullable=True),
-        'bios_version': ovo_fields.StringField(nullable=True),
-        'boot_mode':    ovo_fields.StringField(nullable=True),
-        'bootstrap_protocol':   ovo_fields.StringField(nullable=True),
-        'pxe_interface':    ovo_fields.StringField(nullable=True),
-        'devices':  ovo_fields.ObjectField('HardwareDeviceAliasList',
-                                       nullable=True),
+        'name':
+        ovo_fields.StringField(),
+        'source':
+        hd_fields.ModelSourceField(),
+        'site':
+        ovo_fields.StringField(),
+        'vendor':
+        ovo_fields.StringField(nullable=True),
+        'generation':
+        ovo_fields.StringField(nullable=True),
+        'hw_version':
+        ovo_fields.StringField(nullable=True),
+        'bios_version':
+        ovo_fields.StringField(nullable=True),
+        'boot_mode':
+        ovo_fields.StringField(nullable=True),
+        'bootstrap_protocol':
+        ovo_fields.StringField(nullable=True),
+        'pxe_interface':
+        ovo_fields.StringField(nullable=True),
+        'devices':
+        ovo_fields.ObjectField('HardwareDeviceAliasList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -51,7 +62,7 @@ class HardwareProfile(base.DrydockPersistentObject, base.DrydockObject):
 
     def get_name(self):
         return self.name
-        
+
     def resolve_alias(self, alias_type, alias):
         for d in self.devices:
             if d.alias == alias and d.bus_type == alias_type:
@@ -63,14 +74,14 @@ class HardwareProfile(base.DrydockPersistentObject, base.DrydockObject):
 
         return None
 
+
 @base.DrydockObjectRegistry.register
 class HardwareProfileList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  ovo_fields.ListOfObjectsField('HardwareProfile')
-    }
+    fields = {'objects': ovo_fields.ListOfObjectsField('HardwareProfile')}
+
 
 @base.DrydockObjectRegistry.register
 class HardwareDeviceAlias(base.DrydockObject):
@@ -78,9 +89,9 @@ class HardwareDeviceAlias(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'alias':    ovo_fields.StringField(),
-        'source':   hd_fields.ModelSourceField(),
-        'address':  ovo_fields.StringField(),
+        'alias': ovo_fields.StringField(),
+        'source': hd_fields.ModelSourceField(),
+        'address': ovo_fields.StringField(),
         'bus_type': ovo_fields.StringField(),
         'dev_type': ovo_fields.StringField(nullable=True),
     }
@@ -91,15 +102,15 @@ class HardwareDeviceAlias(base.DrydockObject):
     # HardwareDeviceAlias keyed on alias
     def get_id(self):
         return self.alias
-        
+
+
 @base.DrydockObjectRegistry.register
 class HardwareDeviceAliasList(base.DrydockObjectListBase, base.DrydockObject):
 
     VERSION = '1.0'
 
-    fields = {
-        'objects':  ovo_fields.ListOfObjectsField('HardwareDeviceAlias')
-    }
+    fields = {'objects': ovo_fields.ListOfObjectsField('HardwareDeviceAlias')}
+
 
 @base.DrydockObjectRegistry.register
 class HardwareDeviceSelector(base.DrydockObject):
@@ -107,19 +118,21 @@ class HardwareDeviceSelector(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'selector_type':    ovo_fields.StringField(),
-        'address':  ovo_fields.StringField(),
-        'device_type':  ovo_fields.StringField()
+        'selector_type': ovo_fields.StringField(),
+        'address': ovo_fields.StringField(),
+        'device_type': ovo_fields.StringField()
     }
 
     def __init__(self, **kwargs):
         super(HardwareDeviceSelector, self).__init__(**kwargs)
 
+
 @base.DrydockObjectRegistry.register
-class HardwareDeviceSelectorList(base.DrydockObjectListBase, base.DrydockObject):
+class HardwareDeviceSelectorList(base.DrydockObjectListBase,
+                                 base.DrydockObject):
 
     VERSION = '1.0'
 
     fields = {
-        'objects':  ovo_fields.ListOfObjectsField('HardwareDeviceSelector')
+        'objects': ovo_fields.ListOfObjectsField('HardwareDeviceSelector')
     }

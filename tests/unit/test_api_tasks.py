@@ -26,8 +26,8 @@ import falcon
 
 logging.basicConfig(level=logging.DEBUG)
 
-class TestTasksApi():
 
+class TestTasksApi():
     def test_read_tasks(self, mocker):
         ''' DrydockPolicy.authorized() should correctly use oslo_policy to enforce
             RBAC policy based on a DrydockRequestContext instance
@@ -70,17 +70,18 @@ class TestTasksApi():
         mocker.patch('oslo_policy.policy.Enforcer')
 
         state = mocker.MagicMock()
-        orch = mocker.MagicMock(spec=Orchestrator, wraps=Orchestrator(state_manager=state))
-        orch_mock_config  = {'execute_task.return_value': True}
+        orch = mocker.MagicMock(
+            spec=Orchestrator, wraps=Orchestrator(state_manager=state))
+        orch_mock_config = {'execute_task.return_value': True}
         orch.configure_mock(**orch_mock_config)
 
         ctx = DrydockRequestContext()
         policy_engine = policy.DrydockPolicy()
 
-        json_body  = json.dumps({
-                'action': 'verify_site',
-                'design_id': 'foo',
-            }).encode('utf-8')
+        json_body = json.dumps({
+            'action': 'verify_site',
+            'design_id': 'foo',
+        }).encode('utf-8')
 
         # Mock policy enforcement
         policy_mock_config = {'authorize.return_value': True}
