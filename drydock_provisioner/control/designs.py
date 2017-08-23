@@ -1,5 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
-#
+# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.  #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,6 +15,7 @@ import json
 import uuid
 import logging
 
+import drydock_provisioner.policy as policy
 import drydock_provisioner.objects as hd_objects
 import drydock_provisioner.error as errors
 
@@ -25,17 +25,25 @@ class DesignsResource(StatefulResource):
 
     def __init__(self, **kwargs):
         super(DesignsResource, self).__init__(**kwargs)
-        self.authorized_roles = ['user']
 
+    @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp):
+        ctx = req.context
         state = self.state_manager
 
-        designs = list(state.designs.keys())
+        try:
+            designs = list(state.designs.keys())
 
-        resp.body = json.dumps(designs)
-        resp.status = falcon.HTTP_200
+            resp.body = json.dumps(designs)
+            resp.status = falcon.HTTP_200
+        except Exception as ex:
+            self.error(req.context, "Exception raised: %s" % str(ex))
+            self.return_error(resp, falcon.HTTP_500, message="Error accessing design list", retry=True)
 
+    @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_post(self, req, resp):
+        ctx = req.context
+
         try:
             json_data = self.req_json(req)
             design = None
@@ -67,8 +75,10 @@ class DesignResource(StatefulResource):
         self.authorized_roles = ['user']
         self.orchestrator = orchestrator
 
+    @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp, design_id):
         source = req.params.get('source', 'designed')
+        ctx = req.context
 
         try:
             design = None
@@ -93,6 +103,7 @@ class DesignsPartsResource(StatefulResource):
             self.error(None, "DesignsPartsResource requires a configured Ingester instance")
             raise ValueError("DesignsPartsResource requires a configured Ingester instance")
 
+    @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_post(self, req, resp, design_id):
         ingester_name = req.params.get('ingester', None)
 
@@ -108,12 +119,13 @@ class DesignsPartsResource(StatefulResource):
                     resp.status = falcon.HTTP_201
                     resp.body = json.dumps([x.obj_to_simple() for x in parsed_items])
                 else:
-                    self.return_error(resp, falcon.HTTP_400, message="Empty body not supported", retry=False)    
+                    self.return_error(resp, falcon.HTTP_400, message="Empty body not supported", retry=False)
             except ValueError:
                 self.return_error(resp, falcon.HTTP_500, message="Error processing input", retry=False)
             except LookupError:
                 self.return_error(resp, falcon.HTTP_400, message="Ingester %s not registered" % ingester_name, retry=False)
 
+    @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_get(self, req, resp, design_id):
         try:
             design = self.state_manager.get_design(design_id)
@@ -142,12 +154,16 @@ class DesignsPartsResource(StatefulResource):
 
 
 class DesignsPartsKindsResource(StatefulResource):
+
     def __init__(self, **kwargs):
         super(DesignsPartsKindsResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
 
+    @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp, design_id, kind):
-        pass
+        ctx = req.context
+
+        resp.status = falcon.HTTP_200
 
 class DesignsPartResource(StatefulResource):
 
@@ -156,7 +172,9 @@ class DesignsPartResource(StatefulResource):
         self.authorized_roles = ['user']
         self.orchestrator = orchestrator
 
+    @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req , resp, design_id, kind, name):
+        ctx = req.context
         source = req.params.get('source', 'designed')
 
         try:
@@ -188,3 +206,6 @@ class DesignsPartResource(StatefulResource):
         except errors.DesignError as dex:
             self.error(req.context, str(dex))
             self.return_error(resp, falcon.HTTP_404, message=str(dex), retry=False)
+        except Exception as exc:
+            self.error(req.context, str(exc))
+            self.return_error(resp. falcon.HTTP_500, message=str(exc), retry=False)

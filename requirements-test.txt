@@ -4,3 +4,4 @@ responses
 mock
 tox
 oslo.versionedobjects[fixtures]>=1.23.0
+oslo.config[fixtures]

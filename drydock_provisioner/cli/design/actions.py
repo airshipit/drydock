@@ -37,7 +37,6 @@ class DesignCreate(CliAction): # pylint: disable=too-few-public-methods
         self.base_design = base_design
 
     def invoke(self):
-
         return self.api_client.create_design(base_design=self.base_design)
 
 

@@ -23,7 +23,7 @@ from .base import StatefulResource
 class BootdataResource(StatefulResource):
 
     bootdata_options = [
-        cfg.StrOpt('prom_init', default=None, help='Path to file to distribute for prom_init.sh')        
+        cfg.StrOpt('prom_init', default='/etc/drydock/bootdata/join.sh', help='Path to file to distribute for prom_init.sh')
     ]
 
     def __init__(self, orchestrator=None, **kwargs):

@@ -28,6 +28,7 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
                             state persistence
     :param ingester:        Instance of drydock_provisioner.ingester.ingester.Ingester for handling design
                             part input
+    :param orchestrator:    Instance of drydock_provisioner.orchestrator.Orchestrator for managing tasks
     """
     control_api = falcon.API(request_type=DrydockRequest,
                              middleware=[AuthMiddleware(), ContextMiddleware(), LoggingMiddleware()])

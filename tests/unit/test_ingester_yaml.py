@@ -34,7 +34,7 @@ class TestClass(object):
 
     def test_ingest_multidoc(self, input_files):
         input_file = input_files.join("multidoc.yaml")
- 
+
         ingester = YamlIngester()
 
         models = ingester.ingest_data(filenames=[str(input_file)])

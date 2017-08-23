@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import falcon.request as request
 import uuid
 import json
 import logging
+
+import falcon
+import falcon.request
 
 import drydock_provisioner.error as errors
 
@@ -22,7 +24,6 @@ class BaseResource(object):
 
     def __init__(self):
         self.logger = logging.getLogger('control')
-        self.authorized_roles = []
 
     def on_options(self, req, resp):
         self_attrs = dir(self)
@@ -35,18 +36,6 @@ class BaseResource(object):
 
         resp.headers['Allow'] = ','.join(allowed_methods)
         resp.status = falcon.HTTP_200
-
-    # For authorizing access at the Resource level. A Resource requiring
-    # finer grained authorization at the method or instance level must
-    # implement that in the request handlers
-    def authorize_roles(self, role_list):
-        authorized = set(self.authorized_roles)
-        applied = set(role_list)
-
-        if authorized.isdisjoint(applied):
-            return False
-        else:
-            return True
 
     def req_json(self, req):
         if req.content_length is None or req.content_length == 0:
@@ -101,8 +90,8 @@ class BaseResource(object):
 
 class StatefulResource(BaseResource):
 
-    def __init__(self, state_manager=None):
-        super(StatefulResource, self).__init__()
+    def __init__(self, state_manager=None, **kwargs):
+        super(StatefulResource, self).__init__(**kwargs)
 
         if state_manager is None:
             self.error(None, "StatefulResource:init - StatefulResources require a state manager be set")
@@ -115,10 +104,17 @@ class DrydockRequestContext(object):
 
     def __init__(self):
         self.log_level = 'ERROR'
-        self.user = None
-        self.roles = ['anyone']
+        self.user = None    # Username
+        self.user_id = None # User ID (UUID)
+        self.user_domain_id = None # Domain owning user
+        self.roles = []
+        self.project_id = None
+        self.project_domain_id = None # Domain owning project
+        self.is_admin_project = False
+        self.authenticated = False
         self.request_id = str(uuid.uuid4())
-        self.external_marker = None
+        self.external_marker = ''
+        self.policy_engine = None
 
     def set_log_level(self, level):
         if level in ['error', 'info', 'debug']:
@@ -126,6 +122,9 @@ class DrydockRequestContext(object):
 
     def set_user(self, user):
         self.user = user
+
+    def set_project(self, project):
+        self.project = project
 
     def add_role(self, role):
         self.roles.append(role)
@@ -138,7 +137,23 @@ class DrydockRequestContext(object):
                       if x != role]
 
     def set_external_marker(self, marker):
-        self.external_marker = str(marker)[:20]
+        self.external_marker = marker
 
-class DrydockRequest(request.Request):
+    def set_policy_engine(self, engine):
+        self.policy_engine = engine
+
+    def to_policy_view(self):
+        policy_dict = {}
+
+        policy_dict['user_id'] = self.user_id
+        policy_dict['user_domain_id'] = self.user_domain_id
+        policy_dict['project_id'] = self.project_id
+        policy_dict['project_domain_id'] = self.project_domain_id
+        policy_dict['roles'] = self.roles
+        policy_dict['is_admin_project'] = self.is_admin_project
+
+        return policy_dict
+
+
+class DrydockRequest(falcon.request.Request):
     context_type = DrydockRequestContext
