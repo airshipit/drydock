@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Test that rack models are properly parsed."""
 
 from drydock_provisioner.ingester import Ingester
 from drydock_provisioner.statemgmt import DesignState
 import drydock_provisioner.objects as objects
+import drydock_provisioner.error as errors
 
 import logging
 import pytest
@@ -24,7 +26,7 @@ import drydock_provisioner.ingester.plugins.yaml
 
 
 class TestClass(object):
-    def test_ingest_full_site(self, input_files):
+    def test_rack_parse(self, input_files):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
@@ -45,15 +47,14 @@ class TestClass(object):
 
         design_data = design_state.get_design(design_id)
 
-        assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        rack = design_data.get_rack('rack1')
 
-    def test_ingest_federated_design(self, input_files):
+        assert rack.location.get('grid') == 'EG12'
+
+    def test_rack_not_found(self, input_files):
         objects.register_all()
 
-        profiles_file = input_files.join("fullsite_profiles.yaml")
-        networks_file = input_files.join("fullsite_networks.yaml")
-        nodes_file = input_files.join("fullsite_nodes.yaml")
+        input_file = input_files.join("fullsite.yaml")
 
         design_state = DesignState()
         design_data = objects.SiteDesign()
@@ -66,16 +67,13 @@ class TestClass(object):
         ingester.ingest_data(
             plugin_name='yaml',
             design_state=design_state,
-            design_id=design_id,
-            filenames=[
-                str(profiles_file),
-                str(networks_file),
-                str(nodes_file)
-            ])
+            filenames=[str(input_file)],
+            design_id=design_id)
 
         design_data = design_state.get_design(design_id)
 
-        assert len(design_data.host_profiles) == 2
+        with pytest.raises(errors.DesignError):
+            rack = design_data.get_rack('foo')
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

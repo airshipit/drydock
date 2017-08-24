@@ -27,6 +27,7 @@ import drydock_provisioner.objects.hwprofile as hwprofile
 import drydock_provisioner.objects.node as node
 import drydock_provisioner.objects.hostprofile as hostprofile
 import drydock_provisioner.objects.promenade as prom
+import drydock_provisioner.objects.rack as rack
 
 from drydock_provisioner.statemgmt import DesignState
 
@@ -131,6 +132,8 @@ class Ingester(object):
                     design_data.add_baremetal_node(m)
                 elif type(m) is prom.PromenadeConfig:
                     design_data.add_promenade_config(m)
+                elif type(m) is rack.Rack:
+                    design_data.add_rack(m)
             design_state.put_design(design_data)
             return design_items
         else:

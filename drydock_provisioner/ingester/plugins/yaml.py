@@ -11,11 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#
-# AIC YAML Ingester - This data ingester will consume a AIC YAML design
-#                   file
-#
+"""YAML Ingester.
+This data ingester will consume YAML site topology documents."""
 import yaml
 import logging
 import base64
@@ -34,16 +31,15 @@ class YamlIngester(IngesterPlugin):
     def get_name(self):
         return "yaml"
 
-    """
-    AIC YAML ingester params
-
-    filenames - Array of absolute path to the YAML files to ingest
-
-    returns an array of objects from drydock_provisioner.model
-
-    """
 
     def ingest_data(self, **kwargs):
+        """Parse and save design data.
+
+        :param filenames: Array of absolute path to the YAML files to ingest
+        :param content: String of valid YAML
+
+        returns an array of objects from drydock_provisioner.objects
+        """
         models = []
 
         if 'filenames' in kwargs:
@@ -66,11 +62,9 @@ class YamlIngester(IngesterPlugin):
 
         return models
 
-    """
-    Translate a YAML string into the internal Drydock model
-    """
 
     def parse_docs(self, yaml_string):
+        """Translate a YAML string into the internal Drydock model."""
         models = []
         self.logger.debug(
             "yamlingester:parse_docs - Parsing YAML string \n%s" %
@@ -123,7 +117,40 @@ class YamlIngester(IngesterPlugin):
                             models.append(model)
                         else:
                             raise ValueError(
-                                'Unknown API version %s of Region kind' %
+                                "Unknown API version %s of Region kind" %
+                                (api_version))
+                    elif kind == 'Rack':
+                        if api_version == "v1":
+                            model = objects.Rack()
+
+                            metadata = d.get('metadata', {})
+                            spec = d.get('spec', {})
+
+                            model.name = metadata.get('name', None)
+                            model.site = metadata.get('region', None)
+
+                            model.tor_switches = objects.TorSwitchList()
+                            tors = spec.get('tor_switches', {})
+
+                            for k, v in tors.items():
+                                tor = objects.TorSwitch()
+                                tor.switch_name = k
+                                tor.mgmt_ip = v.get('mgmt_ip', None)
+                                tor.sdn_api_uri = v.get('sdn_api_url', None)
+                                model.tor_switches.append(tor)
+
+                            location = spec.get('location', {})
+                            model.location = dict()
+
+                            for k, v in location.items():
+                                model.location[k] = v
+
+                            model.local_networks = [n for n in spec.get('local_networks', [])]
+
+                            models.append(model)
+                        else:
+                            raise ValueError(
+                                "Unknown API version %s of Rack kind" %
                                 (api_version))
                     elif kind == 'NetworkLink':
                         if api_version == "v1":
@@ -230,6 +257,12 @@ class YamlIngester(IngesterPlugin):
                                     'metric':
                                     r.get('metric', None),
                                 })
+
+                            dhcp_relay = spec.get('dhcp_relay', None)
+                            if dhcp_relay is not None:
+                                model.dhcp_relay_self_ip = dhcp_relay.get('self_ip', None)
+                                model.dhcp_relay_upstream_target = dhcp_relay.get('upstream_target', None)
+
                             models.append(model)
                     elif kind == 'HardwareProfile':
                         if api_version == 'v1':

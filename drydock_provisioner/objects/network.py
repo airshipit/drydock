@@ -103,6 +103,8 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
         'ranges': ovo_fields.ListOfDictOfNullableStringsField(),
         # Keys of routes are 'subnet', 'gateway', 'metric'
         'routes': ovo_fields.ListOfDictOfNullableStringsField(),
+        'dhcp_relay_self_ip': ovo_fields.StringField(nullable=True),
+        'dhcp_relay_upstream_target': ovo_fields.StringField(nullable=True),
     }
 
     def __init__(self, **kwargs):

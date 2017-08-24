@@ -98,7 +98,7 @@ spec:
   # If this link is a bond of physical links, how is it configured
   # 802.3ad
   # active-backup
-  # balance-rr 
+  # balance-rr
   # Can add support for others down the road
   bonding:
     mode: 802.3ad
@@ -117,6 +117,32 @@ spec:
     - mgmt
 ---
 apiVersion: 'drydock/v1'
+kind: Rack
+metadata:
+  name: rack1
+  region: sitename
+  date: 24-AUG-2017
+  author: sh8121@att.com
+  description: A equipment rack
+spec:
+  # List of TOR switches in this rack
+  tor_switches:
+    switch01name:
+      mgmt_ip: 1.1.1.1
+      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch01name
+    switch02name:
+      mgmt_ip: 1.1.1.2
+      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch02name
+  # GIS data for this rack
+  location:
+    clli: HSTNTXMOCG0
+    grid: EG12
+  # Networks wholly contained to this rack
+  # Nodes in a rack can only connect to local_networks of that rack
+  local_networks:
+    - pxe-rack1
+---
+apiVersion: 'drydock/v1'
 kind: Network
 metadata:
   name: oob
@@ -128,12 +154,12 @@ spec:
   allocation: static
   cidr: 172.16.100.0/24
   ranges:
-  - type: static
-    start: 172.16.100.15
-    end: 172.16.100.254
+    - type: static
+      start: 172.16.100.15
+      end: 172.16.100.254
   dns:
-     domain: ilo.sitename.att.com
-     servers: 172.16.100.10
+    domain: ilo.sitename.att.com
+    servers: 172.16.100.10
 ---
 apiVersion: 'drydock/v1'
 kind: Network
@@ -142,26 +168,30 @@ metadata:
   region: sitename
   date: 17-FEB-2017
   author: sh8121@att.com
-  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces  
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-    # Layer 2 VLAN segment id, could support other segmentations. Optional
+  # Layer 2 VLAN segment id, could support other segmentations. Optional
   vlan_id: '99'
-    # How are addresses assigned?
-  allocation: dhcp
-    # MTU for this VLAN interface, if not specified it will be inherited from the link
+  # If this network utilizes a dhcp relay, where does it forward DHCPDISCOVER requests to?
+  dhcp_relay:
+    # Required if Drydock is configuring a switch with the relay
+    self_ip: 172.16.0.4
+    # Can refer to a unicast IP
+    upstream_target: 172.16.5.5
+  # MTU for this VLAN interface, if not specified it will be inherited from the link
   mtu: 1500
-    # Network address
+  # Network address
   cidr: 172.16.0.0/24
-    # Desribe IP address ranges
-  ranges: 
-  - type: dhcp
-    start: 172.16.0.5
-    end: 172.16.0.254
-    # DNS settings for this network
+  # Desribe IP address ranges
+  ranges:
+    - type: dhcp
+      start: 172.16.0.5
+      end: 172.16.0.254
+  # DNS settings for this network
   dns:
-      # Domain addresses on this network will be registered under
+    # Domain addresses on this network will be registered under
     domain: admin.sitename.att.com
-      # DNS servers that a server using this network as its default gateway should use
+    # DNS servers that a server using this network as its default gateway should use
     servers: 172.16.0.10
 ---
 apiVersion: 'drydock/v1'
@@ -174,24 +204,22 @@ metadata:
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
   vlan_id: '100'
-    # How are addresses assigned?
-  allocation: static
     # Allow MTU to be inherited from link the network rides on
   mtu: 1500
     # Network address
   cidr: 172.16.1.0/24
     # Desribe IP address ranges
-  ranges: 
-  - type: static
-    start: 172.16.1.15
-    end: 172.16.1.254
+  ranges:
+    - type: static
+      start: 172.16.1.15
+      end: 172.16.1.254
     # Static routes to be added for this network
   routes:
-  - subnet: 0.0.0.0/0
+    - subnet: 0.0.0.0/0
         # A blank gateway would leave to a static route specifying
         # only the interface as a source
-    gateway: 172.16.1.1
-    metric: 10
+      gateway: 172.16.1.1
+      metric: 10
     # DNS settings for this network
   dns:
       # Domain addresses on this network will be registered under
@@ -209,16 +237,15 @@ metadata:
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
   vlan_id: '101'
-  allocation: static
   mtu: 9000
   cidr: 172.16.2.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
       # Type can be reserved (not used for baremetal), static (all explicit
       # assignments should fall here), dhcp (will be used by a DHCP server on this network)
-  - type: static
-    start: 172.16.2.15
-    end: 172.16.2.254
+    - type: static
+      start: 172.16.2.15
+      end: 172.16.2.254
   dns:
     domain: priv.sitename.example.com
     servers: 172.16.2.9,172.16.2.10
@@ -233,20 +260,18 @@ metadata:
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
   vlan_id: '102'
-    # How are addresses assigned?
-  allocation: static
     # MTU size for the VLAN interface
   mtu: 1500
   cidr: 172.16.3.0/24
     # Desribe IP address ranges
-  ranges: 
-  - type: static
-    start: 172.16.3.15
-    end: 172.16.3.254
+  ranges:
+    - type: static
+      start: 172.16.3.15
+      end: 172.16.3.254
   routes:
-  - subnet: 0.0.0.0/0
-    gateway: 172.16.3.1
-    metric: 10
+    - subnet: 0.0.0.0/0
+      gateway: 172.16.3.1
+      metric: 10
   dns:
     domain: sitename.example.com
     servers: 8.8.8.8
@@ -274,7 +299,7 @@ spec:
     credential: admin
   # Specify storage layout of base OS. Ceph out of scope
   storage:
-    # How storage should be carved up: lvm (logical volumes), flat 
+    # How storage should be carved up: lvm (logical volumes), flat
     # (single partition)
     layout: lvm
     # Info specific to the boot and root disk/partitions
@@ -289,18 +314,18 @@ spec:
     # Info for additional partitions. Need to balance between
     # flexibility and complexity
     partitions:
-    - name: logs
-      device: primary_boot
-      # Partition uuid if needed
-      part_uuid: 84db9664-f45e-11e6-823d-080027ef795a
-      size: 10g
-      # Optional, can carve up unformatted block devices
-      mountpoint: /var/log
-      fstype: ext4
-      mount_options: defaults
-      # Filesystem UUID or label can be specified. UUID recommended
-      fs_uuid: cdb74f1c-9e50-4e51-be1d-068b0e9ff69e
-      fs_label: logs
+      - name: logs
+        device: primary_boot
+        # Partition uuid if needed
+        part_uuid: 84db9664-f45e-11e6-823d-080027ef795a
+        size: 10g
+        # Optional, can carve up unformatted block devices
+        mountpoint: /var/log
+        fstype: ext4
+        mount_options: defaults
+        # Filesystem UUID or label can be specified. UUID recommended
+        fs_uuid: cdb74f1c-9e50-4e51-be1d-068b0e9ff69e
+        fs_label: logs
   # Platform (Operating System) settings
   platform:
     image: ubuntu_16.04
@@ -328,7 +353,7 @@ spec:
   # host_profile inheritance allows for deduplication of common CIs
   # Inheritance is additive for CIs that are lists of multiple items
   # To remove an inherited list member, prefix the primary key value
-  # with '!'. 
+  # with '!'.
   host_profile: defaults
   # Hardware profile will map hardware specific details to the abstract
   # names uses in the host profile as well as specify hardware specific
@@ -342,31 +367,31 @@ spec:
   interfaces:
   # Keyed on device_name
   # pxe is a special marker indicating which device should be used for pxe boot
-  - device_name: pxe
-    # The network link attached to this 
-    device_link: pxe
-    # Slaves will specify aliases from hwdefinition.yaml
-    slaves:
-      - prim_nic01
-    # Which networks will be configured on this interface
-    networks: 
-      - pxe
-  - device_name: bond0
-    network_link: gp
-    # If multiple slaves are specified, but no bonding config
-    # is applied to the link, design validation will fail
-    slaves:
-      - prim_nic01
-      - prim_nic02
-    # If multiple networks are specified, but no trunking
-    # config is applied to the link, design validation will fail
-    networks:
-      - mgmt
-      - private
+    - device_name: pxe
+      # The network link attached to this
+      device_link: pxe
+      # Slaves will specify aliases from hwdefinition.yaml
+      slaves:
+        - prim_nic01
+      # Which networks will be configured on this interface
+      networks:
+        - pxe
+    - device_name: bond0
+      network_link: gp
+      # If multiple slaves are specified, but no bonding config
+      # is applied to the link, design validation will fail
+      slaves:
+        - prim_nic01
+        - prim_nic02
+      # If multiple networks are specified, but no trunking
+      # config is applied to the link, design validation will fail
+      networks:
+        - mgmt
+        - private
   metadata:
     # Explicit tag assignment
     tags:
-    - 'test'
+      - 'test'
 ---
 apiVersion: 'drydock/v1'
 kind: BaremetalNode
@@ -381,26 +406,26 @@ spec:
   # the hostname for a server, could be used in multiple DNS domains to
   # represent different interfaces
   interfaces:
-  - device_name: bond0
-    networks:
-    # '!' prefix for the value of the primary key indicates a record should be removed
-    - '!private'
+    - device_name: bond0
+      networks:
+        # '!' prefix for the value of the primary key indicates a record should be removed
+        - '!private'
   # Addresses assigned to network interfaces
   addressing:
     # Which network the address applies to. If a network appears in addressing
     # that isn't assigned to an interface, design validation will fail
-  - network: pxe
+    - network: pxe
     # The address assigned. Either a explicit IPv4 or IPv6 address
     # or dhcp or slaac
-    address: dhcp
-  - network: mgmt
-    address: 172.16.1.20
-  - network: public
-    address: 172.16.3.20
-  - network: oob
-    address: 172.16.100.20
+      address: dhcp
+    - network: mgmt
+      address: 172.16.1.20
+    - network: public
+      address: 172.16.3.20
+    - network: oob
+      address: 172.16.100.20
   metadata:
-    rack: rack01
+    rack: rack1
 ---
 apiVersion: 'drydock/v1'
 kind: BaremetalNode
@@ -413,16 +438,16 @@ metadata:
 spec:
   host_profile: k8-node
   addressing:
-  - network: pxe
-    address: dhcp
-  - network: mgmt
-    address: 172.16.1.21
-  - network: private
-    address: 172.16.2.21
-  - network: oob
-    address: 172.16.100.21
+    - network: pxe
+      address: dhcp
+    - network: mgmt
+      address: 172.16.1.21
+    - network: private
+      address: 172.16.2.21
+    - network: oob
+      address: 172.16.100.21
   metadata:
-    rack: rack02
+    rack: rack2
 ---
 apiVersion: 'drydock/v1'
 kind: HardwareProfile
@@ -449,17 +474,17 @@ spec:
   # Map hardware addresses to aliases/roles to allow a mix of hardware configs
   # in a site to result in a consistent configuration
   device_aliases:
-  - address: '0000:00:03.0'
-    alias: prim_nic01
+    - address: '0000:00:03.0'
+      alias: prim_nic01
       # type could identify expected hardware - used for hardware manifest validation
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: '0000:00:04.0'
-    alias: prim_nic02
-    dev_type: '82540EM Gigabit Ethernet Controller'
-    bus_type: 'pci'
-  - address: '2:0.0.0'
-    alias: primary_boot
-    dev_type: 'VBOX HARDDISK'
-    bus_type: 'scsi'
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    - address: '0000:00:04.0'
+      alias: prim_nic02
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    - address: '2:0.0.0'
+      alias: primary_boot
+      dev_type: 'VBOX HARDDISK'
+      bus_type: 'scsi'
 ...

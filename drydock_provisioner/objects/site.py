@@ -148,6 +148,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         ovo_fields.ObjectField('BaremetalNodeList', nullable=True),
         'prom_configs':
         ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
+        'racks':
+        ovo_fields.ObjectField('RackList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -200,6 +202,22 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
         raise errors.DesignError(
             "NetworkLink %s not found in design state" % link_key)
+
+    def add_rack(self, new_rack):
+        if new_rack is None:
+            raise errors.DesignError("Invalid Rack model")
+
+        if self.racks is None:
+            self.racks = objects.RackList()
+
+        self.racks.append(new_rack)
+
+    def get_rack(self, rack_key):
+        for r in self.racks:
+            if r.get_id() == rack_key:
+                return r
+        raise errors.DesignError(
+            "Rack %s not found in design state" % rack_key)
 
     def add_host_profile(self, new_host_profile):
         if new_host_profile is None:
