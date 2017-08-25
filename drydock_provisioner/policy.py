@@ -51,8 +51,7 @@ class DrydockPolicy(object):
                                          'GET'
                                      }]),
         policy.DocumentedRuleDefault('physical_provisioner:create_task',
-                                     'role:admin',
-                                     'Create a task', [{
+                                     'role:admin', 'Create a task', [{
                                          'path':
                                          '/api/v1.0/tasks',
                                          'method':

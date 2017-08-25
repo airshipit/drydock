@@ -21,10 +21,17 @@ class BootResource(model_base.ResourceBase):
 
     resource_url = 'boot-resources/{resource_id}/'
     fields = [
-        'resource_id', 'name', 'type', 'subarches', 'architecture',
+        'resource_id',
+        'name',
+        'type',
+        'subarches',
+        'architecture',
     ]
     json_fields = [
-        'name', 'type', 'subarches', 'architecture',
+        'name',
+        'type',
+        'subarches',
+        'architecture',
     ]
 
     def __init__(self, api_client, **kwargs):
@@ -43,8 +50,7 @@ class BootResources(model_base.ResourceCollectionBase):
         """Check if boot resources are importing."""
         url = self.interpolate_url()
 
-        self.logger.debug(
-            "Checking if boot resources are importing.")
+        self.logger.debug("Checking if boot resources are importing.")
         resp = self.api_client.get(url, op='is_importing')
 
         if resp.status_code == 200:
@@ -52,6 +58,7 @@ class BootResources(model_base.ResourceCollectionBase):
             self.logger.debug("Boot resource importing status: %s" % resp_json)
             return resp_json
         else:
-            msg = "Error checking import status of boot resources: %s - %s" % (resp.status_code, resp.text)
+            msg = "Error checking import status of boot resources: %s - %s" % (
+                resp.status_code, resp.text)
             self.logger.error(msg)
             raise errors.DriverError(msg)

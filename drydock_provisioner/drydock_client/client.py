@@ -166,7 +166,8 @@ class DrydockClient(object):
             'node_filter': node_filter,
         }
 
-        self.logger.debug("drydock_client is calling %s API: body is %s" % (endpoint, str(task_dict)))
+        self.logger.debug("drydock_client is calling %s API: body is %s" %
+                          (endpoint, str(task_dict)))
 
         resp = self.session.post(endpoint, data=task_dict)
 

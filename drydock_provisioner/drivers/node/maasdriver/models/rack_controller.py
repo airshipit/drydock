@@ -24,13 +24,22 @@ class RackController(model_base.ResourceBase):
 
     # These are the services that must be 'running'
     # to consider a rack controller healthy
-    REQUIRED_SERVICES = ['http', 'tgt', 'dhcpd', 'ntp_rack', 'rackd',
-                         'tftp']
+    REQUIRED_SERVICES = ['http', 'tgt', 'dhcpd', 'ntp_rack', 'rackd', 'tftp']
     resource_url = 'rackcontrollers/{resource_id}/'
     fields = [
-        'resource_id', 'hostname', 'power_type', 'power_state',
-        'power_parameters', 'interfaces', 'boot_interface', 'memory',
-        'cpu_count', 'tag_names', 'status_name', 'boot_mac', 'owner_data',
+        'resource_id',
+        'hostname',
+        'power_type',
+        'power_state',
+        'power_parameters',
+        'interfaces',
+        'boot_interface',
+        'memory',
+        'cpu_count',
+        'tag_names',
+        'status_name',
+        'boot_mac',
+        'owner_data',
         'service_set',
     ]
     json_fields = ['hostname', 'power_type']
@@ -67,7 +76,8 @@ class RackController(model_base.ResourceBase):
 
         svc_status = {svc: None for svc in RackController.REQUIRED_SERVICES}
 
-        self.logger.debug("Checking service status on rack controller %s" % (self.resource_id))
+        self.logger.debug("Checking service status on rack controller %s" %
+                          (self.resource_id))
 
         for s in getattr(self, 'service_set', []):
             svc = s.get('name')

@@ -59,12 +59,9 @@ class TorSwitch(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'switch_name':
-        obj_fields.StringField(),
-        'mgmt_ip':
-        obj_fields.StringField(nullable=True),
-        'sdn_api_uri':
-        obj_fields.StringField(nullable=True),
+        'switch_name': obj_fields.StringField(),
+        'mgmt_ip': obj_fields.StringField(nullable=True),
+        'sdn_api_uri': obj_fields.StringField(nullable=True),
     }
 
     def __init__(self, **kwargs):

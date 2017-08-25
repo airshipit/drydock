@@ -67,7 +67,6 @@ class ClientError(ApiError):
         super().__init__(msg)
 
 
-
 class ClientUnauthorizedError(ClientError):
     def __init__(self, msg):
         super().__init__(msg, code=401)

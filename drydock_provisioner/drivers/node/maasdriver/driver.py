@@ -93,30 +93,38 @@ class MaasNodeDriver(NodeDriver):
                     result_detail['detail'].append("Able to connect to MaaS.")
                     if maas_client.test_authentication():
                         self.logger.info("Able to authenitcate with MaaS API.")
-                        result_detail['detail'].append("Able to authenticate with MaaS API.")
+                        result_detail['detail'].append(
+                            "Able to authenticate with MaaS API.")
 
                         boot_res = maas_boot_res.BootResources(maas_client)
                         boot_res.refresh()
 
                         if boot_res.is_importing():
-                            self.logger.info("MaaS still importing boot resources.")
-                            result_detail['detail'].append("MaaS still importing boot resources.")
+                            self.logger.info(
+                                "MaaS still importing boot resources.")
+                            result_detail['detail'].append(
+                                "MaaS still importing boot resources.")
                             result = hd_fields.ActionResult.Failure
                         else:
                             if boot_res.len() > 0:
-                                self.logger.info("MaaS has synced boot resources.")
-                                result_detail['detail'].append("MaaS has synced boot resources.")
+                                self.logger.info(
+                                    "MaaS has synced boot resources.")
+                                result_detail['detail'].append(
+                                    "MaaS has synced boot resources.")
                             else:
                                 self.logger.info("MaaS has no boot resources.")
-                                result_detail['detail'].append("MaaS has no boot resources.")
+                                result_detail['detail'].append(
+                                    "MaaS has no boot resources.")
                                 result = hd_fields.ActionResult.Failure
 
                         rack_ctlrs = maas_rack.RackControllers(maas_client)
                         rack_ctlrs.refresh()
 
                         if rack_ctlrs.len() == 0:
-                            self.logger.info("No rack controllers registered in MaaS")
-                            result_detail['detail'].append("No rack controllers registered in MaaS")
+                            self.logger.info(
+                                "No rack controllers registered in MaaS")
+                            result_detail['detail'].append(
+                                "No rack controllers registered in MaaS")
                             result = hd_fields.ActionResult.Failure
                         else:
                             for r in rack_ctlrs:
@@ -125,10 +133,14 @@ class MaasNodeDriver(NodeDriver):
 
                                 for s in rack_svc:
                                     if s in maas_rack.RackController.REQUIRED_SERVICES:
-                                        self.logger.info("Service %s on rackd %s is %s" % (s, rack_name, rack_svc[s]))
+                                        self.logger.info(
+                                            "Service %s on rackd %s is %s" %
+                                            (s, rack_name, rack_svc[s]))
                                         result_detail['detail'].append(
-                                            "Service %s on rackd %s is %s" % (s, rack_name, rack_svc[s]))
-                                        if rack_svc[s] not in ("running", "off"):
+                                            "Service %s on rackd %s is %s" %
+                                            (s, rack_name, rack_svc[s]))
+                                        if rack_svc[s] not in ("running",
+                                                               "off"):
                                             result = hd_fields.ActionResult.Failure
             except errors.TransientDriverError as ex:
                 result_detail['retry'] = True
@@ -1405,9 +1417,9 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 60 // cfg.CONF.maasdriver.poll_interval)
 
                             while (
-                                attempts < max_attempts and
-                                    (machine.status_name != 'Ready' and
-                                     not machine.status_name.startswith('Failed'))
+                                    attempts < max_attempts and
+                                (machine.status_name != 'Ready' and
+                                 not machine.status_name.startswith('Failed'))
                             ):
                                 attempts = attempts + 1
                                 time.sleep(cfg.CONF.maasdriver.poll_interval)

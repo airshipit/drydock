@@ -31,7 +31,6 @@ class YamlIngester(IngesterPlugin):
     def get_name(self):
         return "yaml"
 
-
     def ingest_data(self, **kwargs):
         """Parse and save design data.
 
@@ -61,7 +60,6 @@ class YamlIngester(IngesterPlugin):
             raise ValueError('Missing parameter "filename"')
 
         return models
-
 
     def parse_docs(self, yaml_string):
         """Translate a YAML string into the internal Drydock model."""
@@ -106,8 +104,10 @@ class YamlIngester(IngesterPlugin):
                                 tag_model.definition = t.get('definition', '')
 
                                 if tag_model.type not in ['lshw_xpath']:
-                                    raise ValueError('Unknown definition type in '
-                                                     'NodeTagDefinition: %s' % (t.definition_type))
+                                    raise ValueError(
+                                        'Unknown definition type in '
+                                        'NodeTagDefinition: %s' %
+                                        (t.definition_type))
                                 model.tag_definitions.append(tag_model)
 
                             auth_keys = spec.get('authorized_keys', [])
@@ -145,7 +145,9 @@ class YamlIngester(IngesterPlugin):
                             for k, v in location.items():
                                 model.location[k] = v
 
-                            model.local_networks = [n for n in spec.get('local_networks', [])]
+                            model.local_networks = [
+                                n for n in spec.get('local_networks', [])
+                            ]
 
                             models.append(model)
                         else:
@@ -260,8 +262,10 @@ class YamlIngester(IngesterPlugin):
 
                             dhcp_relay = spec.get('dhcp_relay', None)
                             if dhcp_relay is not None:
-                                model.dhcp_relay_self_ip = dhcp_relay.get('self_ip', None)
-                                model.dhcp_relay_upstream_target = dhcp_relay.get('upstream_target', None)
+                                model.dhcp_relay_self_ip = dhcp_relay.get(
+                                    'self_ip', None)
+                                model.dhcp_relay_upstream_target = dhcp_relay.get(
+                                    'upstream_target', None)
 
                             models.append(model)
                     elif kind == 'HardwareProfile':
@@ -421,8 +425,9 @@ class YamlIngester(IngesterPlugin):
                                 addresses = spec.get('addressing', [])
 
                                 if len(addresses) == 0:
-                                    raise ValueError('BaremetalNode needs at least'
-                                                     ' 1 assigned address')
+                                    raise ValueError(
+                                        'BaremetalNode needs at least'
+                                        ' 1 assigned address')
 
                                 model.addressing = objects.IpAddressAssignmentList(
                                 )
@@ -453,8 +458,7 @@ class YamlIngester(IngesterPlugin):
                                 'Unknown API version %s of Kind HostProfile' %
                                 (api_version))
                 else:
-                    self.log.error(
-                        "Error processing document, no kind field")
+                    self.log.error("Error processing document, no kind field")
                     continue
             elif api.startswith('promenade/'):
                 (foo, api_version) = api.split('/')

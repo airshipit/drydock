@@ -14,6 +14,7 @@
 import requests
 import logging
 
+
 class DrydockSession(object):
     """
     A session to the Drydock API maintaining credentials and API options

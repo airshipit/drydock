@@ -184,7 +184,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             if n.get_id() == network_key:
                 return n
 
-        raise errors.DesignError("Network %s not found in design state" % network_key)
+        raise errors.DesignError(
+            "Network %s not found in design state" % network_key)
 
     def add_network_link(self, new_network_link):
         if new_network_link is None:
