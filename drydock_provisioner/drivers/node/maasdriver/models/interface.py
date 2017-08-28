@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""API model for MaaS network interface resource."""
+
 import logging
 
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
@@ -26,10 +28,10 @@ class Interface(model_base.ResourceBase):
     resource_url = 'nodes/{system_id}/interfaces/{resource_id}/'
     fields = [
         'resource_id', 'system_id', 'name', 'type', 'mac_address', 'vlan',
-        'links', 'effective_mtu', 'fabric_id'
+        'links', 'effective_mtu', 'fabric_id', 'mtu',
     ]
     json_fields = [
-        'name', 'type', 'mac_address', 'vlan', 'links', 'effective_mtu'
+        'name', 'type', 'mac_address', 'vlan', 'links', 'mtu',
     ]
 
     def __init__(self, api_client, **kwargs):
@@ -37,14 +39,14 @@ class Interface(model_base.ResourceBase):
         self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
     def attach_fabric(self, fabric_id=None, fabric_name=None):
-        """
-        Attach this interface to a MaaS fabric. Only one of fabric_id
-        or fabric_name should be specified. If both are, fabric_id rules
+        """Attach this interface to a MaaS fabric.
+
+        Only one of fabric_id or fabric_name should be specified. If both
+        are, fabric_id rules
 
         :param fabric_id: The MaaS resource ID of a network Fabric to connect to
         :param fabric_name: The name of a MaaS fabric to connect to
         """
-
         fabric = None
 
         fabrics = maas_fabric.Fabrics(self.api_client)
@@ -113,9 +115,9 @@ class Interface(model_base.ResourceBase):
                     subnet_cidr=None,
                     ip_address=None,
                     primary=False):
-        """
-        Link this interface to a MaaS subnet. One of subnet_id or subnet_cidr
-        should be specified. If both are, subnet_id rules.
+        """Link this interface to a MaaS subnet.
+
+        One of subnet_id or subnet_cidr should be specified. If both are, subnet_id rules.
 
         :param subnet_id: The MaaS resource ID of a network subnet to connect to
         :param subnet_cidr: The CIDR of a MaaS subnet to connect to
@@ -124,7 +126,6 @@ class Interface(model_base.ResourceBase):
         :param primary: Boolean of whether this interface is the primary interface of the node. This
                         sets the node default gateway to the gateway of the subnet
         """
-
         subnet = None
 
         subnets = maas_subnet.Subnets(self.api_client)
@@ -154,7 +155,7 @@ class Interface(model_base.ResourceBase):
                 (self.resource_id, subnet.resource_id))
             self.unlink_subnet(subnet.resource_id)
 
-        # TODO Probably need to enumerate link mode
+        # TODO(sh8121att) Probably need to enumerate link mode
         options = {
             'subnet': subnet.resource_id,
             'default_gateway': primary,
@@ -188,9 +189,31 @@ class Interface(model_base.ResourceBase):
 
         return
 
+    def responds_to_ip(self, ip_address):
+        """Check if this interface will respond to connections for an IP.
+
+        :param ip_address: string of the IP address we are checking
+
+        :return: true if this interface should respond to the IP, false otherwise
+        """
+        for l in getattr(self, 'links', []):
+            if l.get('ip_address', None) == ip_address:
+                return True
+
+        return False
+
+    def set_mtu(self, new_mtu):
+        """Set interface MTU
+
+        :param new_mtu: integer of the new MTU size for this inteface
+        """
+        self.mtu = new_mtu
+        self.update()
+
     @classmethod
     def from_dict(cls, api_client, obj_dict):
-        """
+        """Instantiate this model from a dictionary.
+
         Because MaaS decides to replace the resource ids with the
         representation of the resource, we must reverse it for a true
         representation of the Interface
@@ -231,15 +254,13 @@ class Interfaces(model_base.ResourceCollectionBase):
         self.system_id = kwargs.get('system_id', None)
 
     def create_vlan(self, vlan_tag, parent_name, mtu=None, tags=[]):
-        """
-        Create a new VLAN interface on this node
+        """Create a new VLAN interface on this node.
 
         :param vlan_tag: The VLAN ID (not MaaS resource id of a VLAN) to create interface for
         :param parent_name: The name of a MaaS interface to build the VLAN interface on top of
         :param mtu: Optional configuration of the interface MTU
         :param tags: Optional list of string tags to apply to the VLAN interface
         """
-
         self.refresh()
 
         parent_iface = self.singleton({'name': parent_name})

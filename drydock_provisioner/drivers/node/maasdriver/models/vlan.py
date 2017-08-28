@@ -22,11 +22,11 @@ class Vlan(model_base.ResourceBase):
     resource_url = 'fabrics/{fabric_id}/vlans/{api_id}/'
     fields = [
         'resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on',
-        'mtu', 'primary_rack', 'secondary_rack'
+        'mtu', 'primary_rack', 'secondary_rack', 'relay_vlan',
     ]
     json_fields = [
         'name', 'description', 'vid', 'dhcp_on', 'mtu', 'primary_rack',
-        'secondary_rack'
+        'secondary_rack', 'relay_vlan',
     ]
 
     def __init__(self, api_client, **kwargs):
@@ -51,6 +51,27 @@ class Vlan(model_base.ResourceBase):
             self.vid = 0
         else:
             self.vid = int(new_vid)
+
+    def set_dhcp_relay(self, relay_vlan_id):
+        self.relay_vlan = relay_vlan_id
+        self.update()
+
+    @classmethod
+    def from_dict(cls, api_client, obj_dict):
+        """
+        Because MaaS decides to replace the relay_vlan id with the
+        representation of the VLAN, we must reverse it for a true
+        representation of the resource
+        """
+        refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
+        if 'id' in obj_dict.keys():
+            refined_dict['resource_id'] = obj_dict.get('id')
+
+        if isinstance(refined_dict.get('relay_vlan', None), dict):
+            refined_dict['relay_vlan'] = refined_dict['relay_vlan']['id']
+
+        i = cls(api_client, **refined_dict)
+        return i
 
 
 class Vlans(model_base.ResourceCollectionBase):

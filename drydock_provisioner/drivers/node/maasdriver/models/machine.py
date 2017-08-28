@@ -41,6 +41,18 @@ class Machine(model_base.ResourceBase):
         else:
             self.interfaces = None
 
+    def interface_for_ip(self, ip_address):
+        """Find the machine interface that will respond to ip_address.
+
+        :param ip_address: The IP address to check interfaces
+
+        :return: The interface that responds to this IP or None
+        """
+        for i in self.interfaces:
+            if i.responds_to_ip(ip_address):
+                return i
+        return None
+
     def get_power_params(self):
         url = self.interpolate_url()
 
@@ -283,9 +295,7 @@ class Machines(model_base.ResourceCollectionBase):
         return maas_node
 
     def query(self, query):
-        """
-        Custom query method to deal with complex fields
-        """
+        """Custom query method to deal with complex fields."""
         result = list(self.resources.values())
         for (k, v) in query.items():
             if k.startswith('power_params.'):

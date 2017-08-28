@@ -1055,7 +1055,16 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                     if link_fabric is None:
                         link_fabric = maas_fabric.Fabric(
                             self.maas_client, name=l.name)
-                        fabrics.add(link_fabric)
+                        link_fabric = fabrics.add(link_fabric)
+
+                # Ensure that the MTU of the untagged VLAN on the fabric
+                # matches that on the NetworkLink config
+
+                vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=link_fabric.resource_id)
+                vlan_list.refresh()
+                vlan = vlan_list.singleton({'vid': 0})
+                vlan.mtu = l.mtu
+                vlan.update()
 
                 # Now that we have the fabrics sorted out, check
                 # that VLAN tags and subnet attributes are correct
@@ -1187,36 +1196,59 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                         vlan = vlan_list.select(subnet.vlan)
 
                         if dhcp_on and not vlan.dhcp_on:
+                            # check if design requires a dhcp relay and if the MaaS vlan already uses a dhcp_relay
                             self.logger.info(
                                 "DHCP enabled for subnet %s, activating in MaaS"
                                 % (subnet.name))
 
-                            # TODO(sh8121att): Ugly hack assuming a single rack controller
-                            # for now until we implement multirack
-                            resp = self.maas_client.get("rackcontrollers/")
+                            rack_ctlrs = maas_rack.RackControllers(self.maas_client)
+                            rack_ctlrs.refresh()
 
-                            if resp.ok:
-                                resp_json = resp.json()
+                            dhcp_config_set=False
 
-                                if not isinstance(resp_json, list):
-                                    self.logger.warning(
-                                        "Unexpected response when querying list of rack controllers"
-                                    )
-                                    self.logger.debug("%s" % resp.text)
-                                else:
-                                    if len(resp_json) > 1:
-                                        self.logger.warning(
-                                            "Received more than one rack controller, defaulting to first"
+                            for r in rack_ctlrs:
+                                if n.dhcp_relay_upstream_target is not None:
+                                    if r.interface_for_ip(n.dhcp_relay_upstream_target):
+                                        iface = r.interface_for_ip(n.dhcp_relay_upstream_target)
+                                        vlan.relay_vlan = iface.vlan
+                                        self.logger.debug(
+                                            "Relaying DHCP on vlan %s to vlan %s" % (vlan.resource_id, vlan.relay_vlan)
                                         )
+                                        result_detail['detail'].append(
+                                            "Relaying DHCP on vlan %s to vlan %s" % (vlan.resource_id, vlan.relay_vlan))
+                                        vlan.update()
+                                        dhcp_config_set=True
+                                        break
+                                else:
+                                    for i in r.interfaces:
+                                        if i.vlan == vlan.resource_id:
+                                            self.logger.debug(
+                                                "Rack controller %s has interface on vlan %s" %
+                                                (r.resource_id, vlan.resource_id))
+                                            rackctl_id = r.resource_id
 
-                                    rackctl_id = resp_json[0]['system_id']
+                                            vlan.dhcp_on = True
+                                            vlan.primary_rack = rackctl_id
+                                            self.logger.debug(
+                                                "Enabling DHCP on VLAN %s managed by rack ctlr %s"
+                                                % (vlan.resource_id, rackctl_id))
+                                            result_detail['detail'].append(
+                                                "Enabling DHCP on VLAN %s managed by rack ctlr %s"
+                                                % (vlan.resource_id, rackctl_id))
+                                            vlan.update()
+                                            dhcp_config_set=True
+                                            break
+                                if dhcp_config_set:
+                                    break
 
-                                    vlan.dhcp_on = True
-                                    vlan.primary_rack = rackctl_id
-                                    vlan.update()
-                                    self.logger.debug(
-                                        "Enabling DHCP on VLAN %s managed by rack ctlr %s"
-                                        % (vlan.resource_id, rackctl_id))
+                            if not dhcp_config_set:
+                                self.logger.error(
+                                    "Network %s requires DHCP, but could not locate a rack controller to serve it." %
+                                    (n.name))
+                                result_detail['detail'].append(
+                                    "Network %s requires DHCP, but could not locate a rack controller to serve it." %
+                                    (n.name))
+
                         elif dhcp_on and vlan.dhcp_on:
                             self.logger.info(
                                 "DHCP already enabled for subnet %s" %
@@ -1575,6 +1607,12 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                            fabric.resource_id))
                                     iface.attach_fabric(
                                         fabric_id=fabric.resource_id)
+
+                                if iface.effective_mtu != nl.mtu:
+                                    self.logger.debug(
+                                        "Updating interface %s MTU to %s"
+                                        % (i.device_name, nl.mtu))
+                                    iface.set_mtu(nl.mtu)
 
                                 for iface_net in getattr(i, 'networks', []):
                                     dd_net = site_design.get_network(iface_net)
