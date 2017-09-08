@@ -52,5 +52,5 @@ class NodeDriver(ProviderDriver):
         if task_action in self.supported_actions:
             return
         else:
-            raise DriverError("Unsupported action %s for driver %s" %
-                              (task_action, self.driver_desc))
+            raise errors.DriverError("Unsupported action %s for driver %s" %
+                                     (task_action, self.driver_desc))

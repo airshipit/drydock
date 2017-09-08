@@ -129,6 +129,10 @@ class DrydockConfig(object):
             default=5,
             help='Timeout in minutes for configuring node networking'),
         cfg.IntOpt(
+            'apply_node_storage',
+            default=5,
+            help='Timeout in minutes for configuring node storage'),
+        cfg.IntOpt(
             'apply_node_platform',
             default=5,
             help='Timeout in minutes for configuring node platform'),

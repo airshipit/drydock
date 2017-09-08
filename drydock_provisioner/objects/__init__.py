@@ -89,6 +89,11 @@ class Utils(object):
 
     @staticmethod
     def merge_lists(child_list, parent_list):
+        if child_list is None:
+            return parent_list
+
+        if parent_list is None:
+            return child_list
 
         effective_list = []
 
@@ -123,6 +128,11 @@ class Utils(object):
 
     @staticmethod
     def merge_dicts(child_dict, parent_dict):
+        if child_dict is None:
+            return parent_dict
+
+        if parent_dict is None:
+            return child_dict
 
         effective_dict = {}
 

@@ -464,7 +464,6 @@ class Orchestrator(object):
                         hd_fields.ActionResult.PartialSuccess,
                         hd_fields.ActionResult.Failure
                 ]:
-                    # TODO(sh8121att) This threshold should be a configurable default and tunable by task API
                     if node_identify_attempts > max_attempts:
                         failed = True
                         break
@@ -580,11 +579,54 @@ class Orchestrator(object):
             ]:
                 failed = True
 
+            node_storage_task = None
             if len(node_networking_task.result_detail['successful_nodes']) > 0:
                 self.logger.info(
-                    "Found %s successfully networked nodes, configuring platform."
+                    "Found %s successfully networked nodes, configuring storage."
                     % (len(node_networking_task.result_detail[
                         'successful_nodes'])))
+
+                node_storage_task = self.create_task(
+                    tasks.DriverTask,
+                    parent_Task_id=task.get_id(),
+                    design_id=design_id,
+                    action=hd_fields.OrchestratorAction.ApplyNodeStorage,
+                    task_scope={
+                        'node_names':
+                        node_networking_task.result_detail['successful_nodes']
+                    })
+
+                self.logger.info(
+                    "Starting node driver task %s to configure node storage." %
+                    (node_storage_task.get_id()))
+
+                node_driver.execute_task(node_storage_task.get_id())
+
+                node_storage_task = self.state_manager.get_task(
+                    node_storage_task.get_id())
+
+                if node_storage_task.get_result() in [
+                        hd_fields.ActionResult.Success,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    worked = True
+                elif node_storage_task.get_result() in [
+                        hd_fields.ActionResult.Failure,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    failed = True
+            else:
+                self.logger.warning(
+                    "No nodes successfully networked, skipping storage configuration subtask."
+                )
+
+            node_platform_task = None
+            if (node_storage_task is not None and
+                    len(node_storage_task.result_detail['successful_nodes']) >
+                    0):
+                self.logger.info(
+                    "Configured storage on %s nodes, configuring platform." %
+                    (len(node_storage_task.result_detail['successful_nodes'])))
 
                 node_platform_task = self.create_task(
                     tasks.DriverTask,
@@ -593,7 +635,7 @@ class Orchestrator(object):
                     action=hd_fields.OrchestratorAction.ApplyNodePlatform,
                     task_scope={
                         'node_names':
-                        node_networking_task.result_detail['successful_nodes']
+                        node_storage_task.result_detail['successful_nodes']
                     })
                 self.logger.info(
                     "Starting node driver task %s to configure node platform."
@@ -614,49 +656,49 @@ class Orchestrator(object):
                         hd_fields.ActionResult.PartialSuccess
                 ]:
                     failed = True
-
-                if len(node_platform_task.result_detail['successful_nodes']
-                       ) > 0:
-                    self.logger.info(
-                        "Configured platform on %s nodes, starting deployment."
-                        % (len(node_platform_task.result_detail[
-                            'successful_nodes'])))
-                    node_deploy_task = self.create_task(
-                        tasks.DriverTask,
-                        parent_task_id=task.get_id(),
-                        design_id=design_id,
-                        action=hd_fields.OrchestratorAction.DeployNode,
-                        task_scope={
-                            'node_names':
-                            node_platform_task.result_detail[
-                                'successful_nodes']
-                        })
-
-                    self.logger.info(
-                        "Starting node driver task %s to deploy nodes." %
-                        (node_deploy_task.get_id()))
-                    node_driver.execute_task(node_deploy_task.get_id())
-
-                    node_deploy_task = self.state_manager.get_task(
-                        node_deploy_task.get_id())
-
-                    if node_deploy_task.get_result() in [
-                            hd_fields.ActionResult.Success,
-                            hd_fields.ActionResult.PartialSuccess
-                    ]:
-                        worked = True
-                    elif node_deploy_task.get_result() in [
-                            hd_fields.ActionResult.Failure,
-                            hd_fields.ActionResult.PartialSuccess
-                    ]:
-                        failed = True
-                else:
-                    self.logger.warning(
-                        "Unable to configure platform on any nodes, skipping deploy subtask"
-                    )
             else:
                 self.logger.warning(
-                    "No nodes successfully networked, skipping platform configuration subtask"
+                    "No nodes with storage configuration, skipping platform configuration subtask."
+                )
+
+            node_deploy_task = None
+            if node_platform_task is not None and len(
+                    node_platform_task.result_detail['successful_nodes']) > 0:
+                self.logger.info(
+                    "Configured platform on %s nodes, starting deployment." %
+                    (len(node_platform_task.result_detail['successful_nodes'])
+                     ))
+                node_deploy_task = self.create_task(
+                    tasks.DriverTask,
+                    parent_task_id=task.get_id(),
+                    design_id=design_id,
+                    action=hd_fields.OrchestratorAction.DeployNode,
+                    task_scope={
+                        'node_names':
+                        node_platform_task.result_detail['successful_nodes']
+                    })
+
+                self.logger.info(
+                    "Starting node driver task %s to deploy nodes." %
+                    (node_deploy_task.get_id()))
+                node_driver.execute_task(node_deploy_task.get_id())
+
+                node_deploy_task = self.state_manager.get_task(
+                    node_deploy_task.get_id())
+
+                if node_deploy_task.get_result() in [
+                        hd_fields.ActionResult.Success,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    worked = True
+                elif node_deploy_task.get_result() in [
+                        hd_fields.ActionResult.Failure,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    failed = True
+            else:
+                self.logger.warning(
+                    "Unable to configure platform on any nodes, skipping deploy subtask"
                 )
 
             final_result = None

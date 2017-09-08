@@ -90,7 +90,7 @@ class BootdataResource(StatefulResource):
 r"""[Unit]
 Description=Promenade Initialization Service
 Documentation=http://github.com/att-comdev/drydock
-After=network.target local-fs.target
+After=network-online.target local-fs.target
 ConditionPathExists=!/var/lib/prom.done
 
 [Service]

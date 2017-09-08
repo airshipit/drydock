@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""YAML Ingester.
-This data ingester will consume YAML site topology documents."""
+"""This data ingester will consume YAML site topology documents."""
+
 import yaml
 import logging
 import base64
@@ -336,36 +336,83 @@ class YamlIngester(IngesterPlugin):
                                     model.oob_parameters[k] = v
 
                             storage = spec.get('storage', {})
-                            model.storage_layout = storage.get('layout', 'lvm')
 
-                            bootdisk = storage.get('bootdisk', {})
-                            model.bootdisk_device = bootdisk.get(
-                                'device', None)
-                            model.bootdisk_root_size = bootdisk.get(
-                                'root_size', None)
-                            model.bootdisk_boot_size = bootdisk.get(
-                                'boot_size', None)
+                            phys_devs = storage.get('physical_devices', {})
 
-                            partitions = storage.get('partitions', [])
-                            model.partitions = objects.HostPartitionList()
+                            model.storage_devices = objects.HostStorageDeviceList(
+                            )
 
-                            for p in partitions:
-                                part_model = objects.HostPartition()
+                            for k, v in phys_devs.items():
+                                sd = objects.HostStorageDevice(name=k)
+                                sd.source = hd_fields.ModelSource.Designed
 
-                                part_model.name = p.get('name', None)
-                                part_model.source = hd_fields.ModelSource.Designed
-                                part_model.device = p.get('device', None)
-                                part_model.part_uuid = p.get('part_uuid', None)
-                                part_model.size = p.get('size', None)
-                                part_model.mountpoint = p.get(
-                                    'mountpoint', None)
-                                part_model.fstype = p.get('fstype', 'ext4')
-                                part_model.mount_options = p.get(
-                                    'mount_options', 'defaults')
-                                part_model.fs_uuid = p.get('fs_uuid', None)
-                                part_model.fs_label = p.get('fs_label', None)
+                                if 'labels' in v:
+                                    sd.labels = v.get('labels').copy()
 
-                                model.partitions.append(part_model)
+                                if 'volume_group' in v:
+                                    vg = v.get('volume_group')
+                                    sd.volume_group = vg
+                                elif 'partitions' in v:
+                                    sd.partitions = objects.HostPartitionList()
+                                    for vv in v.get('partitions', []):
+                                        part_model = objects.HostPartition()
+
+                                        part_model.name = vv.get('name')
+                                        part_model.source = hd_fields.ModelSource.Designed
+                                        part_model.part_uuid = vv.get(
+                                            'part_uuid', None)
+                                        part_model.size = vv.get('size', None)
+
+                                        if 'labels' in vv:
+                                            part_model.labels = vv.get(
+                                                'labels').copy()
+
+                                        if 'volume_group' in vv:
+                                            part_model.volume_group = vv.get(
+                                                'vg')
+                                        elif 'filesystem' in vv:
+                                            fs_info = vv.get('filesystem', {})
+                                            part_model.mountpoint = fs_info.get(
+                                                'mountpoint', None)
+                                            part_model.fstype = fs_info.get(
+                                                'fstype', 'ext4')
+                                            part_model.mount_options = fs_info.get(
+                                                'mount_options', 'defaults')
+                                            part_model.fs_uuid = fs_info.get(
+                                                'fs_uuid', None)
+                                            part_model.fs_label = fs_info.get(
+                                                'fs_label', None)
+
+                                        sd.partitions.append(part_model)
+                                model.storage_devices.append(sd)
+
+                            model.volume_groups = objects.HostVolumeGroupList()
+                            vol_groups = storage.get('volume_groups', {})
+
+                            for k, v in vol_groups.items():
+                                vg = objects.HostVolumeGroup(name=k)
+                                vg.vg_uuid = v.get('vg_uuid', None)
+                                vg.logical_volumes = objects.HostVolumeList()
+                                model.volume_groups.append(vg)
+                                for vv in v.get('logical_volumes', []):
+                                    lv = objects.HostVolume(
+                                        name=vv.get('name'))
+                                    lv.size = vv.get('size', None)
+                                    lv.lv_uuid = vv.get('lv_uuid', None)
+                                    if 'filesystem' in vv:
+                                        fs_info = vv.get('filesystem', {})
+                                        lv.mountpoint = fs_info.get(
+                                            'mountpoint', None)
+                                        lv.fstype = fs_info.get(
+                                            'fstype', 'ext4')
+                                        lv.mount_options = fs_info.get(
+                                            'mount_options', 'defaults')
+                                        lv.fs_uuid = fs_info.get(
+                                            'fs_uuid', None)
+                                        lv.fs_label = fs_info.get(
+                                            'fs_label', None)
+
+                                    vg.logical_volumes.append(lv)
 
                             interfaces = spec.get('interfaces', [])
                             model.interfaces = objects.HostInterfaceList()

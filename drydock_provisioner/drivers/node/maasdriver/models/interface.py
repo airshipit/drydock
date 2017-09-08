@@ -27,11 +27,24 @@ class Interface(model_base.ResourceBase):
 
     resource_url = 'nodes/{system_id}/interfaces/{resource_id}/'
     fields = [
-        'resource_id', 'system_id', 'name', 'type', 'mac_address', 'vlan',
-        'links', 'effective_mtu', 'fabric_id', 'mtu',
+        'resource_id',
+        'system_id',
+        'name',
+        'type',
+        'mac_address',
+        'vlan',
+        'links',
+        'effective_mtu',
+        'fabric_id',
+        'mtu',
     ]
     json_fields = [
-        'name', 'type', 'mac_address', 'vlan', 'links', 'mtu',
+        'name',
+        'type',
+        'mac_address',
+        'vlan',
+        'links',
+        'mtu',
     ]
 
     def __init__(self, api_client, **kwargs):

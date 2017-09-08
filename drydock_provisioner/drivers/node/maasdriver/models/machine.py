@@ -11,22 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Model representing MAAS node/machine resource."""
 
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_interface
+import drydock_provisioner.drivers.node.maasdriver.models.blockdev as maas_blockdev
+import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
 
 import bson
-import yaml
 
 
 class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
     fields = [
-        'resource_id', 'hostname', 'power_type', 'power_state',
-        'power_parameters', 'interfaces', 'boot_interface', 'memory',
-        'cpu_count', 'tag_names', 'status_name', 'boot_mac', 'owner_data'
+        'resource_id',
+        'hostname',
+        'power_type',
+        'power_state',
+        'power_parameters',
+        'interfaces',
+        'boot_interface',
+        'memory',
+        'cpu_count',
+        'tag_names',
+        'status_name',
+        'boot_mac',
+        'owner_data',
+        'block_devices',
+        'volume_groups',
     ]
     json_fields = ['hostname', 'power_type']
 
@@ -38,8 +52,24 @@ class Machine(model_base.ResourceBase):
             self.interfaces = maas_interface.Interfaces(
                 api_client, system_id=self.resource_id)
             self.interfaces.refresh()
+            try:
+                self.block_devices = maas_blockdev.BlockDevices(
+                    api_client, system_id=self.resource_id)
+                self.block_devices.refresh()
+            except Exception as ex:
+                self.logger.warning("Failed loading node %s block devices." %
+                                    (self.resource_id))
+            try:
+                self.volume_groups = maas_vg.VolumeGroups(
+                    api_client, system_id=self.resource_id)
+                self.volume_groups.refresh()
+            except Exception as ex:
+                self.logger.warning("Failed load node %s volume groups." %
+                                    (self.resource_id))
         else:
             self.interfaces = None
+            self.block_devices = None
+            self.volume_groups = None
 
     def interface_for_ip(self, ip_address):
         """Find the machine interface that will respond to ip_address.
@@ -60,6 +90,100 @@ class Machine(model_base.ResourceBase):
 
         if resp.status_code == 200:
             self.power_parameters = resp.json()
+
+    def reset_storage_config(self):
+        """Reset storage config on this machine.
+
+        Removes all the volume groups/logical volumes and all the physical
+        device partitions on this machine.
+        """
+        self.logger.info("Resetting storage configuration on node %s" %
+                         (self.resource_id))
+        if self.volume_groups is not None and self.volume_groups.len() > 0:
+            for vg in self.volume_groups:
+                self.logger.debug("Removing VG %s" % vg.name)
+                vg.delete()
+        else:
+            self.logger.debug("No VGs configured on node %s" %
+                              (self.resource_id))
+
+        if self.block_devices is not None:
+            for d in self.block_devices:
+                if d.partitions is not None and d.partitions.len() > 0:
+                    self.logger.debug(
+                        "Clearing partitions on device %s" % d.name)
+                    d.clear_partitions()
+                else:
+                    self.logger.debug(
+                        "No partitions found on device %s" % d.name)
+        else:
+            self.logger.debug("No block devices found on node %s" %
+                              (self.resource_id))
+
+    def set_storage_layout(self,
+                           layout_type='flat',
+                           root_device=None,
+                           root_size=None,
+                           boot_size=None,
+                           root_lv_size=None,
+                           root_vg_name=None,
+                           root_lv_name=None):
+        """Set machine storage layout for the root disk.
+
+        :param layout_type: Whether to use 'flat' (partitions) or 'lvm' for the root filesystem
+        :param root_device: Name of the block device to place the root partition on
+        :param root_size: Size of the root partition in bytes
+        :param boot_size: Size of the boot partition in bytes
+        :param root_lv_size: Size of the root logical volume in bytes for LVM layout
+        :param root_vg_name: Name of the volume group with root LV
+        :param root_lv_name: Name of the root LV
+        """
+        try:
+            url = self.interpolate_url()
+            self.block_devices.refresh()
+
+            root_dev = self.block_devices.singleton({'name': root_device})
+
+            if root_dev is None:
+                msg = "Error: cannot find storage device %s to set as root device" % root_device
+                self.logger.error(msg)
+                raise errors.DriverError(msg)
+
+            root_dev.set_bootable()
+
+            data = {
+                'storage_layout': layout_type,
+                'root_device': root_dev.resource_id,
+            }
+
+            self.logger.debug("Setting node %s storage layout to %s" %
+                              (self.hostname, layout_type))
+
+            if root_size:
+                data['root_size'] = root_size
+
+            if boot_size:
+                data['boot_size'] = boot_size
+
+            if layout_type == 'lvm':
+                if root_lv_size:
+                    data['lv_size'] = root_lv_size
+                if root_vg_name:
+                    data['vg_name'] = root_vg_name
+                if root_lv_name:
+                    data['lv_name'] = root_lv_name
+
+            resp = self.api_client.post(
+                url, op='set_storage_layout', files=data)
+
+            if not resp.ok:
+                raise Exception("MAAS Error: %s - %s" % (resp.status_code,
+                                                         resp.text))
+        except Exception as ex:
+            msg = "Error: failed configuring node %s storage layout: %s" % (
+                self.resource_id, str(ex))
+            self.logger.error(msg)
+            raise errors.DriverError(msg)
 
     def commission(self, debug=False):
         url = self.interpolate_url()

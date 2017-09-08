@@ -18,6 +18,8 @@ import logging
 import traceback
 import sys
 import uuid
+import re
+import math
 
 from oslo_config import cfg
 
@@ -25,6 +27,7 @@ import drydock_provisioner.error as errors
 import drydock_provisioner.drivers as drivers
 import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.objects.task as task_model
+import drydock_provisioner.objects.hostprofile as hostprofile
 
 from drydock_provisioner.drivers.node import NodeDriver
 from drydock_provisioner.drivers.node.maasdriver.api_client import MaasRequestFactory
@@ -37,6 +40,8 @@ import drydock_provisioner.drivers.node.maasdriver.models.tag as maas_tag
 import drydock_provisioner.drivers.node.maasdriver.models.sshkey as maas_keys
 import drydock_provisioner.drivers.node.maasdriver.models.boot_resource as maas_boot_res
 import drydock_provisioner.drivers.node.maasdriver.models.rack_controller as maas_rack
+import drydock_provisioner.drivers.node.maasdriver.models.partition as maas_partition
+import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
 
 
 class MaasNodeDriver(NodeDriver):
@@ -167,8 +172,6 @@ class MaasNodeDriver(NodeDriver):
 
         self.orchestrator.task_field_update(
             task.get_id(), status=hd_fields.TaskStatus.Running)
-
-        site_design = self.orchestrator.get_effective_site(design_id)
 
         if task.action == hd_fields.OrchestratorAction.CreateNetworkTemplate:
 
@@ -534,6 +537,99 @@ class MaasNodeDriver(NodeDriver):
                 status=hd_fields.TaskStatus.Complete,
                 result=result,
                 result_detail=result_detail)
+        elif task.action == hd_fields.OrchestratorAction.ApplyNodeStorage:
+            self.orchestrator.task_field_update(
+                task.get_id(), status=hd_fields.TaskStatus.Running)
+
+            self.logger.debug(
+                "Starting subtask to configure the storage on %s nodes." %
+                (len(task.node_list)))
+
+            subtasks = []
+
+            result_detail = {
+                'detail': [],
+                'failed_nodes': [],
+                'successful_nodes': [],
+            }
+
+            for n in task.node_list:
+                subtask = self.orchestrator.create_task(
+                    task_model.DriverTask,
+                    parent_task_id=task.get_id(),
+                    design_id=design_id,
+                    action=hd_fields.OrchestratorAction.ApplyNodeStorage,
+                    task_scope={'node_names': [n]})
+                runner = MaasTaskRunner(
+                    state_manager=self.state_manager,
+                    orchestrator=self.orchestrator,
+                    task_id=subtask.get_id())
+
+                self.logger.info(
+                    "Starting thread for task %s to config node %s storage" %
+                    (subtask.get_id(), n))
+
+                runner.start()
+                subtasks.append(subtask.get_id())
+
+            cleaned_subtasks = []
+            attempts = 0
+            max_attempts = cfg.CONF.timeouts.apply_node_storage * (
+                60 // cfg.CONF.poll_interval)
+            worked = failed = False
+
+            self.logger.debug(
+                "Polling for subtask completion every %d seconds, a max of %d polls."
+                % (cfg.CONF.poll_interval, max_attempts))
+
+            while len(cleaned_subtasks) < len(
+                    subtasks) and attempts < max_attempts:
+                for t in subtasks:
+                    if t in cleaned_subtasks:
+                        continue
+
+                    subtask = self.state_manager.get_task(t)
+
+                    if subtask.status == hd_fields.TaskStatus.Complete:
+                        self.logger.info(
+                            "Task %s to configure node storage complete - status %s"
+                            % (subtask.get_id(), subtask.get_result()))
+                        cleaned_subtasks.append(t)
+
+                        if subtask.result == hd_fields.ActionResult.Success:
+                            result_detail['successful_nodes'].extend(
+                                subtask.node_list)
+                            worked = True
+                        elif subtask.result == hd_fields.ActionResult.Failure:
+                            result_detail['failed_nodes'].extend(
+                                subtask.node_list)
+                            failed = True
+                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
+                            worked = failed = True
+
+                time.sleep(cfg.CONF.poll_interval)
+                attempts = attempts + 1
+
+            if len(cleaned_subtasks) < len(subtasks):
+                self.logger.warning(
+                    "Time out for task %s before all subtask threads complete"
+                    % (task.get_id()))
+                result = hd_fields.ActionResult.DependentFailure
+                result_detail['detail'].append(
+                    'Some subtasks did not complete before the timeout threshold'
+                )
+            elif worked and failed:
+                result = hd_fields.ActionResult.PartialSuccess
+            elif worked:
+                result = hd_fields.ActionResult.Success
+            else:
+                result = hd_fields.ActionResult.Failure
+
+            self.orchestrator.task_field_update(
+                task.get_id(),
+                status=hd_fields.TaskStatus.Complete,
+                result=result,
+                result_detail=result_detail)
         elif task.action == hd_fields.OrchestratorAction.ApplyNodePlatform:
             self.orchestrator.task_field_update(
                 task.get_id(), status=hd_fields.TaskStatus.Running)
@@ -719,260 +815,6 @@ class MaasNodeDriver(NodeDriver):
                 status=hd_fields.TaskStatus.Complete,
                 result=result,
                 result_detail=result_detail)
-        elif task.action == hd_fields.OrchestratorAction.ApplyNodeNetworking:
-            self.orchestrator.task_field_update(
-                task.get_id(), status=hd_fields.TaskStatus.Running)
-
-            self.logger.debug(
-                "Starting subtask to configure networking on %s nodes." %
-                (len(task.node_list)))
-
-            subtasks = []
-
-            result_detail = {
-                'detail': [],
-                'failed_nodes': [],
-                'successful_nodes': [],
-            }
-
-            for n in task.node_list:
-                subtask = self.orchestrator.create_task(
-                    task_model.DriverTask,
-                    parent_task_id=task.get_id(),
-                    design_id=design_id,
-                    action=hd_fields.OrchestratorAction.ApplyNodeNetworking,
-                    site_name=task.site_name,
-                    task_scope={'site': task.site_name,
-                                'node_names': [n]})
-                runner = MaasTaskRunner(
-                    state_manager=self.state_manager,
-                    orchestrator=self.orchestrator,
-                    task_id=subtask.get_id())
-
-                self.logger.info(
-                    "Starting thread for task %s to configure networking on node %s"
-                    % (subtask.get_id(), n))
-
-                runner.start()
-                subtasks.append(subtask.get_id())
-
-            running_subtasks = len(subtasks)
-            attempts = 0
-            worked = failed = False
-
-            while running_subtasks > 0 and attempts < cfg.CONF.timeouts.apply_node_networking:
-                for t in subtasks:
-                    subtask = self.state_manager.get_task(t)
-
-                    if subtask.status == hd_fields.TaskStatus.Complete:
-                        self.logger.info(
-                            "Task %s to apply networking on node %s complete - status %s"
-                            % (subtask.get_id(), n, subtask.get_result()))
-                        running_subtasks = running_subtasks - 1
-
-                        if subtask.result == hd_fields.ActionResult.Success:
-                            result_detail['successful_nodes'].extend(
-                                subtask.node_list)
-                            worked = True
-                        elif subtask.result == hd_fields.ActionResult.Failure:
-                            result_detail['failed_nodes'].extend(
-                                subtask.node_list)
-                            failed = True
-                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
-                            worked = failed = True
-
-                time.sleep(1 * 60)
-                attempts = attempts + 1
-
-            if running_subtasks > 0:
-                self.logger.warning(
-                    "Time out for task %s before all subtask threads complete"
-                    % (task.get_id()))
-                result = hd_fields.ActionResult.DependentFailure
-                result_detail['detail'].append(
-                    'Some subtasks did not complete before the timeout threshold'
-                )
-            elif worked and failed:
-                result = hd_fields.ActionResult.PartialSuccess
-            elif worked:
-                result = hd_fields.ActionResult.Success
-            else:
-                result = hd_fields.ActionResult.Failure
-
-            self.orchestrator.task_field_update(
-                task.get_id(),
-                status=hd_fields.TaskStatus.Complete,
-                result=result,
-                result_detail=result_detail)
-        elif task.action == hd_fields.OrchestratorAction.ApplyNodePlatform:
-            self.orchestrator.task_field_update(
-                task.get_id(), status=hd_fields.TaskStatus.Running)
-
-            self.logger.debug(
-                "Starting subtask to configure the platform on %s nodes." %
-                (len(task.node_list)))
-
-            subtasks = []
-
-            result_detail = {
-                'detail': [],
-                'failed_nodes': [],
-                'successful_nodes': [],
-            }
-
-            for n in task.node_list:
-                subtask = self.orchestrator.create_task(
-                    task_model.DriverTask,
-                    parent_task_id=task.get_id(),
-                    design_id=design_id,
-                    action=hd_fields.OrchestratorAction.ApplyNodePlatform,
-                    site_name=task.site_name,
-                    task_scope={'site': task.site_name,
-                                'node_names': [n]})
-                runner = MaasTaskRunner(
-                    state_manager=self.state_manager,
-                    orchestrator=self.orchestrator,
-                    task_id=subtask.get_id())
-
-                self.logger.info(
-                    "Starting thread for task %s to config node %s platform" %
-                    (subtask.get_id(), n))
-
-                runner.start()
-                subtasks.append(subtask.get_id())
-
-            running_subtasks = len(subtasks)
-            attempts = 0
-            worked = failed = False
-
-            while running_subtasks > 0 and attempts < cfg.CONF.timeouts.apply_node_platform:
-                for t in subtasks:
-                    subtask = self.state_manager.get_task(t)
-
-                    if subtask.status == hd_fields.TaskStatus.Complete:
-                        self.logger.info(
-                            "Task %s to configure node %s platform complete - status %s"
-                            % (subtask.get_id(), n, subtask.get_result()))
-                        running_subtasks = running_subtasks - 1
-
-                        if subtask.result == hd_fields.ActionResult.Success:
-                            result_detail['successful_nodes'].extend(
-                                subtask.node_list)
-                            worked = True
-                        elif subtask.result == hd_fields.ActionResult.Failure:
-                            result_detail['failed_nodes'].extend(
-                                subtask.node_list)
-                            failed = True
-                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
-                            worked = failed = True
-
-                time.sleep(1 * 60)
-                attempts = attempts + 1
-
-            if running_subtasks > 0:
-                self.logger.warning(
-                    "Time out for task %s before all subtask threads complete"
-                    % (task.get_id()))
-                result = hd_fields.ActionResult.DependentFailure
-                result_detail['detail'].append(
-                    'Some subtasks did not complete before the timeout threshold'
-                )
-            elif worked and failed:
-                result = hd_fields.ActionResult.PartialSuccess
-            elif worked:
-                result = hd_fields.ActionResult.Success
-            else:
-                result = hd_fields.ActionResult.Failure
-
-            self.orchestrator.task_field_update(
-                task.get_id(),
-                status=hd_fields.TaskStatus.Complete,
-                result=result,
-                result_detail=result_detail)
-        elif task.action == hd_fields.OrchestratorAction.DeployNode:
-            self.orchestrator.task_field_update(
-                task.get_id(), status=hd_fields.TaskStatus.Running)
-
-            self.logger.debug("Starting subtask to deploy %s nodes." %
-                              (len(task.node_list)))
-
-            subtasks = []
-
-            result_detail = {
-                'detail': [],
-                'failed_nodes': [],
-                'successful_nodes': [],
-            }
-
-            for n in task.node_list:
-                subtask = self.orchestrator.create_task(
-                    task_model.DriverTask,
-                    parent_task_id=task.get_id(),
-                    design_id=design_id,
-                    action=hd_fields.OrchestratorAction.DeployNode,
-                    site_name=task.site_name,
-                    task_scope={'site': task.site_name,
-                                'node_names': [n]})
-                runner = MaasTaskRunner(
-                    state_manager=self.state_manager,
-                    orchestrator=self.orchestrator,
-                    task_id=subtask.get_id())
-
-                self.logger.info(
-                    "Starting thread for task %s to deploy node %s" %
-                    (subtask.get_id(), n))
-
-                runner.start()
-                subtasks.append(subtask.get_id())
-
-            running_subtasks = len(subtasks)
-            attempts = 0
-            worked = failed = False
-
-            while running_subtasks > 0 and attempts < cfg.CONF.timeouts.deploy_node:
-                for t in subtasks:
-                    subtask = self.state_manager.get_task(t)
-
-                    if subtask.status == hd_fields.TaskStatus.Complete:
-                        self.logger.info(
-                            "Task %s to deploy node %s complete - status %s" %
-                            (subtask.get_id(), n, subtask.get_result()))
-                        running_subtasks = running_subtasks - 1
-
-                        if subtask.result == hd_fields.ActionResult.Success:
-                            result_detail['successful_nodes'].extend(
-                                subtask.node_list)
-                            worked = True
-                        elif subtask.result == hd_fields.ActionResult.Failure:
-                            result_detail['failed_nodes'].extend(
-                                subtask.node_list)
-                            failed = True
-                        elif subtask.result == hd_fields.ActionResult.PartialSuccess:
-                            worked = failed = True
-
-                time.sleep(1 * 60)
-                attempts = attempts + 1
-
-            if running_subtasks > 0:
-                self.logger.warning(
-                    "Time out for task %s before all subtask threads complete"
-                    % (task.get_id()))
-                result = hd_fields.ActionResult.DependentFailure
-                result_detail['detail'].append(
-                    'Some subtasks did not complete before the timeout threshold'
-                )
-            elif worked and failed:
-                result = hd_fields.ActionResult.PartialSuccess
-            elif worked:
-                result = hd_fields.ActionResult.Success
-            else:
-                result = hd_fields.ActionResult.Failure
-
-            self.orchestrator.task_field_update(
-                task.get_id(),
-                status=hd_fields.TaskStatus.Complete,
-                result=result,
-                result_detail=result_detail)
 
 
 class MaasTaskRunner(drivers.DriverTaskRunner):
@@ -1060,7 +902,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 # Ensure that the MTU of the untagged VLAN on the fabric
                 # matches that on the NetworkLink config
 
-                vlan_list = maas_vlan.Vlans(self.maas_client, fabric_id=link_fabric.resource_id)
+                vlan_list = maas_vlan.Vlans(
+                    self.maas_client, fabric_id=link_fabric.resource_id)
                 vlan_list.refresh()
                 vlan = vlan_list.singleton({'vid': 0})
                 vlan.mtu = l.mtu
@@ -1126,7 +969,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     self.maas_client,
                                     name=n.name,
                                     cidr=n.cidr,
-                                    dns_servers = n.dns_servers,
+                                    dns_servers=n.dns_servers,
                                     fabric=fabric.resource_id,
                                     vlan=vlan.resource_id,
                                     gateway_ip=n.get_default_gateway())
@@ -1202,53 +1045,62 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 "DHCP enabled for subnet %s, activating in MaaS"
                                 % (subnet.name))
 
-                            rack_ctlrs = maas_rack.RackControllers(self.maas_client)
+                            rack_ctlrs = maas_rack.RackControllers(
+                                self.maas_client)
                             rack_ctlrs.refresh()
 
-                            dhcp_config_set=False
+                            dhcp_config_set = False
 
                             for r in rack_ctlrs:
                                 if n.dhcp_relay_upstream_target is not None:
-                                    if r.interface_for_ip(n.dhcp_relay_upstream_target):
-                                        iface = r.interface_for_ip(n.dhcp_relay_upstream_target)
+                                    if r.interface_for_ip(
+                                            n.dhcp_relay_upstream_target):
+                                        iface = r.interface_for_ip(
+                                            n.dhcp_relay_upstream_target)
                                         vlan.relay_vlan = iface.vlan
                                         self.logger.debug(
-                                            "Relaying DHCP on vlan %s to vlan %s" % (vlan.resource_id, vlan.relay_vlan)
-                                        )
+                                            "Relaying DHCP on vlan %s to vlan %s"
+                                            % (vlan.resource_id,
+                                               vlan.relay_vlan))
                                         result_detail['detail'].append(
-                                            "Relaying DHCP on vlan %s to vlan %s" % (vlan.resource_id, vlan.relay_vlan))
+                                            "Relaying DHCP on vlan %s to vlan %s"
+                                            % (vlan.resource_id,
+                                               vlan.relay_vlan))
                                         vlan.update()
-                                        dhcp_config_set=True
+                                        dhcp_config_set = True
                                         break
                                 else:
                                     for i in r.interfaces:
                                         if i.vlan == vlan.resource_id:
                                             self.logger.debug(
-                                                "Rack controller %s has interface on vlan %s" %
-                                                (r.resource_id, vlan.resource_id))
+                                                "Rack controller %s has interface on vlan %s"
+                                                % (r.resource_id,
+                                                   vlan.resource_id))
                                             rackctl_id = r.resource_id
 
                                             vlan.dhcp_on = True
                                             vlan.primary_rack = rackctl_id
                                             self.logger.debug(
                                                 "Enabling DHCP on VLAN %s managed by rack ctlr %s"
-                                                % (vlan.resource_id, rackctl_id))
+                                                % (vlan.resource_id,
+                                                   rackctl_id))
                                             result_detail['detail'].append(
                                                 "Enabling DHCP on VLAN %s managed by rack ctlr %s"
-                                                % (vlan.resource_id, rackctl_id))
+                                                % (vlan.resource_id,
+                                                   rackctl_id))
                                             vlan.update()
-                                            dhcp_config_set=True
+                                            dhcp_config_set = True
                                             break
                                 if dhcp_config_set:
                                     break
 
                             if not dhcp_config_set:
                                 self.logger.error(
-                                    "Network %s requires DHCP, but could not locate a rack controller to serve it." %
-                                    (n.name))
+                                    "Network %s requires DHCP, but could not locate a rack controller to serve it."
+                                    % (n.name))
                                 result_detail['detail'].append(
-                                    "Network %s requires DHCP, but could not locate a rack controller to serve it." %
-                                    (n.name))
+                                    "Network %s requires DHCP, but could not locate a rack controller to serve it."
+                                    % (n.name))
 
                         elif dhcp_on and vlan.dhcp_on:
                             self.logger.info(
@@ -1465,7 +1317,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 except:
                                     self.logger.warning(
                                         "Error updating node %s status during commissioning, will re-attempt."
-                                        % (n))
+                                        % (n),
+                                        exc_info=True)
                             if machine.status_name == 'Ready':
                                 self.logger.info("Node %s commissioned." % (n))
                                 result_detail['detail'].append(
@@ -1611,8 +1464,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
 
                                 if iface.effective_mtu != nl.mtu:
                                     self.logger.debug(
-                                        "Updating interface %s MTU to %s"
-                                        % (i.device_name, nl.mtu))
+                                        "Updating interface %s MTU to %s" %
+                                        (i.device_name, nl.mtu))
                                     iface.set_mtu(nl.mtu)
 
                                 for iface_net in getattr(i, 'networks', []):
@@ -1891,6 +1744,247 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete,
                 result=final_result,
                 result_detail=result_detail)
+        elif task_action == hd_fields.OrchestratorAction.ApplyNodeStorage:
+            try:
+                machine_list = maas_machine.Machines(self.maas_client)
+                machine_list.refresh()
+            except Exception as ex:
+                self.logger.error(
+                    "Error configuring node storage, cannot access MaaS: %s" %
+                    str(ex))
+                traceback.print_tb(sys.last_traceback)
+                self.orchestrator.task_field_update(
+                    self.task.get_id(),
+                    status=hd_fields.TaskStatus.Complete,
+                    result=hd_fields.ActionResult.Failure,
+                    result_detail={
+                        'detail': 'Error accessing MaaS API',
+                        'retry': True
+                    })
+                return
+
+            nodes = self.task.node_list
+
+            result_detail = {'detail': []}
+
+            worked = failed = False
+
+            for n in nodes:
+                try:
+                    self.logger.debug(
+                        "Locating node %s for storage configuration" % (n))
+
+                    node = site_design.get_baremetal_node(n)
+                    machine = machine_list.identify_baremetal_node(
+                        node, update_name=False)
+
+                    if machine is None:
+                        self.logger.warning(
+                            "Could not locate machine for node %s" % n)
+                        result_detail['detail'].append(
+                            "Could not locate machine for node %s" % n)
+                        failed = True
+                        continue
+                except Exception as ex1:
+                    failed = True
+                    self.logger.error(
+                        "Error locating machine for node %s: %s" % (n,
+                                                                    str(ex1)))
+                    result_detail['detail'].append(
+                        "Error locating machine for node %s" % (n))
+                    continue
+
+                try:
+                    """
+                    1. Clear VGs
+                    2. Clear partitions
+                    3. Apply partitioning
+                    4. Create VGs
+                    5. Create logical volumes
+                    """
+                    self.logger.debug(
+                        "Clearing current storage layout on node %s." %
+                        node.name)
+                    machine.reset_storage_config()
+
+                    (root_dev, root_block) = node.find_fs_block_device('/')
+                    (boot_dev, boot_block) = node.find_fs_block_device('/boot')
+
+                    storage_layout = dict()
+                    if isinstance(root_block, hostprofile.HostPartition):
+                        storage_layout['layout_type'] = 'flat'
+                        storage_layout['root_device'] = root_dev.name
+                        storage_layout['root_size'] = root_block.size
+                    elif isinstance(root_block, hostprofile.HostVolume):
+                        storage_layout['layout_type'] = 'lvm'
+                        if len(root_dev.physical_devices) != 1:
+                            msg = "Root LV in VG with multiple physical devices on node %s" % (
+                                node.name)
+                            self.logger.error(msg)
+                            result_detail['detail'].append(msg)
+                            failed = True
+                            continue
+                        storage_layout[
+                            'root_device'] = root_dev.physical_devices[0]
+                        storage_layout['root_lv_size'] = root_block.size
+                        storage_layout['root_lv_name'] = root_block.name
+                        storage_layout['root_vg_name'] = root_dev.name
+
+                    if boot_block is not None:
+                        storage_layout['boot_size'] = boot_block.size
+
+                    self.logger.debug(
+                        "Setting node %s root storage layout: %s" %
+                        (node.name, str(storage_layout)))
+
+                    machine.set_storage_layout(**storage_layout)
+                    vg_devs = {}
+
+                    for d in node.storage_devices:
+                        maas_dev = machine.block_devices.singleton({
+                            'name':
+                            d.name
+                        })
+                        if maas_dev is None:
+                            self.logger.warning("Dev %s not found on node %s" %
+                                                (d.name, node.name))
+                            continue
+
+                        if d.volume_group is not None:
+                            self.logger.debug(
+                                "Adding dev %s to volume group %s" %
+                                (d.name, d.volume_group))
+                            if d.volume_group not in vg_devs:
+                                vg_devs[d.volume_group] = {'b': [], 'p': []}
+                            vg_devs[d.volume_group]['b'].append(
+                                maas_dev.resource_id)
+                            continue
+
+                        self.logger.debug("Partitioning dev %s on node %s" %
+                                          (d.name, node.name))
+                        for p in d.partitions:
+                            if p.is_sys():
+                                self.logger.debug(
+                                    "Skipping manually configuring a system partition."
+                                )
+                                continue
+                            maas_dev.refresh()
+                            size = MaasTaskRunner.calculate_bytes(
+                                size_str=p.size, context=maas_dev)
+                            part = maas_partition.Partition(
+                                self.maas_client,
+                                size=size,
+                                bootable=p.bootable)
+                            if p.part_uuid is not None:
+                                part.uuid = p.part_uuid
+                            self.logger.debug(
+                                "Creating partition %s on dev %s" % (p.name,
+                                                                     d.name))
+                            part = maas_dev.create_partition(part)
+
+                            if p.volume_group is not None:
+                                self.logger.debug(
+                                    "Adding partition %s to volume group %s" %
+                                    (p.name, p.volume_group))
+                                if p.volume_group not in vg_devs:
+                                    vg_devs[p.volume_group] = {
+                                        'b': [],
+                                        'p': []
+                                    }
+                                vg_devs[p.volume_group]['p'].append(
+                                    part.resource_id)
+
+                            if p.mountpoint is not None:
+                                format_opts = {'fstype': p.fstype}
+                                if p.fs_uuid is not None:
+                                    format_opts['uuid'] = str(p.fs_uuid)
+                                if p.fs_label is not None:
+                                    format_opts['label'] = p.fs_label
+
+                                self.logger.debug(
+                                    "Formatting partition %s as %s" %
+                                    (p.name, p.fstype))
+                                part.format(**format_opts)
+                                mount_opts = {
+                                    'mount_point': p.mountpoint,
+                                    'mount_options': p.mount_options,
+                                }
+                                self.logger.debug(
+                                    "Mounting partition %s on %s" % (p.name,
+                                                                     p.mount))
+                                part.mount(**mount_opts)
+
+                    self.logger.debug(
+                        "Finished configuring node %s partitions" % node.name)
+
+                    for v in node.volume_groups:
+                        if v.is_sys():
+                            self.logger.debug(
+                                "Skipping manually configuraing system VG.")
+                            continue
+                        if v.name not in vg_devs:
+                            self.logger.warning(
+                                "No physical volumes defined for VG %s, skipping."
+                                % (v.name))
+                            continue
+
+                        maas_volgroup = maas_vg.VolumeGroup(
+                            self.maas_client, name=v.name)
+
+                        if v.vg_uuid is not None:
+                            maas_volgroup.uuid = v.vg_uuid
+
+                        if len(vg_devs[v.name]['b']) > 0:
+                            maas_volgroup.block_devices = ','.join(
+                                [str(x) for x in vg_devs[v.name]['b']])
+                        if len(vg_devs[v.name]['p']) > 0:
+                            maas_volgroup.partitions = ','.join(
+                                [str(x) for x in vg_devs[v.name]['p']])
+
+                        self.logger.debug(
+                            "Creating volume group %s on node %s" %
+                            (v.name, node.name))
+
+                        maas_volgroup = machine.volume_groups.add(
+                            maas_volgroup)
+                        maas_volgroup.refresh()
+
+                        for lv in v.logical_volumes:
+                            calc_size = MaasTaskRunner.calculate_bytes(size_str=lv.size, context=maas_volgroup)
+                            bd_id = maas_volgroup.create_lv(
+                                name=lv.name,
+                                uuid_str=lv.lv_uuid,
+                                size=calc_size)
+
+                            if lv.mountpoint is not None:
+                                machine.refresh()
+                                maas_lv = machine.block_devices.select(bd_id)
+                                self.logger.debug(
+                                    "Formatting LV %s as filesystem on node %s."
+                                    % (lv.name, node.name))
+                                maas_lv.format(
+                                    fstype=lv.fstype, uuid_str=lv.fs_uuid)
+                                self.logger.debug(
+                                    "Mounting LV %s at %s on node %s." %
+                                    (lv.name, lv.mountpoint, node.name))
+                                maas_lv.mount(
+                                    mount_point=lv.mountpoint,
+                                    mount_options=lv.mount_options)
+                except Exception as ex:
+                    raise errors.DriverError(str(ex))
+
+            if worked and failed:
+                final_result = hd_fields.ActionResult.PartialSuccess
+            elif failed:
+                final_result = hd_fields.ActionResult.Failure
+            else:
+                final_result = hd_fields.ActionResult.Success
+
+            self.orchestrator.task_field_update(
+                self.task.get_id(),
+                status=hd_fields.TaskStatus.Complete,
+                result=final_result,
+                result_detail=result_detail)
         elif task_action == hd_fields.OrchestratorAction.DeployNode:
             try:
                 machine_list = maas_machine.Machines(self.maas_client)
@@ -2017,6 +2111,62 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                 status=hd_fields.TaskStatus.Complete,
                 result=final_result,
                 result_detail=result_detail)
+
+    @classmethod
+    def calculate_bytes(cls, size_str=None, context=None):
+        """Calculate the size on bytes of a size_str.
+
+        Calculate the size as specified in size_str in the context of the provided
+        blockdev or vg. Valid size_str format below.
+
+        #m or #M or #mb or #MB = # * 1024 * 1024
+        #g or #G or #gb or #GB = # * 1024 * 1024 * 1024
+        #t or #T or #tb or #TB = # * 1024 * 1024 * 1024 * 1024
+        #% = Percentage of the total storage in the context
+
+        Prepend '>' to the above to note the size as a minimum and the calculated size being the
+        remaining storage available above the minimum
+
+        If the calculated size is not available in the context, a NotEnoughStorage exception is
+        raised.
+
+        :param size_str: A string representing the desired size
+        :param context: An instance of maasdriver.models.blockdev.BlockDevice or
+                        instance of maasdriver.models.volumegroup.VolumeGroup. The
+                        size_str is interpreted in the context of this device
+        :return size: The calculated size in bytes
+        """
+        pattern = '(>?)(\d+)([mMbBgGtT%]{1,2})'
+        regex = re.compile(pattern)
+        match = regex.match(size_str)
+
+        if not match:
+            raise errors.InvalidSizeFormat(
+                "Invalid size string format: %s" % size_str)
+
+        if ((match.group(1) == '>' or match.group(3) == '%') and not context):
+            raise errors.InvalidSizeFormat(
+                'Sizes using the ">" or "%" format must specify a '
+                'block device or volume group context')
+
+        base_size = int(match.group(2))
+
+        if match.group(3) in ['m', 'M', 'mb', 'MB']:
+            computed_size = base_size * (1000 * 1000)
+        elif match.group(3) in ['g', 'G', 'gb', 'GB']:
+            computed_size = base_size * (1000 * 1000 * 1000)
+        elif match.group(3) in ['t', 'T', 'tb', 'TB']:
+            computed_size = base_size * (1000 * 1000 * 1000 * 1000)
+        elif match.group(3) == '%':
+            computed_size = math.floor((base_size / 100) * int(context.size))
+
+        if computed_size > int(context.available_size):
+            raise errors.NotEnoughStorage()
+
+        if match.group(1) == '>':
+            computed_size = int(context.available_size)
+
+        return computed_size
 
 
 def list_opts():

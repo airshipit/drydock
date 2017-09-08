@@ -11,16 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""A representation of a MaaS REST resource.
+
+Should be subclassed for different resources and
+augmented with operations specific to those resources
+"""
+
 import json
 import re
 import logging
 
 import drydock_provisioner.error as errors
-"""
-A representation of a MaaS REST resource. Should be subclassed
-for different resources and augmented with operations specific
-to those resources
-"""
 
 
 class ResourceBase(object):
@@ -46,10 +47,16 @@ class ResourceBase(object):
         resp = self.api_client.get(url)
 
         updated_fields = resp.json()
+        updated_model = self.from_dict(self.api_client, updated_fields)
 
         for f in self.fields:
-            if f in updated_fields.keys():
-                setattr(self, f, updated_fields.get(f))
+            if hasattr(updated_model, f):
+                setattr(self, f, getattr(updated_model, f))
+
+    def delete(self):
+        """Delete this resource in MaaS."""
+        url = self.interpolate_url()
+        resp = self.api_client.delete(url)
 
     """
     Parse URL for placeholders and replace them with current
@@ -157,8 +164,7 @@ class ResourceBase(object):
 
 
 class ResourceCollectionBase(object):
-    """
-    A collection of MaaS resources.
+    """A collection of MaaS resources.
 
     Rather than a simple list, we will key the collection on resource
     ID for more efficient access.
@@ -175,10 +181,7 @@ class ResourceCollectionBase(object):
         self.logger = logging.getLogger('drydock.nodedriver.maasdriver')
 
     def interpolate_url(self):
-        """
-        Parse URL for placeholders and replace them with current
-        instance values
-        """
+        """Parse URL for placeholders and replace them with current instance values."""
         pattern = '\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0
@@ -273,8 +276,7 @@ class ResourceCollectionBase(object):
         return result
 
     def singleton(self, query):
-        """
-        A query that requires a single item response
+        """A query that requires a single item response.
 
         :param query: A dict of k:v pairs defining the query parameters
         """
@@ -298,11 +300,8 @@ class ResourceCollectionBase(object):
         else:
             return None
 
-    """
-    Iterate over the resources in the collection
-    """
-
     def __iter__(self):
+        """Iterate over the resources in the collection."""
         return iter(self.resources.values())
 
     """

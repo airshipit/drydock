@@ -18,6 +18,8 @@ import requests
 import requests.auth as req_auth
 import base64
 
+import drydock_provisioner.error as errors
+
 
 class MaasOauth(req_auth.AuthBase):
     def __init__(self, apikey):
@@ -74,7 +76,7 @@ class MaasRequestFactory(object):
     def test_connectivity(self):
         try:
             resp = self.get('version/')
-        except requests.Timeout(ex):
+        except requests.Timeout as ex:
             raise errors.TransientDriverError("Timeout connection to MaaS")
 
         if resp.status_code in [500, 503]:
@@ -89,10 +91,11 @@ class MaasRequestFactory(object):
     def test_authentication(self):
         try:
             resp = self.get('account/', op='list_authorisation_tokens')
-        except requests.Timeout(ex):
+        except requests.Timeout as ex:
             raise errors.TransientDriverError("Timeout connection to MaaS")
-        except:
-            raise errors.PersistentDriverError("Error accessing MaaS")
+        except Exception as ex:
+            raise errors.PersistentDriverError(
+                "Error accessing MaaS: %s" % str(ex))
 
         if resp.status_code in [401, 403]:
             raise errors.PersistentDriverError(
@@ -172,4 +175,6 @@ class MaasRequestFactory(object):
                 % (prepared_req.method, prepared_req.url,
                    str(prepared_req.body).replace('\\r\\n', '\n'),
                    resp.status_code, resp.text))
+            raise errors.DriverError("MAAS Error: %s - %s" % (resp.status_code,
+                                                              resp.text))
         return resp

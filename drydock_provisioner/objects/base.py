@@ -104,6 +104,9 @@ class DrydockObjectListBase(base.ObjectListBase):
 
     @classmethod
     def from_basic_list(cls, obj_list):
+        if obj_list is None:
+            return None
+
         model_list = cls()
 
         for o in obj_list:

@@ -24,13 +24,19 @@ is compatible with the physical state of the site.
 
 #### Validations ####
 
-* All baremetal nodes have an address, either static or DHCP, for all networks they are attached to.
-* No static IP assignments are duplicated
-* No static IP assignments are outside of the network they are targetted for
-* All IP assignments are within declared ranges on the network
-* Networks assigned to each node's interface are within the set of of the attached link's allowed_networks
-* No network is allowed on multiple network links
-* Boot drive is above minimum size
+* Networking
+** No static IP assignments are duplicated
+** No static IP assignments are outside of the network they are targetted for
+** All IP assignments are within declared ranges on the network
+** Networks assigned to each node's interface are within the set of of the attached link's allowed\_networks
+** No network is allowed on multiple network links
+** Network MTU is equal or less than NetworkLink MTU
+** MTU values are sane
+* Storage
+** Boot drive is above minimum size
+** Root drive is above minimum size
+** No physical device specifies a target VG and a partition list
+** No partition specifies a target VG and a filesystem
 
 ### VerifySite ###
 

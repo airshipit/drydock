@@ -21,12 +21,26 @@ class Vlan(model_base.ResourceBase):
 
     resource_url = 'fabrics/{fabric_id}/vlans/{api_id}/'
     fields = [
-        'resource_id', 'name', 'description', 'vid', 'fabric_id', 'dhcp_on',
-        'mtu', 'primary_rack', 'secondary_rack', 'relay_vlan',
+        'resource_id',
+        'name',
+        'description',
+        'vid',
+        'fabric_id',
+        'dhcp_on',
+        'mtu',
+        'primary_rack',
+        'secondary_rack',
+        'relay_vlan',
     ]
     json_fields = [
-        'name', 'description', 'vid', 'dhcp_on', 'mtu', 'primary_rack',
-        'secondary_rack', 'relay_vlan',
+        'name',
+        'description',
+        'vid',
+        'dhcp_on',
+        'mtu',
+        'primary_rack',
+        'secondary_rack',
+        'relay_vlan',
     ]
 
     def __init__(self, api_client, **kwargs):

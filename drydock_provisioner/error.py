@@ -46,6 +46,14 @@ class PersistentDriverError(DriverError):
     pass
 
 
+class NotEnoughStorage(DriverError):
+    pass
+
+
+class InvalidSizeFormat(DriverError):
+    pass
+
+
 class ApiError(Exception):
     def __init__(self, msg, code=500):
         super().__init__(msg)
@@ -53,7 +61,7 @@ class ApiError(Exception):
         self.status_code = code
 
     def to_json(self):
-        err_dict = {'error': msg, 'type': self.__class__.__name__}
+        err_dict = {'error': self.message, 'type': self.__class__.__name__}
         return json.dumps(err_dict)
 
 

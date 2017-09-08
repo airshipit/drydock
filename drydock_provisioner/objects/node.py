@@ -14,9 +14,7 @@
 #
 # Models for drydock_provisioner
 #
-import logging
-
-from copy import deepcopy
+"""Drydock model of a baremetal node."""
 
 from oslo_versionedobjects import fields as ovo_fields
 
@@ -95,6 +93,24 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                 return a.address
 
         return None
+
+    def find_fs_block_device(self, fs_mount=None):
+        if not fs_mount:
+            return (None, None)
+
+        if self.volume_groups is not None:
+            for vg in self.volume_groups:
+                if vg.logical_volumes is not None:
+                    for lv in vg.logical_volumes:
+                        if lv.mountpoint is not None and lv.mountpoint == fs_mount:
+                            return (vg, lv)
+        if self.storage_devices is not None:
+            for sd in self.storage_devices:
+                if sd.partitions is not None:
+                    for p in sd.partitions:
+                        if p.mountpoint is not None and p.mountpoint == fs_mount:
+                            return (sd, p)
+        return (None, None)
 
 
 @base.DrydockObjectRegistry.register
