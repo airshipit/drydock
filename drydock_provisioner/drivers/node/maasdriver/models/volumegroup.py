@@ -115,6 +115,17 @@ class VolumeGroup(model_base.ResourceBase):
             self.logger.error(msg)
             raise errors.DriverError(msg)
 
+    def delete(self):
+        """Delete this volume group.
+
+        Override the default delete so that logical volumes can be
+        removed first.
+        """
+        for lv in self.logical_volumes:
+            self.delete_lv(lv_name=lv)
+
+        super().delete()
+
     @classmethod
     def from_dict(cls, api_client, obj_dict):
         """Instantiate this model from a dictionary.

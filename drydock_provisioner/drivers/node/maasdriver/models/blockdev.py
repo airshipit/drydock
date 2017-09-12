@@ -56,7 +56,7 @@ class BlockDevice(model_base.ResourceBase):
     def __init__(self, api_client, **kwargs):
         super().__init__(api_client, **kwargs)
 
-        if getattr(self, 'resource_id', None) is not None:
+        if hasattr(self, 'resource_id') and hasattr(self, 'system_id'):
             try:
                 self.partitions = maas_partition.Partitions(
                     api_client,
@@ -116,7 +116,7 @@ class BlockDevice(model_base.ResourceBase):
                     (self.name))
                 return
 
-            if self.filesystem.get('mount_pount', None) is not None:
+            if self.filesystem.get('mount_point', None) is not None:
                 self.unmount()
 
             url = self.interpolate_url()

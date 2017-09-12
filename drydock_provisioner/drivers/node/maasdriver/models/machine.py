@@ -48,7 +48,7 @@ class Machine(model_base.ResourceBase):
         super(Machine, self).__init__(api_client, **kwargs)
 
         # Replace generic dicts with interface collection model
-        if getattr(self, 'resource_id', None) is not None:
+        if hasattr(self, 'resource_id'):
             self.interfaces = maas_interface.Interfaces(
                 api_client, system_id=self.resource_id)
             self.interfaces.refresh()
@@ -56,14 +56,14 @@ class Machine(model_base.ResourceBase):
                 self.block_devices = maas_blockdev.BlockDevices(
                     api_client, system_id=self.resource_id)
                 self.block_devices.refresh()
-            except Exception as ex:
+            except Exception:
                 self.logger.warning("Failed loading node %s block devices." %
                                     (self.resource_id))
             try:
                 self.volume_groups = maas_vg.VolumeGroups(
                     api_client, system_id=self.resource_id)
                 self.volume_groups.refresh()
-            except Exception as ex:
+            except Exception:
                 self.logger.warning("Failed load node %s volume groups." %
                                     (self.resource_id))
         else:
@@ -84,12 +84,28 @@ class Machine(model_base.ResourceBase):
         return None
 
     def get_power_params(self):
+        """Load power parameters for this node from MaaS."""
         url = self.interpolate_url()
 
         resp = self.api_client.get(url, op='power_parameters')
 
         if resp.status_code == 200:
             self.power_parameters = resp.json()
+
+    def reset_network_config(self):
+        """Reset the node networking configuration."""
+        self.logger.info("Resetting networking configuration on node %s" %
+                         (self.resource_id))
+
+        url = self.interpolate_url()
+
+        resp = self.api_client.post(url, op='restore_networking_configuration')
+
+        if not resp.ok:
+            msg = "Error resetting network on node %s: %s - %s" \
+                  % (self.resource_id, resp.status_code, resp.text)
+            self.logger.error(msg)
+            raise errors.DriverError(msg)
 
     def reset_storage_config(self):
         """Reset storage config on this machine.
@@ -186,6 +202,10 @@ class Machine(model_base.ResourceBase):
             raise errors.DriverError(msg)
 
     def commission(self, debug=False):
+        """Start the MaaS commissioning process.
+
+        :param debug: If true, enable ssh on the node and leave it power up after commission
+        """
         url = self.interpolate_url()
 
         # If we want to debug this node commissioning, enable SSH
@@ -206,6 +226,12 @@ class Machine(model_base.ResourceBase):
                 resp.status_code)
 
     def deploy(self, user_data=None, platform=None, kernel=None):
+        """Start the MaaS deployment process.
+
+        :param user_data: cloud-init user data
+        :param platform: Which image to install
+        :param kernel: Which kernel to enable
+        """
         deploy_options = {}
 
         if user_data is not None:
@@ -247,14 +273,14 @@ class Machine(model_base.ResourceBase):
             return detail_config
 
     def set_owner_data(self, key, value):
-        """
-        Add/update/remove node owner data. If the machine is not currently allocated to a user
+        """Add/update/remove node owner data.
+
+        If the machine is not currently allocated to a user
         it cannot have owner data
 
         :param key: Key of the owner data
         :param value: Value of the owner data. If None, the key is removed
         """
-
         url = self.interpolate_url()
 
         resp = self.api_client.post(
@@ -270,8 +296,9 @@ class Machine(model_base.ResourceBase):
                 resp.status_code)
 
     def to_dict(self):
-        """
-        Serialize this resource instance into a dict matching the
+        """Serialize this resource instance into a dict.
+
+        The dict format matches the
         MAAS representation of the resource
         """
         data_dict = {}
@@ -287,9 +314,9 @@ class Machine(model_base.ResourceBase):
 
     @classmethod
     def from_dict(cls, api_client, obj_dict):
-        """
-        Create a instance of this resource class based on a dict
-        of MaaS type attributes
+        """Create a instance of this resource class based on a dict.
+
+        Dict format matches MaaS type attributes
 
         Customized for Machine due to use of system_id instead of id
         as resource key
@@ -297,7 +324,6 @@ class Machine(model_base.ResourceBase):
         :param api_client: Instance of api_client.MaasRequestFactory for accessing MaaS API
         :param obj_dict: Python dict as parsed from MaaS API JSON representing this resource type
         """
-
         refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
 
         if 'system_id' in obj_dict.keys():
@@ -327,12 +353,10 @@ class Machines(model_base.ResourceCollectionBase):
             v.get_power_params()
 
     def acquire_node(self, node_name):
-        """
-        Acquire a commissioned node fro deployment
+        """Acquire a commissioned node fro deployment.
 
         :param node_name: The hostname of a node to acquire
         """
-
         self.refresh()
 
         node = self.singleton({'hostname': node_name})
@@ -364,7 +388,8 @@ class Machines(model_base.ResourceCollectionBase):
         return node
 
     def identify_baremetal_node(self, node_model, update_name=True):
-        """
+        """Find MaaS node resource matching Drydock BaremetalNode.
+
         Search all the defined MaaS Machines and attempt to match
         one against the provided Drydock BaremetalNode model. Update
         the MaaS instance with the correct hostname
@@ -372,7 +397,6 @@ class Machines(model_base.ResourceCollectionBase):
         :param node_model: Instance of objects.node.BaremetalNode to search MaaS for matching resource
         :param update_name: Whether Drydock should update the MaaS resource name to match the Drydock design
         """
-
         maas_node = None
 
         if node_model.oob_type == 'ipmi':
@@ -390,7 +414,7 @@ class Machines(model_base.ResourceCollectionBase):
                     'power_params.power_address':
                     node_oob_ip
                 })
-            except ValueError as ve:
+            except ValueError:
                 self.logger.warn(
                     "Error locating matching MaaS resource for OOB IP %s" %
                     (node_oob_ip))
@@ -438,10 +462,11 @@ class Machines(model_base.ResourceCollectionBase):
         return result
 
     def add(self, res):
-        """
-        Create a new resource in this collection in MaaS
+        """Create a new resource in this collection in MaaS.
 
         Customize as Machine resources use 'system_id' instead of 'id'
+
+        :param res: A instance of the Machine model
         """
         data_dict = res.to_dict()
         url = self.interpolate_url()

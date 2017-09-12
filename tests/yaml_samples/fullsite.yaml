@@ -170,8 +170,6 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  # Layer 2 VLAN segment id, could support other segmentations. Optional
-  vlan_id: '99'
   # If this network utilizes a dhcp relay, where does it forward DHCPDISCOVER requests to?
   dhcp_relay:
     # Required if Drydock is configuring a switch with the relay
@@ -203,7 +201,7 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  vlan_id: '100'
+  vlan: '100'
     # Allow MTU to be inherited from link the network rides on
   mtu: 1500
     # Network address
@@ -236,7 +234,7 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  vlan_id: '101'
+  vlan: '101'
   mtu: 9000
   cidr: 172.16.2.0/24
     # Desribe IP address ranges
@@ -259,7 +257,7 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  vlan_id: '102'
+  vlan: '102'
     # MTU size for the VLAN interface
   mtu: 1500
   cidr: 172.16.3.0/24
@@ -369,18 +367,20 @@ spec:
   primary_network: mgmt
   interfaces:
   # Keyed on device_name
-  # pxe is a special marker indicating which device should be used for pxe boot
-    - device_name: pxe
+    pxe:
       # The network link attached to this
       device_link: pxe
-      # Slaves will specify aliases from hwdefinition.yaml
+      labels:
+        # this interface will be used only for PXE booting during deploy
+        noconfig: true
+      # Slaves will specify aliases from hwdefinition.yaml or kernel device names
       slaves:
         - prim_nic01
       # Which networks will be configured on this interface
       networks:
         - pxe
-    - device_name: bond0
-      network_link: gp
+    bond0:
+      device_link: gp
       # If multiple slaves are specified, but no bonding config
       # is applied to the link, design validation will fail
       slaves:
@@ -409,7 +409,7 @@ spec:
   # the hostname for a server, could be used in multiple DNS domains to
   # represent different interfaces
   interfaces:
-    - device_name: bond0
+    bond0:
       networks:
         # '!' prefix for the value of the primary key indicates a record should be removed
         - '!private'

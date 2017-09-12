@@ -225,8 +225,6 @@ class YamlIngester(IngesterPlugin):
                                     model.metalabels.append(l)
 
                             model.cidr = spec.get('cidr', None)
-                            model.allocation_strategy = spec.get(
-                                'allocation', 'static')
                             model.vlan_id = spec.get('vlan', None)
                             model.mtu = spec.get('mtu', None)
 
@@ -414,25 +412,30 @@ class YamlIngester(IngesterPlugin):
 
                                     vg.logical_volumes.append(lv)
 
-                            interfaces = spec.get('interfaces', [])
+                            interfaces = spec.get('interfaces', {})
                             model.interfaces = objects.HostInterfaceList()
 
-                            for i in interfaces:
+                            for k, v in interfaces.items():
                                 int_model = objects.HostInterface()
 
-                                int_model.device_name = i.get(
-                                    'device_name', None)
-                                int_model.network_link = i.get(
+                                # A null value indicates this interface should be removed
+                                # from any parent profiles
+                                if v is None:
+                                    int_model.device_name = '!' + k
+                                    continue
+
+                                int_model.device_name = k
+                                int_model.network_link = v.get(
                                     'device_link', None)
 
                                 int_model.hardware_slaves = []
-                                slaves = i.get('slaves', [])
+                                slaves = v.get('slaves', [])
 
                                 for s in slaves:
                                     int_model.hardware_slaves.append(s)
 
                                 int_model.networks = []
-                                networks = i.get('networks', [])
+                                networks = v.get('networks', [])
 
                                 for n in networks:
                                     int_model.networks.append(n)

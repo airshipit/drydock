@@ -37,13 +37,13 @@ class Interface(model_base.ResourceBase):
         'effective_mtu',
         'fabric_id',
         'mtu',
+        'parents',
     ]
     json_fields = [
         'name',
         'type',
         'mac_address',
         'vlan',
-        'links',
         'mtu',
     ]
 
@@ -98,11 +98,31 @@ class Interface(model_base.ResourceBase):
         self.update()
 
     def is_linked(self, subnet_id):
+        """Check if this interface is linked to the given subnet.
+
+        :param subnet_id: MaaS resource id of the subnet
+        """
         for l in self.links:
             if l.get('subnet_id', None) == subnet_id:
                 return True
 
         return False
+
+    def disconnect(self):
+        """Disconnect this interface from subnets and VLANs."""
+        url = self.interpolate_url()
+
+        self.logger.debug("Disconnecting interface %s from networks." %
+                          (self.name))
+        resp = self.api_client.post(url, op='disconnect')
+
+        if not resp.ok:
+            self.logger.warning(
+                "Could not disconnect interface, MaaS error: %s - %s" %
+                (resp.status_code, resp.text))
+            raise errors.DriverError(
+                "Could not disconnect interface, MaaS error: %s - %s" %
+                (resp.status_code, resp.text))
 
     def unlink_subnet(self, subnet_id):
         for l in self.links:
@@ -216,7 +236,7 @@ class Interface(model_base.ResourceBase):
         return False
 
     def set_mtu(self, new_mtu):
-        """Set interface MTU
+        """Set interface MTU.
 
         :param new_mtu: integer of the new MTU size for this inteface
         """
@@ -284,14 +304,6 @@ class Interfaces(model_base.ResourceCollectionBase):
             raise errors.DriverError("Cannot locate parent interface %s" %
                                      (parent_name))
 
-        if parent_iface.type != 'physical':
-            self.logger.error(
-                "Cannot create VLAN interface on parent of type %s" %
-                (parent_iface.type))
-            raise errors.DriverError(
-                "Cannot create VLAN interface on parent of type %s" %
-                (parent_iface.type))
-
         if parent_iface.vlan is None:
             self.logger.error(
                 "Cannot create VLAN interface on disconnected parent %s" %
@@ -352,3 +364,104 @@ class Interfaces(model_base.ResourceCollectionBase):
         self.refresh()
 
         return
+
+    def create_bond(self,
+                    device_name=None,
+                    parent_names=[],
+                    mtu=None,
+                    mac_address=None,
+                    tags=[],
+                    fabric=None,
+                    mode=None,
+                    monitor_interval=None,
+                    downdelay=None,
+                    updelay=None,
+                    lacp_rate=None,
+                    hash_policy=None):
+        """Create a new bonded interface on this node.
+
+        Slaves will be disconnected from networks.
+
+        :param device_name: What the bond interface should be named
+        :param parent_names: The names of interfaces to use as slaves
+        :param mtu: Optional configuration of the interface MTU
+        :param mac_address: String of valid 48-bit mac address, colon separated
+        :param tags: Optional list of string tags to apply to the bonded interface
+        :param fabric: Fabric (MaaS resource id) to attach the new bond to.
+        :param mode: The bonding mode
+        :param monitor_interval: The frequency of checking slave status in milliseconds
+        :param downdelay: The delay in disabling a down slave in milliseconds
+        :param updelay: The delay in enabling a recovered slave in milliseconds
+        :param lacp_rate:  Rate LACP control units are emitted - 'fast' or 'slow'
+        :param hash_policy: Link selection hash policy
+        """
+        self.refresh()
+
+        parent_ifaces = []
+
+        for n in parent_names:
+            parent_iface = self.singleton({'name': n})
+            if parent_iface is not None:
+                parent_ifaces.append(parent_iface)
+            else:
+                self.logger.error("Cannot locate slave interface %s" % (n))
+
+        if len(parent_ifaces) != len(parent_names):
+            self.logger.error("Missing slave interfaces.")
+            raise errors.DriverError("Missing slave interfaces.")
+
+        for i in parent_ifaces:
+            if mtu:
+                i.set_mtu(mtu)
+            i.disconnect()
+            i.attach_fabric(fabric_id=fabric)
+
+        url = self.interpolate_url()
+
+        options = {
+            'name': device_name,
+            'tags': tags,
+            'parents': [x.resource_id for x in parent_ifaces],
+        }
+
+        if mtu is not None:
+            options['mtu'] = mtu
+
+        if mac_address is not None:
+            options['mac_address'] = mac_address
+
+        if mode is not None:
+            options['bond_mode'] = mode
+
+        if monitor_interval is not None:
+            options['bond_miimon'] = monitor_interval
+
+        if downdelay is not None:
+            options['bond_downdelay'] = downdelay
+
+        if updelay is not None:
+            options['bond_updelay'] = updelay
+
+        if lacp_rate is not None:
+            options['bond_lacp_rate'] = lacp_rate
+
+        if hash_policy is not None:
+            options['bond_xmit_hash_policy'] = hash_policy
+
+        resp = self.api_client.post(url, op='create_bond', files=options)
+
+        if resp.status_code == 200:
+            resp_json = resp.json()
+            bond_iface = Interface.from_dict(self.api_client, resp_json)
+            self.logger.debug("Created bond interface %s with slaves %s" %
+                              (bond_iface.resource_id, ','.join(parent_names)))
+            bond_iface.attach_fabric(fabric_id=fabric)
+            self.refresh()
+            return bond_iface
+        else:
+            self.logger.error(
+                "Error creating bond interface on system %s - MaaS response %s: %s"
+                % (self.system_id, resp.status_code, resp.text))
+            raise errors.DriverError(
+                "Error creating bond interface on system %s - MaaS response %s"
+                % (self.system_id, resp.status_code))

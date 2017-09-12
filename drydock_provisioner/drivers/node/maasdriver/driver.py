@@ -1419,6 +1419,9 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                 "Located node %s in MaaS, starting interface configuration"
                                 % (n))
 
+                            machine.reset_network_config()
+                            machine.refresh()
+
                             for i in node.interfaces:
                                 nl = site_design.get_network_link(
                                     i.network_link)
@@ -1439,9 +1442,51 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     failed = True
                                     continue
 
-                                # TODO(sh8121att): HardwareProfile device alias integration
-                                iface = machine.get_network_interface(
-                                    i.device_name)
+                                if nl.bonding_mode != hd_fields.NetworkLinkBondingMode.Disabled:
+                                    if len(i.get_hw_slaves()) > 1:
+                                        msg = "Building node %s interface %s as a bond." % (
+                                            n, i.device_name)
+                                        self.logger.debug(msg)
+                                        result_detail['detail'].append(msg)
+                                        hw_iface_list = i.get_hw_slaves()
+                                        iface = machine.interfaces.create_bond(
+                                            device_name=i.device_name,
+                                            parent_names=hw_iface_list,
+                                            mtu=nl.mtu,
+                                            fabric=fabric.resource_id,
+                                            mode=nl.bonding_mode,
+                                            monitor_interval=nl.
+                                            bonding_mon_rate,
+                                            downdelay=nl.bonding_down_delay,
+                                            updelay=nl.bonding_up_delay,
+                                            lacp_rate=nl.bonding_peer_rate,
+                                            hash_policy=nl.bonding_xmit_hash)
+                                    else:
+                                        msg = "Network link %s indicates bonding, interface %s has less than 2 slaves." % \
+                                              (nl.name, i.device_name)
+                                        self.logger.warning(msg)
+                                        result_detail['detail'].append(msg)
+                                        continue
+                                else:
+                                    if len(i.get_hw_slaves()) > 1:
+                                        msg = "Network link %s disables bonding, interface %s has multiple slaves." % \
+                                              (nl.name, i.device_name)
+                                        self.logger.warning(msg)
+                                        result_detail['detail'].append(msg)
+                                        continue
+                                    elif len(i.get_hw_slaves()) == 0:
+                                        msg = "Interface %s has 0 slaves." % (
+                                            i.device_name)
+                                        self.logger.warning(msg)
+                                        result_detail['detail'].append(msg)
+                                    else:
+                                        msg = "Configuring interface %s on node %s" % (
+                                            i.device_name, n)
+                                        self.logger.debug(msg)
+                                        hw_iface = i.get_hw_slaves()[0]
+                                        # TODO(sh8121att): HardwareProfile device alias integration
+                                        iface = machine.get_network_interface(
+                                            hw_iface)
 
                                 if iface is None:
                                     self.logger.warning(
@@ -1950,7 +1995,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                         maas_volgroup.refresh()
 
                         for lv in v.logical_volumes:
-                            calc_size = MaasTaskRunner.calculate_bytes(size_str=lv.size, context=maas_volgroup)
+                            calc_size = MaasTaskRunner.calculate_bytes(
+                                size_str=lv.size, context=maas_volgroup)
                             bd_id = maas_volgroup.create_lv(
                                 name=lv.name,
                                 uuid_str=lv.lv_uuid,

@@ -25,19 +25,27 @@ is compatible with the physical state of the site.
 #### Validations ####
 
 * Networking
-** No static IP assignments are duplicated
-** No static IP assignments are outside of the network they are targetted for
-** All IP assignments are within declared ranges on the network
-** Networks assigned to each node's interface are within the set of of the attached link's allowed\_networks
-** No network is allowed on multiple network links
-** Network MTU is equal or less than NetworkLink MTU
-** MTU values are sane
+    * No static IP assignments are duplicated
+    * No static IP assignments are outside of the network they are targetted for
+    * All IP assignments are within declared ranges on the network
+    * No network is allowed on multiple network links
+    * Network MTU is equal or less than NetworkLink MTU
+    * MTU values are sane
+    * NetworkLink bond mode is compatible with other bond options
+    * NetworkLink with more than one allowed network supports trunking
 * Storage
-** Boot drive is above minimum size
-** Root drive is above minimum size
-** No physical device specifies a target VG and a partition list
-** No partition specifies a target VG and a filesystem
-
+    * Boot drive is above minimum size
+    * Root drive is above minimum size
+    * No physical device specifies a target VG and a partition list
+    * No partition specifies a target VG and a filesystem
+    * All defined VGs have at least one defined PV (partition or physical device)
+    * Partition and LV sizing is sane
+        * Percentages don't sum to above 100%
+        * If percentages sum to 100%, no other partitions or LVs are defined
+* Node
+    * Root filesystem is defined on a partition or LV
+    * Networks assigned to each node's interface are within the set of of the attached link's allowed\_networks
+    * Inter
 ### VerifySite ###
 
 Verify site-wide resources are in a useful state

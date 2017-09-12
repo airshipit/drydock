@@ -25,11 +25,7 @@ class DrydockSession(object):
     :param string marker: (optional) external context marker
     """
 
-    def __init__(self,
-                 host,
-                 port=None,
-                 scheme='http',
-                 token=None,
+    def __init__(self, host, port=None, scheme='http', token=None,
                  marker=None):
         self.__session = requests.Session()
         self.__session.headers.update({

@@ -23,7 +23,6 @@ from drydock_provisioner.drivers.node.maasdriver.models.blockdev import BlockDev
 from drydock_provisioner.drivers.node.maasdriver.models.volumegroup import VolumeGroup
 
 
-
 class TestCalculateBytes():
     def test_calculate_m_label(self):
         '''Convert megabyte labels to x * 10^6 bytes.'''
@@ -32,7 +31,8 @@ class TestCalculateBytes():
 
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
 
@@ -42,7 +42,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
 
@@ -52,7 +53,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
 
@@ -62,7 +64,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
 
@@ -72,7 +75,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
 
@@ -82,7 +86,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
 
@@ -92,7 +97,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
 
@@ -102,7 +108,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
 
@@ -112,7 +119,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
 
@@ -122,7 +130,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
 
@@ -132,7 +141,8 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
 
@@ -142,55 +152,60 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
 
     def test_calculate_percent_blockdev(self):
         '''Convert a percent of total blockdev space to explicit byte count.'''
-        drive_size = 20 * 1000 * 1000 # 20 mb drive
-        part_size = math.floor(.2 * drive_size) # calculate 20% of drive size
+        drive_size = 20 * 1000 * 1000  # 20 mb drive
+        part_size = math.floor(.2 * drive_size)  # calculate 20% of drive size
         size_str = '20%'
 
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=drive)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=drive)
 
         assert calc_size == part_size
 
     def test_calculate_percent_vg(self):
         '''Convert a percent of total blockdev space to explicit byte count.'''
-        vg_size = 20 * 1000 * 1000 # 20 mb drive
-        lv_size = math.floor(.2 * vg_size) # calculate 20% of drive size
+        vg_size = 20 * 1000 * 1000  # 20 mb drive
+        lv_size = math.floor(.2 * vg_size)  # calculate 20% of drive size
         size_str = '20%'
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=vg)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=vg)
 
         assert calc_size == lv_size
 
     def test_calculate_overprovision(self):
         '''When calculated space is higher than available space, raise an exception.'''
-        vg_size = 20 * 1000 * 1000 # 20 mb drive
+        vg_size = 20 * 1000 * 1000  # 20 mb drive
         vg_available = 10  # 10 bytes available
-        lv_size = math.floor(.8 * vg_size) # calculate 80% of drive size
+        lv_size = math.floor(.8 * vg_size)  # calculate 80% of drive size
         size_str = '80%'
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_available)
 
         with pytest.raises(error.NotEnoughStorage):
-            calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=vg)
+            calc_size = MaasTaskRunner.calculate_bytes(
+                size_str=size_str, context=vg)
 
     def test_calculate_min_label(self):
         '''Adding the min marker '>' should provision all available space.'''
-        vg_size = 20 * 1000 * 1000 # 20 mb drive
+        vg_size = 20 * 1000 * 1000  # 20 mb drive
         vg_available = 15 * 1000 * 1000
-        lv_size = math.floor(.1 * vg_size) # calculate 20% of drive size
+        lv_size = math.floor(.1 * vg_size)  # calculate 20% of drive size
         size_str = '>10%'
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_available)
 
-        calc_size = MaasTaskRunner.calculate_bytes(size_str=size_str, context=vg)
+        calc_size = MaasTaskRunner.calculate_bytes(
+            size_str=size_str, context=vg)
 
         assert calc_size == vg_available

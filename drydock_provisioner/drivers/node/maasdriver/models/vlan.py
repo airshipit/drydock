@@ -108,7 +108,7 @@ class Vlans(model_base.ResourceCollectionBase):
             'name':   res.name,
             'description':  getattr(res, 'description', None),
         }
-         
+
         if getattr(res, 'vid', None) is None:
             min_fields['vid'] = 0
         else:
@@ -124,7 +124,7 @@ class Vlans(model_base.ResourceCollectionBase):
             # Submit PUT for additonal fields
             res.update()
             return res
-        
+
         raise errors.DriverError("Failed updating MAAS url %s - return code %s\n%s"
                 % (url, resp.status_code, resp.text))
     """

@@ -61,33 +61,36 @@ spec:
     credential: admin
   # Specify storage layout of base OS. Ceph out of scope
   storage:
-    # How storage should be carved up: lvm (logical volumes), flat 
-    # (single partition)
-    layout: lvm
-    # Info specific to the boot and root disk/partitions
-    bootdisk:
-      # Device will specify an alias defined in hwdefinition.yaml
-      device: primary_boot
-      # For LVM, the size of the partition added to VG as a PV
-      # For flat, the size of the partition formatted as ext4
-      root_size: 50g
-      # The /boot partition. If not specified, /boot will in root
-      boot_size: 2g
-    # Info for additional partitions. Need to balance between
-    # flexibility and complexity
-    partitions:
-    - name: logs
-      device: primary_boot
-      # Partition uuid if needed
-      part_uuid: 84db9664-f45e-11e6-823d-080027ef795a
-      size: 10g
-      # Optional, can carve up unformatted block devices
-      mountpoint: /var/log
-      fstype: ext4
-      mount_options: defaults
-      # Filesystem UUID or label can be specified. UUID recommended
-      fs_uuid: cdb74f1c-9e50-4e51-be1d-068b0e9ff69e
-      fs_label: logs
+    physical_devices:
+      sda:
+        labels:
+          role: rootdisk
+        partitions:
+          - name: root
+            size: 20g
+            bootable: true
+            filesystem:
+              mountpoint: '/'
+              fstype: 'ext4'
+              mount_options: 'defaults'
+          - name: boot
+            size: 1g
+            bootable: false
+            filesystem:
+              mountpoint: '/boot'
+              fstype: 'ext4'
+              mount_options: 'defaults'
+      sdb:
+        volume_group: 'log_vg'
+    volume_groups:
+      log_vg:
+        logical_volumes:
+          - name: 'log_lv'
+            size: '500m'
+            filesystem:
+              mountpoint: '/var/log'
+              fstype: 'xfs'
+              mount_options: 'defaults'
   # Platform (Operating System) settings
   platform:
     image: ubuntu_16.04
@@ -128,28 +131,30 @@ spec:
   primary_network: mgmt
   interfaces:
   # Keyed on device_name
-  # pxe is a special marker indicating which device should be used for pxe boot
-  - device_name: pxe
-    # The network link attached to this 
-    device_link: pxe
-    # Slaves will specify aliases from hwdefinition.yaml
-    slaves:
-      - prim_nic01
-    # Which networks will be configured on this interface
-    networks: 
-      - pxe
-  - device_name: bond0
-    network_link: gp
-    # If multiple slaves are specified, but no bonding config
-    # is applied to the link, design validation will fail
-    slaves:
-      - prim_nic01
-      - prim_nic02
-    # If multiple networks are specified, but no trunking
-    # config is applied to the link, design validation will fail
-    networks:
-      - mgmt
-      - private
+    pxe:
+      # The network link attached to this
+      device_link: pxe
+      labels:
+        # this interface will be used only for PXE booting during deploy
+        noconfig: true
+      # Slaves will specify aliases from hwdefinition.yaml or kernel device names
+      slaves:
+        - prim_nic01
+      # Which networks will be configured on this interface
+      networks:
+        - pxe
+    bond0:
+      device_link: gp
+      # If multiple slaves are specified, but no bonding config
+      # is applied to the link, design validation will fail
+      slaves:
+        - prim_nic01
+        - prim_nic02
+      # If multiple networks are specified, but no trunking
+      # config is applied to the link, design validation will fail
+      networks:
+        - mgmt
+        - private
   metadata:
     # Explicit tag assignment
     tags:

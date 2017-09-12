@@ -76,7 +76,7 @@ class MaasRequestFactory(object):
     def test_connectivity(self):
         try:
             resp = self.get('version/')
-        except requests.Timeout as ex:
+        except requests.Timeout:
             raise errors.TransientDriverError("Timeout connection to MaaS")
 
         if resp.status_code in [500, 503]:
@@ -122,24 +122,26 @@ class MaasRequestFactory(object):
         if kwargs.get('files', None) is not None:
             files = kwargs.pop('files')
 
-            files_tuples = {}
+            files_tuples = []
 
             for (k, v) in files.items():
                 if v is None:
                     continue
-                files_tuples[k] = (
-                    None,
-                    base64.b64encode(str(v).encode('utf-8')).decode('utf-8'),
-                    'text/plain; charset="utf-8"', {
-                        'Content-Transfer-Encoding': 'base64'
-                    })
-
-    #            elif isinstance(v, str):
-    #                files_tuples[k] = (None, base64.b64encode(v.encode('utf-8')).decode('utf-8'), 'text/plain; charset="utf-8"', {'Content-Transfer-Encoding': 'base64'})
-    #            elif isinstance(v, int) or isinstance(v, bool):
-    #                if isinstance(v, bool):
-    #                    v = int(v)
-    #                files_tuples[k] = (None, base64.b64encode(v.to_bytes(2, byteorder='big')), 'application/octet-stream', {'Content-Transfer-Encoding': 'base64'})
+                elif isinstance(v, list):
+                    for i in v:
+                        files_tuples.append(
+                            (k, (None, base64.b64encode(
+                                str(i).encode('utf-8')).decode('utf-8'),
+                                 'text/plain; charset="utf-8"', {
+                                     'Content-Transfer-Encoding': 'base64'
+                                 })))
+                else:
+                    files_tuples.append((k, (None, base64.b64encode(
+                        str(v).encode('utf-8')).decode('utf-8'),
+                                             'text/plain; charset="utf-8"', {
+                                                 'Content-Transfer-Encoding':
+                                                 'base64'
+                                             })))
 
             kwargs['files'] = files_tuples
 
