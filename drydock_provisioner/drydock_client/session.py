@@ -27,7 +27,6 @@ class DrydockSession(object):
 
     def __init__(self,
                  host,
-                 *,
                  port=None,
                  scheme='http',
                  token=None,
