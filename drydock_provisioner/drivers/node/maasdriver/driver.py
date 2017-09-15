@@ -1126,6 +1126,7 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     self.maas_client,
                                     name=n.name,
                                     cidr=n.cidr,
+                                    dns_servers = n.dns_servers,
                                     fabric=fabric.resource_id,
                                     vlan=vlan.resource_id,
                                     gateway_ip=n.get_default_gateway())
