@@ -41,8 +41,8 @@ setup(
         'drydock_provisioner.drivers.node.maasdriver.models',
         'drydock_provisioner.control', 'drydock_provisioner.cli',
         'drydock_provisioner.cli.design', 'drydock_provisioner.cli.part',
-        'drydock_provisioner.cli.task', 'drydock_provisioner.cli.node',
-        'drydock_provisioner.drydock_client'
+        'drydock_provisioner.cli.task', 'drydock_provisioner.drydock_client',
+        'drydock_provisioner.statemgmt.db','drydock_provisioner.cli.node'
     ],
     entry_points={
         'oslo.config.opts':

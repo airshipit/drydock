@@ -80,9 +80,8 @@ class ActionResult(BaseDrydockEnum):
     Success = 'success'
     PartialSuccess = 'partial_success'
     Failure = 'failure'
-    DependentFailure = 'dependent_failure'
 
-    ALL = (Incomplete, Success, PartialSuccess, Failure, DependentFailure)
+    ALL = (Incomplete, Success, PartialSuccess, Failure)
 
 
 class ActionResultField(fields.BaseEnumField):
@@ -90,17 +89,14 @@ class ActionResultField(fields.BaseEnumField):
 
 
 class TaskStatus(BaseDrydockEnum):
-    Created = 'created'
-    Waiting = 'waiting'
+    Requested = 'requested'
+    Queued = 'queued'
     Running = 'running'
-    Stopping = 'stopping'
+    Terminating = 'terminating'
     Terminated = 'terminated'
-    Errored = 'errored'
     Complete = 'complete'
-    Stopped = 'stopped'
 
-    ALL = (Created, Waiting, Running, Stopping, Terminated, Errored, Complete,
-           Stopped)
+    ALL = (Requested, Queued, Running, Terminating, Terminated, Complete)
 
 
 class TaskStatusField(fields.BaseEnumField):
