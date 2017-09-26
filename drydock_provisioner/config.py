@@ -28,7 +28,6 @@ package. It is assumed that:
 * This module is only used in the context of sample file generation.
 
 """
-import collections
 import importlib
 import os
 import pkgutil
@@ -41,9 +40,8 @@ IGNORED_MODULES = ('drydock', 'config')
 
 
 class DrydockConfig(object):
-    """
-    Initialize all the core options
-    """
+    """Initialize all the core options."""
+
     # Default options
     options = [
         cfg.IntOpt(
@@ -51,6 +49,12 @@ class DrydockConfig(object):
             default=10,
             help=
             'Polling interval in seconds for checking subtask or downstream status'
+        ),
+        cfg.IntOpt(
+            'leader_grace_period',
+            default=300,
+            help=
+            'How long a leader has to check-in before leaderhsip can be usurped, in seconds'
         ),
     ]
 
@@ -76,6 +80,13 @@ class DrydockConfig(object):
             help='Logger name for API server logging'),
     ]
 
+    # Database options
+    database_options = [
+        cfg.StrOpt(
+            'database_connect_string',
+            help='The URI database connect string.'),
+    ]
+
     # Enabled plugins
     plugin_options = [
         cfg.MultiStrOpt(
@@ -93,7 +104,7 @@ class DrydockConfig(object):
             default=
             'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
             help='Module path string of the Node driver to enable'),
-        # TODO Network driver not yet implemented
+        # TODO(sh8121att) Network driver not yet implemented
         cfg.StrOpt(
             'network_driver',
             default=None,
@@ -150,6 +161,8 @@ class DrydockConfig(object):
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(
+            DrydockConfig.database_options, group='database')
+        self.conf.register_opts(
             DrydockConfig.timeout_options, group='timeouts')
         self.conf.register_opts(
             loading.get_auth_plugin_conf_options('password'),
@@ -164,7 +177,8 @@ def list_opts():
         'DEFAULT': DrydockConfig.options,
         'logging': DrydockConfig.logging_options,
         'plugins': DrydockConfig.plugin_options,
-        'timeouts': DrydockConfig.timeout_options
+        'timeouts': DrydockConfig.timeout_options,
+        'database': DrydockConfig.database_options,
     }
 
     package_path = os.path.dirname(os.path.abspath(__file__))

@@ -15,6 +15,7 @@
     Contains commands related to tasks against designs
 """
 import click
+import json
 
 from drydock_provisioner.cli.task.actions import TaskList
 from drydock_provisioner.cli.task.actions import TaskShow
@@ -58,16 +59,17 @@ def task_create(ctx,
         ctx.fail('Error: Action must be specified using --action')
 
     click.echo(
-        TaskCreate(
-            ctx.obj['CLIENT'],
-            design_id=design_id,
-            action_name=action,
-            node_names=[x.strip() for x in node_names.split(',')]
-            if node_names else [],
-            rack_names=[x.strip() for x in rack_names.split(',')]
-            if rack_names else [],
-            node_tags=[x.strip() for x in node_tags.split(',')]
-            if node_tags else []).invoke())
+        json.dumps(
+            TaskCreate(
+                ctx.obj['CLIENT'],
+                design_id=design_id,
+                action_name=action,
+                node_names=[x.strip() for x in node_names.split(',')]
+                if node_names else [],
+                rack_names=[x.strip() for x in rack_names.split(',')]
+                if rack_names else [],
+                node_tags=[x.strip() for x in node_tags.split(',')]
+                if node_tags else []).invoke()))
 
 
 @task.command(name='list')
@@ -75,7 +77,7 @@ def task_create(ctx,
 def task_list(ctx):
     """ List tasks.
     """
-    click.echo(TaskList(ctx.obj['CLIENT']).invoke())
+    click.echo(json.dumps(TaskList(ctx.obj['CLIENT']).invoke()))
 
 
 @task.command(name='show')
@@ -87,4 +89,5 @@ def task_show(ctx, task_id=None):
     if not task_id:
         ctx.fail('The task id must be specified by --task-id')
 
-    click.echo(TaskShow(ctx.obj['CLIENT'], task_id=task_id).invoke())
+    click.echo(
+        json.dumps(TaskShow(ctx.obj['CLIENT'], task_id=task_id).invoke()))

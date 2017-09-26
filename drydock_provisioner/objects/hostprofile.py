@@ -252,30 +252,14 @@ class HostInterface(base.DrydockObject):
                                 getattr(j, 'network_link', None),
                                 getattr(i, 'network_link', None))
 
-                        s = [
-                            x for x in getattr(i, 'hardware_slaves', [])
-                            if ("!" + x
-                                ) not in getattr(j, 'hardware_slaves', [])
-                        ]
+                        m.hardware_slaves = objects.Utils.merge_lists(
+                            getattr(j, 'hardware_slaves', []),
+                            getattr(i, 'hardware_slaves', []))
 
-                        s.extend([
-                            x for x in getattr(j, 'hardware_slaves', [])
-                            if not x.startswith("!")
-                        ])
+                        m.networks = objects.Utils.merge_lists(
+                            getattr(j, 'networks', []),
+                            getattr(i, 'networks', []))
 
-                        m.hardware_slaves = s
-
-                        n = [
-                            x for x in getattr(i, 'networks', [])
-                            if ("!" + x) not in getattr(j, 'networks', [])
-                        ]
-
-                        n.extend([
-                            x for x in getattr(j, 'networks', [])
-                            if not x.startswith("!")
-                        ])
-
-                        m.networks = n
                         m.source = hd_fields.ModelSource.Compiled
 
                         effective_list.append(m)
@@ -332,7 +316,7 @@ class HostVolumeGroup(base.DrydockObject):
         self.physical_devices.append(pv)
 
     def is_sys(self):
-        """Is this the VG for root and/or boot?"""
+        """Check if this is the VG for root and/or boot."""
         for lv in getattr(self, 'logical_volumes', []):
             if lv.is_sys():
                 return True
@@ -577,7 +561,7 @@ class HostPartition(base.DrydockObject):
         return self.name
 
     def is_sys(self):
-        """Is this partition for root and/or boot?"""
+        """Check if this is the partition for root and/or boot."""
         if self.mountpoint is not None and self.mountpoint in ['/', '/boot']:
             return True
         return False
@@ -707,7 +691,7 @@ class HostVolume(base.DrydockObject):
         return self.name
 
     def is_sys(self):
-        """Is this LV for root and/or boot?"""
+        """Check if this is the LV for root and/or boot."""
         if self.mountpoint is not None and self.mountpoint in ['/', '/boot']:
             return True
         return False

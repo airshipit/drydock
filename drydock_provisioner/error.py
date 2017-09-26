@@ -22,6 +22,10 @@ class StateError(Exception):
     pass
 
 
+class TaskNotFoundError(StateError):
+    pass
+
+
 class OrchestratorError(Exception):
     pass
 

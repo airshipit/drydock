@@ -31,6 +31,7 @@ def register_all():
     importlib.import_module('drydock_provisioner.objects.site')
     importlib.import_module('drydock_provisioner.objects.promenade')
     importlib.import_module('drydock_provisioner.objects.rack')
+    importlib.import_module('drydock_provisioner.objects.task')
 
 
 # Utility class for calculating inheritance

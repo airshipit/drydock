@@ -1955,8 +1955,8 @@ class MaasTaskRunner(drivers.DriverTaskRunner):
                                     'mount_options': p.mount_options,
                                 }
                                 self.logger.debug(
-                                    "Mounting partition %s on %s" % (p.name,
-                                                                     p.mountpoint))
+                                    "Mounting partition %s on %s" %
+                                    (p.name, p.mountpoint))
                                 part.mount(**mount_opts)
 
                     self.logger.debug(

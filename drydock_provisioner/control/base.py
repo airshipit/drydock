@@ -125,6 +125,37 @@ class DrydockRequestContext(object):
         self.external_marker = ''
         self.policy_engine = None
 
+    @classmethod
+    def from_dict(cls, d):
+        """Instantiate a context from a dictionary of values.
+
+        This is only used to deserialize persisted instances, so we
+        will trust the dictionary keys are exactly the correct fields
+
+        :param d: Dictionary of instance values
+        """
+        i = DrydockRequestContext()
+
+        for k, v in d.items():
+            setattr(i, k, v)
+
+        return i
+
+    def to_dict(self):
+        return {
+            'log_level': self.log_level,
+            'user': self.user,
+            'user_id': self.user_id,
+            'user_domain_id': self.user_domain_id,
+            'roles': self.roles,
+            'project_id': self.project_id,
+            'project_domain_id': self.project_domain_id,
+            'is_admin_project': self.is_admin_project,
+            'authenticated': self.authenticated,
+            'request_id': self.request_id,
+            'external_marker': self.external_marker,
+        }
+
     def set_log_level(self, level):
         if level in ['error', 'info', 'debug']:
             self.log_level = level

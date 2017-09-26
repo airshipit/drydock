@@ -16,6 +16,7 @@
 Contains commands related to designs
 """
 import click
+import json
 
 from drydock_provisioner.cli.design.actions import DesignList
 from drydock_provisioner.cli.design.actions import DesignShow
@@ -36,14 +37,15 @@ def design():
 @click.pass_context
 def design_create(ctx, base_design=None):
     """Create a design."""
-    click.echo(DesignCreate(ctx.obj['CLIENT'], base_design).invoke())
+    click.echo(
+        json.dumps(DesignCreate(ctx.obj['CLIENT'], base_design).invoke()))
 
 
 @design.command(name='list')
 @click.pass_context
 def design_list(ctx):
     """List designs."""
-    click.echo(DesignList(ctx.obj['CLIENT']).invoke())
+    click.echo(json.dumps(DesignList(ctx.obj['CLIENT']).invoke()))
 
 
 @design.command(name='show')
@@ -54,4 +56,4 @@ def design_show(ctx, design_id):
     if not design_id:
         ctx.fail('The design id must be specified by --design-id')
 
-    click.echo(DesignShow(ctx.obj['CLIENT'], design_id).invoke())
+    click.echo(json.dumps(DesignShow(ctx.obj['CLIENT'], design_id).invoke()))

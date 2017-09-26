@@ -17,6 +17,7 @@ Contains commands related to parts of designs.
 """
 
 import click
+import json
 
 from drydock_provisioner.cli.part.actions import PartList
 from drydock_provisioner.cli.part.actions import PartShow
@@ -50,10 +51,11 @@ def part_create(ctx, file=None):
         file_contents = file_input.read()
         # here is where some potential validation could be done on the input file
         click.echo(
-            PartCreate(
-                ctx.obj['CLIENT'],
-                design_id=ctx.obj['DESIGN_ID'],
-                in_file=file_contents).invoke())
+            json.dumps(
+                PartCreate(
+                    ctx.obj['CLIENT'],
+                    design_id=ctx.obj['DESIGN_ID'],
+                    in_file=file_contents).invoke()))
 
 
 @part.command(name='list')
@@ -61,7 +63,9 @@ def part_create(ctx, file=None):
 def part_list(ctx):
     """List parts of a design."""
     click.echo(
-        PartList(ctx.obj['CLIENT'], design_id=ctx.obj['DESIGN_ID']).invoke())
+        json.dumps(
+            PartList(ctx.obj['CLIENT'], design_id=ctx.obj['DESIGN_ID'])
+            .invoke()))
 
 
 @part.command(name='show')
@@ -78,9 +82,10 @@ def part_show(ctx, source, kind, key):
         ctx.fail('The key must be specified by --key')
 
     click.echo(
-        PartShow(
-            ctx.obj['CLIENT'],
-            design_id=ctx.obj['DESIGN_ID'],
-            kind=kind,
-            key=key,
-            source=source).invoke())
+        json.dumps(
+            PartShow(
+                ctx.obj['CLIENT'],
+                design_id=ctx.obj['DESIGN_ID'],
+                kind=kind,
+                key=key,
+                source=source).invoke()))
