@@ -15,6 +15,8 @@
 
 import uuid
 import json
+import time
+import logging
 
 from datetime import datetime
 
@@ -38,6 +40,7 @@ class Task(object):
     :param context: instance of DrydockRequestContext representing the request context the
                     task is executing under
     :param statemgr: instance of AppState used to access the database for state management
+    :param retry: integer retry sequence
     """
 
     def __init__(self,
@@ -46,7 +49,8 @@ class Task(object):
                  parent_task_id=None,
                  node_filter=None,
                  context=None,
-                 statemgr=None):
+                 statemgr=None,
+                 retry=0):
         self.statemgr = statemgr
 
         self.task_id = uuid.uuid4()
@@ -55,6 +59,7 @@ class Task(object):
         self.result = TaskStatus()
         self.action = action or hd_fields.OrchestratorAction.Noop
         self.design_ref = design_ref
+        self.retry = retry
         self.parent_task_id = parent_task_id
         self.created = datetime.utcnow()
         self.node_filter = node_filter
@@ -63,6 +68,8 @@ class Task(object):
         self.terminated = None
         self.terminated_by = None
         self.request_context = context
+        self.terminate = False
+        self.logger = logging.getLogger("drydock")
 
         if context is not None:
             self.created_by = context.user
@@ -74,8 +81,48 @@ class Task(object):
     def get_id(self):
         return self.task_id
 
-    def terminate_task(self):
-        self.set_Status(hd_fields.TaskStatus.Terminating)
+    def retry_task(self, max_attempts=None):
+        """Check if this task should be retried and update attributes if so."""
+        if (self.result.status != hd_fields.ActionResult.Success) and (len(
+                self.result.failures) > 0):
+            if not max_attempts or (max_attempts
+                                    and self.retry < max_attempts):
+                self.add_status_msg(
+                    msg="Retrying task for failed entities.",
+                    error=False,
+                    ctx='NA',
+                    ctx_type='NA')
+                self.retry = self.retry + 1
+                if len(self.result.successes) > 0:
+                    self.result.status = hd_fields.ActionResult.Success
+                else:
+                    self.result.status = hd_fields.ActionResult.Incomplete
+                self.save()
+                return True
+            else:
+                self.add_status_msg(
+                    msg="Retry requested, out of attempts.",
+                    error=False,
+                    ctx='NA',
+                    ctx_type='NA')
+                raise errors.MaxRetriesReached("Retries reached max attempts.")
+        else:
+            return False
+
+    def terminate_task(self, terminated_by=None):
+        """Terminate this task.
+
+        If the task is queued, just mark it terminated. Otherwise mark it as
+        terminating and let the orchestrator manage completing termination.
+        """
+        self.terminate = True
+        self.terminated = datetime.utcnow()
+        self.terminated_by = terminated_by
+        self.save()
+
+    def check_terminate(self):
+        """Check if execution of this task should terminate."""
+        return self.terminate
 
     def set_status(self, status):
         self.status = status
@@ -84,23 +131,44 @@ class Task(object):
         return self.status
 
     def get_result(self):
-        return self.result
+        return self.result.status
 
-    def success(self):
-        """Encounter a result that causes at least partial success."""
-        if self.result.status in [hd_fields.TaskResult.Failure,
-                                  hd_fields.TaskResult.PartialSuccess]:
-            self.result.status = hd_fields.TaskResult.PartialSuccess
-        else:
-            self.result.status = hd_fields.TaskResult.Success
+    def success(self, focus=None):
+        """Encounter a result that causes at least partial success.
 
-    def failure(self):
-        """Encounter a result that causes at least partial failure."""
-        if self.result.status in [hd_fields.TaskResult.Success,
-                                  hd_fields.TaskResult.PartialSuccess]:
-            self.result.status = hd_fields.TaskResult.PartialSuccess
+        If defined, focus will be added to the task successes list
+
+        :param focus: The entity successfully operated upon
+        """
+        if self.result.status in [
+                hd_fields.ActionResult.Failure,
+                hd_fields.ActionResult.PartialSuccess
+        ]:
+            self.result.status = hd_fields.ActionResult.PartialSuccess
         else:
-            self.result.status = hd_fields.TaskResult.Failure
+            self.result.status = hd_fields.ActionResult.Success
+        if focus:
+            self.logger.debug("Adding %s to successes list." % focus)
+            self.result.add_success(focus)
+        return
+
+    def failure(self, focus=None):
+        """Encounter a result that causes at least partial failure.
+
+        If defined, focus will be added to the task failures list
+
+        :param focus: The entity successfully operated upon
+        """
+        if self.result.status in [
+                hd_fields.ActionResult.Success,
+                hd_fields.ActionResult.PartialSuccess
+        ]:
+            self.result.status = hd_fields.ActionResult.PartialSuccess
+        else:
+            self.result.status = hd_fields.ActionResult.Failure
+        if focus:
+            self.logger.debug("Adding %s to failures list." % focus)
+            self.result.add_failure(focus)
 
     def register_subtask(self, subtask):
         """Register a task as a subtask to this task.
@@ -111,6 +179,12 @@ class Task(object):
             raise errors.OrchestratorError("Cannot add subtask for parent"
                                            " marked for termination")
         if self.statemgr.add_subtask(self.task_id, subtask.task_id):
+            self.add_status_msg(
+                msg="Started subtask %s for action %s" %
+                (str(subtask.get_id()), subtask.action),
+                error=False,
+                ctx=str(self.get_id()),
+                ctx_type='task')
             self.subtask_id_list.append(subtask.task_id)
             subtask.parent_task_id = self.task_id
             subtask.save()
@@ -119,15 +193,130 @@ class Task(object):
 
     def save(self):
         """Save this task's current state to the database."""
+        chk_task = self.statemgr.get_task(self.get_id())
+
+        if chk_task in [
+                hd_fields.TaskStatus.Terminating,
+                hd_fields.TaskStatus.Terminated
+        ]:
+            self.set_status(chk_task.status)
+
+        self.updated = datetime.utcnow()
         if not self.statemgr.put_task(self):
             raise errors.OrchestratorError("Error saving task.")
 
     def get_subtasks(self):
+        """Get list of this task's subtasks."""
         return self.subtask_id_list
 
+    def collect_subtasks(self, action=None, poll_interval=15, timeout=300):
+        """Monitor subtasks waiting for completion.
+
+        If action is specified, only watch subtasks executing this action. poll_interval
+        and timeout are measured in seconds and used for controlling the monitoring behavior.
+
+        :param action: What subtask action to monitor
+        :param poll_interval: How often to load subtask status from the database
+        :param timeout: How long to continue monitoring before considering subtasks as hung
+        """
+        timeleft = timeout
+        while timeleft > 0:
+            st_list = self.statemgr.get_active_subtasks(self.task_id)
+            if len(st_list) == 0:
+                return True
+            else:
+                time.sleep(poll_interval)
+                timeleft = timeleft - poll_interval
+
+        raise errors.CollectTaskTimeout(
+            "Timed out collecting subtasks for task %s." % str(self.task_id))
+
+    def node_filter_from_successes(self):
+        """Create a node filter from successful entities in this task's results."""
+        nf = dict(filter_set_type='intersection', filter_set=[])
+        nf['filter_set'].append(
+            dict(node_names=self.result.successes, filter_type='union'))
+
+    def node_filter_from_failures(self):
+        """Create a node filter from failure entities in this task's result."""
+        nf = dict(filter_set_type='intersection', filter_set=[])
+        nf['filter_set'].append(
+            dict(node_names=self.result.failures, filter_type='union'))
+
+    def bubble_results(self, action_filter=None):
+        """Combine successes and failures of subtasks and update this task with the result.
+
+        Query all completed subtasks of this task and collect the success and failure entities
+        from the subtask result. If action_filter is specified, collect results only from
+        subtasks performing the given action. Replace this task's result failures and successes
+        with the results of the query. If this task has a ``retry`` sequence greater than 0,
+        collect failures from subtasks only with an equivalent retry sequence.
+
+        :param action_filter: string action name to filter subtasks on
+        """
+        self.logger.debug(
+            "Bubbling subtask results up to task %s." % str(self.task_id))
+        self.result.successes = []
+        self.result.failures = []
+        for st in self.statemgr.get_complete_subtasks(self.task_id):
+            if action_filter is None or (action_filter is not None
+                                         and st.action == action_filter):
+                for se in st.result.successes:
+                    self.logger.debug(
+                        "Bubbling subtask success for entity %s." % se)
+                    self.result.add_success(se)
+                if self.retry == 0 or (self.retry == st.retry):
+                    for fe in st.result.failures:
+                        self.logger.debug(
+                            "Bubbling subtask failure for entity %s." % fe)
+                        self.result.add_failure(fe)
+                else:
+                    self.logger.debug(
+                        "Skipping failures as they mismatch task retry sequence."
+                    )
+            else:
+                self.logger.debug("Skipping subtask due to action filter.")
+
+    def align_result(self):
+        """Align the result of this task with the combined results of all the subtasks."""
+        for st in self.statemgr.get_complete_subtasks(self.task_id):
+            if st.get_result() in [
+                    hd_fields.ActionResult.Success,
+                    hd_fields.ActionResult.PartialSuccess
+            ]:
+                self.success()
+            if st.get_result() in [
+                    hd_fields.ActionResult.Failure,
+                    hd_fields.ActionResult.PartialSuccess
+            ]:
+                self.failure()
+
     def add_status_msg(self, **kwargs):
+        """Add a status message to this task's result status."""
         msg = self.result.add_status_msg(**kwargs)
         self.statemgr.post_result_message(self.task_id, msg)
+
+    def merge_status_messages(self, task=None, task_result=None):
+        """Merge status messages into this task's result status.
+
+        Specify either task or task_result to source status messages from.
+
+        :param task: instance of objects.task.Task to consume result messages from
+        :param task_result: instance of objects.task.TaskStatus to consume result message from
+        """
+        if task:
+            msg_list = task.result.message_list
+        elif task_result:
+            msg_list = task_result.message_list
+
+        for m in msg_list:
+            self.add_status_msg(
+                msg=m.msg,
+                error=m.error,
+                ctx_type=m.ctx_type,
+                ctx=m.ctx,
+                ts=m.ts,
+                **m.extra)
 
     def to_db(self, include_id=True):
         """Convert this instance to a dictionary for use persisting to a db.
@@ -150,6 +339,10 @@ class Task(object):
             self.result.reason,
             'result_error_count':
             self.result.error_count,
+            'result_successes':
+            self.result.successes,
+            'result_failures':
+            self.result.failures,
             'status':
             self.status,
             'created':
@@ -169,6 +362,10 @@ class Task(object):
             self.terminated,
             'terminated_by':
             self.terminated_by,
+            'terminate':
+            self.terminate,
+            'retry':
+            self.retry
         }
 
         if include_id:
@@ -182,21 +379,39 @@ class Task(object):
         Intended for use in JSON serialization
         """
         return {
-            'Kind': 'Task',
-            'apiVersion': 'v1',
-            'task_id': str(self.task_id),
-            'action': self.action,
-            'parent_task_id': str(self.parent_task_id),
-            'design_ref': self.design_ref,
-            'status': self.status,
-            'result': self.result.to_dict(),
-            'node_filter': self.node_filter.to_dict(),
+            'kind':
+            'Task',
+            'apiVersion':
+            'v1',
+            'task_id':
+            str(self.task_id),
+            'action':
+            self.action,
+            'parent_task_id':
+            None if self.parent_task_id is None else str(self.parent_task_id),
+            'design_ref':
+            self.design_ref,
+            'status':
+            self.status,
+            'result':
+            self.result.to_dict(),
+            'node_filter':
+            None if self.node_filter is None else self.node_filter,
             'subtask_id_list': [str(x) for x in self.subtask_id_list],
-            'created': self.created,
-            'created_by': self.created_by,
-            'updated': self.updated,
-            'terminated': self.terminated,
-            'terminated_by': self.terminated_by,
+            'created':
+            None if self.created is None else str(self.created),
+            'created_by':
+            self.created_by,
+            'updated':
+            None if self.updated is None else str(self.updated),
+            'terminated':
+            None if self.terminated is None else str(self.terminated),
+            'terminated_by':
+            self.terminated_by,
+            'terminate':
+            self.terminate,
+            'retry':
+            self.retry,
         }
 
     @classmethod
@@ -207,22 +422,39 @@ class Task(object):
         """
         i = Task()
 
-        i.task_id = uuid.UUID(bytes=d.get('task_id'))
+        i.task_id = uuid.UUID(bytes=bytes(d.get('task_id')))
 
         if d.get('parent_task_id', None) is not None:
-            i.parent_task_id = uuid.UUID(bytes=d.get('parent_task_id'))
+            i.parent_task_id = uuid.UUID(bytes=bytes(d.get('parent_task_id')))
 
         if d.get('subtask_id_list', None) is not None:
             for t in d.get('subtask_id_list'):
-                i.subtask_id_list.append(uuid.UUID(bytes=t))
+                i.subtask_id_list.append(uuid.UUID(bytes=bytes(t)))
 
         simple_fields = [
-            'status', 'created', 'created_by', 'design_ref', 'action',
-            'terminated', 'terminated_by'
+            'status',
+            'created',
+            'created_by',
+            'design_ref',
+            'action',
+            'terminated',
+            'terminated_by',
+            'terminate',
+            'updated',
+            'retry',
         ]
 
         for f in simple_fields:
             setattr(i, f, d.get(f, None))
+
+        # Recreate result
+        i.result = TaskStatus()
+        i.result.error_count = d.get('result_error_count')
+        i.result.message = d.get('result_message')
+        i.result.reason = d.get('result_reason')
+        i.result.status = d.get('result_status')
+        i.result.successes = d.get('result_successes', [])
+        i.result.failures = d.get('result_failures', [])
 
         # Deserialize the request context for this task
         if i.request_context is not None:
@@ -243,6 +475,11 @@ class TaskStatus(object):
         self.reason = None
         self.status = hd_fields.ActionResult.Incomplete
 
+        # For tasks operating on multiple contexts (nodes, networks, etc...)
+        # track which contexts ended successfully and which failed
+        self.successes = []
+        self.failures = []
+
     @classmethod
     def obj_name(cls):
         return cls.__name__
@@ -255,6 +492,22 @@ class TaskStatus(object):
 
     def set_status(self, status):
         self.status = status
+
+    def add_failure(self, entity):
+        """Add an entity to the failures list.
+
+        :param entity: String entity name to add
+        """
+        if entity not in self.failures:
+            self.failures.append(entity)
+
+    def add_success(self, entity):
+        """Add an entity to the successes list.
+
+        :param entity: String entity name to add
+        """
+        if entity not in self.successes:
+            self.successes.append(entity)
 
     def add_status_msg(self,
                        msg=None,
@@ -277,12 +530,14 @@ class TaskStatus(object):
 
     def to_dict(self):
         return {
-            'Kind': 'Status',
+            'kind': 'Status',
             'apiVersion': 'v1',
             'metadata': {},
             'message': self.message,
             'reason': self.reason,
             'status': self.status,
+            'successes': self.successes,
+            'failures': self.failures,
             'details': {
                 'errorCount': self.error_count,
                 'messageList': [x.to_dict() for x in self.message_list],
@@ -298,7 +553,10 @@ class TaskStatusMessage(object):
         self.error = error
         self.ctx_type = ctx_type
         self.ctx = ctx
-        self.ts = datetime.utcnow()
+        if 'ts' not in kwargs:
+            self.ts = datetime.utcnow()
+        else:
+            self.ts = kwargs.pop('ts')
         self.extra = kwargs
 
     @classmethod
@@ -306,21 +564,20 @@ class TaskStatusMessage(object):
         return cls.__name__
 
     def to_dict(self):
+        """Convert to a dictionary in prep for JSON/YAML serialization."""
         _dict = {
             'message': self.message,
             'error': self.error,
             'context_type': self.ctx_type,
             'context': self.ctx,
-            'ts': self.ts,
+            'ts': str(self.ts),
+            'extra': self.extra,
         }
-
-        _dict.update(self.extra)
-
         return _dict
 
     def to_db(self):
         """Convert this instance to a dictionary appropriate for the DB."""
-        return {
+        _dict = {
             'message': self.message,
             'error': self.error,
             'context': self.ctx,
@@ -328,6 +585,11 @@ class TaskStatusMessage(object):
             'ts': self.ts,
             'extra': json.dumps(self.extra),
         }
+
+        if len(_dict['message']) > 128:
+            _dict['message'] = _dict['message'][:127]
+
+        return _dict
 
     @classmethod
     def from_db(cls, d):
@@ -337,8 +599,7 @@ class TaskStatusMessage(object):
         """
         i = TaskStatusMessage(
             d.get('message', None),
-            d.get('error'),
-            d.get('context_type'), d.get('context'))
+            d.get('error'), d.get('context_type'), d.get('context'))
         if 'extra' in d:
             i.extra = d.get('extra')
         i.ts = d.get('ts', None)

@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Model for MaaS SSH Key resources."""
 
-import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
 
@@ -25,7 +25,7 @@ class SshKey(model_base.ResourceBase):
     def __init__(self, api_client, **kwargs):
         super(SshKey, self).__init__(api_client, **kwargs)
 
-        #Keys should never have newlines, but sometimes they get added
+        # Keys should never have newlines, but sometimes they get added
         self.key = self.key.replace("\n", "")
 
 

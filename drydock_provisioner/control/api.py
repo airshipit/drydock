@@ -13,9 +13,14 @@
 # limitations under the License.
 import falcon
 
-from .designs import *
-from .tasks import *
-from .bootdata import *
+from .designs import DesignsResource
+from .designs import DesignResource
+from .designs import DesignsPartsResource
+from .designs import DesignsPartsKindsResource
+from .designs import DesignsPartResource
+from .tasks import TasksResource
+from .tasks import TaskResource
+from .bootdata import BootdataResource
 from .nodes import NodesResource
 
 from .base import DrydockRequest
@@ -53,8 +58,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
             state_manager=state_manager, orchestrator=orchestrator)),
         ('/designs/{design_id}/parts', DesignsPartsResource(
             state_manager=state_manager, ingester=ingester)),
-        ('/designs/{design_id}/parts/{kind}', DesignsPartsKindsResource(
-            state_manager=state_manager)),
+        ('/designs/{design_id}/parts/{kind}',
+         DesignsPartsKindsResource(state_manager=state_manager)),
         ('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(
             state_manager=state_manager, orchestrator=orchestrator)),
 

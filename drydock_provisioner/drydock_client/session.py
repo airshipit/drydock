@@ -17,6 +17,7 @@ import logging
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 
+
 class DrydockSession(object):
     """
     A session to the Drydock API maintaining credentials and API options
@@ -89,7 +90,6 @@ class DrydockSession(object):
 
 
 class KeystoneClient(object):
-
     @staticmethod
     def get_endpoint(endpoint, ks_sess=None, auth_info=None):
         """
@@ -103,7 +103,8 @@ class KeystoneClient(object):
         if ks_sess is None:
             ks_sess = KeystoneClient.get_ks_session(**auth_info)
 
-        return ks_sess.get_endpoint(interface='internal', service_type=endpoint)
+        return ks_sess.get_endpoint(
+            interface='internal', service_type=endpoint)
 
     @staticmethod
     def get_token(ks_sess=None, auth_info=None):

@@ -20,7 +20,7 @@ import drydock_provisioner.drydock_client.client as dc_client
 
 def test_blank_session_error():
     with pytest.raises(Exception):
-        dd_ses = dc_session.DrydockSession()
+        dc_session.DrydockSession()
 
 
 def test_session_init_minimal():
@@ -52,7 +52,9 @@ def test_session_init_uuid_token():
 
 def test_session_init_fernet_token():
     host = 'foo.bar.baz'
-    token = 'gAAAAABU7roWGiCuOvgFcckec-0ytpGnMZDBLG9hA7Hr9qfvdZDHjsak39YN98HXxoYLIqVm19Egku5YR3wyI7heVrOmPNEtmr-fIM1rtahudEdEAPM4HCiMrBmiA1Lw6SU8jc2rPLC7FK7nBCia_BGhG17NVHuQu0S7waA306jyKNhHwUnpsBQ'
+    token = 'gAAAAABU7roWGiCuOvgFcckec-0ytpGnMZDBLG9hA7Hr9qfvdZDHjsak39YN98HXxoYLIqVm' \
+            '19Egku5YR3wyI7heVrOmPNEtmr-fIM1rtahudEdEAPM4HCiMrBmiA1Lw6SU8jc2rPLC7FK7n' \
+            'BCia_BGhG17NVHuQu0S7waA306jyKNhHwUnpsBQ'
 
     dd_ses = dc_session.DrydockSession(host, token=token)
 
@@ -88,49 +90,6 @@ def test_session_get():
 
     assert req.headers.get('X-Auth-Token', None) == token
     assert req.headers.get('X-Context-Marker', None) == marker
-
-
-@responses.activate
-def test_client_designs_get():
-    design_id = '828e88dc-6a8b-11e7-97ae-080027ef795a'
-    responses.add(
-        responses.GET,
-        'http://foo.bar.baz/api/v1.0/designs',
-        json=[design_id],
-        status=200)
-
-    host = 'foo.bar.baz'
-    token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
-
-    dd_ses = dc_session.DrydockSession(host, token=token)
-    dd_client = dc_client.DrydockClient(dd_ses)
-    design_list = dd_client.get_design_ids()
-
-    assert design_id in design_list
-
-
-@responses.activate
-def test_client_design_get():
-    design = {
-        'id': '828e88dc-6a8b-11e7-97ae-080027ef795a',
-        'model_type': 'SiteDesign'
-    }
-
-    responses.add(
-        responses.GET,
-        'http://foo.bar.baz/api/v1.0/designs/828e88dc-6a8b-11e7-97ae-080027ef795a',
-        json=design,
-        status=200)
-
-    host = 'foo.bar.baz'
-
-    dd_ses = dc_session.DrydockSession(host)
-    dd_client = dc_client.DrydockClient(dd_ses)
-
-    design_resp = dd_client.get_design('828e88dc-6a8b-11e7-97ae-080027ef795a')
-
-    assert design_resp['id'] == design['id']
-    assert design_resp['model_type'] == design['model_type']
 
 
 @responses.activate

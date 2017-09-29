@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Models for MaaS Tag resources."""
 
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
-
-import yaml
 
 
 class Tag(model_base.ResourceBase):
@@ -71,7 +70,9 @@ class Tag(model_base.ResourceBase):
             url = self.interpolate_url()
 
             resp = self.api_client.post(
-                url, op='update_nodes', files={'add': system_id})
+                url, op='update_nodes', files={
+                    'add': system_id
+                })
 
             if not resp.ok:
                 self.logger.error(

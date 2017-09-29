@@ -14,7 +14,6 @@
 import pytest
 import shutil
 import os
-import uuid
 import logging
 
 from drydock_provisioner.ingester.plugins.yaml import YamlIngester
@@ -28,8 +27,12 @@ class TestClass(object):
 
         ingester = YamlIngester()
 
-        models = ingester.ingest_data(filenames=[str(input_file)])
+        f = open(str(input_file), 'rb')
+        yaml_string = f.read()
 
+        status, models = ingester.ingest_data(content=yaml_string)
+
+        assert status.status == 'success'
         assert len(models) == 1
 
     def test_ingest_multidoc(self, input_files):
@@ -37,15 +40,19 @@ class TestClass(object):
 
         ingester = YamlIngester()
 
-        models = ingester.ingest_data(filenames=[str(input_file)])
+        f = open(str(input_file), 'rb')
+        yaml_string = f.read()
 
+        status, models = ingester.ingest_data(content=yaml_string)
+
+        assert status.status == 'success'
         assert len(models) == 3
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(
-            str(request.fspath)) + "/" + "../yaml_samples"
+        samples_dir = os.path.dirname(str(
+            request.fspath)) + "/" + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:

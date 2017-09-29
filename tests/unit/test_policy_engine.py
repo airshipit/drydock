@@ -15,8 +15,6 @@ import uuid
 from drydock_provisioner.policy import DrydockPolicy
 from drydock_provisioner.control.base import DrydockRequestContext
 
-import pytest
-
 
 class TestDefaultRules():
     def test_register_policy(self, mocker):

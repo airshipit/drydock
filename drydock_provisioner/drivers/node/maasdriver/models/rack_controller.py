@@ -13,10 +13,7 @@
 # limitations under the License.
 """Model for MaaS rack-controller API resource."""
 
-import bson
-
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
-import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_interface
 import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machine
 
 

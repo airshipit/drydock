@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Noop driver for manually executing OOB tasks."""
+
 import time
 import logging
 
@@ -19,10 +21,8 @@ from oslo_config import cfg
 import drydock_provisioner.error as errors
 
 import drydock_provisioner.objects.fields as hd_fields
-import drydock_provisioner.objects.task as task_model
 
-import drydock_provisioner.drivers.oob as oob
-import drydock_provisioner.drivers as drivers
+import drydock_provisioner.drivers.oob.driver as oob
 
 
 class ManualDriver(oob.OobDriver):
@@ -52,9 +52,9 @@ class ManualDriver(oob.OobDriver):
                 "Driver %s doesn't support task action %s" % (self.driver_desc,
                                                               task.action))
 
-        design_id = getattr(task, 'design_id', None)
+        design_ref = task.design_ref
 
-        if design_id is None:
+        if design_ref is None:
             raise errors.DriverError("No design ID specified in task %s" %
                                      (task_id))
 
@@ -66,7 +66,8 @@ class ManualDriver(oob.OobDriver):
 
         time.sleep(60)
 
-        self.orchestrator.task_field_update(
-            task.get_id(),
-            status=hd_fields.TaskStatus.Complete,
-            result=hd_fields.ActionResult.Success)
+        task.set_status(hd_fields.TaskStatus.Complete)
+        task.success()
+        task.save()
+
+        return

@@ -10,10 +10,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Handler resources for Design API endpoints.
+
+NOTICE - THIS API IS DEPRECATED
+"""
+
 import falcon
 import json
 import uuid
-import logging
 
 import drydock_provisioner.policy as policy
 import drydock_provisioner.objects as hd_objects
@@ -23,12 +27,18 @@ from .base import StatefulResource
 
 
 class DesignsResource(StatefulResource):
+    """Resource handlers for design collection."""
+
     def __init__(self, **kwargs):
         super(DesignsResource, self).__init__(**kwargs)
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp):
-        ctx = req.context
+        """Method handler for GET requests.
+
+        :param req: Falcon request object
+        :param resp: Falcon response object
+        """
         state = self.state_manager
 
         try:
@@ -46,8 +56,11 @@ class DesignsResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:ingest_data')
     def on_post(self, req, resp):
-        ctx = req.context
+        """Method handler for POST requests.
 
+        :param req: Falcon request object
+        :param resp: Falcon response object
+        """
         try:
             json_data = self.req_json(req)
             design = None
@@ -56,8 +69,7 @@ class DesignsResource(StatefulResource):
 
                 if base_design is not None:
                     base_design = uuid.UUID(base_design)
-                    design = hd_objects.SiteDesign(
-                        base_design_id=base_design_uuid)
+                    design = hd_objects.SiteDesign(base_design_id=base_design)
             else:
                 design = hd_objects.SiteDesign()
             design.assign_id()
@@ -79,6 +91,8 @@ class DesignsResource(StatefulResource):
 
 
 class DesignResource(StatefulResource):
+    """Resource Handlers for design singletons."""
+
     def __init__(self, orchestrator=None, **kwargs):
         super(DesignResource, self).__init__(**kwargs)
         self.authorized_roles = ['user']
@@ -86,8 +100,13 @@ class DesignResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp, design_id):
+        """Method Handler for GET design singleton.
+
+        :param req: Falcon request object
+        :param resp: Falcon response object
+        :param design_id: UUID of the design resource
+        """
         source = req.params.get('source', 'designed')
-        ctx = req.context
 
         try:
             design = None
@@ -168,7 +187,7 @@ class DesignsPartsResource(StatefulResource):
     def on_get(self, req, resp, design_id):
         try:
             design = self.state_manager.get_design(design_id)
-        except DesignError:
+        except errors.DesignError:
             self.return_error(
                 resp,
                 falcon.HTTP_404,
@@ -218,7 +237,6 @@ class DesignsPartsKindsResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp, design_id, kind):
-        ctx = req.context
 
         resp.status = falcon.HTTP_200
 
@@ -231,7 +249,6 @@ class DesignsPartResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp, design_id, kind, name):
-        ctx = req.context
         source = req.params.get('source', 'designed')
 
         try:

@@ -13,15 +13,18 @@ branch_labels = None
 depends_on = None
 
 from alembic import op
-import sqlalchemy as sa
 
 from drydock_provisioner.statemgmt.db import tables
 
+
 def upgrade():
     op.create_table(tables.Tasks.__tablename__, *tables.Tasks.__schema__)
-    op.create_table(tables.ResultMessage.__tablename__, *tables.ResultMessage.__schema__)
-    op.create_table(tables.ActiveInstance.__tablename__, *tables.ActiveInstance.__schema__)
-    op.create_table(tables.BuildData.__tablename__, *tables.BuildData.__schema__)
+    op.create_table(tables.ResultMessage.__tablename__,
+                    *tables.ResultMessage.__schema__)
+    op.create_table(tables.ActiveInstance.__tablename__,
+                    *tables.ActiveInstance.__schema__)
+    op.create_table(tables.BuildData.__tablename__,
+                    *tables.BuildData.__schema__)
 
 
 def downgrade():

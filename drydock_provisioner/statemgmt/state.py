@@ -14,18 +14,20 @@
 """Access methods for managing external data access and persistence."""
 
 import logging
+from datetime import datetime
 
 from sqlalchemy import create_engine
-from sqlalchemy import MetaData
 from sqlalchemy import sql
+from sqlalchemy import MetaData
 
 import drydock_provisioner.objects as objects
+import drydock_provisioner.objects.fields as hd_fields
 
 from .db import tables
+from .design import resolver
 
 from drydock_provisioner import config
 
-from drydock_provisioner.error import DesignError
 from drydock_provisioner.error import StateError
 
 
@@ -34,110 +36,42 @@ class DrydockState(object):
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.global_logger_name)
 
+        self.resolver = resolver.DesignResolver()
+        return
+
+    def connect_db(self):
+        """Connect the state manager to the persistent DB."""
         self.db_engine = create_engine(
             config.config_mgr.conf.database.database_connect_string)
-        self.db_metadata = MetaData()
+        self.db_metadata = MetaData(bind=self.db_engine)
 
         self.tasks_tbl = tables.Tasks(self.db_metadata)
         self.result_message_tbl = tables.ResultMessage(self.db_metadata)
         self.active_instance_tbl = tables.ActiveInstance(self.db_metadata)
         self.build_data_tbl = tables.BuildData(self.db_metadata)
-
         return
 
-    # TODO(sh8121att) Need to lock a design base or change once implementation
-    # has started
-    def get_design(self, design_id):
-        if design_id not in self.designs.keys():
+    def tabularasa(self):
+        """Truncate all tables.
 
-            raise DesignError("Design ID %s not found" % (design_id))
+        Used for testing to truncate all tables so the database is clean.
+        """
+        table_names = [
+            'tasks',
+            'result_message',
+            'active_instance',
+            'build_data',
+        ]
 
-        return objects.SiteDesign.obj_from_primitive(self.designs[design_id])
+        conn = self.db_engine.connect()
+        for t in table_names:
+            query_text = sql.text(
+                "TRUNCATE TABLE %s" % t).execution_options(autocommit=True)
+            conn.execute(query_text)
+        conn.close()
 
-    def post_design(self, site_design):
-        if site_design is not None:
-            my_lock = self.designs_lock.acquire(blocking=True, timeout=10)
-            if my_lock:
-                design_id = site_design.id
-                if design_id not in self.designs.keys():
-                    self.designs[design_id] = site_design.obj_to_primitive()
-                else:
-                    self.designs_lock.release()
-                    raise StateError("Design ID %s already exists" % design_id)
-                self.designs_lock.release()
-                return True
-            raise StateError("Could not acquire lock")
-        else:
-            raise DesignError("Design change must be a SiteDesign instance")
-
-    def put_design(self, site_design):
-        if site_design is not None:
-            my_lock = self.designs_lock.acquire(blocking=True, timeout=10)
-            if my_lock:
-                design_id = site_design.id
-                if design_id not in self.designs.keys():
-                    self.designs_lock.release()
-                    raise StateError("Design ID %s does not exist" % design_id)
-                else:
-                    self.designs[design_id] = site_design.obj_to_primitive()
-                    self.designs_lock.release()
-                    return True
-            raise StateError("Could not acquire lock")
-        else:
-            raise DesignError("Design base must be a SiteDesign instance")
-
-    def get_current_build(self):
-        latest_stamp = 0
-        current_build = None
-
-        for b in self.builds:
-            if b.build_id > latest_stamp:
-                latest_stamp = b.build_id
-                current_build = b
-
-        return deepcopy(current_build)
-
-    def get_build(self, build_id):
-        for b in self.builds:
-            if b.build_id == build_id:
-                return b
-
-        return None
-
-    def post_build(self, site_build):
-        if site_build is not None and isinstance(site_build, SiteBuild):
-            my_lock = self.builds_lock.acquire(block=True, timeout=10)
-            if my_lock:
-                exists = [
-                    b for b in self.builds if b.build_id == site_build.build_id
-                ]
-
-                if len(exists) > 0:
-                    self.builds_lock.release()
-                    raise DesignError("Already a site build with ID %s" %
-                                      (str(site_build.build_id)))
-                self.builds.append(deepcopy(site_build))
-                self.builds_lock.release()
-                return True
-            raise StateError("Could not acquire lock")
-        else:
-            raise DesignError("Design change must be a SiteDesign instance")
-
-    def put_build(self, site_build):
-        if site_build is not None and isinstance(site_build, SiteBuild):
-            my_lock = self.builds_lock.acquire(block=True, timeout=10)
-            if my_lock:
-                buildid = site_build.buildid
-                for b in self.builds:
-                    if b.buildid == buildid:
-                        b.merge_updates(site_build)
-                        self.builds_lock.release()
-                        return True
-                self.builds_lock.release()
-                return False
-            raise StateError("Could not acquire lock")
-        else:
-            raise DesignError("Design change must be a SiteDesign instance")
+    def get_design_documents(self, design_ref):
+        return self.resolver.resolve_reference(design_ref)
 
     def get_tasks(self):
         """Get all tasks in the database."""
@@ -150,12 +84,117 @@ class DrydockState(object):
 
             self._assemble_tasks(task_list=task_list)
 
+            # add reference to this state manager to each task
+            for t in task_list:
+                t.statemgr = self
+
             conn.close()
 
             return task_list
         except Exception as ex:
             self.logger.error("Error querying task list: %s" % str(ex))
             return []
+
+    def get_complete_subtasks(self, task_id):
+        """Query database for subtasks of the provided task that are complete.
+
+        Complete is defined as status of Terminated or Complete.
+
+        :param task_id: uuid.UUID ID of the parent task for subtasks
+        """
+        try:
+            conn = self.db_engine.connect()
+            query_text = sql.text(
+                "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
+                "parent_task_id = :parent_task_id AND "
+                "status IN ('" + hd_fields.TaskStatus.Terminated + "','" +
+                hd_fields.TaskStatus.Complete + "')")
+
+            rs = conn.execute(query_text, parent_task_id=task_id.bytes)
+            task_list = [objects.Task.from_db(dict(r)) for r in rs]
+            conn.close()
+
+            self._assemble_tasks(task_list=task_list)
+            for t in task_list:
+                t.statemgr = self
+
+            return task_list
+        except Exception as ex:
+            self.logger.error("Error querying complete subtask: %s" % str(ex))
+            return []
+
+    def get_active_subtasks(self, task_id):
+        """Query database for subtasks of the provided task that are active.
+
+        Active is defined as status of not Terminated or Complete. Returns
+        list of objects.Task instances
+
+        :param task_id: uuid.UUID ID of the parent task for subtasks
+        """
+        try:
+            conn = self.db_engine.connect()
+            query_text = sql.text(
+                "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
+                "parent_task_id = :parent_task_id AND "
+                "status NOT IN ['" + hd_fields.TaskStatus.Terminated + "','" +
+                hd_fields.TaskStatus.Complete + "']")
+
+            rs = conn.execute(query_text, parent_task_id=task_id.bytes)
+
+            task_list = [objects.Task.from_db(dict(r)) for r in rs]
+            conn.close()
+
+            self._assemble_tasks(task_list=task_list)
+
+            for t in task_list:
+                t.statemgr = self
+
+            return task_list
+        except Exception as ex:
+            self.logger.error("Error querying active subtask: %s" % str(ex))
+            return []
+
+    def get_next_queued_task(self, allowed_actions=None):
+        """Query the database for the next (by creation timestamp) queued task.
+
+        If specified, only select tasks for one of the actions in the allowed_actions
+        list.
+
+        :param allowed_actions: list of string action names
+        """
+        try:
+            conn = self.db_engine.connect()
+            if allowed_actions is None:
+                query = self.tasks_tbl.select().where(
+                    self.tasks_tbl.c.status ==
+                    hd_fields.TaskStatus.Queued).order_by(
+                        self.tasks_tbl.c.created.asc())
+                rs = conn.execute(query)
+            else:
+                query = sql.text("SELECT * FROM tasks WHERE "
+                                 "status = :queued_status AND "
+                                 "action = ANY(:actions) "
+                                 "ORDER BY created ASC")
+                rs = conn.execute(
+                    query,
+                    queued_status=hd_fields.TaskStatus.Queued,
+                    actions=allowed_actions)
+
+            r = rs.first()
+            conn.close()
+
+            if r is not None:
+                task = objects.Task.from_db(dict(r))
+                self._assemble_tasks(task_list=[task])
+                task.statemgr = self
+                return task
+            else:
+                return None
+        except Exception as ex:
+            self.logger.error(
+                "Error querying for next queued task: %s" % str(ex),
+                exc_info=True)
+            return None
 
     def get_task(self, task_id):
         """Query database for task matching task_id.
@@ -172,16 +211,19 @@ class DrydockState(object):
 
             task = objects.Task.from_db(dict(r))
 
-            self.logger.debug("Assembling result messages for task %s." % str(task.task_id))
+            self.logger.debug(
+                "Assembling result messages for task %s." % str(task.task_id))
             self._assemble_tasks(task_list=[task])
+            task.statemgr = self
 
             conn.close()
 
             return task
 
         except Exception as ex:
-            self.logger.error("Error querying task %s: %s" % (str(task_id),
-                                                              str(ex)), exc_info=True)
+            self.logger.error(
+                "Error querying task %s: %s" % (str(task_id), str(ex)),
+                exc_info=True)
             return None
 
     def post_result_message(self, task_id, msg):
@@ -192,12 +234,15 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.result_message_tbl.insert().values(task_id=task_id.bytes, **(msg.to_db()))
+            query = self.result_message_tbl.insert().values(
+                task_id=task_id.bytes, **(msg.to_db()))
             conn.execute(query)
             conn.close()
             return True
         except Exception as ex:
-            self.logger.error("Error inserting result message for task %s: %s" % (str(task_id), str(ex)))
+            self.logger.error(
+                "Error inserting result message for task %s: %s" %
+                (str(task_id), str(ex)))
             return False
 
     def _assemble_tasks(self, task_list=None):
@@ -209,9 +254,10 @@ class DrydockState(object):
             return None
 
         conn = self.db_engine.connect()
-        query = sql.select([self.result_message_tbl]).where(
-            self.result_message_tbl.c.task_id == sql.bindparam(
-                'task_id')).order_by(self.result_message_tbl.c.sequence.asc())
+        query = sql.select([
+            self.result_message_tbl
+        ]).where(self.result_message_tbl.c.task_id == sql.bindparam(
+            'task_id')).order_by(self.result_message_tbl.c.sequence.asc())
         query.compile(self.db_engine)
 
         for t in task_list:
@@ -235,7 +281,8 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.tasks_tbl.insert().values(**(task.to_db(include_id=True)))
+            query = self.tasks_tbl.insert().values(
+                **(task.to_db(include_id=True)))
             conn.execute(query)
             conn.close()
             return True
@@ -251,9 +298,9 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.tasks_tbl.update(
-                **(task.to_db(include_id=False))).where(
-                    self.tasks_tbl.c.task_id == task.task_id.bytes)
+            query = self.tasks_tbl.update().where(
+                self.tasks_tbl.c.task_id == task.task_id.bytes).values(
+                    **(task.to_db(include_id=False)))
             rs = conn.execute(query)
             if rs.rowcount == 1:
                 conn.close()
@@ -272,13 +319,17 @@ class DrydockState(object):
         :param task_id: uuid.UUID parent task ID
         :param subtask_id: uuid.UUID new subtask ID
         """
-        query_string = sql.text("UPDATE tasks "
-                                "SET subtask_id_list = array_append(subtask_id_list, :new_subtask) "
-                                "WHERE task_id = :task_id").execution_options(autocommit=True)
+        query_string = sql.text(
+            "UPDATE tasks "
+            "SET subtask_id_list = array_append(subtask_id_list, :new_subtask) "
+            "WHERE task_id = :task_id").execution_options(autocommit=True)
 
         try:
             conn = self.db_engine.connect()
-            rs = conn.execute(query_string, new_subtask=subtask_id.bytes, task_id=task_id.bytes)
+            rs = conn.execute(
+                query_string,
+                new_subtask=subtask_id.bytes,
+                task_id=task_id.bytes)
             rc = rs.rowcount
             conn.close()
             if rc == 1:
@@ -286,9 +337,30 @@ class DrydockState(object):
             else:
                 return False
         except Exception as ex:
-            self.logger.error("Error appending subtask %s to task %s: %s"
-                              % (str(subtask_id), str(task_id), str(ex)))
+            self.logger.error("Error appending subtask %s to task %s: %s" %
+                              (str(subtask_id), str(task_id), str(ex)))
             return False
+
+    def maintain_leadership(self, leader_id):
+        """The active leader reaffirms its existence.
+
+        :param leader_id: uuid.UUID ID of the leader
+        """
+        try:
+            conn = self.db_engine.connect()
+            query = self.active_instance_tbl.update().where(
+                self.active_instance_tbl.c.identity == leader_id.bytes).values(
+                    last_ping=datetime.utcnow())
+            rs = conn.execute(query)
+            rc = rs.rowcount
+            conn.close()
+
+            if rc == 1:
+                return True
+            else:
+                return False
+        except Exception as ex:
+            self.logger.error("Error maintaining leadership: %s" % str(ex))
 
     def claim_leadership(self, leader_id):
         """Claim active instance status for leader_id.
@@ -303,25 +375,50 @@ class DrydockState(object):
 
         :param leader_id: a uuid.UUID instance identifying the instance to be considered active
         """
-        query_string = sql.text("INSERT INTO active_instance (dummy_key, identity, last_ping) "
-                                "VALUES (1, :instance_id, timezone('UTC', now())) "
-                                "ON CONFLICT (dummy_key) DO UPDATE SET "
-                                "identity = :instance_id "
-                                "WHERE active_instance.last_ping < (now() - interval '%d seconds')"
-                                % (config.config_mgr.conf.default.leader_grace_period)).execution_options(autocommit=True)
+        query_string = sql.text(  # nosec no strings are user-sourced
+            "INSERT INTO active_instance (dummy_key, identity, last_ping) "
+            "VALUES (1, :instance_id, timezone('UTC', now())) "
+            "ON CONFLICT (dummy_key) DO UPDATE SET "
+            "identity = :instance_id "
+            "WHERE active_instance.last_ping < (now() - interval '%d seconds')"
+            % (config.config_mgr.conf.leader_grace_period
+               )).execution_options(autocommit=True)
 
         try:
             conn = self.db_engine.connect()
-            rs = conn.execute(query_string, instance_id=leader_id.bytes)
-            rc = rs.rowcount
+            conn.execute(query_string, instance_id=leader_id.bytes)
+            check_query = self.active_instance_tbl.select().where(
+                self.active_instance_tbl.c.identity == leader_id.bytes)
+            rs = conn.execute(check_query)
+            r = rs.fetchone()
             conn.close()
-            if rc == 1:
+            if r is not None:
                 return True
             else:
                 return False
         except Exception as ex:
             self.logger.error("Error executing leadership claim: %s" % str(ex))
             return False
+
+    def abdicate_leadership(self, leader_id):
+        """Give up leadership for ``leader_id``.
+
+        :param leader_id: a uuid.UUID instance identifying the instance giving up leadership
+        """
+        try:
+            conn = self.db_engine.connect()
+            query = self.active_instance_tbl.delete().where(
+                self.active_instance_tbl.c.identity == leader_id.bytes)
+            rs = conn.execute(query)
+            rc = rs.rowcount
+            conn.close()
+
+            if rc == 1:
+                return True
+            else:
+                return False
+        except Exception as ex:
+            self.logger.error("Error abidcating leadership: %s" % str(ex))
 
     def post_promenade_part(self, part):
         my_lock = self.promenade_lock.acquire(blocking=True, timeout=10)

@@ -18,8 +18,6 @@ import sys
 from drydock_provisioner.control.base import DrydockRequest
 from drydock_provisioner.control.middleware import AuthMiddleware
 
-import pytest
-
 
 class TestAuthMiddleware():
 
@@ -96,7 +94,7 @@ class TestAuthMiddleware():
 
         middleware.process_request(request, response)
 
-        assert request.context.authenticated == True
+        assert request.context.authenticated
         assert request.context.user_id == user_id
 
     def test_process_request_user_noauth(self):
@@ -115,4 +113,4 @@ class TestAuthMiddleware():
 
         middleware.process_request(request, response)
 
-        assert request.context.authenticated == False
+        assert request.context.authenticated is False

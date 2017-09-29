@@ -13,73 +13,61 @@
 # limitations under the License.
 """Test that rack models are properly parsed."""
 
-from drydock_provisioner.ingester import Ingester
-from drydock_provisioner.statemgmt import DesignState
+from drydock_provisioner.ingester.ingester import Ingester
+from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
+import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
+
+from oslo_config import cfg
 
 import logging
 import pytest
 import shutil
 import os
-import drydock_provisioner.ingester.plugins.yaml
 
 
 class TestClass(object):
-    def test_rack_parse(self, input_files):
+    def test_rack_parse(self, input_files, setup):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
 
-        design_state = DesignState()
-        design_data = objects.SiteDesign()
-        design_id = design_data.assign_id()
-        design_state.post_design(design_data)
+        design_state = DrydockState()
+        design_ref = "file://%s" % str(input_file)
 
         ingester = Ingester()
-        ingester.enable_plugins(
-            ['drydock_provisioner.ingester.plugins.yaml.YamlIngester'])
-        ingester.ingest_data(
-            plugin_name='yaml',
-            design_state=design_state,
-            filenames=[str(input_file)],
-            design_id=design_id)
-
-        design_data = design_state.get_design(design_id)
+        ingester.enable_plugin(
+            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
+        design_status, design_data = ingester.ingest_data(
+            design_state=design_state, design_ref=design_ref)
 
         rack = design_data.get_rack('rack1')
 
         assert rack.location.get('grid') == 'EG12'
 
-    def test_rack_not_found(self, input_files):
+    def test_rack_not_found(self, input_files, setup):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
 
-        design_state = DesignState()
-        design_data = objects.SiteDesign()
-        design_id = design_data.assign_id()
-        design_state.post_design(design_data)
+        design_state = DrydockState()
+        design_ref = "file://%s" % str(input_file)
 
         ingester = Ingester()
-        ingester.enable_plugins(
-            ['drydock_provisioner.ingester.plugins.yaml.YamlIngester'])
-        ingester.ingest_data(
-            plugin_name='yaml',
-            design_state=design_state,
-            filenames=[str(input_file)],
-            design_id=design_id)
-
-        design_data = design_state.get_design(design_id)
+        ingester.enable_plugin(
+            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
+        design_status, design_data = ingester.ingest_data(
+            design_state=design_state, design_ref=design_ref)
 
         with pytest.raises(errors.DesignError):
-            rack = design_data.get_rack('foo')
+            design_data.get_rack('foo')
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):
         tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(
-            str(request.fspath)) + "/" + "../yaml_samples"
+        samples_dir = os.path.dirname(str(
+            request.fspath)) + "/" + "../yaml_samples"
         samples = os.listdir(samples_dir)
 
         for f in samples:
@@ -88,3 +76,30 @@ class TestClass(object):
             shutil.copyfile(src_file, dst_file)
 
         return tmpdir
+
+    @pytest.fixture(scope='module')
+    def setup(self):
+        objects.register_all()
+        logging.basicConfig()
+
+        req_opts = {
+            'default': [cfg.IntOpt('leader_grace_period')],
+            'database': [cfg.StrOpt('database_connect_string')],
+            'logging': [
+                cfg.StrOpt('global_logger_name', default='drydock'),
+            ]
+        }
+
+        for k, v in req_opts.items():
+            config.config_mgr.conf.register_opts(v, group=k)
+
+        config.config_mgr.conf([])
+        config.config_mgr.conf.set_override(
+            name="database_connect_string",
+            group="database",
+            override=
+            "postgresql+psycopg2://drydock:drydock@localhost:5432/drydock")
+        config.config_mgr.conf.set_override(
+            name="leader_grace_period", group="default", override=15)
+
+        return

@@ -56,7 +56,7 @@ class ResourceBase(object):
     def delete(self):
         """Delete this resource in MaaS."""
         url = self.interpolate_url()
-        resp = self.api_client.delete(url)
+        self.api_client.delete(url)
 
     """
     Parse URL for placeholders and replace them with current

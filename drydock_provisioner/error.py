@@ -18,6 +18,14 @@ class DesignError(Exception):
     pass
 
 
+class IngesterError(DesignError):
+    pass
+
+
+class InvalidDesignReference(DesignError):
+    pass
+
+
 class StateError(Exception):
     pass
 
@@ -27,6 +35,14 @@ class TaskNotFoundError(StateError):
 
 
 class OrchestratorError(Exception):
+    pass
+
+
+class MaxRetriesReached(OrchestratorError):
+    pass
+
+
+class CollectSubaskTimeout(OrchestratorError):
     pass
 
 

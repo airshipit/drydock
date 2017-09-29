@@ -56,7 +56,7 @@ Load Site
 To use Drydock for site configuration, you must craft and load a site topology
 YAML. An example of this is in ``./examples/designparts_v1.0.yaml``.
 
-Documentation on building your topology document is under construction.
+Documentation on building your topology document is at :ref:`topology_label`.
 
 Use the Drydock CLI create a design and load the configuration
 

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Client for submitting authenticated requests to MaaS API."""
+
 import logging
 
 from oauthlib import oauth1
@@ -58,7 +60,7 @@ class MaasRequestFactory(object):
         self.signer = MaasOauth(apikey)
         self.http_session = requests.Session()
 
-        # TODO Get logger name from config
+        # TODO(sh8121att) Get logger name from config
         self.logger = logging.getLogger('drydock')
 
     def get(self, endpoint, **kwargs):
@@ -129,20 +131,19 @@ class MaasRequestFactory(object):
                     continue
                 elif isinstance(v, list):
                     for i in v:
-                        files_tuples.append(
-                            (k, (None, base64.b64encode(
-                                str(i).encode('utf-8')).decode('utf-8'),
-                                 'text/plain; charset="utf-8"', {
-                                     'Content-Transfer-Encoding': 'base64'
-                                 })))
+                        value = base64.b64encode(
+                            str(i).encode('utf-8')).decode('utf-8')
+                        content_type = 'text/plain; charset="utf-8"'
+                        part_headers = {'Content-Transfer-Encoding': 'base64'}
+                        files_tuples.append((k, (None, value, content_type,
+                                                 part_headers)))
                 else:
-                    files_tuples.append((k, (None, base64.b64encode(
-                        str(v).encode('utf-8')).decode('utf-8'),
-                                             'text/plain; charset="utf-8"', {
-                                                 'Content-Transfer-Encoding':
-                                                 'base64'
-                                             })))
-
+                    value = base64.b64encode(
+                        str(v).encode('utf-8')).decode('utf-8')
+                    content_type = 'text/plain; charset="utf-8"'
+                    part_headers = {'Content-Transfer-Encoding': 'base64'}
+                    files_tuples.append((k, (None, value, content_type,
+                                             part_headers)))
             kwargs['files'] = files_tuples
 
         params = kwargs.get('params', None)
@@ -154,7 +155,7 @@ class MaasRequestFactory(object):
         elif 'op' in kwargs.keys():
             kwargs.pop('op')
 
-        # TODO timeouts should be configurable
+        # TODO(sh8121att) timeouts should be configurable
         timeout = kwargs.pop('timeout', None)
         if timeout is None:
             timeout = (2, 30)
@@ -173,10 +174,8 @@ class MaasRequestFactory(object):
 
         if resp.status_code >= 400:
             self.logger.debug(
-                "FAILED API CALL:\nURL: %s %s\nBODY:\n%s\nRESPONSE: %s\nBODY:\n%s"
-                % (prepared_req.method, prepared_req.url,
-                   str(prepared_req.body).replace('\\r\\n', '\n'),
-                   resp.status_code, resp.text))
+                "Received error response - URL: %s %s - RESPONSE: %s" %
+                (prepared_req.method, prepared_req.url, resp.status_code))
             raise errors.DriverError("MAAS Error: %s - %s" % (resp.status_code,
                                                               resp.text))
         return resp

@@ -16,42 +16,19 @@
 # and monitor the provisioning of those hosts and execution of bootstrap
 # scripts
 
-from setuptools import setup
-
-
+from setuptools import setup, find_packages
 
 setup(
     name='drydock_provisioner',
     version='0.1a1',
     description='Bootstrapper for Kubernetes infrastructure',
     url='http://github.com/att-comdev/drydock',
-    author='Scott Hussey - AT&T',
-    author_email='sh8121@att.com',
+    author='AT&T - AIC UCP Developers',
     license='Apache 2.0',
-    packages=[
-        'drydock_provisioner',
-        'drydock_provisioner.objects',
-        'drydock_provisioner.ingester',
-        'drydock_provisioner.ingester.plugins',
-        'drydock_provisioner.statemgmt',
-        'drydock_provisioner.orchestrator',
-        'drydock_provisioner.control',
-        'drydock_provisioner.drivers',
-        'drydock_provisioner.drivers.oob',
-        'drydock_provisioner.drivers.oob.pyghmi_driver',
-        'drydock_provisioner.drivers.oob.manual_driver',
-        'drydock_provisioner.drivers.node',
-        'drydock_provisioner.drivers.node.maasdriver',
-        'drydock_provisioner.drivers.node.maasdriver.models',
-        'drydock_provisioner.control',
-        'drydock_provisioner.cli',
-        'drydock_provisioner.cli.design',
-        'drydock_provisioner.cli.part',
-        'drydock_provisioner.cli.task',
-        'drydock_provisioner.drydock_client',
-        'drydock_provisioner.statemgmt.db',
-        'drydock_provisioner.cli.node',
-    ],
+    packages=find_packages(),
+    package_data={
+        '': ['schemas/*.yaml'],
+    },
     entry_points={
         'oslo.config.opts':
         'drydock_provisioner = drydock_provisioner.config:list_opts',

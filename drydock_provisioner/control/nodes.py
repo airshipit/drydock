@@ -30,8 +30,9 @@ class NodesResource(BaseResource):
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp):
         try:
-            maas_client = MaasRequestFactory(config.config_mgr.conf.maasdriver.maas_api_url,
-                                             config.config_mgr.conf.maasdriver.maas_api_key)
+            maas_client = MaasRequestFactory(
+                config.config_mgr.conf.maasdriver.maas_api_url,
+                config.config_mgr.conf.maasdriver.maas_api_key)
 
             machine_list = Machines(maas_client)
             machine_list.refresh()
@@ -39,7 +40,16 @@ class NodesResource(BaseResource):
             node_view = list()
             for m in machine_list:
                 m.get_power_params()
-                node_view.append(dict(hostname=m.hostname, memory=m.memory, cpu_count=m.cpu_count, status_name=m.status_name, boot_mac=m.boot_mac, power_state=m.power_state, power_address=m.power_parameters.get('power_address'), boot_ip=m.boot_ip))
+                node_view.append(
+                    dict(
+                        hostname=m.hostname,
+                        memory=m.memory,
+                        cpu_count=m.cpu_count,
+                        status_name=m.status_name,
+                        boot_mac=m.boot_mac,
+                        power_state=m.power_state,
+                        power_address=m.power_parameters.get('power_address'),
+                        boot_ip=m.boot_ip))
 
             resp.body = json.dumps(node_view)
             resp.status = falcon.HTTP_200

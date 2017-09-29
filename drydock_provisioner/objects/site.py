@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Models for drydock_provisioner
-#
-from copy import deepcopy
+"""Object models for a Region and the combined site design."""
+
 import uuid
 import datetime
 

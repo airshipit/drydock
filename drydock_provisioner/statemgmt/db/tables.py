@@ -1,6 +1,6 @@
 """Definitions for Drydock database tables."""
 
-from sqlalchemy.schema import Table, Column, Sequence
+from sqlalchemy.schema import Table, Column
 from sqlalchemy.types import Boolean, DateTime, String, Integer
 from sqlalchemy.dialects import postgresql as pg
 
@@ -25,6 +25,9 @@ class Tasks(ExtendTable):
         Column('result_message', String(128)),
         Column('result_reason', String(128)),
         Column('result_error_count', Integer),
+        Column('result_successes', pg.ARRAY(String(32))),
+        Column('result_failures', pg.ARRAY(String(32))),
+        Column('retry', Integer),
         Column('status', String(32)),
         Column('created', DateTime),
         Column('created_by', String(16)),
@@ -33,7 +36,8 @@ class Tasks(ExtendTable):
         Column('request_context', pg.JSON),
         Column('action', String(32)),
         Column('terminated', DateTime),
-        Column('terminated_by', String(16))
+        Column('terminated_by', String(16)),
+        Column('terminate', Boolean, default=False)
     ]
 
 
@@ -47,7 +51,7 @@ class ResultMessage(ExtendTable):
         Column('task_id', pg.BYTEA(16)),
         Column('message', String(128)),
         Column('error', Boolean),
-        Column('context', String(32)),
+        Column('context', String(64)),
         Column('context_type', String(16)),
         Column('ts', DateTime),
         Column('extra', pg.JSON)

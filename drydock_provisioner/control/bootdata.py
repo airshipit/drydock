@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import falcon
-import json
-import yaml
-import base64
+"""Handle resources for bootdata API endpoints.
+
+THIS API IS DEPRECATED
+"""
 
 from oslo_config import cfg
 
@@ -56,64 +56,64 @@ class BootdataResource(StatefulResource):
             resp.content_type = 'text/plain'
             return
         elif data_key == 'promconfig':
-            bootdata = self.state_manager.get_bootdata_key(hostname)
-
-            if bootdata is None:
-                resp.status = falcon.HTTP_404
-                return
-            else:
-                resp.content_type = 'text/plain'
-
-                host_design_id = bootdata.get('design_id', None)
-                host_design = self.orchestrator.get_effective_site(
-                    host_design_id)
-
-                host_model = host_design.get_baremetal_node(hostname)
-
-                part_selectors = ['all', hostname]
-
-                if host_model.tags is not None:
-                    part_selectors.extend(host_model.tags)
-
-                all_configs = host_design.get_promenade_config(part_selectors)
-
-                part_list = [i.document for i in all_configs]
-
-                resp.body = "---\n" + "---\n".join([
-                    base64.b64decode(i.encode()).decode('utf-8')
-                    for i in part_list
-                ]) + "\n..."
-                return
+            # The next PS will be a complete rewrite of the bootdata system
+            # so not wasting time refactoring this
+            # TODO(sh8121att) rebuild bootdata API for BootAction framework
+            resp.content = 'text/plain'
+            return
 
 
-    prom_init_service = \
-r"""[Unit]
-Description=Promenade Initialization Service
-Documentation=http://github.com/att-comdev/drydock
-After=network-online.target local-fs.target
-ConditionPathExists=!/var/lib/prom.done
+#            bootdata = self.state_manager.get_bootdata_key(hostname)
+#
+#            if bootdata is None:
+#                resp.status = falcon.HTTP_404
+#                return
+#            else:
+#                resp.content_type = 'text/plain'
+#
+#                host_design_id = bootdata.get('design_id', None)
+#                host_design = self.orchestrator.get_effective_site(
+#                    host_design_id)
+#
+#                host_model = host_design.get_baremetal_node(hostname)
+#
+#                part_selectors = ['all', hostname]
+#
+#                if host_model.tags is not None:
+#                    part_selectors.extend(host_model.tags)
+#
+#                all_configs = host_design.get_promenade_config(part_selectors)
+#
+#                part_list = [i.document for i in all_configs]
+#
+#                resp.body = "---\n" + "---\n".join([
+#                    base64.b64decode(i.encode()).decode('utf-8')
+#                    for i in part_list
+#                ]) + "\n..."
+#                return
 
-[Service]
-Type=simple
-ExecStart=/var/tmp/prom_init.sh /etc/prom_init.yaml
+    prom_init_service = (
+        "[Unit]\n"
+        "Description=Promenade Initialization Service\n"
+        "Documentation=http://github.com/att-comdev/drydock\n"
+        "After=network-online.target local-fs.target\n"
+        "ConditionPathExists=!/var/lib/prom.done\n\n"
+        "[Service]\n"
+        "Type=simple\n"
+        "ExecStart=/var/tmp/prom_init.sh /etc/prom_init.yaml\n\n"
+        "[Install]\n"
+        "WantedBy=multi-user.target\n")
 
-[Install]
-WantedBy=multi-user.target
-"""
-
-    vfs_service = \
-r"""[Unit]
-Description=SR-IOV Virtual Function configuration
-Documentation=http://github.com/att-comdev/drydock
-After=network.target local-fs.target
-
-[Service]
-Type=simple
-ExecStart=/bin/sh -c '/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs'
-
-[Install]
-WantedBy=multi-user.target
-"""
+    vfs_service = (
+        "[Unit]\n"
+        "Description=SR-IOV Virtual Function configuration\n"
+        "Documentation=http://github.com/att-comdev/drydock\n"
+        "After=network.target local-fs.target\n\n"
+        "[Service]\n"
+        "Type=simple\n"
+        "ExecStart=/bin/sh -c '/bin/echo 4 >/sys/class/net/ens3f0/device/sriov_numvfs'\n\n"
+        "[Install]\n"
+        "WantedBy=multi-user.target\n")
 
 
 def list_opts():

@@ -477,17 +477,17 @@ spec:
   # Map hardware addresses to aliases/roles to allow a mix of hardware configs
   # in a site to result in a consistent configuration
   device_aliases:
-    - address: '0000:00:03.0'
-      alias: prim_nic01
+    prim_nic01:
+      address: '0000:00:03.0'
       # type could identify expected hardware - used for hardware manifest validation
       dev_type: '82540EM Gigabit Ethernet Controller'
       bus_type: 'pci'
-    - address: '0000:00:04.0'
-      alias: prim_nic02
+    prim_nic02:
+      address: '0000:00:04.0'
       dev_type: '82540EM Gigabit Ethernet Controller'
       bus_type: 'pci'
-    - address: '2:0.0.0'
-      alias: primary_boot
+    primary_boot:
+      address: '2:0.0.0'
       dev_type: 'VBOX HARDDISK'
       bus_type: 'scsi'
 ...

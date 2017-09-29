@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+"""Object models for Promenade configs."""
+
 from oslo_versionedobjects import fields as ovo_fields
 
-import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.base as base
-import drydock_provisioner.objects.fields as hd_fields
 
 
 @base.DrydockObjectRegistry.register

@@ -26,10 +26,10 @@ class OrchestratorAction(BaseDrydockEnum):
     ValidateDesign = 'validate_design'
     VerifySite = 'verify_site'
     PrepareSite = 'prepare_site'
-    VerifyNode = 'verify_node'
-    PrepareNode = 'prepare_node'
-    DeployNode = 'deploy_node'
-    DestroyNode = 'destroy_node'
+    VerifyNodes = 'verify_nodes'
+    PrepareNodes = 'prepare_nodes'
+    DeployNodes = 'deploy_nodes'
+    DestroyNodes = 'destroy_nodes'
 
     # OOB driver actions
     ValidateOobServices = 'validate_oob_services'
@@ -62,8 +62,8 @@ class OrchestratorAction(BaseDrydockEnum):
     ConfigurePortProvisioning = 'config_port_provisioning'
     ConfigurePortProduction = 'config_port_production'
 
-    ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNode,
-           PrepareNode, DeployNode, DestroyNode, ConfigNodePxe, SetNodeBoot,
+    ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNodes,
+           PrepareNodes, DeployNodes, DestroyNodes, ConfigNodePxe, SetNodeBoot,
            PowerOffNode, PowerOnNode, PowerCycleNode, InterrogateOob,
            CreateNetworkTemplate, CreateStorageTemplate, CreateBootMedia,
            PrepareHardwareConfig, ConfigureHardware, InterrogateNode,

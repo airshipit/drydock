@@ -14,15 +14,17 @@
 import logging
 import sys
 import os
+import threading
 
 from oslo_config import cfg
 
 from drydock_provisioner import policy
+from drydock_provisioner.statemgmt.state import DrydockState
+from drydock_provisioner.ingester.ingester import Ingester
+from drydock_provisioner.orchestrator.orchestrator import Orchestrator
+
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
-import drydock_provisioner.ingester as ingester
-import drydock_provisioner.statemgmt as statemgmt
-import drydock_provisioner.orchestrator as orch
 import drydock_provisioner.control.api as api
 
 
@@ -35,18 +37,19 @@ def start_drydock():
             'debug', short='d', default=False, help='Enable debug logging'),
     ]
 
-    cfg.CONF.register_cli_opts(cli_options)
+    config.config_mgr.conf.register_cli_opts(cli_options)
     config.config_mgr.register_options()
-    cfg.CONF(sys.argv[1:])
+    config.config_mgr.conf(sys.argv[1:])
 
-    if cfg.CONF.debug:
-        cfg.CONF.set_override(
+    if config.config_mgr.conf.debug:
+        config.config_mgr.conf.set_override(
             name='log_level', override='DEBUG', group='logging')
 
     # Setup root logger
-    logger = logging.getLogger(cfg.CONF.logging.global_logger_name)
+    logger = logging.getLogger(
+        config.config_mgr.conf.logging.global_logger_name)
 
-    logger.setLevel(cfg.CONF.logging.log_level)
+    logger.setLevel(config.config_mgr.conf.logging.log_level)
     ch = logging.StreamHandler()
     formatter = logging.Formatter(
         '%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s'
@@ -55,7 +58,8 @@ def start_drydock():
     logger.addHandler(ch)
 
     # Specalized format for API logging
-    logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
+    logger = logging.getLogger(
+        config.config_mgr.conf.logging.control_logger_name)
     logger.propagate = False
     formatter = logging.Formatter(
         '%(asctime)s - %(levelname)s - %(user)s - %(req_id)s - %(external_ctx)s - %(message)s'
@@ -65,16 +69,24 @@ def start_drydock():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    state = statemgmt.DesignState()
+    state = DrydockState()
+    state.connect_db()
 
-    orchestrator = orch.Orchestrator(cfg.CONF.plugins, state_manager=state)
-    input_ingester = ingester.Ingester()
-    input_ingester.enable_plugins(cfg.CONF.plugins.ingester)
+    input_ingester = Ingester()
+    input_ingester.enable_plugin(config.config_mgr.conf.plugins.ingester)
+
+    orchestrator = Orchestrator(
+        enabled_drivers=config.config_mgr.conf.plugins,
+        state_manager=state,
+        ingester=input_ingester)
+
+    orch_thread = threading.Thread(target=orchestrator.watch_for_tasks)
+    orch_thread.start()
 
     # Check if we have an API key in the environment
     # Hack around until we move MaaS configs to the YAML schema
     if 'MAAS_API_KEY' in os.environ:
-        cfg.CONF.set_override(
+        config.config_mgr.conf.set_override(
             name='maas_api_key',
             override=os.environ['MAAS_API_KEY'],
             group='maasdriver')
@@ -90,8 +102,9 @@ def start_drydock():
         orchestrator=orchestrator)
 
     # Now that loggers are configured, log the effective config
-    cfg.CONF.log_opt_values(
-        logging.getLogger(cfg.CONF.logging.global_logger_name), logging.DEBUG)
+    config.config_mgr.conf.log_opt_values(
+        logging.getLogger(config.config_mgr.conf.logging.global_logger_name),
+        logging.DEBUG)
 
     return wsgi_callable
 

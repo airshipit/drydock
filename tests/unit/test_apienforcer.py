@@ -17,8 +17,6 @@ import logging
 from drydock_provisioner import policy
 from drydock_provisioner.control.base import DrydockRequestContext
 
-import pytest
-
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -50,10 +48,10 @@ class TestEnforcerDecorator():
         self.target_function(req, resp)
 
         expected_calls = [
-            mocker.call.authorize('physical_provisioner:read_task', {
-                'project_id': project_id,
-                'user_id': user_id
-            }, ctx.to_policy_view())
+            mocker.call.authorize(
+                'physical_provisioner:read_task',
+                {'project_id': project_id,
+                 'user_id': user_id}, ctx.to_policy_view())
         ]
 
         policy_engine.enforcer.assert_has_calls(expected_calls)

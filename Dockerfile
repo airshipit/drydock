@@ -16,6 +16,8 @@ FROM ubuntu:16.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
 ENV PORT 9000
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
 
 RUN apt -qq update && \
     apt -y install git \
@@ -31,6 +33,7 @@ RUN apt -qq update && \
                    libffi-dev \
                    libssl-dev --no-install-recommends
 
+RUN pip3 install wheel
 # Copy direct dependency requirements only to build a dependency layer
 COPY ./requirements-lock.txt /tmp/drydock/
 RUN pip3 install -r /tmp/drydock/requirements-lock.txt

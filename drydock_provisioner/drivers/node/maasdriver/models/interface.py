@@ -132,7 +132,9 @@ class Interface(model_base.ResourceBase):
                 resp = self.api_client.post(
                     url,
                     op='unlink_subnet',
-                    files={'id': l.get('resource_id')})
+                    files={
+                        'id': l.get('resource_id')
+                    })
 
                 if not resp.ok:
                     raise errors.DriverError("Error unlinking subnet")

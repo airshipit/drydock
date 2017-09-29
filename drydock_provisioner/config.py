@@ -89,16 +89,16 @@ class DrydockConfig(object):
 
     # Enabled plugins
     plugin_options = [
-        cfg.MultiStrOpt(
+        cfg.StrOpt(
             'ingester',
-            default=['drydock_provisioner.ingester.plugins.yaml.YamlIngester'],
+            default='drydock_provisioner.ingester.plugins.yaml.YamlIngester',
             help='Module path string of a input ingester to enable'),
-        cfg.MultiStrOpt(
+        cfg.ListOpt(
             'oob_driver',
             default=[
                 'drydock_provisioner.drivers.oob.pyghmi_driver.PyghmiDriver'
             ],
-            help='Module path string of a OOB driver to enable'),
+            help='List of module path strings of OOB drivers to enable'),
         cfg.StrOpt(
             'node_driver',
             default=
@@ -205,8 +205,8 @@ def _list_module_names(pkg_path, parent_module):
             continue
         elif ispkg:
             module_names.extend(
-                _list_module_names(pkg_path + "/" + module_name, parent_module
-                                   + "." + module_name))
+                _list_module_names(pkg_path + "/" + module_name,
+                                   parent_module + "." + module_name))
         else:
             module_names.append(parent_module + "." + module_name)
     return module_names

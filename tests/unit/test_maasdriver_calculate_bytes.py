@@ -18,7 +18,7 @@ import math
 
 from drydock_provisioner import error
 
-from drydock_provisioner.drivers.node.maasdriver.driver import MaasTaskRunner
+from drydock_provisioner.drivers.node.maasdriver.actions.node import ApplyNodeStorage
 from drydock_provisioner.drivers.node.maasdriver.models.blockdev import BlockDevice
 from drydock_provisioner.drivers.node.maasdriver.models.volumegroup import VolumeGroup
 
@@ -31,7 +31,7 @@ class TestCalculateBytes():
 
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
@@ -42,7 +42,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
@@ -53,7 +53,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
@@ -64,7 +64,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000
@@ -75,7 +75,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
@@ -86,7 +86,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
@@ -97,7 +97,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
@@ -108,7 +108,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000
@@ -119,7 +119,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
@@ -130,7 +130,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
@@ -141,7 +141,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
@@ -152,7 +152,7 @@ class TestCalculateBytes():
         drive_size = 20 * 1000 * 1000 * 1000 * 1000
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == 15 * 1000 * 1000 * 1000 * 1000
@@ -165,7 +165,7 @@ class TestCalculateBytes():
 
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=drive)
 
         assert calc_size == part_size
@@ -178,7 +178,7 @@ class TestCalculateBytes():
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_size)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=vg)
 
         assert calc_size == lv_size
@@ -187,25 +187,22 @@ class TestCalculateBytes():
         '''When calculated space is higher than available space, raise an exception.'''
         vg_size = 20 * 1000 * 1000  # 20 mb drive
         vg_available = 10  # 10 bytes available
-        lv_size = math.floor(.8 * vg_size)  # calculate 80% of drive size
         size_str = '80%'
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_available)
 
         with pytest.raises(error.NotEnoughStorage):
-            calc_size = MaasTaskRunner.calculate_bytes(
-                size_str=size_str, context=vg)
+            ApplyNodeStorage.calculate_bytes(size_str=size_str, context=vg)
 
     def test_calculate_min_label(self):
         '''Adding the min marker '>' should provision all available space.'''
         vg_size = 20 * 1000 * 1000  # 20 mb drive
         vg_available = 15 * 1000 * 1000
-        lv_size = math.floor(.1 * vg_size)  # calculate 20% of drive size
         size_str = '>10%'
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_available)
 
-        calc_size = MaasTaskRunner.calculate_bytes(
+        calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=vg)
 
         assert calc_size == vg_available

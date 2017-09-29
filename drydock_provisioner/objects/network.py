@@ -11,16 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Models for drydock_provisioner
-#
-import logging
-
-from copy import deepcopy
+"""Object models for Network and Networklink."""
 
 import oslo_versionedobjects.fields as ovo_fields
 
-import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
 

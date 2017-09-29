@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" cli.task.commands
-    Contains commands related to tasks against designs
-"""
+"""Contains commands related to tasks against designs."""
 import click
 import json
 
@@ -24,12 +22,12 @@ from drydock_provisioner.cli.task.actions import TaskCreate
 
 @click.group()
 def task():
-    """ Drydock task commands
-    """
+    """Drydock task commands."""
 
 
 @task.command(name='create')
-@click.option('--design-id', '-d', help='The design id for this action')
+@click.option(
+    '--design-ref', '-d', help='The design reference for this action')
 @click.option('--action', '-a', help='The action to perform')
 @click.option(
     '--node-names',
@@ -43,17 +41,28 @@ def task():
     '--node-tags',
     '-t',
     help='The nodes by tag name targeted by this action, comma separated')
+@click.option(
+    '--block/--no-block',
+    '-b',
+    help='The CLI will wait until the created completes before exitting',
+    default=False)
+@click.option(
+    '--poll-interval',
+    help='Polling interval to check task status in blocking mode.',
+    default=15)
 @click.pass_context
 def task_create(ctx,
-                design_id=None,
+                design_ref=None,
                 action=None,
                 node_names=None,
                 rack_names=None,
-                node_tags=None):
-    """ Create a task
-    """
-    if not design_id:
-        ctx.fail('Error: Design id must be specified using --design-id')
+                node_tags=None,
+                block=False,
+                poll_interval=15):
+    """Create a task."""
+    if not design_ref:
+        ctx.fail(
+            'Error: Design reference must be specified using --design-ref')
 
     if not action:
         ctx.fail('Error: Action must be specified using --action')
@@ -62,30 +71,35 @@ def task_create(ctx,
         json.dumps(
             TaskCreate(
                 ctx.obj['CLIENT'],
-                design_id=design_id,
+                design_ref=design_ref,
                 action_name=action,
                 node_names=[x.strip() for x in node_names.split(',')]
                 if node_names else [],
                 rack_names=[x.strip() for x in rack_names.split(',')]
                 if rack_names else [],
                 node_tags=[x.strip() for x in node_tags.split(',')]
-                if node_tags else []).invoke()))
+                if node_tags else [],
+                block=block,
+                poll_interval=poll_interval).invoke()))
 
 
 @task.command(name='list')
 @click.pass_context
 def task_list(ctx):
-    """ List tasks.
-    """
+    """List tasks."""
     click.echo(json.dumps(TaskList(ctx.obj['CLIENT']).invoke()))
 
 
 @task.command(name='show')
 @click.option('--task-id', '-t', help='The required task id')
+@click.option(
+    '--block/--no-block',
+    '-b',
+    help='The CLI will wait until the created completes before exitting',
+    default=False)
 @click.pass_context
-def task_show(ctx, task_id=None):
-    """ show a task's details
-    """
+def task_show(ctx, task_id=None, block=False):
+    """show a task's details."""
     if not task_id:
         ctx.fail('The task id must be specified by --task-id')
 

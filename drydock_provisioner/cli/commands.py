@@ -20,10 +20,9 @@ import click
 from drydock_provisioner.drydock_client.session import DrydockSession
 from drydock_provisioner.drydock_client.session import KeystoneClient
 from drydock_provisioner.drydock_client.client import DrydockClient
-from .design import commands as design
-from .part import commands as part
 from .task import commands as task
 from .node import commands as node
+
 
 @click.group()
 @click.option(
@@ -49,8 +48,8 @@ from .node import commands as node
     help='The url of the running drydock instance',
     default=lambda: os.environ.get('DD_URL', ''))
 @click.pass_context
-def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name, os_project_name,
-            os_username, os_password, os_auth_url, os_token):
+def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name,
+            os_project_name, os_username, os_password, os_auth_url, os_token):
     """Drydock CLI to invoke the running instance of the drydock API."""
     if not ctx.obj:
         ctx.obj = {}
@@ -80,10 +79,12 @@ def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name, os_pro
 
     try:
         if not os_token:
-            logger.debug("Generating Keystone session by env vars: %s" % str(keystone_env))
+            logger.debug("Generating Keystone session by env vars: %s" %
+                         str(keystone_env))
             ks_sess = KeystoneClient.get_ks_session(**keystone_env)
         else:
-            logger.debug("Generating Keystone session by explicit token: %s" % os_token)
+            logger.debug(
+                "Generating Keystone session by explicit token: %s" % os_token)
             ks_sess = KeystoneClient.get_ks_session(token=os_token)
         KeystoneClient.get_token(ks_sess=ks_sess)
     except Exception as ex:
@@ -93,7 +94,8 @@ def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name, os_pro
 
     try:
         if not url:
-            url = KeystoneClient.get_endpoint('physicalprovisioner', ks_sess=ks_sess)
+            url = KeystoneClient.get_endpoint(
+                'physicalprovisioner', ks_sess=ks_sess)
     except Exception as ex:
         logger.debug("Exception getting Drydock endpoint.", exc_info=ex)
         ctx.fail('Error: Unable to discover Drydock API URL')
@@ -116,7 +118,6 @@ def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name, os_pro
             port=url_parse_result.port,
             token=token))
 
-drydock.add_command(design.design)
-drydock.add_command(part.part)
+
 drydock.add_command(task.task)
 drydock.add_command(node.node)

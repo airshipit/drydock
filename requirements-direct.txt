@@ -18,3 +18,4 @@ keystoneauth1==2.13.0
 alembic==0.8.2
 sqlalchemy==1.1.14
 psycopg2==2.7.3.1
+jsonschema==2.6.0

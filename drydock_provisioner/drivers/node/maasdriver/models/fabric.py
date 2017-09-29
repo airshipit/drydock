@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
+"""Models for MaaS Fabric resources."""
 
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.vlan as model_vlan

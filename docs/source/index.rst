@@ -32,6 +32,7 @@ Drydock Configuration Guide
    :maxdepth: 2
 
    getting_started
+   configuration
    sampleconf
    policy-enforcement
 

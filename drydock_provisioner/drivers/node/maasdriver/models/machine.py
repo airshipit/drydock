@@ -285,7 +285,9 @@ class Machine(model_base.ResourceBase):
         url = self.interpolate_url()
 
         resp = self.api_client.post(
-            url, op='set_owner_data', files={key: value})
+            url, op='set_owner_data', files={
+                key: value
+            })
 
         if resp.status_code != 200:
             self.logger.error(
@@ -335,7 +337,8 @@ class Machine(model_base.ResourceBase):
             if isinstance(obj_dict['boot_interface'], dict):
                 refined_dict['boot_mac'] = obj_dict['boot_interface'][
                     'mac_address']
-                refined_dict['boot_ip'] = obj_dict['boot_interface']['links'][0]['ip_address']
+                refined_dict['boot_ip'] = obj_dict['boot_interface']['links'][
+                    0]['ip_address']
 
         i = cls(api_client, **refined_dict)
         return i
@@ -378,7 +381,9 @@ class Machines(model_base.ResourceCollectionBase):
         url = self.interpolate_url()
 
         resp = self.api_client.post(
-            url, op='allocate', files={'system_id': node.resource_id})
+            url, op='allocate', files={
+                'system_id': node.resource_id
+            })
 
         if not resp.ok:
             self.logger.error(

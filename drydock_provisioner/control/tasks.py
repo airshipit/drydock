@@ -11,28 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Handler resources for task management API."""
+
 import falcon
 import json
-import threading
 import traceback
+import uuid
 
 from drydock_provisioner import policy
 from drydock_provisioner import error as errors
+from drydock_provisioner.objects import fields as hd_fields
 
-import drydock_provisioner.objects.task as obj_task
 from .base import StatefulResource
 
 
 class TasksResource(StatefulResource):
+    """Handler resource for /tasks collection endpoint."""
+
     def __init__(self, orchestrator=None, **kwargs):
-        super(TasksResource, self).__init__(**kwargs)
+        """Object initializer.
+
+        :param orchestrator: instance of orchestrator.Orchestrator
+        """
+        super().__init__(**kwargs)
         self.orchestrator = orchestrator
 
     @policy.ApiEnforcer('physical_provisioner:read_task')
     def on_get(self, req, resp):
+        """Handler for GET method."""
         try:
-            task_id_list = [str(x.get_id()) for x in self.state_manager.tasks]
-            resp.body = json.dumps(task_id_list)
+            task_model_list = self.state_manager.get_tasks()
+            task_list = [str(x.to_dict()) for x in task_model_list]
+            resp.body = json.dumps(task_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s\n%s" %
@@ -42,19 +52,19 @@ class TasksResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:create_task')
     def on_post(self, req, resp):
+        """Handler for POST method."""
         # A map of supported actions to the handlers for tasks for those actions
         supported_actions = {
             'validate_design': TasksResource.task_validate_design,
             'verify_site': TasksResource.task_verify_site,
             'prepare_site': TasksResource.task_prepare_site,
-            'verify_node': TasksResource.task_verify_node,
-            'prepare_node': TasksResource.task_prepare_node,
-            'deploy_node': TasksResource.task_deploy_node,
-            'destroy_node': TasksResource.task_destroy_node,
+            'verify_nodes': TasksResource.task_verify_nodes,
+            'prepare_nodes': TasksResource.task_prepare_nodes,
+            'deploy_nodes': TasksResource.task_deploy_nodes,
+            'destroy_nodes': TasksResource.task_destroy_nodes,
         }
 
         try:
-            ctx = req.context
             json_data = self.req_json(req)
 
             action = json_data.get('action', None)
@@ -75,6 +85,7 @@ class TasksResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:validate_design')
     def task_validate_design(self, req, resp, json_data):
+        """Create async task for validate design."""
         action = json_data.get('action', None)
 
         if action != 'validate_design':
@@ -86,7 +97,7 @@ class TasksResource(StatefulResource):
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -98,6 +109,7 @@ class TasksResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:verify_site')
     def task_verify_site(self, req, resp, json_data):
+        """Create async task for verify site."""
         action = json_data.get('action', None)
 
         if action != 'verify_site':
@@ -109,7 +121,7 @@ class TasksResource(StatefulResource):
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -121,6 +133,7 @@ class TasksResource(StatefulResource):
 
     @policy.ApiEnforcer('physical_provisioner:prepare_site')
     def task_prepare_site(self, req, resp, json_data):
+        """Create async task for prepare site."""
         action = json_data.get('action', None)
 
         if action != 'prepare_site':
@@ -132,7 +145,7 @@ class TasksResource(StatefulResource):
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -142,20 +155,21 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
-    @policy.ApiEnforcer('physical_provisioner:verify_node')
-    def task_verify_node(self, req, resp, json_data):
+    @policy.ApiEnforcer('physical_provisioner:verify_nodes')
+    def task_verify_nodes(self, req, resp, json_data):
+        """Create async task for verify node."""
         action = json_data.get('action', None)
 
-        if action != 'verify_node':
+        if action != 'verify_nodes':
             self.error(
                 req.context,
-                "Task body ended up in wrong handler: action %s in task_verify_node"
+                "Task body ended up in wrong handler: action %s in task_verify_nodes"
                 % action)
             self.return_error(
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -165,20 +179,21 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
-    @policy.ApiEnforcer('physical_provisioner:prepare_node')
-    def task_prepare_node(self, req, resp, json_data):
+    @policy.ApiEnforcer('physical_provisioner:prepare_nodes')
+    def task_prepare_nodes(self, req, resp, json_data):
+        """Create async task for prepare node."""
         action = json_data.get('action', None)
 
-        if action != 'prepare_node':
+        if action != 'prepare_nodes':
             self.error(
                 req.context,
-                "Task body ended up in wrong handler: action %s in task_prepare_node"
+                "Task body ended up in wrong handler: action %s in task_prepare_nodes"
                 % action)
             self.return_error(
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -188,20 +203,21 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
-    @policy.ApiEnforcer('physical_provisioner:deploy_node')
-    def task_deploy_node(self, req, resp, json_data):
+    @policy.ApiEnforcer('physical_provisioner:deploy_nodes')
+    def task_deploy_nodes(self, req, resp, json_data):
+        """Create async task for deploy node."""
         action = json_data.get('action', None)
 
-        if action != 'deploy_node':
+        if action != 'deploy_nodes':
             self.error(
                 req.context,
-                "Task body ended up in wrong handler: action %s in task_deploy_node"
+                "Task body ended up in wrong handler: action %s in task_deploy_nodes"
                 % action)
             self.return_error(
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -211,20 +227,21 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
-    @policy.ApiEnforcer('physical_provisioner:destroy_node')
-    def task_destroy_node(self, req, resp, json_data):
+    @policy.ApiEnforcer('physical_provisioner:destroy_nodes')
+    def task_destroy_nodes(self, req, resp, json_data):
+        """Create async task for destroy node."""
         action = json_data.get('action', None)
 
-        if action != 'destroy_node':
+        if action != 'destroy_nodes':
             self.error(
                 req.context,
-                "Task body ended up in wrong handler: action %s in task_destroy_node"
+                "Task body ended up in wrong handler: action %s in task_destroy_nodes"
                 % action)
             self.return_error(
                 resp, falcon.HTTP_500, message="Error", retry=False)
 
         try:
-            task = self.create_task(json_data)
+            task = self.create_task(json_data, req.context)
             resp.body = json.dumps(task.to_dict())
             resp.append_header('Location',
                                "/api/v1.0/tasks/%s" % str(task.task_id))
@@ -234,56 +251,53 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_400, message=ex.msg, retry=False)
 
-    def create_task(self, task_body):
-        """
-        Given the parsed body of a create task request, create the task
-        and start it in a thread
+    def create_task(self, task_body, req_context):
+        """General task creation.
+
+        Given the parsed ``task_body`` of a create task request, create the task
+        and queue it in the database.
 
         :param dict task_body: Dict representing the JSON body of a create task request
            action - The action the task will execute
-           design_id - The design context the task will execute in
-           node_filter - A filter on which nodes will be affected by the task. The result is
-                         an intersection of
-           applying all filters
-             node_names - A list of node hostnames
-             rack_names - A list of rack names that contain the nodes
-             node_tags - A list of tags applied to the nodes
-
+           design_ref - A URI reference to the design document set the task should operate on
+           node_filter - A filter on which nodes will be affected by the task.
         :return: The Task object created
         """
-        design_id = task_body.get('design_id', None)
+        design_ref = task_body.get('design_ref', None)
         node_filter = task_body.get('node_filter', None)
         action = task_body.get('action', None)
 
-        if design_id is None or action is None:
+        if design_ref is None or action is None:
             raise errors.InvalidFormat(
-                'Task creation requires fields design_id, action')
+                'Task creation requires fields design_ref, action')
 
         task = self.orchestrator.create_task(
-            obj_task.OrchestratorTask,
-            design_id=design_id,
+            design_ref=design_ref,
             action=action,
-            node_filter=node_filter)
+            node_filter=node_filter,
+            context=req_context)
 
-        task_thread = threading.Thread(
-            target=self.orchestrator.execute_task, args=[task.get_id()])
-        task_thread.start()
-
+        task.set_status(hd_fields.TaskStatus.Queued)
+        task.save()
         return task
 
 
 class TaskResource(StatefulResource):
+    """Handler resource for /tasks/<id> singleton endpoint."""
+
     def __init__(self, orchestrator=None, **kwargs):
-        super(TaskResource, self).__init__(**kwargs)
-        self.authorized_roles = ['user']
+        """Object initializer.
+
+        :param orchestrator: instance of orchestrator.Orchestrator
+        """
+        super().__init__(**kwargs)
         self.orchestrator = orchestrator
 
     @policy.ApiEnforcer('physical_provisioner:read_task')
     def on_get(self, req, resp, task_id):
-        ctx = req.context
-
+        """Handler for GET method."""
         try:
-            task = self.state_manager.get_task(task_id)
+            task = self.state_manager.get_task(uuid.UUID(task_id))
 
             if task is None:
                 self.info(req.context, "Task %s does not exist" % task_id)

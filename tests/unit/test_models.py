@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-
 import drydock_provisioner.objects as objects
 from drydock_provisioner.objects import fields
 
