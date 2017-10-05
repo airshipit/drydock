@@ -8,3 +8,5 @@ oslo.config[fixtures]
 yapf
 flake8
 bandit>=1.1.0
+sphinx>=1.6.2
+sphinx_rtd_theme==0.2.4

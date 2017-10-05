@@ -17,6 +17,10 @@
 # scripts
 
 from setuptools import setup
+from sphinx.setup_command import BuildDoc
+
+cmdclass = {'build_sphinx': BuildDoc}
+
 
 setup(
     name='drydock_provisioner',
@@ -48,4 +52,12 @@ setup(
         'drydock_provisioner = drydock_provisioner.policy:list_policies',
         'console_scripts':
         'drydock = drydock_provisioner.cli.commands:drydock'
+    },
+    cmdclass=cmdclass,
+    command_options={
+        'build_sphinx': {
+            'source_dir': ('setup.py', 'docs/source'),
+            'build_dir': ('setup.py', 'docs/build'),
+            'all_files': ('setup.py', 1),
+        }
     })
