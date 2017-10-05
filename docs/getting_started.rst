@@ -6,24 +6,26 @@ Bootstrap Kubernetes
 --------------------
 
 You can bootstrap your Helm-enabled Kubernetes cluster via the Openstack-Helm
-AIO_ http://openstack-helm.readthedocs.io/en/latest/install/developer/all-in-one.html
-process or using the UCP Promenade_ https://github.com/att-comdev/promenade tool.
+`AIO <https://openstack-helm.readthedocs.io/en/latest/install/developer/all-in-one.html>`_
+or the `Promenade <https://github.com/att-comdev/promenade>`_ tools.
 
 Deploy Drydock and Dependencies
 -------------------------------
 
 Drydock is most easily deployed using Armada to deploy the Drydock
 container into a Kubernetes cluster via Helm charts. The Drydock chart
-is in aic-helm_ https://github.com/att-comdev/aic-helm. It depends on
-the deployments of the MaaS_ https://github.com/openstack/openstack-helm-addons chart
-and the Keystone_ https://github.com/openstack/openstack-helm chart.
+is in `aic-helm <https://github.com/att-comdev/aic-helm>`_. It depends on
+the deployments of the `MaaS <https://github.com/openstack/openstack-helm-addons>`_
+chart and the `Keystone <https://github.com/openstack/openstack-helm>`_ chart.
 
 A integrated deployment of these charts can be accomplished using the
-Armada_ https://github.com/att-comdev/armada tool. An example integration
-chart can be found in the UCP integrations_ https://github.com/att-comdev/ucp-integration
-repo in the manifests/basic_ucp directory.
+`Armada <https://github.com/att-comdev/armada>`_ tool. An example integration
+chart can be found in the
+`UCP-Integration <https://github.com/att-comdev/ucp-integration>`_ repo in the
+``./manifests/basic_ucp`` directory.
 
-::
+.. code:: bash
+
     $ git clone https://github.com/att-comdev/ucp-integration
     $ sudo docker run -ti -v $(pwd):/target -v ~/.kube:/armaada/.kube quay.io/attcomdev/armada:master apply --tiller-host <host_ip> --tiller-port 44134 /target/manifests/basic_ucp/ucp-armada.yaml
     $ # wait for all pods in kubectl get pods -n ucp are 'Running'
@@ -32,24 +34,24 @@ repo in the manifests/basic_ucp directory.
     $ docker run  --rm -ti --net=host -e "DD_TOKEN=$TOKEN" -e "DD_URL=http://drydock-api.ucp.svc.cluster.local:9000" -e "LC_ALL=C.UTF-8" -e "LANG=C.UTF-8" $DRYDOCK_IMAGE /bin/bash
 
 
-                                     Load Site
+Load Site
 ---------
 
 To use Drydock for site configuration, you must craft and load a site topology
-YAML. An example of this is in examples/designparts_v1.0.yaml.
+YAML. An example of this is in ``./examples/designparts_v1.0.yaml``.
 
-Documentation on building your topology document is under construction
+Documentation on building your topology document is under construction.
 
 Use the Drydock CLI create a design and load the configuration
 
-::
+.. code:: bash
 
     # drydock design create
     # drydock part create -d <design_id> -f <yaml_file>
 
 Use the CLI to create tasks to deploy your site
 
-::
+.. code:: bash
 
     # drydock task create -d <design_id> -a verify_site
     # drydock task create -d <design_id> -a prepare_site

@@ -1,5 +1,5 @@
 ===========================================================
- drydock_client - client for drydock_provisioner RESTful API
+drydock_client - client for drydock_provisioner RESTful API
 ===========================================================
 
 The drydock_client module can be used to access a remote (or local)
@@ -17,7 +17,9 @@ The usage pattern for drydock_client is to build a DrydockSession
 with your credentials and the target host. Then use this session
 to build a DrydockClient to make one or more API calls. The
 DrydockSession will care for TCP connection pooling and header
-management::
+management:
+
+.. code:: python
 
     import drydock_provisioner.drydock_client.client as client
     import drydock_provisioner.drydock_client.session as session
@@ -42,7 +44,7 @@ get_design
 ----------
 
 Provide a UUID-formatted design ID, receive back a dictionary representing
-a objects.site.SiteDesign instance. You can provide the kwarg 'source' with
+an objects.site.SiteDesign instance. You can provide the kwarg 'source' with
 the value of 'compiled' to see the site design after inheritance is applied.
 
 create_design
@@ -56,10 +58,10 @@ get_part
 --------
 
 Get the attributes of a particular design part. Provide the design_id the part
-is loaded in, the kind (one of 'Region', 'NetworkLink', 'Network', 'HardwareProfile',
-'HostProfile' or 'BaremetalNode' and the part key (i.e. name). You can provide the kwarg
-'source' with the value of 'compiled' to see the site design after inheritance is
-applied.
+is loaded in, the kind (one of ``Region``, ``NetworkLink``, ``Network``,
+``HardwareProfile``, ``HostProfile`` or ``BaremetalNode`` and the part key
+(i.e. name). You can provide the kwarg 'source' with the value of 'compiled' to
+see the site design after inheritance is applied.
 
 load_parts
 ----------
