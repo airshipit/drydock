@@ -36,6 +36,15 @@ Drydock Configuration Guide
    sampleconf
    policy-enforcement
 
+API Documentation
+-----------------
+.. toctree::
+   :maxdepth: 1
+
+   API
+   task
+   bootaction
+
 Client Documentation
 --------------------
 

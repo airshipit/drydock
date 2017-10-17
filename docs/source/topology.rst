@@ -163,6 +163,7 @@ Ranges cannot overlap.
 
 *NOTE: Static routes are not currently implemented beyond specifying a route for
 ``0.0.0.0/0`` for default route*
+
 ``routes`` defines a list of static routes to be configured on nodes attached to
 this network.
 
@@ -449,10 +450,10 @@ parts:
 * The second part is the numeric portion and must be an integer
 * The third part is a label
 
-    * ``m``\|``M``\|``mb``\|``MB``: Megabytes or 10^6 * the numeric
-    * ``g``\|``G``\|``gb``\|``GB``: Gigabytes or 10^9 * the numeric
-    * ``t``\|``T``\|``tb``\|``TB``: Terabytes or 10^12 * the numeric
-    * ``%``: The percentage of total device or volume group space
+    * m|M|mb|MB: Megabytes or 10^6 * the numeric
+    * g|G|gb|GB: Gigabytes or 10^9 * the numeric
+    * t|T|tb|TB: Terabytes or 10^12 * the numeric
+    * %: The percentage of total device or volume group space
 
 Volume Groups and Logical Volumes
 ---------------------------------

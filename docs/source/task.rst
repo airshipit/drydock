@@ -1,3 +1,5 @@
+.. _task:
+
 Tasks
 =====
 
@@ -9,7 +11,7 @@ the task API for task status and results.
 Task Document Schema
 --------------------
 
-This document can be posted to the Drydock task API to create a new task.::
+This document can be posted to the Drydock :ref:`task-api` to create a new task.::
 
     {
       "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node",
