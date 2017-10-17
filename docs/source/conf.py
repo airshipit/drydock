@@ -19,7 +19,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
+import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
@@ -39,11 +39,13 @@ extensions = [
 ]
 
 # oslo_config.sphinxconfiggen options
-config_generator_config_file = '../../etc/drydock/drydock-config-generator.conf'
+config_generator_config_file = \
+    '../../etc/drydock/drydock-config-generator.conf'
 sample_config_basename = '_static/drydock'
 
 # oslo_policy.sphinxpolicygen options
-policy_generator_config_file = '../../etc/drydock/drydock-policy-generator.conf'
+policy_generator_config_file = \
+    '../../etc/drydock/drydock-policy-generator.conf'
 sample_policy_basename = '_static/drydock'
 
 # Add any paths that contain templates here, relative to this directory.
@@ -96,7 +98,6 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -165,6 +166,7 @@ man_pages = [
 texinfo_documents = [
     (master_doc, 'Drydock', u'Drydock Documentation',
      author, 'Drydock',
-     'An orchestrator to translate a host topology to a provisioned set of hosts.',
+     'An orchestrator to translate a host topology to a provisioned set of \
+hosts.',
      'Miscellaneous'),
 ]
