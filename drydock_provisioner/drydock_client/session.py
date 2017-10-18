@@ -99,7 +99,6 @@ class KeystoneClient(object):
         :param auth_info: Authentication info to use for building a token if a ``ks_sess`` is not specified
         :returns: The url string of the endpoint
         :rtype: str
-        :raises AppError: if the endpoint cannot be resolved
         """
         if ks_sess is None:
             ks_sess = KeystoneClient.get_ks_session(**auth_info)

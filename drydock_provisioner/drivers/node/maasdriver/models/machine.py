@@ -38,6 +38,7 @@ class Machine(model_base.ResourceBase):
         'tag_names',
         'status_name',
         'boot_mac',
+        'boot_ip',
         'owner_data',
         'block_devices',
         'volume_groups',
@@ -334,6 +335,7 @@ class Machine(model_base.ResourceBase):
             if isinstance(obj_dict['boot_interface'], dict):
                 refined_dict['boot_mac'] = obj_dict['boot_interface'][
                     'mac_address']
+                refined_dict['boot_ip'] = obj_dict['boot_interface']['links'][0]['ip_address']
 
         i = cls(api_client, **refined_dict)
         return i

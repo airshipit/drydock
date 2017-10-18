@@ -37,10 +37,10 @@ def node_list(ctx, output='table'):
     if output == 'table':
         pt = PrettyTable()
 
-        pt.field_names = ['Node Name', 'Status', 'CPUs', 'Memory', 'PXE MAC']
+        pt.field_names = ['Node Name', 'Status', 'CPUs', 'Memory', 'PXE MAC', 'Mgmt IP', 'IPMI IP', 'Power State']
 
         for n in nodelist:
-            pt.add_row([n['hostname'], n['status_name'], n['cpu_count'], n['memory'], n['boot_mac']])
+            pt.add_row([n['hostname'], n['status_name'], n['cpu_count'], n['memory'], n['boot_mac'], n['boot_ip'], n['power_address'], n['power_state']])
 
         click.echo(pt)
     elif output == 'json':

@@ -38,7 +38,8 @@ class NodesResource(BaseResource):
 
             node_view = list()
             for m in machine_list:
-                node_view.append(dict(hostname=m.hostname, memory=m.memory, cpu_count=m.cpu_count, status_name=m.status_name, boot_mac=m.boot_mac))
+                m.get_power_params()
+                node_view.append(dict(hostname=m.hostname, memory=m.memory, cpu_count=m.cpu_count, status_name=m.status_name, boot_mac=m.boot_mac, power_state=m.power_state, power_address=m.power_parameters.get('power_address'), boot_ip=m.boot_ip))
 
             resp.body = json.dumps(node_view)
             resp.status = falcon.HTTP_200
