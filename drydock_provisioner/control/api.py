@@ -16,6 +16,7 @@ import falcon
 from .designs import *
 from .tasks import *
 from .bootdata import *
+from .nodes import NodesResource
 
 from .base import DrydockRequest
 from .middleware import AuthMiddleware, ContextMiddleware, LoggingMiddleware
@@ -59,7 +60,10 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
 
         # API for nodes to discover their bootdata during curtin install
         ('/bootdata/{hostname}/{data_key}', BootdataResource(
-            state_manager=state_manager, orchestrator=orchestrator))
+            state_manager=state_manager, orchestrator=orchestrator)),
+
+        # API to list current MaaS nodes
+        ('/nodes', NodesResource()),
     ]
 
     for path, res in v1_0_routes:
