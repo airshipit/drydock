@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" The entry point for the cli commands
-"""
+"""The entry point for the cli commands."""
 import os
 import logging
 from urllib.parse import urlparse
@@ -23,7 +22,7 @@ from drydock_provisioner.drydock_client.client import DrydockClient
 from .design import commands as design
 from .part import commands as part
 from .task import commands as task
-
+from .node import commands as node
 
 @click.group()
 @click.option(
@@ -82,3 +81,4 @@ def drydock(ctx, debug, token, url):
 drydock.add_command(design.design)
 drydock.add_command(part.part)
 drydock.add_command(task.task)
+drydock.add_command(node.node)

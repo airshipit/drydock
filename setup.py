@@ -17,9 +17,7 @@
 # scripts
 
 from setuptools import setup
-from sphinx.setup_command import BuildDoc
 
-cmdclass = {'build_sphinx': BuildDoc}
 
 
 setup(
@@ -43,7 +41,8 @@ setup(
         'drydock_provisioner.drivers.node.maasdriver.models',
         'drydock_provisioner.control', 'drydock_provisioner.cli',
         'drydock_provisioner.cli.design', 'drydock_provisioner.cli.part',
-        'drydock_provisioner.cli.task', 'drydock_provisioner.drydock_client'
+        'drydock_provisioner.cli.task', 'drydock_provisioner.cli.node',
+        'drydock_provisioner.drydock_client'
     ],
     entry_points={
         'oslo.config.opts':
@@ -53,11 +52,4 @@ setup(
         'console_scripts':
         'drydock = drydock_provisioner.cli.commands:drydock'
     },
-    cmdclass=cmdclass,
-    command_options={
-        'build_sphinx': {
-            'source_dir': ('setup.py', 'docs/source'),
-            'build_dir': ('setup.py', 'docs/build'),
-            'all_files': ('setup.py', 1),
-        }
-    })
+    )

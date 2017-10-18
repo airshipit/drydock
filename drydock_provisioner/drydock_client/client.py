@@ -29,6 +29,16 @@ class DrydockClient(object):
         self.session = session
         self.logger = logging.getLogger(__name__)
 
+    def get_nodes(self):
+        """Get list of nodes in MaaS and their status."""
+        endpoint = 'v1.0/nodes'
+
+        resp = self.session.get(endpoint)
+
+        self._check_response(resp)
+
+        return resp.json()
+
     def get_design_ids(self):
         """
         Get list of Drydock design_ids
