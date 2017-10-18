@@ -14,6 +14,8 @@
 import requests
 import logging
 
+from keystoneauth1 import session
+from keystoneauth1.identity import v3
 
 class DrydockSession(object):
     """
@@ -40,7 +42,7 @@ class DrydockSession(object):
             self.base_url = "%s://%s:%s/api/" % (self.scheme, self.host,
                                                  self.port)
         else:
-            #assume default port for scheme
+            # assume default port for scheme
             self.base_url = "%s://%s/api/" % (self.scheme, self.host)
 
         self.token = token
@@ -48,7 +50,6 @@ class DrydockSession(object):
 
         self.logger = logging.getLogger(__name__)
 
-    # TODO Add keystone authentication to produce a token for this session
     def get(self, endpoint, query=None):
         """
         Send a GET request to Drydock.
@@ -85,3 +86,43 @@ class DrydockSession(object):
                 self.base_url + endpoint, params=query, json=data, timeout=10)
 
         return resp
+
+
+class KeystoneClient(object):
+
+    @staticmethod
+    def get_endpoint(endpoint, ks_sess=None, auth_info=None):
+        """
+        Wraps calls to keystone for lookup of an endpoint by service type
+        :param endpoint: The endpoint to look up
+        :param ks_sess: A keystone session to use for accessing endpoint catalogue
+        :param auth_info: Authentication info to use for building a token if a ``ks_sess`` is not specified
+        :returns: The url string of the endpoint
+        :rtype: str
+        :raises AppError: if the endpoint cannot be resolved
+        """
+        if ks_sess is None:
+            ks_sess = KeystoneClient.get_ks_session(**auth_info)
+
+        return ks_sess.get_endpoint(interface='internal', service_type=endpoint)
+
+    @staticmethod
+    def get_token(ks_sess=None, auth_info=None):
+        """
+        Returns the simple token string for a token acquired from keystone
+
+        :param ks_sess: an existing Keystone session to retrieve a token from
+        :param auth_info: dictionary of information required to generate a keystone token
+        """
+        if ks_sess is None:
+            ks_sess = KeystoneClient.get_ks_session(**auth_info)
+        return ks_sess.get_auth_headers().get('X-Auth-Token')
+
+    @staticmethod
+    def get_ks_session(**kwargs):
+        # Establishes a keystone session
+        if 'token' in kwargs:
+            auth = v3.TokenMethod(token=kwargs.get('token'))
+        else:
+            auth = v3.Password(**kwargs)
+        return session.Session(auth=auth)

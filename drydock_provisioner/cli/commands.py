@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 import click
 from drydock_provisioner.drydock_client.session import DrydockSession
+from drydock_provisioner.drydock_client.session import KeystoneClient
 from drydock_provisioner.drydock_client.client import DrydockClient
 from .design import commands as design
 from .part import commands as part
@@ -27,32 +28,43 @@ from .node import commands as node
 @click.group()
 @click.option(
     '--debug/--no-debug', help='Enable or disable debugging', default=False)
+# Supported Environment Variables
 @click.option(
-    '--token',
-    '-t',
-    help='The auth token to be used',
-    default=lambda: os.environ.get('DD_TOKEN', ''))
+    '--os_project_domain_name',
+    envvar='OS_PROJECT_DOMAIN_NAME',
+    required=False)
+@click.option(
+    '--os_user_domain_name', envvar='OS_USER_DOMAIN_NAME', required=False)
+@click.option('--os_project_name', envvar='OS_PROJECT_NAME', required=False)
+@click.option('--os_username', envvar='OS_USERNAME', required=False)
+@click.option('--os_password', envvar='OS_PASSWORD', required=False)
+@click.option('--os_auth_url', envvar='OS_AUTH_URL', required=False)
+@click.option(
+    '--os_token',
+    help='The Keystone token to be used',
+    default=lambda: os.environ.get('OS_TOKEN', ''))
 @click.option(
     '--url',
     '-u',
     help='The url of the running drydock instance',
     default=lambda: os.environ.get('DD_URL', ''))
 @click.pass_context
-def drydock(ctx, debug, token, url):
-    """ Drydock CLI to invoke the running instance of the drydock API
-    """
+def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name, os_project_name,
+            os_username, os_password, os_auth_url, os_token):
+    """Drydock CLI to invoke the running instance of the drydock API."""
     if not ctx.obj:
         ctx.obj = {}
 
     ctx.obj['DEBUG'] = debug
 
-    if not token:
-        ctx.fail('Error: Token must be specified either by '
-                 '--token or DD_TOKEN from the environment')
-
-    if not url:
-        ctx.fail('Error: URL must be specified either by '
-                 '--url or DD_URL from the environment')
+    keystone_env = {
+        'project_domain_name': os_project_domain_name,
+        'user_domain_name': os_user_domain_name,
+        'project_name': os_project_name,
+        'username': os_username,
+        'password': os_password,
+        'auth_url': os_auth_url,
+    }
 
     # setup logging for the CLI
     # Setup root logger
@@ -66,17 +78,43 @@ def drydock(ctx, debug, token, url):
     logger.addHandler(logging_handler)
     logger.debug('logging for cli initialized')
 
+    try:
+        if not os_token:
+            logger.debug("Generating Keystone session by env vars: %s" % str(keystone_env))
+            ks_sess = KeystoneClient.get_ks_session(**keystone_env)
+        else:
+            logger.debug("Generating Keystone session by explicit token: %s" % os_token)
+            ks_sess = KeystoneClient.get_ks_session(token=os_token)
+        KeystoneClient.get_token(ks_sess=ks_sess)
+    except Exception as ex:
+        logger.debug("Exception getting Keystone session.", exc_info=ex)
+        ctx.fail('Error: Unable to authenticate with Keystone')
+        return
+
+    try:
+        if not url:
+            url = KeystoneClient.get_endpoint('physicalprovisioner', ks_sess=ks_sess)
+    except Exception as ex:
+        logger.debug("Exception getting Drydock endpoint.", exc_info=ex)
+        ctx.fail('Error: Unable to discover Drydock API URL')
+
     # setup the drydock client using the passed parameters.
     url_parse_result = urlparse(url)
-    logger.debug(url_parse_result)
+
+    if not os_token:
+        token = KeystoneClient.get_token(ks_sess=ks_sess)
+        logger.debug("Creating Drydock client with token %s." % token)
+    else:
+        token = os_token
+
     if not url_parse_result.scheme:
         ctx.fail('URL must specify a scheme and hostname, optionally a port')
     ctx.obj['CLIENT'] = DrydockClient(
         DrydockSession(
             scheme=url_parse_result.scheme,
-            host=url_parse_result.netloc,
+            host=url_parse_result.hostname,
+            port=url_parse_result.port,
             token=token))
-
 
 drydock.add_command(design.design)
 drydock.add_command(part.part)
