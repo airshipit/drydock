@@ -1,0 +1,34 @@
+---
+apiVersion: 'drydock/v1'
+kind: Network
+metadata:
+  name: mgmt
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  vlan: '100'
+    # Allow MTU to be inherited from link the network rides on
+  mtu: 1500
+    # Network address
+  cidr: 172.16.1.0/24
+    # Desribe IP address ranges
+  ranges:
+    - type: static
+      start: 172.16.1.15
+      end: 172.16.1.254
+    # Static routes to be added for this network
+  routes:
+    - subnet: 0.0.0.0/0
+        # A blank gateway would leave to a static route specifying
+        # only the interface as a source
+      gateway: 172.16.1.1
+      metric: 10
+    # DNS settings for this network
+  dns:
+      # Domain addresses on this network will be registered under
+    domain: mgmt.sitename.example.com
+      # DNS servers that a server using this network as its default gateway should use
+    servers: 172.16.1.9,172.16.1.10
+...

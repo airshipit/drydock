@@ -1,0 +1,14 @@
+---
+apiVersion: 'drydock/v1'
+kind: HostProfile
+metadata:
+  name: defaults
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+  # No magic to this host_profile, it just provides a way to specify
+  # sitewide settings. If it is absent from a node's inheritance chain
+  # then these values will NOT be applied
+spec:
+  foo: bar

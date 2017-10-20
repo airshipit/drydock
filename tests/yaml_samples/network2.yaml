@@ -1,0 +1,32 @@
+---
+apiVersion: 'drydock/v1'
+kind: Network
+metadata:
+  name: pxe
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  # If this network utilizes a dhcp relay, where does it forward DHCPDISCOVER requests to?
+  dhcp_relay:
+    # Required if Drydock is configuring a switch with the relay
+    self_ip: 172.16.0.4
+    # Can refer to a unicast IP
+    upstream_target: 172.16.5.5
+  # MTU for this VLAN interface, if not specified it will be inherited from the link
+  mtu: 1500
+  # Network address
+  cidr: 172.16.0.0/24
+  # Desribe IP address ranges
+  ranges:
+    - type: dhcp
+      start: 172.16.0.5
+      end: 172.16.0.254
+  # DNS settings for this network
+  dns:
+    # Domain addresses on this network will be registered under
+    domain: admin.sitename.att.com
+    # DNS servers that a server using this network as its default gateway should use
+    servers: 172.16.0.10
+...

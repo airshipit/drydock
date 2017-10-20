@@ -1,0 +1,12 @@
+---
+apiVersion: 'drydock/v1'
+kind: Rack
+metadata:
+  name: rack1
+  region: sitename
+  date: 24-AUG-2017
+  author: sh8121@att.com
+  description: A equipment rack
+spec:
+  foo: 'bar'
+...

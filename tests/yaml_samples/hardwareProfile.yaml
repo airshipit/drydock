@@ -1,0 +1,40 @@
+---
+apiVersion: 'drydock/v1'
+kind: HardwareProfile
+metadata:
+  name: HPGen9v3
+  region: sitename
+  date: 17-FEB-2017
+  author: Scott Hussey
+spec:
+  # Vendor of the server chassis
+  vendor: HP
+  # Generation of the chassis model
+  generation: '8'
+  # Version of the chassis model within its generation - not version of the hardware definition
+  hw_version: '3'
+  # The certified version of the chassis BIOS
+  bios_version: '2.2.3'
+  # Mode of the default boot of hardware - bios, uefi
+  boot_mode: bios
+  # Protocol of boot of the hardware - pxe, usb, hdd
+  bootstrap_protocol: pxe
+  # Which interface to use for network booting within the OOB manager, not OS device
+  pxe_interface: 0
+  # Map hardware addresses to aliases/roles to allow a mix of hardware configs
+  # in a site to result in a consistent configuration
+  device_aliases:
+    prim_nic01:
+      address: '0000:00:03.0'
+      # type could identify expected hardware - used for hardware manifest validation
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    prim_nic02:
+      address: '0000:00:04.0'
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    primary_boot:
+      address: '2:0.0.0'
+      dev_type: 'VBOX HARDDISK'
+      bus_type: 'scsi'
+...

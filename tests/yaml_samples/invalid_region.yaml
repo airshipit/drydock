@@ -1,0 +1,11 @@
+---
+apiVersion: 'drydock/v1'
+kind: Region
+metadata:
+  name: sitename
+  date: 17-FEB-2017
+  description: Sample site design
+  author: sh8121@att.com
+spec:
+  foo: 'bar'
+...

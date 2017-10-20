@@ -1,0 +1,69 @@
+---
+apiVersion: 'drydock/v1'
+kind: HostProfile
+metadata:
+  name: defaults
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+  # No magic to this host_profile, it just provides a way to specify
+  # sitewide settings. If it is absent from a node's inheritance chain
+  # then these values will NOT be applied
+spec:
+  # OOB (iLO, iDRAC, etc...) settings. Should prefer open standards such
+  # as IPMI over vender-specific when possible.
+  oob:
+    type: ipmi
+    # OOB networking should be preconfigured, but we can include a network
+    # definition for validation or enhancement (DNS registration)
+    network: oob
+    account: admin
+    credential: admin
+  # Specify storage layout of base OS. Ceph out of scope
+  storage:
+    physical_devices:
+      sda:
+        labels:
+          role: rootdisk
+        partitions:
+          - name: root
+            size: 20g
+            bootable: true
+            filesystem:
+              mountpoint: '/'
+              fstype: 'ext4'
+              mount_options: 'defaults'
+          - name: boot
+            size: 1g
+            bootable: false
+            filesystem:
+              mountpoint: '/boot'
+              fstype: 'ext4'
+              mount_options: 'defaults'
+      sdb:
+        volume_group: 'log_vg'
+    volume_groups:
+      log_vg:
+        logical_volumes:
+          - name: 'log_lv'
+            size: '500m'
+            filesystem:
+              mountpoint: '/var/log'
+              fstype: 'xfs'
+              mount_options: 'defaults'
+  # Platform (Operating System) settings
+  platform:
+    image: ubuntu_16.04
+    kernel: generic
+    kernel_params:
+      quiet: true
+      console: ttyS2
+  # Additional metadata to apply to a node
+  metadata:
+    # Freeform tags to be applied to the host
+    tags:
+      - deployment=initial
+    owner_data:
+      foo: bar
+...

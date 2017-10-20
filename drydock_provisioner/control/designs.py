@@ -77,7 +77,7 @@ class DesignsResource(StatefulResource):
 
             resp.body = json.dumps(design.obj_to_simple())
             resp.status = falcon.HTTP_201
-        except errors.StateError as stex:
+        except errors.StateError:
             self.error(req.context, "Error updating persistence")
             self.return_error(
                 resp,

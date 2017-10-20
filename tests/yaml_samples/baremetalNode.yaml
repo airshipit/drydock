@@ -1,0 +1,35 @@
+---
+apiVersion: 'drydock/v1'
+kind: BaremetalNode
+metadata:
+  name: controller01
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  host_profile: k8-node
+  # the hostname for a server, could be used in multiple DNS domains to
+  # represent different interfaces
+  interfaces:
+    bond0:
+      networks:
+        # '!' prefix for the value of the primary key indicates a record should be removed
+        - '!private'
+  # Addresses assigned to network interfaces
+  addressing:
+    # Which network the address applies to. If a network appears in addressing
+    # that isn't assigned to an interface, design validation will fail
+    - network: pxe
+    # The address assigned. Either a explicit IPv4 or IPv6 address
+    # or dhcp or slaac
+      address: dhcp
+    - network: mgmt
+      address: 172.16.1.20
+    - network: public
+      address: 172.16.3.20
+    - network: oob
+      address: 172.16.100.20
+  metadata:
+    rack: rack1
+...

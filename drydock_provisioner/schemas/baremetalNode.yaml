@@ -1,0 +1,39 @@
+---
+schema: 'deckhand/DataSchema/v1'
+metadata:
+  schema: metadata/Control/v1
+  name: drydock/BaremetalNode/v1
+  labels:
+    application: drydock
+data:
+  $schema: 'http://json-schema.org/schema#'
+  id: 'http://att.com/att-comdev/drydock/baremetalNode.yaml'
+  type: 'object'
+  properties:
+    host_profile:
+      type: 'string'
+    interfaces:
+      type: 'object'
+      properties:
+        bond0:
+          type: 'object'
+          properties:
+            networks:
+              type: 'array'
+              items:
+                type: 'string'
+    addressing:
+      type: 'array'
+      items:
+        type: 'object'
+        properties:
+          network:
+            type: 'string'
+          address:
+            type: 'string'
+    metadata:
+      type: 'object'
+      properties:
+        rack:
+          type: 'string'
+  additionalProperties: false

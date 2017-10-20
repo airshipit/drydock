@@ -1,0 +1,24 @@
+---
+apiVersion: 'drydock/v1'
+kind: Network
+metadata:
+  name: private
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  vlan: '101'
+  mtu: 9000
+  cidr: 172.16.2.0/24
+    # Desribe IP address ranges
+  ranges:
+      # Type can be reserved (not used for baremetal), static (all explicit
+      # assignments should fall here), dhcp (will be used by a DHCP server on this network)
+    - type: static
+      start: 172.16.2.15
+      end: 172.16.2.254
+  dns:
+    domain: priv.sitename.example.com
+    servers: 172.16.2.9,172.16.2.10
+...

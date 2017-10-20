@@ -1,0 +1,12 @@
+---
+apiVersion: 'drydock/v1'
+kind: BaremetalNode
+metadata:
+  name: controller01
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  foo: 'bar'
+...

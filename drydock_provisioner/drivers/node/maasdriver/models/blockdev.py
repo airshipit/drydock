@@ -63,7 +63,7 @@ class BlockDevice(model_base.ResourceBase):
                     system_id=self.system_id,
                     device_id=self.resource_id)
                 self.partitions.refresh()
-            except Exception as ex:
+            except Exception:
                 self.logger.warning(
                     "Could not load partitions on node %s block device %s" %
                     (self.system_id, self.resource_id))

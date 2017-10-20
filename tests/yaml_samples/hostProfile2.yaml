@@ -1,0 +1,55 @@
+---
+apiVersion: 'drydock/v1'
+kind: HostProfile
+metadata:
+  name: k8-node
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
+spec:
+  # host_profile inheritance allows for deduplication of common CIs
+  # Inheritance is additive for CIs that are lists of multiple items
+  # To remove an inherited list member, prefix the primary key value
+  # with '!'.
+  host_profile: defaults
+  # Hardware profile will map hardware specific details to the abstract
+  # names uses in the host profile as well as specify hardware specific
+  # configs. A viable model should be to build a host profile without a
+  # hardware_profile and then for each node inherit the host profile and
+  # specify a hardware_profile to map that node's hardware to the abstract
+  # settings of the host_profile
+  hardware_profile: HPGen9v3
+  # Network interfaces.
+  primary_network: mgmt
+  interfaces:
+  # Keyed on device_name
+    pxe:
+      # The network link attached to this
+      device_link: pxe
+      labels:
+        # this interface will be used only for PXE booting during deploy
+        noconfig: true
+      # Slaves will specify aliases from hwdefinition.yaml or kernel device names
+      slaves:
+        - prim_nic01
+      # Which networks will be configured on this interface
+      networks:
+        - pxe
+    bond0:
+      device_link: gp
+      # If multiple slaves are specified, but no bonding config
+      # is applied to the link, design validation will fail
+      slaves:
+        - prim_nic01
+        - prim_nic02
+      # If multiple networks are specified, but no trunking
+      # config is applied to the link, design validation will fail
+      networks:
+        - mgmt
+        - private
+  metadata:
+    # Explicit tag assignment
+    tags:
+      - 'test'
+...

@@ -211,7 +211,7 @@ class CreateNetworkTemplate(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -531,7 +531,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                     elif dhcp_on and vlan.dhcp_on:
                         self.logger.info("DHCP already enabled for subnet %s" %
                                          (subnet.resource_id))
-                except ValueError as vex:
+                except ValueError:
                     raise errors.DriverError("Inconsistent data from MaaS")
 
         # Now that all networks should be created, we can setup routes between them
@@ -591,7 +591,7 @@ class ConfigureUserCredentials(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -671,7 +671,7 @@ class IdentifyNode(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -740,7 +740,7 @@ class ConfigureHardware(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -871,7 +871,7 @@ class ApplyNodeNetworking(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -1170,7 +1170,7 @@ class ApplyNodePlatform(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -1272,7 +1272,7 @@ class ApplyNodePlatform(BaseMaasAction):
                                 self.logger.debug("Creating static tag %s" % t)
                                 tag = maas_tag.Tag(self.maas_client, name=t)
                                 tag = tag_list.add(tag)
-                            except errors.DriverError as dex:
+                            except errors.DriverError:
                                 tag_list.refresh()
                                 tag = tag_list.select(t)
                                 if tag is not None:
@@ -1328,7 +1328,7 @@ class ApplyNodeStorage(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -1655,7 +1655,7 @@ class DeployNode(BaseMaasAction):
 
         try:
             site_design = self._load_site_design()
-        except errors.OrchestratorError as ex:
+        except errors.OrchestratorError:
             self.task.add_status_msg(
                 "Error loading site design.",
                 error=True,
@@ -1725,7 +1725,7 @@ class DeployNode(BaseMaasAction):
 
             try:
                 machine.deploy()
-            except errors.DriverError as dex:
+            except errors.DriverError:
                 msg = "Error deploying node %s, skipping" % n.name
                 self.logger.warning(msg)
                 self.task.add_status_msg(

@@ -1,0 +1,65 @@
+---
+schema: 'deckhand/DataSchema/v1'
+metadata:
+  schema: metadata/Control/v1
+  name: drydock/Network/v1
+  labels:
+    application: drydock
+data:
+  $schema: 'http://json-schema.org/schema#'
+  id: 'http://att.com/att-comdev/drydock/network.yaml'
+  type: 'object'
+  properties:
+    allocation:
+      type: 'string'
+    cidr:
+      type: 'string'
+      format: 'ipv4'
+    ranges:
+      type: 'array'
+      items:
+        type: 'object'
+        properties:
+          type:
+            type: 'string'
+          start:
+            type: 'string'
+            format: 'ipv4'
+          end:
+            type: 'string'
+            format: 'ipv4'
+    dns:
+      type: 'object'
+      properties:
+        domain:
+          type: 'string'
+        servers:
+          type: 'string'
+          format: 'ipv4'
+    dhcp_relay:
+      type: 'object'
+      properties:
+        self_ip:
+          type: 'string'
+          format: 'ipv4'
+        upstream_target:
+          type: 'string'
+          format: 'ipv4'
+    mtu:
+      type: 'number'
+    vlan:
+      type: 'string'
+    routes:
+      type: 'array'
+      items:
+        type: 'object'
+        properties:
+          subnet:
+            type: 'string'
+            format: 'ipv4'
+          gateway:
+            type: 'string'
+            format: 'ipv4'
+          metric:
+            type: 'number'
+  additionalProperties: false

@@ -1,0 +1,21 @@
+---
+apiVersion: 'drydock/v1'
+kind: Region
+metadata:
+  name: sitename
+  date: 17-FEB-2017
+  description: Sample site design
+  author: sh8121@att.com
+spec:
+  tag_definitions:
+    - tag: test
+      definition_type: lshw_xpath
+      definition: "//node[@id=\"display\"]/'clock units=\"Hz\"' > 1000000000"
+  authorized_keys:
+    - |
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDENeyO5hLPbLLQRZ0oafTYWs1ieo5Q+XgyZQs51Ju
+      jDGc8lKlWsg1/6yei2JewKMgcwG2Buu1eqU92Xn1SvMZLyt9GZURuBkyjcfVc/8GiU5QP1Of8B7CV0c
+      kfUpHWYJ17olTzT61Hgz10ioicBF6cjgQrLNcyn05xoaJHD2Vpf8Unxzi0YzA2e77yRqBo9jJVRaX2q
+      wUJuZrzb62x3zw8Knz6GGSZBn8xRKLaw1SKFpd1hwvL62GfqX5ZBAT1AYTZP1j8GcAoK8AFVn193SEU
+      vjSdUFa+RNWuJhkjBRfylJczIjTIFb5ls0jpbA3bMA9DE7lFKVQl6vVwFmiIVBI1 samplekey
+...

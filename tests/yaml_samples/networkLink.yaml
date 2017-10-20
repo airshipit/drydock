@@ -1,0 +1,20 @@
+---
+apiVersion: 'drydock/v1'
+kind: NetworkLink
+metadata:
+  name: oob
+  region: sitename
+  date: 17-FEB-2017
+  author: sh8121@att.com
+  description: Describe layer 1 attributes. Primary key is 'name'. These settings will generally be things the switch and server have to agree on
+spec:
+  bonding:
+    mode: disabled
+  mtu: 1500
+  linkspeed: 100full
+  trunking:
+    mode: disabled
+    default_network: oob
+  allowed_networks:
+    - oob
+...

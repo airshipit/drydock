@@ -1,0 +1,27 @@
+---
+apiVersion: 'drydock/v1'
+kind: Rack
+metadata:
+  name: rack1
+  region: sitename
+  date: 24-AUG-2017
+  author: sh8121@att.com
+  description: A equipment rack
+spec:
+  # List of TOR switches in this rack
+  tor_switches:
+    switch01name:
+      mgmt_ip: 1.1.1.1
+      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch01name
+    switch02name:
+      mgmt_ip: 1.1.1.2
+      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch02name
+  # GIS data for this rack
+  location:
+    clli: HSTNTXMOCG0
+    grid: EG12
+  # Networks wholly contained to this rack
+  # Nodes in a rack can only connect to local_networks of that rack
+  local_networks:
+    - pxe-rack1
+...

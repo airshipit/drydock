@@ -1,0 +1,11 @@
+---
+apiVersion: 'drydock/v1'
+kind: HardwareProfile
+metadata:
+  name: HPGen9v3
+  region: sitename
+  date: 17-FEB-2017
+  author: Scott Hussey
+spec:
+  foo: 'bar'
+...
