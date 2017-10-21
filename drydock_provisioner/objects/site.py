@@ -148,6 +148,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
         'racks':
         ovo_fields.ObjectField('RackList', nullable=True),
+        'bootactions':
+        ovo_fields.ObjectField('BootActionList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -217,6 +219,27 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
                 return r
         raise errors.DesignError(
             "Rack %s not found in design state" % rack_key)
+
+    def add_bootaction(self, new_ba):
+        """Add a bootaction definition to this site design.
+
+        :param new_ba: instance of BootAction to add to the design
+        """
+        if self.bootactions is None:
+            self.bootactions = objects.BootActionList()
+
+        self.bootactions.append(new_ba)
+
+    def get_bootaction(self, ba_key):
+        """Select a boot action from this site design with the matchkey key.
+
+        :param ba_key: Value should match the ``get_id()`` value of the BootAction returned
+        """
+        for ba in self.bootactions:
+            if ba.get_id() == ba_key:
+                return ba
+        raise errors.DesignError(
+            "BootAction %s not found in design state" % ba_key)
 
     def add_host_profile(self, new_host_profile):
         if new_host_profile is None:

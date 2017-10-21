@@ -25,6 +25,7 @@ import drydock_provisioner.objects.node as node
 import drydock_provisioner.objects.hostprofile as hostprofile
 import drydock_provisioner.objects.promenade as prom
 import drydock_provisioner.objects.rack as rack
+import drydock_provisioner.objects.bootaction as bootaction
 
 
 class Ingester(object):
@@ -119,4 +120,6 @@ class Ingester(object):
                 design_data.add_promenade_config(m)
             elif type(m) is rack.Rack:
                 design_data.add_rack(m)
+            elif type(m) is bootaction.BootAction:
+                design_data.add_bootaction(m)
         return status, design_data

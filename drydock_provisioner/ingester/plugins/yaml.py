@@ -382,6 +382,55 @@ class YamlIngester(IngesterPlugin):
 
         return model
 
+    def process_drydock_bootaction(self, name, data):
+        """Process the data/spec section of a BootAction document.
+
+        :param name: the document name attribute
+        :Param data: the dictionary of the parsed data/spec section
+        """
+        model = objects.BootAction()
+        model.name = name
+        model.source = hd_fields.ModelSource.Designed
+
+        assets = data.get('assets')
+
+        model.asset_list = objects.BootActionAssetList()
+
+        for a in assets:
+            ba = self.process_bootaction_asset(a)
+            model.asset_list.append(ba)
+
+        node_filter = data.get('node_filter', None)
+
+        if node_filter is not None:
+            nfs = self.process_bootaction_nodefilter(node_filter)
+            model.node_filter = nfs
+
+        return model
+
+    def process_bootaction_asset(self, asset_dict):
+        """Process a dictionary representing a BootAction Data Asset.
+
+        :param asset_dict: dictionary representing the bootaction asset
+        """
+        model = objects.BootActionAsset(**asset_dict)
+        return model
+
+    def process_bootaction_nodefilter(self, nf):
+        """Process a dictionary representing a BootAction NodeFilter Set.
+
+        :param nf: dictionary representing the bootaction nodefilter set.
+        """
+        model = objects.NodeFilterSet()
+        model.filter_set_type = nf.get('filter_set_type', None)
+        model.filter_set = []
+
+        for nf in nf.get('filter_set', []):
+            nf_model = objects.NodeFilter(**nf)
+            model.filter_set.append(nf_model)
+
+        return model
+
     def process_drydock_node(self, name, data):
         """Process the data/spec section of a BaremetalNode document.
 
@@ -610,4 +659,5 @@ class YamlIngester(IngesterPlugin):
         'HardwareProfile': process_drydock_hwprofile,
         'HostProfile': process_drydock_hostprofile,
         'BaremetalNode': process_drydock_node,
+        'BootAction': process_drydock_bootaction,
     }
