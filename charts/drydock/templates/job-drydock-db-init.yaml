@@ -35,7 +35,7 @@ spec:
 {{ tuple $envAll $dependencies "[]" | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
         - name: drydock-db-sync
-          image: {{ .Values.images.drydock_db_sync | quote }}
+          image: {{ .Values.images.tags.drydock_db_sync | quote }}
           imagePullPolicy: {{ .Values.images.pull_policy | quote }}
 {{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_sync | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:

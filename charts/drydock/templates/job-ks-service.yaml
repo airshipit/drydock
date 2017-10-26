@@ -37,7 +37,7 @@ spec:
       containers:
 {{- range $key1, $osServiceType := tuple "physicalprovisioner" }}
         - name: {{ $osServiceType }}-ks-service-registration
-          image: {{ $envAll.Values.images.ks_service }}
+          image: {{ $envAll.Values.images.tags.ks_service }}
           imagePullPolicy: {{ $envAll.Values.images.pull_policy }}
           command:
             - /tmp/ks-service.sh

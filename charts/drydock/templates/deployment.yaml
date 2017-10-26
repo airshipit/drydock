@@ -43,7 +43,7 @@ spec:
                 secretKeyRef:
                   name: 'maas-api-key'
                   key: 'token'
-          image: {{ .Values.images.drydock }}
+          image: {{ .Values.images.tags.drydock }}
           imagePullPolicy: {{ .Values.images.pull_policy }}
 {{ tuple $envAll $envAll.Values.pod.resources.api | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           ports:
