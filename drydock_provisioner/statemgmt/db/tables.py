@@ -70,13 +70,27 @@ class ActiveInstance(ExtendTable):
     ]
 
 
-class BuildData(ExtendTable):
+class BootAction(ExtendTable):
     """Table persisting node build data."""
 
-    __tablename__ = 'build_data'
+    __tablename__ = 'boot_action'
 
     __schema__ = [
         Column('node_name', String(16), primary_key=True),
         Column('task_id', pg.BYTEA(16)),
-        Column('message', String(128)),
+        Column('identity_key', pg.BYTEA(32)),
+    ]
+
+
+class BootActionStatus(ExtendTable):
+    """Table tracking status of node boot actions."""
+
+    __tablename__ = 'boot_action_status'
+
+    __schema__ = [
+        Column('node_name', String(32)),
+        Column('bootaction_id', pg.BYTEA(16), primary_key=True),
+        Column('task_id', pg.BYTEA(16)),
+        Column('identity_key', pg.BYTEA(32)),
+        Column('action_status', String(32)),
     ]

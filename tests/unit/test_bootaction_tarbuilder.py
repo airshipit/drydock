@@ -11,14 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test YAML data ingestion."""
+"""Test that rack models are properly parsed."""
 
+import ulid2
+import tarfile
+import io
+
+import drydock_provisioner.objects as objects
 from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
-import drydock_provisioner.objects as objects
+from drydock_provisioner.control.bootaction import BootactionUtils
+
 
 class TestClass(object):
-    def test_ingest_full_site(self, input_files, setup):
+    def test_bootaction_tarbuilder(self, input_files, setup):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
@@ -32,5 +38,21 @@ class TestClass(object):
         design_status, design_data = ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        target_host = 'compute01'
+
+        ba = design_data.get_bootaction('helloworld')
+        action_id = ulid2.generate_binary_ulid()
+        assets = ba.render_assets(target_host, design_data, action_id)
+
+        assert len(assets) > 0
+
+        tarbytes = BootactionUtils.tarbuilder(assets)
+
+        assert tarbytes is not None
+
+        fileobj = io.BytesIO(tarbytes)
+        tarball = tarfile.open(mode='r:gz', fileobj=fileobj)
+
+        tarasset = tarball.getmember('/var/tmp/hello.sh')
+
+        assert tarasset.mode == 0o555

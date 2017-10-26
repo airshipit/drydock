@@ -70,14 +70,21 @@ are separate pipelines for the ``location`` field to build the URL that referenc
 be sourced from and the ``data`` field (or the data sourced from resolving the ``location`` field).
 
 The ``location`` string will be passed through the ``location_pipeline`` before it is queried. This response
-or the ``data`` field will then be passed through the ``data_pipeline``. Below are pipeline segments available
-for use.
+or the ``data`` field will then be passed through the ``data_pipeline``. The data entity will start the pipeline
+as a bytestring meaning if it is defined in the ``data`` field, it will first be encoded into a bytestring.
+Below are pipeline segments available for use.
 
 base64_decode
     Decode the data element from base64
 
 base64_encode
     Encode the data element in base64
+
+utf8_decode
+    Decode the data element from bytes to UTF-8 string
+
+utf8_encode
+    Encode the data element from a UTF-8 string to bytes
 
 template
     Treat the data element as a Jinja2 template and apply a node context to it. The defined context available

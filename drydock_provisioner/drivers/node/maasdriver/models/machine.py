@@ -337,8 +337,9 @@ class Machine(model_base.ResourceBase):
             if isinstance(obj_dict['boot_interface'], dict):
                 refined_dict['boot_mac'] = obj_dict['boot_interface'][
                     'mac_address']
-                refined_dict['boot_ip'] = obj_dict['boot_interface']['links'][
-                    0]['ip_address']
+                if len(obj_dict['boot_interface']['links']) > 0:
+                    refined_dict['boot_ip'] = obj_dict['boot_interface'][
+                        'links'][0].get('ip_address', None)
 
         i = cls(api_client, **refined_dict)
         return i

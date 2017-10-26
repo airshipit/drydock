@@ -44,8 +44,11 @@ data:
                 - 'base64_encode'
                 - 'template'
                 - 'base64_decode'
+                - 'utf8_encode'
+                - 'utf8_decode'
           permissions:
-            type: 'integer'
+            type: 'string'
+            pattern: '\d{3}'
         required:
           - 'type'
     node_filter:

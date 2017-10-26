@@ -15,11 +15,13 @@ import falcon
 
 from drydock_provisioner.control.base import BaseResource
 
+
 class HealthResource(BaseResource):
     """
     Return empty response/body to show
     that Drydock is healthy
     """
+
     def on_get(self, req, resp):
         """
         It really does nothing right now. It may do more later

@@ -10,14 +10,15 @@ spec:
   assets:
     - path: /var/tmp/hello.sh
       type: file
-      permissions: 555
-      data: |
+      permissions: '555'
+      data: |-
         IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkIScK
       data_pipeline:
         - base64_decode
+        - utf8_encode
     - path: /lib/systemd/system/hello.service
       type: unit
-      data: |
+      data: |-
         W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
         ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
         dGFyZ2V0Cg==

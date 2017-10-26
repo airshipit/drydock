@@ -23,12 +23,15 @@ def upgrade():
                     *tables.ResultMessage.__schema__)
     op.create_table(tables.ActiveInstance.__tablename__,
                     *tables.ActiveInstance.__schema__)
-    op.create_table(tables.BuildData.__tablename__,
-                    *tables.BuildData.__schema__)
+    op.create_table(tables.BootAction.__tablename__,
+                    *tables.BootAction.__schema__)
+    op.create_table(tables.BootActionStatus.__tablename__,
+                    *tables.BootActionStatus.__schema__)
 
 
 def downgrade():
     op.drop_table(tables.Tasks.__tablename__)
     op.drop_table(tables.ResultMessage.__tablename__)
     op.drop_table(tables.ActiveInstance.__tablename__)
-    op.drop_table(tables.BuildData.__tablename__)
+    op.drop_table(tables.BootAction.__tablename__)
+    op.drop_table(tables.BootActionStatus.__tablename__)

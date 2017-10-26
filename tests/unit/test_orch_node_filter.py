@@ -11,20 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test that rack models are properly parsed."""
+"""Test the node filter logic in the orchestrator."""
 
 from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
-import drydock_provisioner.error as errors
-
-import pytest
-
 
 class TestClass(object):
-    def test_rack_parse(self, input_files, setup):
-        objects.register_all()
-
+    def test_node_filter_obj(self, input_files, setup, test_orchestrator):
         input_file = input_files.join("fullsite.yaml")
 
         design_state = DrydockState()
@@ -36,13 +30,17 @@ class TestClass(object):
         design_status, design_data = ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        rack = design_data.get_rack('rack1')
+        nf = objects.NodeFilter()
+        nf.filter_type = 'intersection'
+        nf.node_names = ['compute01']
+        nfs = objects.NodeFilterSet(
+            filter_set_type='intersection', filter_set=[nf])
 
-        assert rack.location.get('grid') == 'EG12'
+        node_list = test_orchestrator.process_node_filter(nfs, design_data)
 
-    def test_rack_not_found(self, input_files, setup):
-        objects.register_all()
+        assert len(node_list) == 1
 
+    def test_node_filter_dict(self, input_files, setup, test_orchestrator):
         input_file = input_files.join("fullsite.yaml")
 
         design_state = DrydockState()
@@ -54,5 +52,17 @@ class TestClass(object):
         design_status, design_data = ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        with pytest.raises(errors.DesignError):
-            design_data.get_rack('foo')
+        nfs = {
+            'filter_set_type':
+            'intersection',
+            'filter_set': [
+                {
+                    'filter_type': 'intersection',
+                    'node_names': 'compute01',
+                },
+            ],
+        }
+
+        node_list = test_orchestrator.process_node_filter(nfs, design_data)
+
+        assert len(node_list) == 1

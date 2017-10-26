@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM ubuntu:16.04
+FROM python:3.5
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
@@ -19,21 +19,6 @@ ENV PORT 9000
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-RUN apt -qq update && \
-    apt -y install git \
-                   netbase \
-                   python3-minimal \
-                   python3-setuptools \
-                   python3-pip \
-                   python3-dev \
-                   ca-certificates \
-                   gcc \
-                   g++ \
-                   make \
-                   libffi-dev \
-                   libssl-dev --no-install-recommends
-
-RUN pip3 install wheel
 # Copy direct dependency requirements only to build a dependency layer
 COPY ./requirements-lock.txt /tmp/drydock/
 RUN pip3 install -r /tmp/drydock/requirements-lock.txt

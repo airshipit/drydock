@@ -213,7 +213,7 @@ class CreateNetworkTemplate(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -593,7 +593,7 @@ class ConfigureUserCredentials(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -605,7 +605,8 @@ class ConfigureUserCredentials(BaseMaasAction):
         try:
             key_list = maas_keys.SshKeys(self.maas_client)
             key_list.refresh()
-        except Exception:
+        except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -655,11 +656,12 @@ class IdentifyNode(BaseMaasAction):
         try:
             machine_list = maas_machine.Machines(self.maas_client)
             machine_list.refresh()
-        except Exception:
+        except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
-                msg='Error accessing MaaS Machines API.',
+                msg='Error accessing MaaS Machines API: %s' % str(ex),
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -673,7 +675,7 @@ class IdentifyNode(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -725,6 +727,7 @@ class ConfigureHardware(BaseMaasAction):
             machine_list = maas_machine.Machines(self.maas_client)
             machine_list.refresh()
         except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -742,7 +745,7 @@ class ConfigureHardware(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -856,6 +859,7 @@ class ApplyNodeNetworking(BaseMaasAction):
             subnets = maas_subnet.Subnets(self.maas_client)
             subnets.refresh()
         except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -873,7 +877,7 @@ class ApplyNodeNetworking(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -1155,6 +1159,7 @@ class ApplyNodePlatform(BaseMaasAction):
             tag_list = maas_tag.Tags(self.maas_client)
             tag_list.refresh()
         except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -1172,7 +1177,7 @@ class ApplyNodePlatform(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -1313,6 +1318,7 @@ class ApplyNodeStorage(BaseMaasAction):
             machine_list = maas_machine.Machines(self.maas_client)
             machine_list.refresh()
         except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -1330,7 +1336,7 @@ class ApplyNodeStorage(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -1563,7 +1569,7 @@ class ApplyNodeStorage(BaseMaasAction):
             except Exception as ex:
                 self.task.failure(focus=n.get_id())
                 self.task.add_status_msg(
-                    "Error configuring storage.",
+                    msg="Error configuring storage.",
                     error=True,
                     ctx=n.name,
                     ctx_type='node')
@@ -1640,6 +1646,7 @@ class DeployNode(BaseMaasAction):
             machine_list = maas_machine.Machines(self.maas_client)
             machine_list.refresh()
         except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.add_status_msg(
@@ -1657,7 +1664,7 @@ class DeployNode(BaseMaasAction):
             site_design = self._load_site_design()
         except errors.OrchestratorError:
             self.task.add_status_msg(
-                "Error loading site design.",
+                msg="Error loading site design.",
                 error=True,
                 ctx='NA',
                 ctx_type='NA')
@@ -1720,6 +1727,35 @@ class DeployNode(BaseMaasAction):
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 continue
+
+            # Saving boot action context for a node
+            self.logger.info("Saving Boot Action context for node %s." %
+                             (n.name))
+            try:
+                ba_key = self.orchestrator.create_bootaction_context(
+                    n.name, self.task)
+
+                tag_list = maas_tag.Tags(self.maas_client)
+                tag_list.refresh()
+                node_id_tags = tag_list.startswith("%s_baid-" % (n.name))
+                for t in node_id_tags:
+                    t.delete()
+
+                if ba_key is not None:
+                    msg = "Creating boot action id key tag for node %s" % (
+                        n.name)
+                    self.logger.debug(msg)
+                    node_baid_tag = maas_tag.Tag(
+                        self.maas_client,
+                        name="%s_baid-%s" % (n.name, ba_key.hex()))
+                    node_baid_tag = tag_list.add(node_baid_tag)
+                    node_baid_tag.apply_to_node(machine.resource_id)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+            except Exception as ex:
+                self.logger.error(
+                    "Error setting boot action id key tag for %s." % n.name,
+                    exc_info=ex)
 
             self.logger.info("Deploying node %s" % (n.name))
 

@@ -23,7 +23,7 @@ import drydock_provisioner.error as errors
 
 class BaseResource(object):
     def __init__(self):
-        self.logger = logging.getLogger('control')
+        self.logger = logging.getLogger('drydock')
 
     def on_options(self, req, resp):
         self_attrs = dir(self)

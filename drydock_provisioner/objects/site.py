@@ -144,8 +144,6 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         ovo_fields.ObjectField('HardwareProfileList', nullable=True),
         'baremetal_nodes':
         ovo_fields.ObjectField('BaremetalNodeList', nullable=True),
-        'prom_configs':
-        ovo_fields.ObjectField('PromenadeConfigList', nullable=True),
         'racks':
         ovo_fields.ObjectField('RackList', nullable=True),
         'bootactions':

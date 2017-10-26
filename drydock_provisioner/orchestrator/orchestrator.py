@@ -18,6 +18,7 @@ import importlib
 import logging
 import uuid
 import concurrent.futures
+import os
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -294,6 +295,7 @@ class Orchestrator(object):
             status, site_design = self.get_described_site(design_ref)
             if status.status == hd_fields.ActionResult.Success:
                 self.compute_model_inheritance(site_design)
+                self.compute_bootaction_targets(site_design)
             status = self._validate_design(site_design, result_status=status)
         except Exception as ex:
             if status is not None:
@@ -303,9 +305,8 @@ class Orchestrator(object):
                     ctx='NA',
                     ctx_type='NA')
                 status.set_status(hd_fields.ActionResult.Failure)
-            else:
-                self.logger.error(
-                    "Error getting site definition: %s" % str(ex), exc_info=ex)
+            self.logger.error(
+                "Error getting site definition: %s" % str(ex), exc_info=ex)
         else:
             status.add_status_msg(
                 msg="Successfully computed effective design.",
@@ -369,24 +370,48 @@ class Orchestrator(object):
 
         return nf
 
+    def compute_bootaction_targets(self, site_design):
+        """Find target nodes for each bootaction in ``site_design``.
+
+        Calculate the node_filter for each bootaction and save the list
+        of target node names.
+
+        :param site_design: an instance of objects.SiteDesign
+        """
+        if site_design.bootactions is None:
+            return
+        for ba in site_design.bootactions:
+            nf = ba.node_filter
+            target_nodes = self.process_node_filter(nf, site_design)
+            ba.target_nodes = [x.get_id() for x in target_nodes]
+
     def process_node_filter(self, node_filter, site_design):
         target_nodes = site_design.baremetal_nodes
 
         if node_filter is None:
             return target_nodes
 
-        if not isinstance(node_filter, dict):
+        if not isinstance(node_filter, dict) and not isinstance(
+                node_filter, objects.NodeFilterSet):
             msg = "Invalid node_filter, must be a dictionary with keys 'filter_set_type' and 'filter_set'."
             self.logger.error(msg)
             raise errors.OrchestratorError(msg)
 
         result_sets = []
 
-        for f in node_filter.get('filter_set', []):
-            result_sets.append(self.process_filter(target_nodes, f))
+        if isinstance(node_filter, dict):
+            for f in node_filter.get('filter_set', []):
+                result_sets.append(self.process_filter(target_nodes, f))
 
-        return self.join_filter_sets(
-            node_filter.get('filter_set_type'), result_sets)
+            return self.join_filter_sets(
+                node_filter.get('filter_set_type'), result_sets)
+
+        elif isinstance(node_filter, objects.NodeFilterSet):
+            for f in node_filter.filter_set:
+                result_sets.append(self.process_filter(target_nodes, f))
+
+            return self.join_filter_sets(node_filter.filter_set_type,
+                                         result_sets)
 
     def join_filter_sets(self, filter_set_type, result_sets):
         if filter_set_type == 'union':
@@ -401,38 +426,50 @@ class Orchestrator(object):
         """Take a filter and apply it to the node_set.
 
         :param node_set: A full set of objects.BaremetalNode
-        :param filter_set: A filter set describing filters to apply to the node set
+        :param filter_set: A node filter describing filters to apply to the node set.
+                           Either a dict or objects.NodeFilter
         """
         try:
-            set_type = filter_set.get('filter_type', None)
-
-            node_names = filter_set.get('node_names', [])
-            node_tags = filter_set.get('node_tags', [])
-            node_labels = filter_set.get('node_labels', {})
-            rack_names = filter_set.get('rack_names', [])
-            rack_labels = filter_set.get('rack_labels', {})
+            if isinstance(filter_set, dict):
+                set_type = filter_set.get('filter_type', None)
+                node_names = filter_set.get('node_names', [])
+                node_tags = filter_set.get('node_tags', [])
+                node_labels = filter_set.get('node_labels', {})
+                rack_names = filter_set.get('rack_names', [])
+                rack_labels = filter_set.get('rack_labels', {})
+            elif isinstance(filter_set, objects.NodeFilter):
+                set_type = filter_set.filter_type
+                node_names = filter_set.node_names
+                node_tags = filter_set.node_tags
+                node_labels = filter_set.node_labels
+                rack_names = filter_set.rack_names
+                rack_labels = filter_set.rack_labels
+            else:
+                raise errors.OrchestratorError(
+                    "Node filter must be a dictionary or a NodeFilter instance"
+                )
 
             target_nodes = dict()
 
-            if len(node_names) > 0:
+            if node_names and len(node_names) > 0:
                 self.logger.debug("Filtering nodes based on node names.")
                 target_nodes['node_names'] = [
                     x for x in node_set if x.get_name() in node_names
                 ]
 
-            if len(node_tags) > 0:
+            if node_tags and len(node_tags) > 0:
                 self.logger.debug("Filtering nodes based on node tags.")
                 target_nodes['node_tags'] = [
                     x for x in node_set for t in node_tags if x.has_tag(t)
                 ]
 
-            if len(rack_names) > 0:
+            if rack_names and len(rack_names) > 0:
                 self.logger.debug("Filtering nodes based on rack names.")
                 target_nodes['rack_names'] = [
                     x for x in node_set if x.get_rack() in rack_names
                 ]
 
-            if len(node_labels) > 0:
+            if node_labels and len(node_labels) > 0:
                 self.logger.debug("Filtering nodes based on node labels.")
                 target_nodes['node_labels'] = []
                 for k, v in node_labels.items():
@@ -441,27 +478,27 @@ class Orchestrator(object):
                         if getattr(x, 'owner_data', {}).get(k, None) == v
                     ])
 
-            if len(rack_labels) > 0:
+            if rack_labels and len(rack_labels) > 0:
                 self.logger.info(
                     "Rack label filtering not yet implemented, returning all nodes."
                 )
                 target_nodes['rack_labels'] = node_set
 
             if set_type == 'union':
-                result_set = self.list_union(
+                return self.list_union(
                     target_nodes.get('node_names', []),
                     target_nodes.get('node_tags', []),
                     target_nodes.get('rack_names', []),
                     target_nodes.get('node_labels', []))
             elif set_type == 'intersection':
-                result_set = self.list_intersection(
-                    target_nodes.get('node_names', []),
-                    target_nodes.get('node_tags', []),
-                    target_nodes.get('rack_names', []),
-                    target_nodes.get('node_labels', []))
+                return self.list_intersection(
+                    target_nodes.get('node_names', None),
+                    target_nodes.get('node_tags', None),
+                    target_nodes.get('rack_names', None),
+                    target_nodes.get('node_labels', None))
 
-            return result_set
         except Exception as ex:
+            self.logger.error("Error processing node filter.", exc_info=ex)
             raise errors.OrchestratorError(
                 "Error processing node filter: %s" % str(ex))
 
@@ -472,11 +509,20 @@ class Orchestrator(object):
         :params rest: 0 or more lists of values
         """
         if len(rest) > 1:
-            return list(
-                set(a).intersection(
-                    set(Orchestrator.list_intersection(rest[0], rest[1:]))))
+            result = self.list_intersection(rest[0], *rest[1:])
+            if a is None:
+                return result
+            elif result is None:
+                return a
+            else:
+                return list(set(a).intersection(set(result)))
         elif len(rest) == 1:
-            return list(set(a).intersection(set(rest[0])))
+            if a is None and rest[0] is None:
+                return None
+            elif rest is None or rest[0]:
+                return a
+            else:
+                return list(set(a).intersection(set(rest[0])))
         else:
             return a
 
@@ -494,3 +540,27 @@ class Orchestrator(object):
             return list(set(lists[0]))
         else:
             return None
+
+    def create_bootaction_context(self, nodename, task):
+        """Save a boot action context for ``nodename``
+
+        Generate a identity key and persist the boot action context
+        for nodename pointing at the top level task. Return the
+        generated identity key as ``bytes``.
+
+        :param nodename: Name of the node the bootaction context is targeted for
+        :param task: The task instigating the ndoe deployment
+        """
+        design_status, site_design = self.get_effective_site(task.design_ref)
+
+        if site_design.bootactions is None:
+            return None
+
+        for ba in site_design.bootactions:
+            if nodename in ba.target_nodes:
+                identity_key = os.urandom(32)
+                self.state_manager.post_boot_action_context(
+                    nodename, task.get_id(), identity_key)
+                return identity_key
+
+        return None

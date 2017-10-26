@@ -54,6 +54,22 @@ class PersistentOrchestratorError(OrchestratorError):
     pass
 
 
+class BootactionError(Exception):
+    pass
+
+
+class UnknownPipelineSegment(BootactionError):
+    pass
+
+
+class PipelineFailure(BootactionError):
+    pass
+
+
+class InvalidAssetLocation(BootactionError):
+    pass
+
+
 class DriverError(Exception):
     pass
 

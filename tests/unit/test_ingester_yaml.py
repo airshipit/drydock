@@ -11,15 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
-import shutil
-import os
-import logging
+"""Test that YAML ingestion works."""
 
 from drydock_provisioner.ingester.plugins.yaml import YamlIngester
-
-logging.basicConfig(level=logging.DEBUG)
-
 
 class TestClass(object):
     def test_ingest_singledoc(self, input_files):
@@ -47,17 +41,3 @@ class TestClass(object):
 
         assert status.status == 'success'
         assert len(models) == 3
-
-    @pytest.fixture(scope='module')
-    def input_files(self, tmpdir_factory, request):
-        tmpdir = tmpdir_factory.mktemp('data')
-        samples_dir = os.path.dirname(str(
-            request.fspath)) + "/" + "../yaml_samples"
-        samples = os.listdir(samples_dir)
-
-        for f in samples:
-            src_file = samples_dir + "/" + f
-            dst_file = str(tmpdir) + "/" + f
-            shutil.copyfile(src_file, dst_file)
-
-        return tmpdir

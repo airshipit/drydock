@@ -87,6 +87,12 @@ class DrydockConfig(object):
             help='The URI database connect string.'),
     ]
 
+    # Options for the boot action framework
+    bootactions_options = [
+        cfg.StrOpt(
+            'report_url',
+            default='http://localhost:9000/api/v1.0/bootactions/')
+    ]
     # Enabled plugins
     plugin_options = [
         cfg.StrOpt(
@@ -151,22 +157,31 @@ class DrydockConfig(object):
             'deploy_node',
             default=45,
             help='Timeout in minutes for deploying a node'),
+        cfg.IntOpt(
+            'bootaction_final_status',
+            default=15,
+            help=
+            'Timeout in minutes between deployment completion and the all boot actions reporting status'
+        ),
     ]
 
     def __init__(self):
         self.conf = cfg.CONF
 
-    def register_options(self):
+    def register_options(self, enable_keystone=True):
         self.conf.register_opts(DrydockConfig.options)
+        self.conf.register_opts(
+            DrydockConfig.bootactions_options, group='bootactions')
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(
             DrydockConfig.database_options, group='database')
         self.conf.register_opts(
             DrydockConfig.timeout_options, group='timeouts')
-        self.conf.register_opts(
-            loading.get_auth_plugin_conf_options('password'),
-            group='keystone_authtoken')
+        if enable_keystone:
+            self.conf.register_opts(
+                loading.get_auth_plugin_conf_options('password'),
+                group='keystone_authtoken')
 
 
 config_mgr = DrydockConfig()

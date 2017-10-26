@@ -11,26 +11,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test YAML data ingestion."""
+"""Test that rack models are properly parsed."""
+import base64
 
-from drydock_provisioner.ingester.ingester import Ingester
-from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
+
 class TestClass(object):
-    def test_ingest_full_site(self, input_files, setup):
+    def test_bootaction_pipeline_base64(self):
         objects.register_all()
 
-        input_file = input_files.join("fullsite.yaml")
+        ba = objects.BootActionAsset()
 
-        design_state = DrydockState()
-        design_ref = "file://%s" % str(input_file)
+        orig = 'Test 1 2 3!'.encode('utf-8')
+        expected_value = base64.b64encode(orig)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
-            design_state=design_state, design_ref=design_ref)
+        test_value = ba.execute_pipeline(orig, ['base64_encode'])
 
-        assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        assert expected_value == test_value
+
+    def test_bootaction_pipeline_utf8(self):
+        objects.register_all()
+
+        ba = objects.BootActionAsset()
+
+        expected_value = 'Test 1 2 3!'
+        orig = expected_value.encode('utf-8')
+
+        test_value = ba.execute_pipeline(orig, ['utf8_decode'])
+
+        assert test_value == expected_value

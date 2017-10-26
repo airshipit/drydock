@@ -14,7 +14,9 @@
 """Access methods for managing external data access and persistence."""
 
 import logging
+import uuid
 from datetime import datetime
+import ulid2
 
 from sqlalchemy import create_engine
 from sqlalchemy import sql
@@ -48,7 +50,8 @@ class DrydockState(object):
         self.tasks_tbl = tables.Tasks(self.db_metadata)
         self.result_message_tbl = tables.ResultMessage(self.db_metadata)
         self.active_instance_tbl = tables.ActiveInstance(self.db_metadata)
-        self.build_data_tbl = tables.BuildData(self.db_metadata)
+        self.boot_action_tbl = tables.BootAction(self.db_metadata)
+        self.ba_status_tbl = tables.BootActionStatus(self.db_metadata)
         return
 
     def tabularasa(self):
@@ -60,7 +63,8 @@ class DrydockState(object):
             'tasks',
             'result_message',
             'active_instance',
-            'build_data',
+            'boot_action',
+            'boot_action_status',
         ]
 
         conn = self.db_engine.connect()
@@ -379,7 +383,7 @@ class DrydockState(object):
             "INSERT INTO active_instance (dummy_key, identity, last_ping) "
             "VALUES (1, :instance_id, timezone('UTC', now())) "
             "ON CONFLICT (dummy_key) DO UPDATE SET "
-            "identity = :instance_id "
+            "identity = :instance_id, last_ping = timezone('UTC', now()) "
             "WHERE active_instance.last_ping < (now() - interval '%d seconds')"
             % (config.config_mgr.conf.leader_grace_period
                )).execution_options(autocommit=True)
@@ -419,6 +423,119 @@ class DrydockState(object):
                 return False
         except Exception as ex:
             self.logger.error("Error abidcating leadership: %s" % str(ex))
+
+    def post_boot_action_context(self, nodename, task_id, identity):
+        """Save the context for a boot action for later access by a node.
+
+        The ``task_id`` passed here will be maintained for the context of the boot action
+        so that the design_ref can be accessed for loading the design document set. When
+        status messages for the boot actions are reported, they will be attached to this task.
+
+        :param nodename: The name of the node
+        :param task_id: The uuid.UUID task id instigating the node deployment
+        :param identity: A 32 byte string that the node must provide in the ``X-BootAction-Key``
+                         header when accessing the boot action API
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = sql.text(
+                    "INSERT INTO boot_action AS ba1 (node_name, task_id, identity_key) "
+                    "VALUES (:node, :task_id, :identity) "
+                    "ON CONFLICT (node_name) DO UPDATE SET "
+                    "task_id = :task_id, identity_key = :identity "
+                    "WHERE ba1.node_name = :node").execution_options(
+                        autocommit=True)
+
+                conn.execute(
+                    query,
+                    node=nodename,
+                    task_id=task_id.bytes,
+                    identity=identity)
+
+            return True
+        except Exception as ex:
+            self.logger.error(
+                "Error posting boot action context for node %s" % nodename,
+                exc_info=ex)
+            return False
+
+    def get_boot_action_context(self, nodename):
+        """Get the boot action context for a node.
+
+        Returns dictionary with ``node_name``, ``task_id`` and ``identity_key`` keys
+
+        :param nodename: Name of the node
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.boot_action_tbl.select().where(
+                    self.boot_action_tbl.c.node_name == nodename)
+                rs = conn.execute(query)
+                r = rs.fetchone()
+                if r is not None:
+                    result_dict = dict(r)
+                    result_dict['task_id'] = uuid.UUID(
+                        bytes=bytes(result_dict['task_id']))
+                    result_dict['identity_key'] = bytes(
+                        result_dict['identity_key'])
+                    return result_dict
+                return None
+        except Exception as ex:
+            self.logger.error(
+                "Error retrieving boot action context for node %s" % nodename,
+                exc_info=ex)
+            return None
+
+    def post_boot_action(self,
+                         nodename,
+                         task_id,
+                         identity_key,
+                         action_id,
+                         action_status=hd_fields.ActionResult.Incomplete):
+        """Post a individual boot action.
+
+        :param nodename: The name of the node the boot action is running on
+        :param task_id: The uuid.UUID task_id of the task that instigated the node deployment
+        :param identity_key: A 256-bit key the node must provide when accessing the boot action API
+        :param action_id: The string ULID id of the boot action
+        :param action_status: The status of the action.
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.ba_status_tbl.insert().values(
+                    node_name=nodename,
+                    bootaction_id=action_id,
+                    task_id=task_id.bytes,
+                    identity_key=identity_key,
+                    action_status=action_status)
+                conn.execute(query)
+                return True
+        except Exception as ex:
+            self.logger.error(
+                "Error saving boot action %s." % action_id, exc_info=ex)
+
+    def get_boot_action(self, action_id):
+        """Query for a single boot action by ID.
+
+        :param action_id: string ULID bootaction id
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.ba_status_tbl.select().where(
+                    bootaction_id=ulid2.decode_ulid_base32(action_id))
+                rs = conn.execute(query)
+                r = rs.fetchone()
+                if r is not None:
+                    ba_dict = dict(r)
+                    ba_dict['bootaction_id'] = bytes(ba_dict['bootaction_id'])
+                    ba_dict['identity_key'] = bytes(
+                        ba_dict['identity_key']).hex()
+                    return ba_dict
+                else:
+                    return None
+        except Exception as ex:
+            self.logger.error(
+                "Error querying boot action %s" % action_id, exc_info=ex)
 
     def post_promenade_part(self, part):
         my_lock = self.promenade_lock.acquire(blocking=True, timeout=10)

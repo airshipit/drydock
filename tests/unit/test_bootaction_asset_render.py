@@ -11,14 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test YAML data ingestion."""
+"""Test that boot action assets are rendered correctly."""
+
+import ulid2
 
 from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 class TestClass(object):
-    def test_ingest_full_site(self, input_files, setup):
+    def test_bootaction_render(self, input_files, setup):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
@@ -32,5 +34,8 @@ class TestClass(object):
         design_status, design_data = ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        ba = design_data.get_bootaction('helloworld')
+        action_id = ulid2.generate_binary_ulid()
+        assets = ba.render_assets('compute01', design_data, action_id)
+
+        assert 'compute01' in assets[0].rendered_bytes.decode('utf-8')

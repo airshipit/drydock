@@ -73,6 +73,7 @@ class AuthMiddleware(object):
                 'Request from authenticated user %s with roles %s' %
                 (ctx.user, ','.join(ctx.roles)))
         else:
+            self.logger.debug('Request from unauthenticated client.')
             ctx.authenticated = False
 
 

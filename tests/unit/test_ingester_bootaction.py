@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test YAML data ingestion."""
+"""Test that boot action models are properly parsed."""
 
 from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 class TestClass(object):
-    def test_ingest_full_site(self, input_files, setup):
+    def test_bootaction_parse(self, input_files, setup):
         objects.register_all()
 
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("bootaction.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
@@ -32,5 +32,6 @@ class TestClass(object):
         design_status, design_data = ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        ba = design_data.get_bootaction('helloworld')
+
+        assert len(ba.asset_list) == 2

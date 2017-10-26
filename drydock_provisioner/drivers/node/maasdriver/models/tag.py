@@ -129,6 +129,19 @@ class Tags(model_base.ResourceCollectionBase):
     def __init__(self, api_client, **kwargs):
         super(Tags, self).__init__(api_client)
 
+    def startswith(self, partial_tag):
+        """Find the set of tags that start with ``partial_tag``.
+
+        Return a list of Tag instances that start with ``partial_tag``.
+
+        :param partial_tag: string to compare to tags
+        """
+        results = list()
+        for k, v in self.resources.items():
+            if k.startswith(partial_tag):
+                results.append(v)
+        return results
+
     def add(self, res):
         """
         Create a new resource in this collection in MaaS

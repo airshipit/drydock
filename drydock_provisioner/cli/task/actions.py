@@ -99,7 +99,7 @@ class TaskCreate(CliAction):  # pylint: disable=too-few-public-methods
         while True:
             time.sleep(self.poll_interval)
             task = self.api_client.get_task(task_id=task_id)
-            if task.status in ['completed', 'terminated']:
+            if task.get('status', '') in ['completed', 'terminated']:
                 return task
 
 
