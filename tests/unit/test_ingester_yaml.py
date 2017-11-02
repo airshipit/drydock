@@ -15,6 +15,7 @@
 
 from drydock_provisioner.ingester.plugins.yaml import YamlIngester
 
+
 class TestClass(object):
     def test_ingest_singledoc(self, input_files):
         input_file = input_files.join("singledoc.yaml")

@@ -13,17 +13,51 @@
 # limitations under the License.
 """Handle resources for boot action API endpoints. """
 
-import falcon
-import ulid2
 import tarfile
 import io
 import logging
+
+import jsonschema
+import json
+import ulid2
+import falcon
+
+from drydock_provisioner.objects.fields import ActionResult
+import drydock_provisioner.objects as objects
 
 from .base import StatefulResource
 
 logger = logging.getLogger('drydock')
 
 class BootactionResource(StatefulResource):
+    bootaction_schema = {
+        '$schema': 'http://json-schema.org/schema#',
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'status': {
+                'type': 'string',
+                'enum': ['Failure', 'Success', 'failure', 'success'],
+            },
+            'details': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'additionalProperties': True,
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                        },
+                        'error': {
+                            'type': 'boolean',
+                        }
+                    },
+                    'required': ['message', 'error'],
+                },
+            },
+        },
+    }
+
     def __init__(self, orchestrator=None, **kwargs):
         super().__init__(**kwargs)
         self.orchestrator = orchestrator
@@ -38,6 +72,60 @@ class BootactionResource(StatefulResource):
         :param resp: falcone response
         :param action_id: ULID ID of the boot action
         """
+        try:
+            ba_entry = self.state_manager.get_boot_action(action_id)
+        except Exception as ex:
+            self.logger.error(
+                "Error querying for boot action %s" % action_id, exc_info=ex)
+            raise falcon.HTTPInternalServerError(str(ex))
+
+        if ba_entry is None:
+            raise falcon.HTTPNotFound()
+
+        BootactionUtils.check_auth(ba_entry, req)
+
+        try:
+            json_body = self.req_json(req)
+            jsonschema.validate(json_body,
+                                BootactionResource.bootaction_schema)
+        except Exception as ex:
+            self.logger.error("Error processing boot action body", exc_info=ex)
+            raise falcon.HTTPBadRequest(description="Error processing body.")
+
+        if ba_entry.get('action_status').lower() != ActionResult.Incomplete:
+            self.logger.info(
+                "Attempt to update boot action %s after status finalized." %
+                action_id)
+            raise falcon.HTTPConflict(
+                description=
+                "Action %s status finalized, not available for update." %
+                action_id)
+
+        for m in json_body.get('details', []):
+            rm = objects.TaskStatusMessage(
+                m.get('message'), m.get('error'), 'bootaction', action_id)
+            for f, v in m.items():
+                if f not in ['message', 'error']:
+                    rm['extra'] = dict()
+                    rm['extra'][f] = v
+
+            self.state_manager.post_result_message(ba_entry['task_id'], rm)
+
+        new_status = json_body.get('status', None)
+
+        if new_status is not None:
+            self.state_manager.put_bootaction_status(
+                action_id, action_status=new_status.lower())
+
+        ba_entry = self.state_manager.get_boot_action(action_id)
+        ba_entry.pop('identity_key')
+        resp.status = falcon.HTTP_200
+        resp.content_type = 'application/json'
+        ba_entry['task_id'] = str(ba_entry['task_id'])
+        ba_entry['action_id'] = ulid2.encode_ulid_base32(
+            ba_entry['action_id'])
+        resp.body = json.dumps(ba_entry)
+        return
 
 
 class BootactionAssetsResource(StatefulResource):
@@ -79,18 +167,19 @@ class BootactionAssetsResource(StatefulResource):
                 task.design_ref)
 
             assets = list()
+            ba_status_list = self.state_manager.get_boot_actions_for_node(
+                hostname)
+
             for ba in site_design.bootactions:
                 if hostname in ba.target_nodes:
-                    action_id = ulid2.generate_binary_ulid()
+                    ba_status = ba_status_list.get(ba.name, None)
+                    action_id = ba_status.get('action_id')
                     assets.extend(
                         ba.render_assets(
                             hostname,
                             site_design,
                             action_id,
                             type_filter=asset_type_filter))
-                    self.state_manager.post_boot_action(
-                        hostname, ba_ctx['task_id'], ba_ctx['identity_key'],
-                        action_id)
 
             tarball = BootactionUtils.tarbuilder(asset_list=assets)
             resp.set_header('Content-Type', 'application/gzip')
@@ -112,7 +201,7 @@ class BootactionUnitsResource(BootactionAssetsResource):
     def on_get(self, req, resp, hostname):
         self.logger.debug(
             "Accessing boot action units resource for host %s." % hostname)
-        super().do_get(req, resp, hostname, 'unit')
+        self.do_get(req, resp, hostname, 'unit')
 
 
 class BootactionFilesResource(BootactionAssetsResource):
@@ -120,7 +209,7 @@ class BootactionFilesResource(BootactionAssetsResource):
         super().__init__(**kwargs)
 
     def on_get(self, req, resp, hostname):
-        super().do_get(req, resp, hostname, 'file')
+        self.do_get(req, resp, hostname, 'file')
 
 
 class BootactionUtils(object):

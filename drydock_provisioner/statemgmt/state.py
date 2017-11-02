@@ -30,8 +30,6 @@ from .design import resolver
 
 from drydock_provisioner import config
 
-from drydock_provisioner.error import StateError
-
 
 class DrydockState(object):
     def __init__(self):
@@ -491,20 +489,22 @@ class DrydockState(object):
                          task_id,
                          identity_key,
                          action_id,
+                         action_name,
                          action_status=hd_fields.ActionResult.Incomplete):
         """Post a individual boot action.
 
         :param nodename: The name of the node the boot action is running on
         :param task_id: The uuid.UUID task_id of the task that instigated the node deployment
         :param identity_key: A 256-bit key the node must provide when accessing the boot action API
-        :param action_id: The string ULID id of the boot action
+        :param action_id: The 32-byte ULID id of the boot action
         :param action_status: The status of the action.
         """
         try:
             with self.db_engine.connect() as conn:
                 query = self.ba_status_tbl.insert().values(
                     node_name=nodename,
-                    bootaction_id=action_id,
+                    action_id=action_id,
+                    action_name=action_name,
                     task_id=task_id.bytes,
                     identity_key=identity_key,
                     action_status=action_status)
@@ -513,6 +513,55 @@ class DrydockState(object):
         except Exception as ex:
             self.logger.error(
                 "Error saving boot action %s." % action_id, exc_info=ex)
+            return False
+
+    def put_bootaction_status(self,
+                              action_id,
+                              action_status=hd_fields.ActionResult.Incomplete):
+        """Update the status of a bootaction.
+
+        :param action_id: string ULID ID of the boot action
+        :param action_status: The string statu to set for the boot action
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.ba_status_tbl.update().where(
+                    self.ba_status_tbl.c.action_id == ulid2.decode_ulid_base32(
+                        action_id)).values(action_status=action_status)
+                conn.execute(query)
+                return True
+        except Exception as ex:
+            self.logger.error(
+                "Error updating boot action %s status." % action_id,
+                exc_info=ex)
+            return False
+
+    def get_boot_actions_for_node(self, nodename):
+        """Query for getting all boot action statuses for a node.
+
+        Return a dictionary of boot action dictionaries keyed by the
+        boot action name.
+
+        :param nodename: string nodename of the target node
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.ba_status_tbl.select().where(
+                    self.ba_status_tbl.c.node_name == nodename)
+                rs = conn.execute(query)
+                actions = dict()
+                for r in rs:
+                    ba_dict = dict(r)
+                    ba_dict['action_id'] = bytes(ba_dict['action_id'])
+                    ba_dict['identity_key'] = bytes(ba_dict['identity_key'])
+                    ba_dict['task_id'] = uuid.UUID(bytes=ba_dict['task_id'])
+                    actions[ba_dict.get('action_name', 'undefined')] = ba_dict
+                return actions
+        except Exception as ex:
+            self.logger.error(
+                "Error selecting boot actions for node %s" % nodename,
+                exc_info=ex)
+            return None
 
     def get_boot_action(self, action_id):
         """Query for a single boot action by ID.
@@ -522,52 +571,18 @@ class DrydockState(object):
         try:
             with self.db_engine.connect() as conn:
                 query = self.ba_status_tbl.select().where(
-                    bootaction_id=ulid2.decode_ulid_base32(action_id))
+                    self.ba_status_tbl.c.action_id == ulid2.decode_ulid_base32(
+                        action_id))
                 rs = conn.execute(query)
                 r = rs.fetchone()
                 if r is not None:
                     ba_dict = dict(r)
-                    ba_dict['bootaction_id'] = bytes(ba_dict['bootaction_id'])
-                    ba_dict['identity_key'] = bytes(
-                        ba_dict['identity_key']).hex()
+                    ba_dict['action_id'] = bytes(ba_dict['action_id'])
+                    ba_dict['identity_key'] = bytes(ba_dict['identity_key'])
+                    ba_dict['task_id'] = uuid.UUID(bytes=ba_dict['task_id'])
                     return ba_dict
                 else:
                     return None
         except Exception as ex:
             self.logger.error(
                 "Error querying boot action %s" % action_id, exc_info=ex)
-
-    def post_promenade_part(self, part):
-        my_lock = self.promenade_lock.acquire(blocking=True, timeout=10)
-        if my_lock:
-            if self.promenade.get(part.target, None) is not None:
-                self.promenade[part.target].append(part.obj_to_primitive())
-            else:
-                self.promenade[part.target] = [part.obj_to_primitive()]
-            self.promenade_lock.release()
-            return None
-        else:
-            raise StateError("Could not acquire lock")
-
-    def get_promenade_parts(self, target):
-        parts = self.promenade.get(target, None)
-
-        if parts is not None:
-            return [
-                objects.PromenadeConfig.obj_from_primitive(p) for p in parts
-            ]
-        else:
-            # Return an empty list just to play nice with extend
-            return []
-
-    def set_bootdata_key(self, hostname, design_id, data_key):
-        my_lock = self.bootdata_lock.acquire(blocking=True, timeout=10)
-        if my_lock:
-            self.bootdata[hostname] = {'design_id': design_id, 'key': data_key}
-            self.bootdata_lock.release()
-            return None
-        else:
-            raise StateError("Could not acquire lock")
-
-    def get_bootdata_key(self, hostname):
-        return self.bootdata.get(hostname, None)

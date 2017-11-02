@@ -49,7 +49,7 @@ class ResultMessage(ExtendTable):
     __schema__ = [
         Column('sequence', Integer, primary_key=True),
         Column('task_id', pg.BYTEA(16)),
-        Column('message', String(128)),
+        Column('message', String(1024)),
         Column('error', Boolean),
         Column('context', String(64)),
         Column('context_type', String(16)),
@@ -89,7 +89,8 @@ class BootActionStatus(ExtendTable):
 
     __schema__ = [
         Column('node_name', String(32)),
-        Column('bootaction_id', pg.BYTEA(16), primary_key=True),
+        Column('action_id', pg.BYTEA(16), primary_key=True),
+        Column('action_name', String(64)),
         Column('task_id', pg.BYTEA(16)),
         Column('identity_key', pg.BYTEA(32)),
         Column('action_status', String(32)),

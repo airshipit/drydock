@@ -17,6 +17,7 @@ from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
+
 class TestClass(object):
     def test_node_filter_obj(self, input_files, setup, test_orchestrator):
         input_file = input_files.join("fullsite.yaml")

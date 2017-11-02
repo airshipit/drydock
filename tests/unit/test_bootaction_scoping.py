@@ -14,6 +14,7 @@
 
 import drydock_provisioner.objects as objects
 
+
 class TestClass(object):
     def test_bootaction_scoping_blankfilter(self, input_files,
                                             test_orchestrator):

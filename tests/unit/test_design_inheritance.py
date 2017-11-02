@@ -16,6 +16,7 @@ from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
+
 class TestClass(object):
     def test_design_inheritance(self, input_files, setup):
         input_file = input_files.join("fullsite.yaml")

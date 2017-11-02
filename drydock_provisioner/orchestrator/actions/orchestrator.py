@@ -14,6 +14,7 @@
 """Actions for the Orchestrator level of the Drydock workflow."""
 
 import time
+import datetime
 import logging
 import concurrent.futures
 import uuid
@@ -718,7 +719,101 @@ class DeployNodes(BaseAction):
                 "Unable to configure platform on any nodes, skipping deploy subtask"
             )
 
+        node_deploy_task.bubble_results(
+            action_filter=hd_fields.OrchestratorAction.DeployNode)
+
+        if len(node_deploy_task.result.successes) > 0:
+            node_bootaction_task = self.orchestrator.create_task(
+                design_ref=self.task.design_ref,
+                action=hd_fields.OrchestratorAction.BootactionReport,
+                node_filter=node_deploy_task.node_filter_from_successes())
+            action = BootactionReports(node_bootaction_task, self.orchestrator,
+                                       self.state_manager)
+            action.start()
+
+        self.task.align_result(
+            action_filter=hd_fields.OrchestratorAction.BootactionReport)
         self.task.set_status(hd_fields.TaskStatus.Complete)
-        self.task.align_result()
+        self.task.save()
+        return
+
+
+class BootactionReports(BaseAction):
+    """Wait for nodes to report status of boot action."""
+
+    def start(self):
+        self.task.set_status(hd_fields.TaskStatus.Running)
+        self.task.save()
+
+        poll_start = datetime.utcnow()
+
+        still_running = True
+        timeout = datetime.timedelta(
+            minutes=config.config_mgr.conf.timeouts.bootaction_final_status)
+        running_time = datetime.utcnow() - poll_start
+        nodelist = [
+            n.get_id() for n in self.orchestrator.get_target_nodes(self.task)
+        ]
+
+        while running_time < timeout:
+            still_running = False
+            for n in nodelist:
+                bas = self.state_manager.get_boot_actions_for_node(n)
+                running_bas = {
+                    k: v
+                    for (k, v) in bas.items()
+                    if v.get('action_status') ==
+                    hd_fields.ActionResult.Incomplete
+                }
+                if len(running_bas) > 0:
+                    still_running = True
+                    break
+            if still_running:
+                time.sleep(config.config_mgr.conf.poll_interval)
+                running_time = datetime.utcnow()
+
+        for n in nodelist:
+            bas = self.state_manager.get_boot_actions_for_node(n)
+            success_bas = {
+                k: v
+                for (k, v) in bas.items()
+                if v.get('action_status') == hd_fields.ActionResult.Success
+            }
+            running_bas = {
+                k: v
+                for (k, v) in bas.items()
+                if v.get('action_status') == hd_fields.ActionResult.Incomplete
+            }
+            failure_bas = {
+                k: v
+                for (k, v) in bas.items()
+                if v.get('action_status') == hd_fields.ActionResult.Failure
+            }
+            for ba in success_bas.values():
+                self.task.add_status_msg(
+                    msg="Boot action %s completed with status %s" %
+                    (ba['action_name'], ba['action_status']),
+                    error=False,
+                    ctx=n,
+                    ctx_type='node')
+            for ba in failure_bas.values():
+                self.task.add_status_msg(
+                    msg="Boot action %s completed with status %s" %
+                    (ba['action_name'], ba['action_status']),
+                    error=True,
+                    ctx=n,
+                    ctx_type='node')
+            for ba in running_bas.values():
+                self.task.add_status_msg(
+                    msg="Boot action %s timed out." % (ba['action_name']),
+                    error=True,
+                    ctx=n,
+                    ctx_type='node')
+
+            if len(failure_bas) == 0 and len(running_bas) == 0:
+                self.task.success(focus=n)
+            else:
+                self.task.failure(focus=n)
+
         self.task.save()
         return

@@ -14,7 +14,6 @@
 """Generic testing for the orchestrator."""
 from falcon import testing
 import pytest
-import os
 import tarfile
 import io
 import falcon
@@ -74,9 +73,7 @@ class TestClass(object):
         test_task = test_orchestrator.create_task(
             action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
 
-        id_key = os.urandom(32)
-        blank_state.post_boot_action_context('compute01',
-                                             test_task.get_id(), id_key)
+        id_key = test_orchestrator.create_bootaction_context('compute01', test_task)
 
         ba_ctx = dict(
             nodename='compute01',

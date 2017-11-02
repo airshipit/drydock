@@ -17,6 +17,7 @@ import time
 import importlib
 import logging
 import uuid
+import ulid2
 import concurrent.futures
 import os
 
@@ -556,11 +557,16 @@ class Orchestrator(object):
         if site_design.bootactions is None:
             return None
 
+        identity_key = None
+
         for ba in site_design.bootactions:
             if nodename in ba.target_nodes:
-                identity_key = os.urandom(32)
-                self.state_manager.post_boot_action_context(
-                    nodename, task.get_id(), identity_key)
-                return identity_key
+                if identity_key is None:
+                    identity_key = os.urandom(32)
+                    self.state_manager.post_boot_action_context(
+                        nodename, task.get_id(), identity_key)
+                action_id = ulid2.generate_binary_ulid()
+                self.state_manager.post_boot_action(
+                    nodename, task.get_id(), identity_key, action_id, ba.name)
 
-        return None
+        return identity_key

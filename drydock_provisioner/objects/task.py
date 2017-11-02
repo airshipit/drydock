@@ -277,19 +277,26 @@ class Task(object):
             else:
                 self.logger.debug("Skipping subtask due to action filter.")
 
-    def align_result(self):
-        """Align the result of this task with the combined results of all the subtasks."""
+    def align_result(self, action_filter=None):
+        """Align the result of this task with the combined results of all the subtasks.
+
+        :param action_filter: string action name to filter subtasks on
+        """
         for st in self.statemgr.get_complete_subtasks(self.task_id):
-            if st.get_result() in [
-                    hd_fields.ActionResult.Success,
-                    hd_fields.ActionResult.PartialSuccess
-            ]:
-                self.success()
-            if st.get_result() in [
-                    hd_fields.ActionResult.Failure,
-                    hd_fields.ActionResult.PartialSuccess
-            ]:
-                self.failure()
+            if action_filter is None or (action_filter is not None
+                                         and st.action == action_filter):
+                if st.get_result() in [
+                        hd_fields.ActionResult.Success,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    self.success()
+                if st.get_result() in [
+                        hd_fields.ActionResult.Failure,
+                        hd_fields.ActionResult.PartialSuccess
+                ]:
+                    self.failure()
+            else:
+                self.logger.debug("Skipping subtask due to action filter.")
 
     def add_status_msg(self, **kwargs):
         """Add a status message to this task's result status."""
