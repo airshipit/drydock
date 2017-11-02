@@ -24,7 +24,7 @@ from .bootdata import BootdataResource
 from .nodes import NodesResource
 from .health import HealthResource
 
-from .base import DrydockRequest
+from .base import DrydockRequest, BaseResource
 from .middleware import AuthMiddleware, ContextMiddleware, LoggingMiddleware
 
 
@@ -45,6 +45,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
             ContextMiddleware(),
             LoggingMiddleware()
         ])
+
+    control_api.add_route('/versions', VersionsResource())
 
     # v1.0 of Drydock API
     v1_0_routes = [
@@ -77,3 +79,17 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
         control_api.add_route('/api/v1.0' + path, res)
 
     return control_api
+
+
+class VersionsResource(BaseResource):
+    """
+    Lists the versions supported by this API
+    """
+
+    def on_get(self, req, resp):
+        resp.body = self.to_json({
+            'v1.0': {
+                'path': '/api/v1.0',
+                'status': 'stable'
+            }})
+        resp.status = falcon.HTTP_200

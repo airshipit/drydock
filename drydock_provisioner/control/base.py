@@ -82,6 +82,12 @@ class BaseResource(object):
 
         self.logger.log(level, msg, extra=extra)
 
+    def to_json(self, body_dict):
+        """
+        Thin wrapper around json.dumps, providing the default=str config
+        """
+        return json.dumps(body_dict, default=str)
+
     def debug(self, ctx, msg):
         self.log_error(ctx, logging.DEBUG, msg)
 
