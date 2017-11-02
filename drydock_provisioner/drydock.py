@@ -28,7 +28,7 @@ import drydock_provisioner.objects as objects
 import drydock_provisioner.control.api as api
 
 
-def start_drydock():
+def start_drydock(enable_keystone=True):
     objects.register_all()
 
     # Setup configuration parsing
@@ -38,7 +38,7 @@ def start_drydock():
     ]
 
     config.config_mgr.conf.register_cli_opts(cli_options)
-    config.config_mgr.register_options()
+    config.config_mgr.register_options(enable_keystone=enable_keystone)
     config.config_mgr.conf(sys.argv[1:])
 
     if config.config_mgr.conf.debug:
@@ -110,9 +110,12 @@ def start_drydock():
 
 
 # Initialization compatible with PasteDeploy
-def paste_start_drydock(global_conf, **kwargs):
-    # At this time just ignore everything in the paste configuration and rely on oslo_config
-    return drydock
+def paste_start_drydock(global_conf, disable=None):
+    enable_keystone = True
 
+    if disable is not None:
+        for d in disable.split():
+            if d == 'keystone':
+                enable_keystone = False
 
-drydock = start_drydock()
+    return start_drydock(enable_keystone=enable_keystone)
