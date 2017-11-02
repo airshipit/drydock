@@ -22,6 +22,7 @@ from .tasks import TasksResource
 from .tasks import TaskResource
 from .bootdata import BootdataResource
 from .nodes import NodesResource
+from .health import HealthResource
 
 from .base import DrydockRequest
 from .middleware import AuthMiddleware, ContextMiddleware, LoggingMiddleware
@@ -48,6 +49,7 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
     # v1.0 of Drydock API
     v1_0_routes = [
         # API for managing orchestrator tasks
+        ('/health', HealthResource()),
         ('/tasks', TasksResource(
             state_manager=state_manager, orchestrator=orchestrator)),
         ('/tasks/{task_id}', TaskResource(state_manager=state_manager)),
