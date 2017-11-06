@@ -121,6 +121,17 @@ class DrydockPolicy(object):
             }])
     ]
 
+    # Validate Design Policy
+    validation_rules = [
+        policy.DocumentedRuleDefault(
+            'physical_provisioner:validate_site_design', 'role:admin',
+            'Validate site design',
+            [{
+                'path': '/api/v1.0/validatedesign',
+                'method': 'POST'
+            }]),
+    ]
+
     def __init__(self):
         self.enforcer = policy.Enforcer(cfg.CONF)
 
@@ -128,6 +139,7 @@ class DrydockPolicy(object):
         self.enforcer.register_defaults(DrydockPolicy.base_rules)
         self.enforcer.register_defaults(DrydockPolicy.task_rules)
         self.enforcer.register_defaults(DrydockPolicy.data_rules)
+        self.enforcer.register_defaults(DrydockPolicy.validation_rules)
         self.enforcer.load_rules()
 
     def authorize(self, action, ctx):
@@ -183,5 +195,6 @@ def list_policies():
     default_policy.extend(DrydockPolicy.base_rules)
     default_policy.extend(DrydockPolicy.task_rules)
     default_policy.extend(DrydockPolicy.data_rules)
+    default_policy.extend(DrydockPolicy.validation_rules)
 
     return default_policy

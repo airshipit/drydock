@@ -20,7 +20,6 @@ import uuid
 import ulid2
 import concurrent.futures
 import os
-import yaml
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -35,6 +34,7 @@ from .actions.orchestrator import VerifyNodes
 from .actions.orchestrator import PrepareNodes
 from .actions.orchestrator import DeployNodes
 from .actions.orchestrator import DestroyNodes
+from .validations.validator import Validator
 
 
 class Orchestrator(object):
@@ -265,24 +265,6 @@ class Orchestrator(object):
 
         return status, site_design
 
-    def _validate_design(self, site_design, result_status=None):
-        """Validate the design in site_design passes all validation rules.
-
-        Apply all validation rules to the design in site_design. If result_status is
-        defined, update it with validation messages. Otherwise a new status instance
-        will be created and returned.
-
-        :param site_design: instance of objects.SiteDesign
-        :param result_status: instance of objects.TaskStatus
-        """
-        # TODO(sh8121att) actually implement the validation rules defined in the readme
-
-        if result_status is not None:
-            result_status = objects.TaskStatus()
-            result_status.set_status(hd_fields.ActionResult.Success)
-
-        return result_status
-
     def get_effective_site(self, design_ref):
         """Ingest design data and compile the effective model of the design.
 
@@ -293,13 +275,13 @@ class Orchestrator(object):
         """
         status = None
         site_design = None
+        val = Validator()
         try:
             status, site_design = self.get_described_site(design_ref)
             if status.status == hd_fields.ActionResult.Success:
                 self.compute_model_inheritance(site_design)
                 self.compute_bootaction_targets(site_design)
-                status = self._validate_design(site_design, result_status=status)
-            self.logger.debug("Status of effective design:\n%s" % yaml.dump(status.to_dict()))
+            status = val.validate_design(site_design, result_status=status)
         except Exception as ex:
             if status is not None:
                 status.add_status_msg(

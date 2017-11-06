@@ -187,3 +187,8 @@ class NetworkLinkTrunkingMode(BaseDrydockEnum):
 
 class NetworkLinkTrunkingModeField(fields.BaseEnumField):
     AUTO_TYPE = NetworkLinkTrunkingMode()
+
+
+class ValidationResult(BaseDrydockEnum):
+    Success = 'success'
+    Failure = 'failure'

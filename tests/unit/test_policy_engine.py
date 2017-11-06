@@ -29,7 +29,8 @@ class TestDefaultRules():
         expected_calls = [
             mocker.call.register_defaults(DrydockPolicy.base_rules),
             mocker.call.register_defaults(DrydockPolicy.task_rules),
-            mocker.call.register_defaults(DrydockPolicy.data_rules)
+            mocker.call.register_defaults(DrydockPolicy.data_rules),
+            mocker.call.register_defaults(DrydockPolicy.validation_rules)
         ]
 
         # Validate the oslo_policy Enforcer was loaded with expected default policy rules

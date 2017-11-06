@@ -25,6 +25,7 @@ from .health import HealthResource
 from .bootaction import BootactionUnitsResource
 from .bootaction import BootactionFilesResource
 from .bootaction import BootactionResource
+from .validation import ValidationResource
 
 from .base import DrydockRequest, BaseResource
 from .middleware import AuthMiddleware, ContextMiddleware, LoggingMiddleware
@@ -77,6 +78,10 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
         ('/bootactions/nodes/{hostname}/files', BootactionFilesResource(
             state_manager=state_manager, orchestrator=orchestrator)),
         ('/bootactions/{action_id}', BootactionResource(
+            state_manager=state_manager, orchestrator=orchestrator)),
+
+        # API to validate schemas
+        ('/validatedesign', ValidationResource(
             state_manager=state_manager, orchestrator=orchestrator)),
     ]
 
