@@ -74,7 +74,7 @@ spec:
   # If this link is a bond of physical links, how is it configured
   # 802.3ad
   # active-backup
-  # balance-rr 
+  # balance-rr
   # Can add support for others down the road
   bonding:
     mode: 802.3ad
@@ -98,7 +98,6 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  allocation: static
   cidr: 172.16.100.0/24
   ranges:
   - type: static
@@ -115,18 +114,16 @@ metadata:
   region: sitename
   date: 17-FEB-2017
   author: sh8121@att.com
-  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces  
+  description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
     # Layer 2 VLAN segment id, could support other segmentations. Optional
   vlan_id: '99'
-    # How are addresses assigned?
-  allocation: dhcp
     # MTU for this VLAN interface, if not specified it will be inherited from the link
   mtu: 1500
     # Network address
   cidr: 172.16.0.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
   - type: dhcp
     start: 172.16.0.5
     end: 172.16.0.254
@@ -148,13 +145,12 @@ metadata:
 spec:
   vlan_id: '100'
     # How are addresses assigned?
-  allocation: static
     # Allow MTU to be inherited from link the network rides on
   mtu: 1500
     # Network address
   cidr: 172.16.1.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
   - type: static
     start: 172.16.1.15
     end: 172.16.1.254
@@ -182,11 +178,10 @@ metadata:
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
   vlan_id: '101'
-  allocation: static
   mtu: 9000
   cidr: 172.16.2.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
       # Type can be reserved (not used for baremetal), static (all explicit
       # assignments should fall here), dhcp (will be used by a DHCP server on this network)
   - type: static
@@ -207,12 +202,11 @@ metadata:
 spec:
   vlan_id: '102'
     # How are addresses assigned?
-  allocation: static
     # MTU size for the VLAN interface
   mtu: 1500
   cidr: 172.16.3.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
   - type: static
     start: 172.16.3.15
     end: 172.16.3.254

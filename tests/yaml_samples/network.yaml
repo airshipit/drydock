@@ -8,7 +8,6 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  allocation: static
   cidr: 172.16.100.0/24
   ranges:
     - type: static

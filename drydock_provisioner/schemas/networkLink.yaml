@@ -19,6 +19,13 @@ data:
           type: 'string'
         peer_rate:
           type: 'string'
+        mon_rate:
+          type: 'number'
+        up_delay:
+          type: 'number'
+        down_delay:
+          type: 'number'
+      additionalProperties: false
     mtu:
       type: 'number'
     linkspeed:
@@ -30,8 +37,12 @@ data:
           type: 'string'
         default_network:
           type: 'string'
+      additionalProperties: false
     allowed_networks:
       type: 'array'
       items:
         type: 'string'
+    labels:
+      type: 'object'
+      additionalProperties: true
   additionalProperties: false

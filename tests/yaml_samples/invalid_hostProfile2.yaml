@@ -8,5 +8,14 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  foo: bar
+  storage:
+    physical_devices:
+      sda:
+        labels:
+          a: 'b'
+        volume_group: 'a'
+        partitions:
+          - name: 'test'
+            size: '100%'
+      sdb: 'invalid_device'
 ...

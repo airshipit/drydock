@@ -33,11 +33,5 @@ data:
       type: 'number'
     device_aliases:
       type: 'object'
-      properties:
-        address:
-          type: 'string'
-        dev_type:
-          type: 'string'
-        bus_type:
-          type: 'string'
+      additionalProperties: true
   additionalProperties: false

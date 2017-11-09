@@ -10,11 +10,8 @@ data:
   id: 'http://att.com/att-comdev/drydock/network.yaml'
   type: 'object'
   properties:
-    allocation:
-      type: 'string'
     cidr:
       type: 'string'
-      format: 'ipv4'
     ranges:
       type: 'array'
       items:
@@ -28,6 +25,7 @@ data:
           end:
             type: 'string'
             format: 'ipv4'
+        additionalProperties: false
     dns:
       type: 'object'
       properties:
@@ -35,7 +33,7 @@ data:
           type: 'string'
         servers:
           type: 'string'
-          format: 'ipv4'
+      additionalProperties: false
     dhcp_relay:
       type: 'object'
       properties:
@@ -45,6 +43,7 @@ data:
         upstream_target:
           type: 'string'
           format: 'ipv4'
+      additionalProperties: false
     mtu:
       type: 'number'
     vlan:
@@ -56,10 +55,13 @@ data:
         properties:
           subnet:
             type: 'string'
-            format: 'ipv4'
           gateway:
             type: 'string'
             format: 'ipv4'
           metric:
             type: 'number'
+        additionalProperties: false
+    labels:
+      type: 'object'
+      additionalProperties: true
   additionalProperties: false

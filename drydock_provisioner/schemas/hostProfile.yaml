@@ -21,68 +21,87 @@ data:
           type: 'string'
         credetial:
           type: 'string'
+      additionalProperties: true
     storage:
       type: 'object'
       properties:
         physical_devices:
           type: 'object'
-          properties:
-            sda:
-              type: 'object'
-              properties:
-                labels:
+          additionalProperties:
+            type: 'object'
+            properties:
+              labels:
+                type: 'object'
+                additionalProperties:
+                  type: 'string'
+              volume_group:
+                type: 'string'
+              partitions:
+                type: 'array'
+                items:
                   type: 'object'
                   properties:
-                    role:
+                    name:
                       type: 'string'
-                partitions:
-                  type: 'array'
-                  items:
-                    type: 'object'
-                    properties:
-                      name:
+                    size:
+                      type: 'string'
+                    part_uuid:
+                      type: 'string'
+                    volume_group:
+                      type: 'string'
+                    labels:
+                      type: 'object'
+                      additionalProperties:
                         type: 'string'
-                      size:
-                        type: 'string'
-                      bootable:
-                        type: 'boolean'
-                      filesystem:
-                        type: 'object'
-                        properties:
-                          mountpoint:
-                            type: 'string'
-                          fstype:
-                            type: 'string'
-                          mount_options:
-                            type: 'string'
-            sdb:
-              type: 'object'
-              properties:
-                volume_group:
-                  type: 'string'
-        volume_groups:
-          type: 'object'
-          properties:
-            log_vg:
-              type: 'object'
-              properties:
-                logical_volumes:
-                  type: 'array'
-                  items:
-                    type: 'object'
-                    properties:
-                      name:
-                        type: 'string'
-                      size:
-                        type: 'string'
-                      filesystem:
-                        type: 'object'
+                    bootable:
+                      type: 'boolean'
+                    volume_group:
+                      type: 'string'
+                    filesystem:
+                      type: 'object'
                       properties:
                         mountpoint:
                           type: 'string'
                         fstype:
                           type: 'string'
                         mount_options:
+                          type: 'string'
+                        fs_uuid:
+                          type: 'string'
+                        fs_label:
+                          type: 'string'
+                      additionalProperties: false
+                  additionalProperties: false
+        volume_groups:
+          type: 'object'
+          additionalProperties:
+            type: 'object'
+            properties:
+              vg_uuid:
+                type: 'string'
+              logical_volumes:
+                type: 'array'
+                items:
+                  type: 'object'
+                  properties:
+                    name:
+                      type: 'string'
+                    lv_uuid:
+                      type: 'string'
+                    size:
+                      type: 'string'
+                    filesystem:
+                      type: 'object'
+                      properties:
+                        mountpoint:
+                          type: 'string'
+                        fstype:
+                          type: 'string'
+                        mount_options:
+                          type: 'string'
+                        fs_uuid:
+                          type: 'string'
+                        fs_label:
                           type: 'string'
     platform:
       type: 'object'
@@ -93,11 +112,8 @@ data:
           type: 'string'
         kernel_params:
           type: 'object'
-          properties:
-            quiet:
-              type: 'boolean'
-            console:
-              type: 'string'
+          additionalProperties: true
+      additionalProperties: false
     metadata:
       type: 'object'
       properties:
@@ -107,9 +123,13 @@ data:
             type: 'string'
         owner_data:
           type: 'object'
-          properties:
-            foo:
-              type: 'string'
+          additionalProperties:
+            type: 'string'
+        rack:
+          type: 'string'
+        boot_mac:
+          type: 'string'
+      additionalProperties: false
     host_profile:
       type: 'string'
     hardware_profile:
@@ -118,37 +138,18 @@ data:
       type: 'string'
     interfaces:
       type: 'object'
-      properties:
-        pxe:
-          type: 'object'
-          properties:
-            device_link:
+      additionalProperties:
+        type: 'object'
+        properties:
+          device_link:
+           type: 'string'
+          slaves:
+            type: 'array'
+            items:
               type: 'string'
-            labels:
-              type: 'object'
-              properties:
-                nonconfig:
-                  type: 'boolean'
-            slaves:
-              type: 'array'
-              items:
-                type: 'string'
-            networks:
-              type: 'array'
-              items:
-                type: 'string'
-
-        bond0:
-          type: 'object'
-          properties:
-            device_link:
+          networks:
+            type: 'array'
+            items:
               type: 'string'
-            slaves:
-              type: 'array'
-              items:
-                type: 'string'
-            networks:
-              type: 'array'
-              items:
-                type: 'string'
   additionalProperties: false
+...

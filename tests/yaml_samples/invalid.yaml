@@ -1,5 +1,5 @@
 ---
-apiVersion: 
+apiVersion:
 : Network
 metadata:
   name: public
@@ -11,12 +11,11 @@ metadata:
 spec:
   vlan_id: '102'
     # How are addresses assigned?
-  allocation: static
     # MTU size for the VLAN interface
   mtu: 1500
   cidr: 172.16.3.0/24
     # Desribe IP address ranges
-  ranges: 
+  ranges:
   - type: static
     start: 172.16.3.15
     end: 172.16.3.254

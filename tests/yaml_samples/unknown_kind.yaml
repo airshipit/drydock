@@ -23,7 +23,7 @@ spec:
     credential: admin
   # Specify storage layout of base OS. Ceph out of scope
   storage:
-    # How storage should be carved up: lvm (logical volumes), flat 
+    # How storage should be carved up: lvm (logical volumes), flat
     # (single partition)
     layout: lvm
     # Info specific to the boot and root disk/partitions

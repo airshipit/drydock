@@ -118,7 +118,7 @@ spec:
   # host_profile inheritance allows for deduplication of common CIs
   # Inheritance is additive for CIs that are lists of multiple items
   # To remove an inherited list member, prefix the primary key value
-  # with '!'. 
+  # with '!'.
   host_profile: defaults
   # Hardware profile will map hardware specific details to the abstract
   # names uses in the host profile as well as specify hardware specific

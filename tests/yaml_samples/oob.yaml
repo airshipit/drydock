@@ -53,7 +53,6 @@ metadata:
   author: sh8121@att.com
   description: Describe layer 2/3 attributes. Primarily CIs used for configuring server interfaces
 spec:
-  allocation: static
   cidr: 172.16.100.0/24
   ranges:
   - type: static
@@ -86,7 +85,7 @@ spec:
     credential: admin
   # Specify storage layout of base OS. Ceph out of scope
   storage:
-    # How storage should be carved up: lvm (logical volumes), flat 
+    # How storage should be carved up: lvm (logical volumes), flat
     # (single partition)
     layout: lvm
     # Info specific to the boot and root disk/partitions
@@ -134,7 +133,7 @@ spec:
   # host_profile inheritance allows for deduplication of common CIs
   # Inheritance is additive for CIs that are lists of multiple items
   # To remove an inherited list member, prefix the primary key value
-  # with '!'. 
+  # with '!'.
   host_profile: defaults
   # Hardware profile will map hardware specific details to the abstract
   # names uses in the host profile as well as specify hardware specific
