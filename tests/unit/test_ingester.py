@@ -13,13 +13,28 @@
 # limitations under the License.
 """Test YAML data ingestion."""
 
-from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_ingest_full_site(self, input_files, setup):
+    def test_ingest_deckhand(self, input_files, setup, deckhand_ingester):
+        objects.register_all()
+
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_state = DrydockState()
+        design_ref = "file://%s" % str(input_file)
+
+        design_status, design_data = deckhand_ingester.ingest_data(
+            design_state=design_state, design_ref=design_ref)
+
+        print("%s" % str(design_status.to_dict()))
+        assert design_status.status == objects.fields.ActionResult.Success
+        assert len(design_data.host_profiles) == 2
+        assert len(design_data.baremetal_nodes) == 2
+
+    def test_ingest_yaml(self, input_files, setup, yaml_ingester):
         objects.register_all()
 
         input_file = input_files.join("fullsite.yaml")
@@ -27,11 +42,10 @@ class TestClass(object):
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = yaml_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
+        print("%s" % str(design_status.to_dict()))
+        assert design_status.status == objects.fields.ActionResult.Success
         assert len(design_data.host_profiles) == 2
         assert len(design_data.baremetal_nodes) == 2

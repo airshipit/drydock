@@ -1,27 +1,31 @@
 ---
-apiVersion: 'drydock/v1'
-kind: BootAction
+schema: 'drydock/BootAction/v1'
 metadata:
+  schema: 'metadata/Document/v1'
   name: helloworld
-  region: sitename
-  date: 17-FEB-2017
-  author: Scott Hussey
-spec:
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
   assets:
     - path: /var/tmp/hello.sh
       type: file
       permissions: '555'
       data: |-
-        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkIScK
+        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
+        Jwo=
       data_pipeline:
         - base64_decode
-        - utf8_encode
+        - utf8_decode
+        - template
     - path: /lib/systemd/system/hello.service
       type: unit
+      permissions: '600'
       data: |-
         W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
         ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
         dGFyZ2V0Cg==
       data_pipeline:
         - base64_decode
+        - utf8_decode
 ...

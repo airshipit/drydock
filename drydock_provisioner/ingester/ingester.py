@@ -85,10 +85,11 @@ class Ingester(object):
             raise ValueError(
                 "Ingester:ingest_data required kwarg 'design_ref' missing")
 
-        design_blob = design_state.get_design_documents(design_ref)
         self.logger.debug(
             "Ingester:ingest_data ingesting design parts for design %s" %
             design_ref)
+        design_blob = design_state.get_design_documents(design_ref)
+        self.logger.debug("Ingesting design data of %d bytes." % len(design_blob))
 
         try:
             status, design_items = self.registered_plugin.ingest_data(

@@ -104,7 +104,8 @@ class TestClass(object):
         id_key = os.urandom(32)
         action_id = ulid2.generate_binary_ulid()
         blank_state.post_boot_action('compute01',
-                                     test_task.get_id(), id_key, action_id, 'helloworld')
+                                     test_task.get_id(), id_key, action_id,
+                                     'helloworld')
 
         ba = dict(
             nodename='compute01',

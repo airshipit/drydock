@@ -122,8 +122,7 @@ class BootactionResource(StatefulResource):
         resp.status = falcon.HTTP_200
         resp.content_type = 'application/json'
         ba_entry['task_id'] = str(ba_entry['task_id'])
-        ba_entry['action_id'] = ulid2.encode_ulid_base32(
-            ba_entry['action_id'])
+        ba_entry['action_id'] = ulid2.encode_ulid_base32(ba_entry['action_id'])
         resp.body = json.dumps(ba_entry)
         return
 

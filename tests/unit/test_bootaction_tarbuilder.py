@@ -18,24 +18,20 @@ import tarfile
 import io
 
 import drydock_provisioner.objects as objects
-from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 from drydock_provisioner.control.bootaction import BootactionUtils
 
 
 class TestClass(object):
-    def test_bootaction_tarbuilder(self, input_files, setup):
+    def test_bootaction_tarbuilder(self, input_files, deckhand_ingester, setup):
         objects.register_all()
 
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
         target_host = 'compute01'

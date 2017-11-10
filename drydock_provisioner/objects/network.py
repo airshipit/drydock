@@ -30,7 +30,7 @@ class NetworkLink(base.DrydockPersistentObject, base.DrydockObject):
         'site':
         ovo_fields.StringField(),
         'metalabels':
-        ovo_fields.ListOfStringsField(nullable=True),
+        ovo_fields.DictOfNullableStringsField(),
         'bonding_mode':
         hd_fields.NetworkLinkBondingModeField(
             default=hd_fields.NetworkLinkBondingMode.Disabled),
@@ -86,7 +86,7 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
     fields = {
         'name': ovo_fields.StringField(),
         'site': ovo_fields.StringField(),
-        'metalabels': ovo_fields.ListOfStringsField(nullable=True),
+        'metalabels': ovo_fields.DictOfNullableStringsField(),
         'cidr': ovo_fields.StringField(),
         'allocation_strategy': ovo_fields.StringField(),
         'vlan_id': ovo_fields.StringField(nullable=True),

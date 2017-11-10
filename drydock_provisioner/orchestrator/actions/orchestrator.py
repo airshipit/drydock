@@ -727,8 +727,8 @@ class DeployNodes(BaseAction):
                 design_ref=self.task.design_ref,
                 action=hd_fields.OrchestratorAction.BootactionReport,
                 node_filter=node_deploy_task.node_filter_from_successes())
-            action = BootactionReports(node_bootaction_task, self.orchestrator,
-                                       self.state_manager)
+            action = BootactionReport(node_bootaction_task, self.orchestrator,
+                                      self.state_manager)
             action.start()
 
         self.task.align_result(
@@ -738,7 +738,7 @@ class DeployNodes(BaseAction):
         return
 
 
-class BootactionReports(BaseAction):
+class BootactionReport(BaseAction):
     """Wait for nodes to report status of boot action."""
 
     def start(self):

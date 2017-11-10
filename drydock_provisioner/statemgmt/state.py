@@ -26,9 +26,9 @@ import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.fields as hd_fields
 
 from .db import tables
-from .design import resolver
 
 from drydock_provisioner import config
+from .design.resolver import ReferenceResolver
 
 
 class DrydockState(object):
@@ -36,7 +36,6 @@ class DrydockState(object):
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.global_logger_name)
 
-        self.resolver = resolver.DesignResolver()
         return
 
     def connect_db(self):
@@ -73,7 +72,7 @@ class DrydockState(object):
         conn.close()
 
     def get_design_documents(self, design_ref):
-        return self.resolver.resolve_reference(design_ref)
+        return ReferenceResolver.resolve_reference(design_ref)
 
     def get_tasks(self):
         """Get all tasks in the database."""

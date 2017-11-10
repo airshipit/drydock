@@ -13,13 +13,12 @@
 # limitations under the License.
 """Test that boot action models are properly parsed."""
 
-from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_bootaction_parse(self, input_files, setup):
+    def test_bootaction_parse(self, input_files, deckhand_ingester, setup):
         objects.register_all()
 
         input_file = input_files.join("bootaction.yaml")
@@ -27,10 +26,7 @@ class TestClass(object):
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
         ba = design_data.get_bootaction('helloworld')

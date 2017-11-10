@@ -13,22 +13,18 @@
 # limitations under the License.
 """Test the node filter logic in the orchestrator."""
 
-from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_node_filter_obj(self, input_files, setup, test_orchestrator):
-        input_file = input_files.join("fullsite.yaml")
+    def test_node_filter_obj(self, input_files, setup, deckhand_orchestrator, deckhand_ingester):
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
         nf = objects.NodeFilter()
@@ -37,20 +33,17 @@ class TestClass(object):
         nfs = objects.NodeFilterSet(
             filter_set_type='intersection', filter_set=[nf])
 
-        node_list = test_orchestrator.process_node_filter(nfs, design_data)
+        node_list = deckhand_orchestrator.process_node_filter(nfs, design_data)
 
         assert len(node_list) == 1
 
-    def test_node_filter_dict(self, input_files, setup, test_orchestrator):
-        input_file = input_files.join("fullsite.yaml")
+    def test_node_filter_dict(self, input_files, setup, deckhand_orchestrator, deckhand_ingester):
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
         nfs = {
@@ -64,6 +57,6 @@ class TestClass(object):
             ],
         }
 
-        node_list = test_orchestrator.process_node_filter(nfs, design_data)
+        node_list = deckhand_orchestrator.process_node_filter(nfs, design_data)
 
         assert len(node_list) == 1

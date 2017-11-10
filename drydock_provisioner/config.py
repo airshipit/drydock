@@ -64,7 +64,7 @@ class DrydockConfig(object):
             'log_level', default='INFO', help='Global log level for Drydock'),
         cfg.StrOpt(
             'global_logger_name',
-            default='drydock',
+            default='drydock_provisioner',
             help='Logger name for the top-level logger'),
         cfg.StrOpt(
             'oobdriver_logger_name',

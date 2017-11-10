@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Object models for BootActions."""
-import requests
 import base64
 from jinja2 import Template
-from urllib.parse import urlparse
-from urllib.parse import urlunparse
-import re
 import ulid2
 
 import oslo_versionedobjects.fields as ovo_fields
@@ -28,7 +24,7 @@ import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.config as config
 import drydock_provisioner.error as errors
 
-from drydock_provisioner.util import KeystoneUtils
+from drydock_provisioner.statemgmt.design.resolver import ReferenceResolver
 
 
 @base.DrydockObjectRegistry.register
@@ -176,33 +172,12 @@ class BootActionAsset(base.DrydockObject):
 
         :param asset_url: URL to retrieve the data asset from
         """
-        url_parts = urlparse(asset_url)
-
-        if url_parts.scheme in ['http', 'https']:
-            try:
-                resp = requests.get(asset_url)
-            except Exception as ex:
-                raise errors.InvalidAssetLocation(
-                    "Failed retrieving asset: %s - %s" % (type(ex).__name__,
-                                                          str(ex)))
-            return resp.content
-        elif url_parts.scheme in [
-                'promenade+http', 'promenade+https', 'deckhand+http',
-                'deckhand+https'
-        ]:
-            try:
-                ks_sess = KeystoneUtils.get_session()
-                url_parts.scheme = re.sub('^[^+]+\+', '', url_parts.scheme)
-                new_url = urlunparse(url_parts)
-                resp = ks_sess.get(new_url)
-            except Exception as ex:
-                raise errors.InvalidAssetLocation(
-                    "Failed retrieving asset: %s - %s" % (type(ex).__name__,
-                                                          str(ex)))
-            return resp.content
-        else:
+        try:
+            return ReferenceResolver.resolve_reference(asset_url)
+        except Exception as ex:
             raise errors.InvalidAssetLocation(
-                "Unknown scheme %s" % url_parts.scheme)
+                "Unable to resolve asset reference %s: %s" % (asset_url,
+                                                              str(ex)))
 
     def execute_pipeline(self, data, pipeline, tpl_ctx=None):
         """Execute a pipeline against a data element.

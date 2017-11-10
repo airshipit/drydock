@@ -73,7 +73,8 @@ class TestClass(object):
         test_task = test_orchestrator.create_task(
             action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
 
-        id_key = test_orchestrator.create_bootaction_context('compute01', test_task)
+        id_key = test_orchestrator.create_bootaction_context(
+            'compute01', test_task)
 
         ba_ctx = dict(
             nodename='compute01',

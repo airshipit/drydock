@@ -20,6 +20,7 @@ import uuid
 import ulid2
 import concurrent.futures
 import os
+import yaml
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -278,8 +279,8 @@ class Orchestrator(object):
 
         if result_status is not None:
             result_status = objects.TaskStatus()
+            result_status.set_status(hd_fields.ActionResult.Success)
 
-        result_status.set_status(hd_fields.ActionResult.Success)
         return result_status
 
     def get_effective_site(self, design_ref):
@@ -297,7 +298,8 @@ class Orchestrator(object):
             if status.status == hd_fields.ActionResult.Success:
                 self.compute_model_inheritance(site_design)
                 self.compute_bootaction_targets(site_design)
-            status = self._validate_design(site_design, result_status=status)
+                status = self._validate_design(site_design, result_status=status)
+            self.logger.debug("Status of effective design:\n%s" % yaml.dump(status.to_dict()))
         except Exception as ex:
             if status is not None:
                 status.add_status_msg(
@@ -308,13 +310,6 @@ class Orchestrator(object):
                 status.set_status(hd_fields.ActionResult.Failure)
             self.logger.error(
                 "Error getting site definition: %s" % str(ex), exc_info=ex)
-        else:
-            status.add_status_msg(
-                msg="Successfully computed effective design.",
-                error=False,
-                ctx_type='NA',
-                ctx='NA')
-            status.set_status(hd_fields.ActionResult.Success)
 
         return status, site_design
 

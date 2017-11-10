@@ -17,13 +17,13 @@ import drydock_provisioner.objects as objects
 
 class TestClass(object):
     def test_bootaction_scoping_blankfilter(self, input_files,
-                                            test_orchestrator):
+                                            deckhand_orchestrator):
         """Test a boot action with no node filter scopes correctly."""
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_ref = "file://%s" % str(input_file)
 
-        design_status, design_data = test_orchestrator.get_effective_site(
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref)
 
         assert design_status.status == objects.fields.ActionResult.Success
@@ -36,13 +36,13 @@ class TestClass(object):
                 assert 'controller01' in ba.target_nodes
 
     def test_bootaction_scoping_unionfilter(self, input_files,
-                                            test_orchestrator):
+                                            deckhand_orchestrator):
         """Test a boot action with a union node filter scopes correctly."""
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_ref = "file://%s" % str(input_file)
 
-        design_status, design_data = test_orchestrator.get_effective_site(
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref)
 
         assert design_status.status == objects.fields.ActionResult.Success

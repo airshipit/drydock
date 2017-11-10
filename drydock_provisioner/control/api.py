@@ -96,5 +96,6 @@ class VersionsResource(BaseResource):
             'v1.0': {
                 'path': '/api/v1.0',
                 'status': 'stable'
-            }})
+            }
+        })
         resp.status = falcon.HTTP_200

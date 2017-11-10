@@ -13,7 +13,6 @@
 # limitations under the License.
 """Test that rack models are properly parsed."""
 
-from drydock_provisioner.ingester.ingester import Ingester
 from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 import drydock_provisioner.error as errors
@@ -22,36 +21,32 @@ import pytest
 
 
 class TestClass(object):
-    def test_rack_parse(self, input_files, setup):
+    def test_rack_parse(self, deckhand_ingester, input_files, setup):
         objects.register_all()
 
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
+        print("%s" % str(design_status.to_dict()))
+        assert design_status.status == objects.fields.ActionResult.Success
         rack = design_data.get_rack('rack1')
 
         assert rack.location.get('grid') == 'EG12'
 
-    def test_rack_not_found(self, input_files, setup):
+    def test_rack_not_found(self, deckhand_ingester, input_files, setup):
         objects.register_all()
 
-        input_file = input_files.join("fullsite.yaml")
+        input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
+        design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
         with pytest.raises(errors.DesignError):

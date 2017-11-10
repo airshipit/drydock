@@ -27,19 +27,30 @@ import pytest
 
 
 @pytest.fixture()
-def test_ingester():
+def deckhand_ingester():
+    ingester = Ingester()
+    ingester.enable_plugin(
+        'drydock_provisioner.ingester.plugins.deckhand.DeckhandIngester')
+    return ingester
+
+@pytest.fixture()
+def yaml_ingester():
     ingester = Ingester()
     ingester.enable_plugin(
         'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
     return ingester
 
-
 @pytest.fixture()
-def test_orchestrator(drydock_state, test_ingester):
+def deckhand_orchestrator(drydock_state, deckhand_ingester):
     orchestrator = Orchestrator(
-        state_manager=drydock_state, ingester=test_ingester)
+        state_manager=drydock_state, ingester=deckhand_ingester)
     return orchestrator
 
+@pytest.fixture()
+def yaml_orchestrator(drydock_state, yaml_ingester):
+    orchestrator = Orchestrator(
+        state_manager=drydock_state, ingester=yaml_ingester)
+    return orchestrator
 
 @pytest.fixture()
 def blank_state(drydock_state):
