@@ -48,6 +48,8 @@ data:
       type: 'number'
     vlan:
       type: 'string'
+    routedomain:
+      type: 'string'
     routes:
       type: 'array'
       items:
@@ -60,6 +62,8 @@ data:
             format: 'ipv4'
           metric:
             type: 'number'
+          routedomain:
+            type: 'string'
         additionalProperties: false
     labels:
       type: 'object'

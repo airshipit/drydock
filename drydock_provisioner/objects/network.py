@@ -88,14 +88,14 @@ class Network(base.DrydockPersistentObject, base.DrydockObject):
         'site': ovo_fields.StringField(),
         'metalabels': ovo_fields.DictOfNullableStringsField(),
         'cidr': ovo_fields.StringField(),
-        'allocation_strategy': ovo_fields.StringField(),
         'vlan_id': ovo_fields.StringField(nullable=True),
+        'routedomain': ovo_fields.StringField(nullable=True),
         'mtu': ovo_fields.IntegerField(nullable=True),
         'dns_domain': ovo_fields.StringField(nullable=True),
         'dns_servers': ovo_fields.StringField(nullable=True),
         # Keys of ranges are 'type', 'start', 'end'
         'ranges': ovo_fields.ListOfDictOfNullableStringsField(),
-        # Keys of routes are 'subnet', 'gateway', 'metric'
+        # Keys of routes are 'subnet', 'routedomain', 'gateway', 'metric'
         'routes': ovo_fields.ListOfDictOfNullableStringsField(),
         'dhcp_relay_self_ip': ovo_fields.StringField(nullable=True),
         'dhcp_relay_upstream_target': ovo_fields.StringField(nullable=True),

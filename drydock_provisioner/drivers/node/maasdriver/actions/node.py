@@ -541,6 +541,9 @@ class CreateNetworkTemplate(BaseMaasAction):
         for n in design_networks:
             src_subnet = subnet_list.singleton({'cidr': n.cidr})
             for r in n.routes:
+                # care for case of routedomain routes that are logical placeholders
+                if not r.get('subnet', None):
+                    continue
                 route_net = r.get('subnet')
                 # Skip the default route case
                 if route_net == '0.0.0.0/0':

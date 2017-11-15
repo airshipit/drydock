@@ -286,6 +286,7 @@ class DeckhandIngester(IngesterPlugin):
         model.cidr = data.get('cidr', None)
         model.vlan_id = data.get('vlan', None)
         model.mtu = data.get('mtu', None)
+        model.routedomain = data.get('routedomain', None)
 
         dns = data.get('dns', {})
         model.dns_domain = dns.get('domain', 'local')
@@ -309,6 +310,7 @@ class DeckhandIngester(IngesterPlugin):
                 'subnet': r.get('subnet', None),
                 'gateway': r.get('gateway', None),
                 'metric': r.get('metric', None),
+                'routedomain': r.get('routedomain', None),
             })
 
         dhcp_relay = data.get('dhcp_relay', None)

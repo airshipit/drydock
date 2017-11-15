@@ -246,13 +246,7 @@ class YamlIngester(IngesterPlugin):
         model.source = hd_fields.ModelSource.Designed
         model.name = name
 
-        metalabels = data.get('labels', [])
-
-        for l in metalabels:
-            if model.metalabels is None:
-                model.metalabels = [l]
-            else:
-                model.metalabels.append(l)
+        model.metalabels = data.get('labels', {})
 
         bonding = data.get('bonding', {})
 
@@ -289,17 +283,12 @@ class YamlIngester(IngesterPlugin):
         model.source = hd_fields.ModelSource.Designed
         model.name = name
 
-        metalabels = data.get('labels', [])
-
-        for l in metalabels:
-            if model.metalabels is None:
-                model.metalabels = [l]
-            else:
-                model.metalabels.append(l)
+        model.metalabels = data.get('labels', {})
 
         model.cidr = data.get('cidr', None)
         model.vlan_id = data.get('vlan', None)
         model.mtu = data.get('mtu', None)
+        model.routedomain = data.get('routedomain', None)
 
         dns = data.get('dns', {})
         model.dns_domain = dns.get('domain', 'local')
@@ -323,6 +312,7 @@ class YamlIngester(IngesterPlugin):
                 'subnet': r.get('subnet', None),
                 'gateway': r.get('gateway', None),
                 'metric': r.get('metric', None),
+                'routedomain': r.get('routedomain', None),
             })
 
         dhcp_relay = data.get('dhcp_relay', None)

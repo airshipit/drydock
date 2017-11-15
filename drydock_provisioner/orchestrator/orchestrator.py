@@ -247,8 +247,12 @@ class Orchestrator(object):
         Given a fully populated Site model, compute the effecitve
         design by applying inheritance and references
         """
-        for n in getattr(site_design, 'baremetal_nodes', []):
-            n.compile_applied_model(site_design)
+        try:
+            nodes = site_design.baremetal_nodes
+            for n in nodes or []:
+                n.compile_applied_model(site_design)
+        except AttributeError:
+            self.logger.debug("Model inheritance skipped, no node definitions in site design.")
 
         return
 
@@ -281,7 +285,8 @@ class Orchestrator(object):
             if status.status == hd_fields.ActionResult.Success:
                 self.compute_model_inheritance(site_design)
                 self.compute_bootaction_targets(site_design)
-            status = val.validate_design(site_design, result_status=status)
+                self.render_route_domains(site_design)
+                status = val.validate_design(site_design, result_status=status)
         except Exception as ex:
             if status is not None:
                 status.add_status_msg(
@@ -547,3 +552,37 @@ class Orchestrator(object):
                     nodename, task.get_id(), identity_key, action_id, ba.name)
 
         return identity_key
+
+    def render_route_domains(self, site_design):
+        """Update site_design with static routes for route domains.
+
+        site_design will be updated in place with explicit static routes
+        for all routedomain members
+
+        :param site_design: a populated instance of objects.SiteDesign
+        """
+        self.logger.info("Rendering routes for network route domains.")
+        if site_design.networks is not None:
+            routedomains = dict()
+            for n in site_design.networks:
+                if n.routedomain is not None:
+                    if n.routedomain not in routedomains:
+                        self.logger.info("Adding routedomain %s to render map." % n.routedomain)
+                        routedomains[n.routedomain] = list()
+                    routedomains[n.routedomain].append(n)
+            for rd, nl in routedomains.items():
+                rd_cidrs = [n.cidr for n in nl]
+                self.logger.debug("Target CIDRs for routedomain %s: %s" % (rd, ','.join(rd_cidrs)))
+                for n in site_design.networks:
+                    gw = None
+                    metric = None
+                    for r in n.routes:
+                        if 'routedomain' in r and r.get('routedomain', None) == rd:
+                            gw = r.get('gateway')
+                            metric = r.get('metric')
+                            self.logger.debug("Use gateway %s for routedomain %s on network %s." %
+                                              (gw, rd, n.get_name()))
+                            break
+                    if gw is not None and metric is not None:
+                        for cidr in rd_cidrs:
+                            n.routes.append(dict(subnet=cidr, gateway=gw, metric=metric))

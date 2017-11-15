@@ -122,6 +122,7 @@ Example YAML schema of the Network spec:
       vlan: '102'
       mtu: 1500
       cidr: 172.16.3.0/24
+      routedomain: storage
       ranges:
         - type: static
           start: 172.16.3.15
@@ -133,6 +134,9 @@ Example YAML schema of the Network spec:
         - subnet: 0.0.0.0/0
           gateway: 172.16.3.1
           metric: 10
+        - gateawy: 172.16.3.2
+          metric: 10
+          routedomain: storage
       dns:
         domain: sitename.example.com
         servers: 8.8.8.8
@@ -146,6 +150,11 @@ than the ``mtu`` defined for the hosting NetworkLink. Can be omitted to default
 to the NetworkLink ``mtu``.
 
 ``cidr`` is the classless inter-domain routing address for the network.
+
+``routedomain`` is a logical grouping of L3 networks such that a network that
+describes a static route for accessing the route domain will yield a list of
+static routes for all the networks in the routedomain. See the description
+of ``routes`` below for more information.
 
 ``ranges`` defines a sequence of IP addresses within the defined ``cidr``.
 Ranges cannot overlap.
@@ -161,15 +170,18 @@ Ranges cannot overlap.
 * ``start``: The starting IP of the range, inclusive.
 * ``end``: The last IP of the range, inclusive
 
-*NOTE: Static routes are not currently implemented beyond specifying a route for
-``0.0.0.0/0`` for default route*
-
 ``routes`` defines a list of static routes to be configured on nodes attached to
-this network.
+this network. The routes can defined in one of two ways: an explicit destination
+``subnet`` where the route will be configured exactly as described or a destination
+``routedomain`` where Drydock will calculate all the destination L3 subnets for the
+routedomain and add routes for each of them using the ``gateway`` and ``metric``
+defined.
 
 * ``subnet``: Destination CIDR for the route
 * ``gateway``: The gateway IP on this Network to use for accessing the destination
 * ``metric``: The metric or weight for this route
+* ``routedomain``: Use this route's gateway and metric for accessing networks in the
+                   defined routedomain.
 
 ``dns`` is used for specifying the list of DNS servers to use if this network
 is the primary network for the node.

@@ -82,6 +82,7 @@ class Subnet(model_base.ResourceBase):
         :param metric: weight to assign this gateway
         """
         sr = maas_route.StaticRoutes(self.api_client)
+        sr.refresh()
         current_route = sr.singleton({
             'source': self.resource_id,
             'destination': dest_subnet

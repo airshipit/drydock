@@ -1,5 +1,6 @@
 pytest-mock
 pytest
+pytest-cov
 responses
 mock
 tox
