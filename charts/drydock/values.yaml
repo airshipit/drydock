@@ -24,7 +24,7 @@ labels:
 images:
   tags:
     drydock: quay.io/attcomdev/drydock:1.0.1
-    dep_check: docker.io/kolla/ubuntu-source-kubernetes-entrypoint:4.0.0
+    dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
     ks_user: docker.io/kolla/ubuntu-source-kolla-toolbox:3.0.3
     ks_service: docker.io/kolla/ubuntu-source-kolla-toolbox:3.0.3
     ks_endpoints: docker.io/kolla/ubuntu-source-kolla-toolbox:3.0.3
