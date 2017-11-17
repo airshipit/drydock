@@ -155,7 +155,7 @@ class MaasNodeDriver(NodeDriver):
                     nf = self.orchestrator.create_nodefilter_from_nodelist([n])
                     subtask = self.orchestrator.create_task(
                         design_ref=task.design_ref,
-                        action=hd_fields.OrchestratorAction.IdentifyNode,
+                        action=task.action,
                         node_filter=nf,
                         retry=task.retry)
                     task.register_subtask(subtask)

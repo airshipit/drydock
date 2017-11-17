@@ -34,6 +34,7 @@ class Tasks(ExtendTable):
         Column('updated', DateTime),
         Column('design_ref', String(128)),
         Column('request_context', pg.JSON),
+        Column('node_filter', pg.JSON),
         Column('action', String(32)),
         Column('terminated', DateTime),
         Column('terminated_by', String(16)),

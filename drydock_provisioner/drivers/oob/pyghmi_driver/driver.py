@@ -139,6 +139,7 @@ class PyghmiDriver(oob_driver.OobDriver):
                                 uuid.UUID(bytes=t)),
                             exc_info=f.exception())
             task.align_result()
+            task.bubble_results()
             task.set_status(hd_fields.TaskStatus.Complete)
             task.save()
 

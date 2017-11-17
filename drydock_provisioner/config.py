@@ -54,7 +54,13 @@ class DrydockConfig(object):
             'leader_grace_period',
             default=300,
             help=
-            'How long a leader has to check-in before leaderhsip can be usurped, in seconds'
+            'How long a leader has to check-in before leadership can be usurped, in seconds'
+        ),
+        cfg.IntOpt(
+            'leadership_claim_interval',
+            default=30,
+            help=
+            'How often will an instance attempt to claim leadership, in seconds'
         ),
     ]
 

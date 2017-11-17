@@ -130,7 +130,7 @@ class Orchestrator(object):
                     "Orchestrator %s denied leadership, sleeping to try again."
                     % str(self.orch_id))
                 # TODO(sh8121att) Make this configurable
-                time.sleep(300)
+                time.sleep(config.config_mgr.conf.leadership_claim_interval)
             else:
                 self.logger.info(
                     "Orchestrator %s successfully claimed leadership, polling for tasks."

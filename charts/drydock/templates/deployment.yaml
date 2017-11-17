@@ -33,6 +33,8 @@ spec:
         configmap-etc-hash: {{ tuple "configmap-etc.yaml" . | include "helm-toolkit.utils.hash" }}
     spec:
       restartPolicy: Always
+      affinity:
+{{ tuple $envAll "drydock" "api" | include "helm-toolkit.snippets.kubernetes_pod_anti_affinity" | indent 8 }}
       initContainers:
 {{ tuple $envAll $dependencies "[]" | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
@@ -43,6 +45,10 @@ spec:
                 secretKeyRef:
                   name: 'maas-api-key'
                   key: 'token'
+            - name: 'DRYDOCK_API_WORKERS'
+              value: {{ .Values.conf.uwsgi.workers | default 1 | quote }}
+            - name: 'DRYDOCK_API_THREADS'
+              value: {{ .Values.conf.uwsgi.threads | default 1 | quote }}
           image: {{ .Values.images.tags.drydock }}
           imagePullPolicy: {{ .Values.images.pull_policy }}
 {{ tuple $envAll $envAll.Values.pod.resources.api | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}

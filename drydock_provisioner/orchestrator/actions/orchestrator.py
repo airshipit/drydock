@@ -58,6 +58,38 @@ class BaseAction(object):
 
         return task_futures
 
+    def _split_action(self):
+        """Start a parallel action for each node in scope.
+
+        Start a threaded instance of this action for each node in
+        scope of this action's task. A subtask will be created for each
+        action. Returns all a list of concurrent.futures managed
+        threads running the actions.
+
+        :returns: dictionary of subtask_id.bytes => Future instance
+        """
+        target_nodes = self.orchestrator.get_target_nodes(self.task)
+
+        if len(target_nodes) > 1:
+            self.logger.info(
+                "Found multiple target nodes in task %s, splitting..." % str(
+                    self.task.get_id()))
+            split_tasks = dict()
+
+            with concurrent.futures.ThreadPoolExecutor() as te:
+                for n in target_nodes:
+                    split_task = self.orchestrator.create_task(
+                        design_ref=self.task.design_ref,
+                        action=hd_fields.OrchestratorAction.PrepareNodes,
+                        node_filter=self.orchestrator.
+                        create_nodefilter_from_nodelist([n]))
+                    self.task.register_subtask(split_task)
+                    action = self.__class__(split_task, self.orchestrator,
+                                            self.state_manager)
+                    split_tasks[split_task.get_id().bytes] = te.submit(action.start)
+
+            return split_tasks
+
     def _collect_subtask_futures(self, subtask_futures, timeout=300):
         """Collect Futures executing on subtasks or timeout.
 
@@ -66,10 +98,10 @@ class BaseAction(object):
 
         :param subtask_futures: dictionary of subtask_id.bytes -> Future instance
         :param timeout: The number of seconds to wait for all Futures to complete
+        :param bubble: Whether to bubble results from collected subtasks
         """
         finished, timed_out = concurrent.futures.wait(
             subtask_futures.values(), timeout=timeout)
-        self.task.align_result()
 
         for k, v in subtask_futures.items():
             if not v.done():
@@ -86,11 +118,16 @@ class BaseAction(object):
                         "Uncaught excetion in subtask %s future:" % str(
                             uuid.UUID(bytes=k)),
                         exc_info=v.exception())
+            st = self.state_manager.get_task(uuid.UUID(bytes=k))
+            st.bubble_results()
+            st.align_result()
+            st.save()
         if len(timed_out) > 0:
             raise errors.CollectSubtaskTimeout(
                 "One or more subtask threads did not finish in %d seconds." %
                 timeout)
 
+        self.task.align_result()
         return
 
     def _load_site_design(self):
@@ -107,6 +144,26 @@ class BaseAction(object):
             raise errors.OrchestratorError("Site design failed load.")
 
         return site_design
+
+    def _get_driver(self, driver_type, subtype=None):
+        """Locate the correct driver instance based on type and subtype.
+
+        :param driver_type: The type of driver, 'oob', 'node', or 'network'
+        :param subtype: In cases where multiple drivers can be active, select
+                        one based on subtype
+        """
+        driver = None
+        if driver_type == 'oob':
+            if subtype is None:
+                return None
+            for d in self.orchestrator.enabled_drivers['oob']:
+                if d.oob_type_support(subtype):
+                    driver = d
+                    break
+        else:
+            driver = self.orchestrator.enabled_drivers[driver_type]
+
+        return driver
 
 
 class Noop(BaseAction):
@@ -162,7 +219,10 @@ class ValidateDesign(BaseAction):
                 self.task.design_ref)
             self.task.merge_status_messages(task_result=status)
             self.task.set_status(hd_fields.TaskStatus.Complete)
-            self.task.success()
+            if status.result.status == hd_fields.ActionResult.Success:
+                self.task.success()
+            else:
+                self.task.failure()
             self.task.save()
         except Exception:
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -179,7 +239,7 @@ class VerifySite(BaseAction):
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
-        node_driver = self.orchestrator.enabled_drivers['node']
+        node_driver = self._get_driver('node')
 
         if node_driver is None:
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -225,7 +285,7 @@ class PrepareSite(BaseAction):
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
-        driver = self.orchestrator.enabled_drivers['node']
+        driver = self._get_driver('node')
 
         if driver is None:
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -240,6 +300,19 @@ class PrepareSite(BaseAction):
             self.task.save()
             return
 
+        self.step_networktemplate(driver)
+        self.step_usercredentials(driver)
+
+        self.task.align_result()
+        self.task.set_status(hd_fields.TaskStatus.Complete)
+        self.task.save()
+        return
+
+    def step_networktemplate(self, driver):
+        """Run the CreateNetworkTemplate step of this action.
+
+        :param driver: The driver instance to use for execution.
+        """
         site_network_task = self.orchestrator.create_task(
             design_ref=self.task.design_ref,
             action=hd_fields.OrchestratorAction.CreateNetworkTemplate)
@@ -259,6 +332,11 @@ class PrepareSite(BaseAction):
         self.logger.info("Node driver task %s complete" %
                          (site_network_task.get_id()))
 
+    def step_usercredentials(self, driver):
+        """Run the ConfigureUserCredentials step of this action.
+
+        :param driver: The driver instance to use for execution.
+        """
         user_creds_task = self.orchestrator.create_task(
             design_ref=self.task.design_ref,
             action=hd_fields.OrchestratorAction.ConfigureUserCredentials)
@@ -276,12 +354,7 @@ class PrepareSite(BaseAction):
             ctx=str(user_creds_task.get_id()),
             ctx_type='task')
         self.logger.info("Node driver task %s complete" %
-                         (site_network_task.get_id()))
-
-        self.task.align_result()
-        self.task.set_status(hd_fields.TaskStatus.Complete)
-        self.task.save()
-        return
+                         (user_creds_task.get_id()))
 
 
 class VerifyNodes(BaseAction):
@@ -310,11 +383,7 @@ class VerifyNodes(BaseAction):
 
         task_futures = dict()
         for oob_type, oob_nodes in oob_type_partition.items():
-            oob_driver = None
-            for d in self.orchestrator.enabled_drivers['oob']:
-                if d.oob_type_support(oob_type):
-                    oob_driver = d
-                    break
+            oob_driver = self._get_driver('oob', oob_type)
 
             if oob_driver is None:
                 self.logger.warning(
@@ -366,11 +435,7 @@ class PrepareNodes(BaseAction):
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
-        # NOTE(sh8121att) Should we attempt to interrogate the node via Node
-        # Driver to see if it is in a deployed state before we
-        # start rebooting? Or do we just leverage
-        # Drydock internal state via site build data (when implemented)?
-        node_driver = self.orchestrator.enabled_drivers['node']
+        node_driver = self._get_driver('node')
 
         if node_driver is None:
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -388,129 +453,124 @@ class PrepareNodes(BaseAction):
         design_status, site_design = self.orchestrator.get_effective_site(
             self.task.design_ref)
 
-        target_nodes = self.orchestrator.process_node_filter(
-            self.task.node_filter, site_design)
+        target_nodes = self.orchestrator.get_target_nodes(self.task)
 
-        oob_type_partition = {}
+        # Parallelize this task so that node progression is
+        # not interlinked
+        if len(target_nodes) > 1:
+            self.split_action()
+        else:
+            check_task_id = self.step_checkexist(node_driver)
+            node_check_task = self.state_manager.get_task(check_task_id)
 
-        for n in target_nodes:
-            if n.oob_type not in oob_type_partition.keys():
-                oob_type_partition[n.oob_type] = []
+            # Build the node_filter from the failures of the node_check_task
+            # as these are the nodes that are unknown to the node provisioner
+            # and are likely save to be rebooted
 
-            oob_type_partition[n.oob_type].append(n)
+            target_nodes = self.orchestrator.process_node_filter(
+                node_check_task.node_filter_from_failures(), site_design)
 
-        task_futures = dict()
-        oob_type_filters = dict()
+            # And log the nodes that were found so they can be addressed
 
-        for oob_type, oob_nodes in oob_type_partition.items():
-            oob_driver = None
-            for d in self.orchestrator.enabled_drivers['oob']:
-                if d.oob_type_support(oob_type):
-                    oob_driver = d
-                    break
+            for n in node_check_task.result.successes:
+                self.logger.debug(
+                    "Found node %s in provisioner, skipping OOB management." %
+                    (n))
+                self.task.add_status_msg(
+                    msg="Node found in provisioner, skipping OOB management",
+                    error=False,
+                    ctx=n,
+                    ctx_type='node')
 
-            if oob_driver is None:
-                self.logger.warning(
-                    "Node OOB type %s has no enabled driver." % oob_type)
-                self.task.failure()
-                for n in oob_nodes:
-                    self.task.add_status_msg(
-                        msg="Node %s OOB type %s is not supported." %
-                        (n.get_name(), oob_type),
-                        error=True,
-                        ctx=n.get_name(),
-                        ctx_type='node')
-                continue
+            self.step_oob_set_netboot(target_nodes)
 
-            oob_type_filters[
-                oob_type] = self.orchestrator.create_nodefilter_from_nodelist(
-                    oob_nodes)
+            # bubble results from the SetNodeBoot task and
+            # continue the execution with successful targets
 
-            setboot_task = self.orchestrator.create_task(
-                design_ref=self.task.design_ref,
-                action=hd_fields.OrchestratorAction.SetNodeBoot,
-                node_filter=oob_type_filters[oob_type])
-            self.task.register_subtask(setboot_task)
-
-            self.logger.info(
-                "Starting OOB driver task %s to set PXE boot for OOB type %s" %
-                (setboot_task.get_id(), oob_type))
-            task_futures.update(
-                self._parallelize_subtasks(oob_driver.execute_task,
-                                           [setboot_task.get_id()]))
-
-        try:
-            self._collect_subtask_futures(
-                task_futures,
-                timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
-            # Get successful nodes and add it to the node filter
-            # so the next step only happens for successfully configured nodes
             self.task.bubble_results(
                 action_filter=hd_fields.OrchestratorAction.SetNodeBoot)
-            for t, f in oob_type_filters.items():
-                oob_type_filters[t]['filter_set'].append(
-                    dict(
-                        filter_type='union',
-                        node_names=self.task.result.successes))
-            self.logger.debug(
-                "Collected subtasks for task %s" % str(self.task.get_id()))
-        except errors.CollectSubtaskTimeout as ex:
-            self.logger.warning(str(ex))
 
-        task_futures = dict()
+            target_nodes = self.orchestrator.process_node_filter(
+                self.task.node_filter_from_successes(), site_design)
 
-        for oob_type, oob_nodes in oob_type_partition.items():
-            oob_driver = None
-            for d in self.orchestrator.enabled_drivers['oob']:
-                if d.oob_type_support(oob_type):
-                    oob_driver = d
-                    break
+            self.step_oob_powercycle(target_nodes)
 
-            if oob_driver is None:
-                self.logger.warning(
-                    "Node OOB type %s has no enabled driver." % oob_type)
-                self.task.failure()
-                for n in oob_nodes:
-                    self.task.add_status_msg(
-                        msg="Node %s OOB type %s is not supported." %
-                        (n.get_name(), oob_type),
-                        error=True,
-                        ctx=n.get_name(),
-                        ctx_type='node')
-                continue
-
-            cycle_task = self.orchestrator.create_task(
-                design_ref=self.task.design_ref,
-                action=hd_fields.OrchestratorAction.PowerCycleNode,
-                node_filter=oob_type_filters[oob_type])
-            self.task.register_subtask(cycle_task)
-
-            self.logger.info(
-                "Starting OOB driver task %s to power cycle nodes for OOB type %s"
-                % (cycle_task.get_id(), oob_type))
-
-            task_futures.update(
-                self._parallelize_subtasks(oob_driver.execute_task,
-                                           [cycle_task.get_id()]))
-
-        try:
-            self._collect_subtask_futures(
-                task_futures,
-                timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
-            # Get successful nodes and add it to the node filter
-            # so the next step only happens for successfully configured nodes
+            # bubble results from the Powercycle task and
+            # continue the execution with successful targets
             self.task.bubble_results(
                 action_filter=hd_fields.OrchestratorAction.PowerCycleNode)
-            for t, f in oob_type_filters.items():
-                oob_type_filters[t]['filter_set'].append(
-                    dict(
-                        filter_type='union',
-                        node_names=self.task.result.successes))
-            self.logger.debug(
-                "Collected subtasks for task %s" % str(self.task.get_id()))
-        except errors.CollectSubtaskTimeout as ex:
-            self.logger.warning(str(ex))
 
+            target_nodes = self.orchestrator.process_node_filter(
+                self.task.node_filter_from_successes(), site_design)
+
+            self.step_node_identify(node_driver, target_nodes)
+
+            # We can only commission nodes that were successfully identified in the provisioner
+
+            self.task.bubble_results(
+                action_filter=hd_fields.OrchestratorAction.IdentifyNode)
+
+            target_nodes = self.orchestrator.process_node_filter(
+                self.task.node_filter_from_successes(), site_design)
+
+            self.step_node_configure_hw(node_driver, target_nodes)
+
+        self.task.bubble_results()
+        self.task.align_result()
+        self.task.set_status(hd_fields.TaskStatus.Complete)
+        self.task.save()
+        return
+
+    def step_node_configure_hw(self, node_driver, node_list):
+        """Execute the ConfigureHardware step of this action on a list of nodes.
+
+        :param node_driver: driver instance to use for execution
+        :param node_list: a list of objects.BaremetalNode instances
+        :return: list of uuid.UUID task ids of the tasks executing this step
+        """
+        if len(node_list) > 0:
+            self.logger.info(
+                "Starting hardware configuration task on %d nodes." %
+                len(node_list))
+
+            node_commission_task = None
+            while True:
+                if node_commission_task is None:
+                    node_commission_task = self.orchestrator.create_task(
+                        design_ref=self.task.design_ref,
+                        action=hd_fields.OrchestratorAction.ConfigureHardware,
+                        node_filter=self.orchestrator.
+                        create_nodefilter_from_nodelist(node_list))
+                    self.task.register_subtask(node_commission_task)
+
+                self.logger.info(
+                    "Starting node driver task %s to commission nodes." %
+                    (node_commission_task.get_id()))
+
+                node_driver.execute_task(node_commission_task.get_id())
+
+                node_commission_task = self.state_manager.get_task(
+                    node_commission_task.get_id())
+                try:
+                    if not node_commission_task.retry_task(max_attempts=3):
+                        break
+                except errors.MaxRetriesReached:
+                    self.task.failure()
+                    break
+            return [node_commission_task.get_id()]
+        else:
+            self.logger.warning(
+                "No nodes successfully identified, skipping commissioning subtask"
+            )
+            return list()
+
+    def step_node_identify(self, node_driver, node_list):
+        """Execute the IdentifyNode step of this action on a list of nodes.
+
+        :param node_driver: driver instance to use for execution
+        :param node_list: a list of objects.BaremetalNode instances
+        :return: list of uuid.UUID task ids of the tasks executing this step
+        """
         # IdentifyNode success will take some time after PowerCycleNode finishes
         # Retry the operation a few times if it fails before considering it a final failure
         # Each attempt is a new task which might make the final task tree a bit confusing
@@ -521,7 +581,6 @@ class PrepareNodes(BaseAction):
         self.logger.debug(
             "Will make max of %d attempts to complete the identify_node task."
             % max_attempts)
-        nf = self.task.node_filter_from_successes()
         node_identify_task = None
 
         while True:
@@ -529,7 +588,8 @@ class PrepareNodes(BaseAction):
                 node_identify_task = self.orchestrator.create_task(
                     design_ref=self.task.design_ref,
                     action=hd_fields.OrchestratorAction.IdentifyNode,
-                    node_filter=nf)
+                    node_filter=self.orchestrator.
+                    create_nodefilter_from_nodelist(node_list))
                 self.task.register_subtask(node_identify_task)
 
             self.logger.info(
@@ -552,46 +612,155 @@ class PrepareNodes(BaseAction):
                 self.task.failure()
                 break
 
-        # We can only commission nodes that were successfully identified in the provisioner
-        if len(node_identify_task.result.successes) > 0:
-            target_nf = node_identify_task.node_filter_from_successes()
+        return [node_identify_task.get_id()]
+
+    def step_oob_set_netboot(self, node_list):
+        """Execute the SetNetBoot step of this action on a list of nodes.
+
+        :param node_list: a list of objects.BaremetalNode instances
+        :return: list of uuid.UUID task ids of the tasks executing this step
+        """
+        oob_type_partition = {}
+
+        for n in node_list:
+            if n.oob_type not in oob_type_partition.keys():
+                oob_type_partition[n.oob_type] = []
+
+            oob_type_partition[n.oob_type].append(n)
+
+        task_futures = dict()
+
+        for oob_type, oob_nodes in oob_type_partition.items():
+            oob_driver = self._get_driver('oob', oob_type)
+
+            if oob_driver is None:
+                self.logger.warning(
+                    "Node OOB type %s has no enabled driver." % oob_type)
+                self.task.failure()
+                for n in oob_nodes:
+                    self.task.add_status_msg(
+                        msg="Node %s OOB type %s is not supported." %
+                        (n.get_name(), oob_type),
+                        error=True,
+                        ctx=n.get_name(),
+                        ctx_type='node')
+                continue
+
+            setboot_task = self.orchestrator.create_task(
+                design_ref=self.task.design_ref,
+                action=hd_fields.OrchestratorAction.SetNodeBoot,
+                node_filter=self.orchestrator.create_nodefilter_from_nodelist(
+                    oob_nodes))
+            self.task.register_subtask(setboot_task)
+
             self.logger.info(
-                "Found %s successfully identified nodes, starting commissioning."
-                % (len(node_identify_task.result.successes)))
+                "Starting OOB driver task %s to set PXE boot for OOB type %s" %
+                (setboot_task.get_id(), oob_type))
+            task_futures.update(
+                self._parallelize_subtasks(oob_driver.execute_task,
+                                           [setboot_task.get_id()]))
 
-            node_commission_task = None
-            while True:
-                if node_commission_task is None:
-                    node_commission_task = self.orchestrator.create_task(
-                        design_ref=self.task.design_ref,
-                        action=hd_fields.OrchestratorAction.ConfigureHardware,
-                        node_filter=target_nf)
-                    self.task.register_subtask(node_commission_task)
+        try:
+            self._collect_subtask_futures(
+                task_futures,
+                timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
+            self.logger.debug(
+                "Collected subtasks for task %s" % str(self.task.get_id()))
+        except errors.CollectSubtaskTimeout as ex:
+            self.logger.warning(str(ex))
 
-                self.logger.info(
-                    "Starting node driver task %s to commission nodes." %
-                    (node_commission_task.get_id()))
+        return [uuid.UUID(bytes=x) for x in task_futures.keys()]
 
-                node_driver.execute_task(node_commission_task.get_id())
+    def step_oob_powercycle(self, node_list):
+        """Execute the NodePowerCycle step of this action on a list of nodes.
 
-                node_commission_task = self.state_manager.get_task(
-                    node_commission_task.get_id())
-                try:
-                    if not node_commission_task.retry_task(max_attempts=3):
-                        break
-                except errors.MaxRetriesReached:
-                    self.task.failure()
-                    break
+        :param node_list: a list of objects.BaremetalNode instances
+        :return: list of uuid.UUID task ids of the tasks executing this step
+        """
+        oob_type_partition = {}
 
-        else:
-            self.logger.warning(
-                "No nodes successfully identified, skipping commissioning subtask"
-            )
+        for n in node_list:
+            if n.oob_type not in oob_type_partition.keys():
+                oob_type_partition[n.oob_type] = []
 
-        self.task.align_result()
-        self.task.set_status(hd_fields.TaskStatus.Complete)
-        self.task.save()
-        return
+            oob_type_partition[n.oob_type].append(n)
+
+        task_futures = dict()
+
+        for oob_type, oob_nodes in oob_type_partition.items():
+            oob_driver = self._get_driver('oob', oob_type)
+
+            if oob_driver is None:
+                self.logger.warning(
+                    "Node OOB type %s has no enabled driver." % oob_type)
+                self.task.failure()
+                for n in oob_nodes:
+                    self.task.add_status_msg(
+                        msg="Node %s OOB type %s is not supported." %
+                        (n.get_name(), oob_type),
+                        error=True,
+                        ctx=n.get_name(),
+                        ctx_type='node')
+                continue
+
+            cycle_task = self.orchestrator.create_task(
+                design_ref=self.task.design_ref,
+                action=hd_fields.OrchestratorAction.PowerCycleNode,
+                node_filter=self.orchestrator.create_nodefilter_from_nodelist(
+                    oob_nodes))
+            self.task.register_subtask(cycle_task)
+
+            self.logger.info(
+                "Starting OOB driver task %s to power cycle nodes for OOB type %s"
+                % (cycle_task.get_id(), oob_type))
+
+            task_futures.update(
+                self._parallelize_subtasks(oob_driver.execute_task,
+                                           [cycle_task.get_id()]))
+
+        try:
+            self._collect_subtask_futures(
+                task_futures,
+                timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
+            self.logger.debug(
+                "Collected subtasks for task %s" % str(self.task.get_id()))
+        except errors.CollectSubtaskTimeout as ex:
+            self.logger.warning(str(ex))
+
+        return [uuid.UUID(bytes=x) for x in task_futures.keys()]
+
+    def split_action(self):
+        """Split this action into independent threads per node."""
+        action_timeout = config.config_mgr.conf.timeouts.identify_node + \
+            config.config_mgr.conf.timeouts.configure_hardware
+        split_tasks = self._split_action()
+        self._collect_subtask_futures(split_tasks, timeout=action_timeout * 60)
+
+    def step_checkexist(self, driver):
+        """Query the driver for node existence to prevent impacting deployed nodes.
+
+        :param driver: driver instance to use for execution
+        :returns: uuid.UUID task id of the task that executed this step
+        """
+        node_check_task = self.orchestrator.create_task(
+            design_ref=self.task.design_ref,
+            action=hd_fields.OrchestratorAction.IdentifyNode,
+            node_filter=self.task.node_filter)
+
+        self.logger.info("Starting check task %s before rebooting nodes" %
+                         (node_check_task.get_id()))
+
+        task_futures = self._parallelize_subtasks(driver.execute_task,
+                                                  [node_check_task.get_id()])
+        self._collect_subtask_futures(
+            task_futures,
+            timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
+
+        node_check_task = self.state_manager.get_task(node_check_task.get_id())
+        node_check_task.bubble_results()
+        node_check_task.save()
+
+        return node_check_task.get_id()
 
 
 class DeployNodes(BaseAction):
@@ -699,6 +868,7 @@ class DeployNodes(BaseAction):
                         action=hd_fields.OrchestratorAction.DeployNode,
                         node_filter=node_platform_task.
                         node_filter_from_successes())
+                    self.task.register_subtask(node_deploy_task)
 
                 self.logger.info(
                     "Starting node driver task %s to deploy nodes." %
@@ -719,20 +889,23 @@ class DeployNodes(BaseAction):
                 "Unable to configure platform on any nodes, skipping deploy subtask"
             )
 
-        node_deploy_task.bubble_results(
-            action_filter=hd_fields.OrchestratorAction.DeployNode)
-
         if len(node_deploy_task.result.successes) > 0:
             node_bootaction_task = self.orchestrator.create_task(
                 design_ref=self.task.design_ref,
                 action=hd_fields.OrchestratorAction.BootactionReport,
                 node_filter=node_deploy_task.node_filter_from_successes())
+            self.task.register_subtask(node_bootaction_task)
             action = BootactionReport(node_bootaction_task, self.orchestrator,
                                       self.state_manager)
             action.start()
+            self.task.bubble_results(
+                action_filter=hd_fields.OrchestratorAction.BootactionReport)
+            self.task.align_result()
+        else:
+            self.task.bubble_results(
+                action_filter=hd_fields.OrchestratorAction.DeployNode)
+            self.task.align_result()
 
-        self.task.align_result(
-            action_filter=hd_fields.OrchestratorAction.BootactionReport)
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
@@ -745,16 +918,18 @@ class BootactionReport(BaseAction):
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
-        poll_start = datetime.utcnow()
+        poll_start = datetime.datetime.utcnow()
 
         still_running = True
         timeout = datetime.timedelta(
             minutes=config.config_mgr.conf.timeouts.bootaction_final_status)
-        running_time = datetime.utcnow() - poll_start
+        running_time = datetime.datetime.utcnow() - poll_start
         nodelist = [
             n.get_id() for n in self.orchestrator.get_target_nodes(self.task)
         ]
 
+        self.logger.debug(
+            "Waiting for bootaction response signals to complete.")
         while running_time < timeout:
             still_running = False
             for n in nodelist:
@@ -769,8 +944,14 @@ class BootactionReport(BaseAction):
                     still_running = True
                     break
             if still_running:
+                self.logger.debug("Still waiting on %d running bootactions." %
+                                  len(running_bas))
                 time.sleep(config.config_mgr.conf.poll_interval)
-                running_time = datetime.utcnow()
+                running_time = datetime.datetime.utcnow() - poll_start
+            else:
+                break
+
+        self.logger.debug("Signals complete or timeout reached.")
 
         for n in nodelist:
             bas = self.state_manager.get_boot_actions_for_node(n)
@@ -815,5 +996,7 @@ class BootactionReport(BaseAction):
             else:
                 self.task.failure(focus=n)
 
+        self.logger.debug("Completed collecting bootaction signals.")
+        self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return

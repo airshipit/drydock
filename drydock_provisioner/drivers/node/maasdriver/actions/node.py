@@ -224,7 +224,7 @@ class CreateNetworkTemplate(BaseMaasAction):
 
         # Try to true up MaaS definitions of fabrics/vlans/subnets
         # with the networks defined in Drydock
-        design_networks = site_design.networks
+        design_networks = list()
         design_links = site_design.network_links
 
         fabrics = maas_fabric.Fabrics(self.maas_client)
@@ -306,6 +306,7 @@ class CreateNetworkTemplate(BaseMaasAction):
             # that VLAN tags and subnet attributes are correct
             for net_name in l.allowed_networks:
                 n = site_design.get_network(net_name)
+                design_networks.append(n)
 
                 if n is None:
                     continue
@@ -406,7 +407,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                             subnet.resource_id, n.name)
                         self.task.add_status_msg(
                             msg=msg,
-                            error=True,
+                            error=False,
                             ctx=n.name,
                             ctx_type='network')
                         self.logger.info(msg)
@@ -430,7 +431,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                             self.logger.debug(msg)
                             self.task.add_status_msg(
                                 msg=msg,
-                                error=True,
+                                error=False,
                                 ctx=n.name,
                                 ctx_type='network')
                         else:
@@ -442,6 +443,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 error=True,
                                 ctx=n.name,
                                 ctx_type='network')
+                            self.task.failure(focus=n.name)
 
                     # Check if the routes have a default route
                     subnet.gateway_ip = n.get_default_gateway()
@@ -527,6 +529,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 error=True,
                                 ctx=n.name,
                                 ctx_type='network')
+                            self.task.failure(focus=n.name)
 
                     elif dhcp_on and vlan.dhcp_on:
                         self.logger.info("DHCP already enabled for subnet %s" %
@@ -558,8 +561,11 @@ class CreateNetworkTemplate(BaseMaasAction):
                     msg = "Could not locate destination network for static route to %s." % route_net
                     self.task.add_status_msg(
                         msg=msg, error=True, ctx=n.name, ctx_type='network')
+                    self.task.failure(focus=n.name)
                     self.logger.info(msg)
                     continue
+
+        # now validate that all subnets allowed on a link were created
 
         for n in design_networks:
             if n.metalabels is not None:
@@ -572,13 +578,13 @@ class CreateNetworkTemplate(BaseMaasAction):
 
             exists = subnet_list.singleton({'cidr': n.cidr})
             if exists is not None:
-                self.task.success()
+                self.task.success(focus=n.name)
             else:
                 msg = "Network %s defined, but not found in MaaS after network config task." % n.name
                 self.logger.error(msg)
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='network')
-                self.task.failure()
+                self.task.failure(focus=n.name)
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()

@@ -93,12 +93,12 @@ class TestClass(object):
         assert result.status == falcon.HTTP_400
 
     @pytest.fixture()
-    def seed_bootaction_status(self, blank_state, test_orchestrator,
+    def seed_bootaction_status(self, blank_state, yaml_orchestrator,
                                input_files):
         """Add a task and boot action to the database for testing."""
         input_file = input_files.join("fullsite.yaml")
         design_ref = "file://%s" % input_file
-        test_task = test_orchestrator.create_task(
+        test_task = yaml_orchestrator.create_task(
             action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
 
         id_key = os.urandom(32)
@@ -115,10 +115,10 @@ class TestClass(object):
         return ba
 
     @pytest.fixture()
-    def falcontest(self, drydock_state, test_ingester, test_orchestrator):
+    def falcontest(self, drydock_state, yaml_ingester, yaml_orchestrator):
         """Create a test harness for the the Falcon API framework."""
         return testing.TestClient(
             start_api(
                 state_manager=drydock_state,
-                ingester=test_ingester,
-                orchestrator=test_orchestrator))
+                ingester=yaml_ingester,
+                orchestrator=yaml_orchestrator))

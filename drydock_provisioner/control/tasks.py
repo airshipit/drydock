@@ -41,7 +41,7 @@ class TasksResource(StatefulResource):
         """Handler for GET method."""
         try:
             task_model_list = self.state_manager.get_tasks()
-            task_list = [str(x.to_dict()) for x in task_model_list]
+            task_list = [x.to_dict() for x in task_model_list]
             resp.body = json.dumps(task_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:

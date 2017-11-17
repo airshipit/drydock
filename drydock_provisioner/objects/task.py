@@ -17,6 +17,7 @@ import uuid
 import json
 import time
 import logging
+import copy
 
 from datetime import datetime
 
@@ -62,7 +63,7 @@ class Task(object):
         self.retry = retry
         self.parent_task_id = parent_task_id
         self.created = datetime.utcnow()
-        self.node_filter = node_filter
+        self.node_filter = copy.deepcopy(node_filter)
         self.created_by = None
         self.updated = None
         self.terminated = None
@@ -82,7 +83,10 @@ class Task(object):
         return self.task_id
 
     def retry_task(self, max_attempts=None):
-        """Check if this task should be retried and update attributes if so."""
+        """Check if this task should be retried and update attributes if so.
+
+        :param max_attempts: The maximum number of retries for this task
+        """
         if (self.result.status != hd_fields.ActionResult.Success) and (len(
                 self.result.failures) > 0):
             if not max_attempts or (max_attempts
@@ -237,11 +241,15 @@ class Task(object):
         nf['filter_set'].append(
             dict(node_names=self.result.successes, filter_type='union'))
 
+        return nf
+
     def node_filter_from_failures(self):
         """Create a node filter from failure entities in this task's result."""
         nf = dict(filter_set_type='intersection', filter_set=[])
         nf['filter_set'].append(
             dict(node_names=self.result.failures, filter_type='union'))
+
+        return nf
 
     def bubble_results(self, action_filter=None):
         """Combine successes and failures of subtasks and update this task with the result.
@@ -277,23 +285,32 @@ class Task(object):
             else:
                 self.logger.debug("Skipping subtask due to action filter.")
 
-    def align_result(self, action_filter=None):
+    def align_result(self, action_filter=None, reset_status=True):
         """Align the result of this task with the combined results of all the subtasks.
 
+        If this task has a retry counter > 0, then failure or partial_success results
+        of a subtask are only counted if the subtask retry counter is equivalent to this
+        task.
+
         :param action_filter: string action name to filter subtasks on
+        :param reset_status: Whether to reset the result status of this task before aligning
         """
+        if reset_status:
+            self.result.status = hd_fields.ActionResult.Incomplete
         for st in self.statemgr.get_complete_subtasks(self.task_id):
             if action_filter is None or (action_filter is not None
                                          and st.action == action_filter):
+                self.logger.debug(
+                    "Collecting result status from subtask %s." % str(st.task_id))
                 if st.get_result() in [
                         hd_fields.ActionResult.Success,
                         hd_fields.ActionResult.PartialSuccess
                 ]:
                     self.success()
-                if st.get_result() in [
+                if (st.get_result() in [
                         hd_fields.ActionResult.Failure,
                         hd_fields.ActionResult.PartialSuccess
-                ]:
+                ] and (self.retry == 0 or (self.retry == st.retry))):
                     self.failure()
             else:
                 self.logger.debug("Skipping subtask due to action filter.")
@@ -363,6 +380,7 @@ class Task(object):
             'request_context':
             json.dumps(self.request_context.to_dict())
             if self.request_context is not None else None,
+            'node_filter': self.node_filter,
             'action':
             self.action,
             'terminated':
@@ -449,6 +467,7 @@ class Task(object):
             'terminate',
             'updated',
             'retry',
+            'node_filter',
         ]
 
         for f in simple_fields:

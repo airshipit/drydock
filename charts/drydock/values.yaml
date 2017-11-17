@@ -46,8 +46,21 @@ pod:
         rolling_update:
           max_unavailable: 1
           max_surge: 3
+  affinity:
+    anti:
+      type:
+        default: preferredDuringSchedulingIgnoredDuringExecution
+      topologyKey:
+        default: kubernetes.io/hostname
   resources:
     enabled: false
+    test:
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
     api:
       limits:
         memory: "128Mi"
@@ -103,6 +116,8 @@ manifests:
   configmap_bin: true
   service_drydock: true
   deployment_drydock: true
+  test_drydock_api: true
+  test_drydock_auth: true
 
 dependencies:
   db_init:
@@ -220,6 +235,9 @@ database:
 
 # Settings for drydock.conf
 conf:
+  uwsgi:
+    threads: 1
+    workers: 1
   drydock:
     logging:
       log_level: 'DEBUG'
