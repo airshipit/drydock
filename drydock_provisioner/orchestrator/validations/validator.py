@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Business Logic Validation"""
+
 import drydock_provisioner.objects.fields as hd_fields
 
 from drydock_provisioner.objects.task import TaskStatus
@@ -64,8 +65,13 @@ class Validator():
 
             if bonding_mode == 'disabled':
                 # check to make sure nothing else is specified
-                if any([network_link.get(x) for x in ['bonding_peer_rate', 'bonding_xmit_hash',
-                        'bonding_mon_rate', 'bonding_up_delay', 'bonding_down_delay']]):
+                if any([
+                        network_link.get(x)
+                        for x in [
+                            'bonding_peer_rate', 'bonding_xmit_hash', 'bonding_mon_rate', 'bonding_up_delay',
+                            'bonding_down_delay'
+                        ]
+                ]):
 
                     msg = ('Network Link Bonding Error: If bonding mode is disabled no other bond option can be'
                            'specified; on BaremetalNode %s' % network_link.get('name'))
@@ -207,9 +213,50 @@ class Validator():
             message_list.append(TaskStatusMessage(msg='Storage Partitioning', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
+    @classmethod
+    def unique_network_check(cls, site_design):
+        """
+        Ensures that each network name appears at most once between all NetworkLink
+        allowed networks
+        """
+
+        message_list = []
+        site_design = site_design.obj_to_simple()
+        network_link_list = site_design.get('network_links', [])
+        compare = {}
+
+        for network_link in network_link_list:
+            allowed_network_list = network_link.get('allowed_networks', [])
+            compare[network_link.get('name')] = allowed_network_list
+
+        # This checks the allowed networks for each network link aginst
+        # the other allowed networks
+        checked_pairs = []
+        for network_link_name in compare:
+            allowed_network_list_1 = compare[network_link_name]
+
+            for network_link_name_2 in compare:
+                if (network_link_name is not network_link_name_2
+                        and sorted([network_link_name, network_link_name_2]) not in checked_pairs):
+                    checked_pairs.append(sorted([network_link_name, network_link_name_2]))
+                    allowed_network_list_2 = compare[network_link_name_2]
+                    # creates a list of duplicated allowed networks
+                    duplicated_names = [i for i in allowed_network_list_1 if i in allowed_network_list_2]
+
+                    for name in duplicated_names:
+                        msg = ('Unique Network Error: Allowed network '
+                               '%s duplicated on NetworkLink %s ' % (name, network_link_name) + ''
+                               ' and NetworkLink %s' % network_link_name_2)
+                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+        if not message_list:
+            message_list.append(TaskStatusMessage(msg='Unique Network', error=False, ctx_type='NA', ctx='NA'))
+        return message_list
+
 
 rule_set = [
     Validator.rational_network_bond,
     Validator.network_trunking_rational,
     Validator.storage_partitioning,
+    Validator.unique_network_check,
 ]

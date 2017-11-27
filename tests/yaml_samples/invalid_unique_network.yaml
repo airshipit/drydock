@@ -53,8 +53,12 @@ data:
   trunking:
     mode: disabled
     default_network: oob
+########################################
+# TEST FAILS HERE
   allowed_networks:
     - oob
+    - public
+########################################
 ---
 schema: 'drydock/NetworkLink/v1'
 metadata:
@@ -91,9 +95,12 @@ data:
   trunking:
     mode: 802.1q
     default_network: mgmt
+########################################
+# TEST FAILS HERE
   allowed_networks:
     - public
     - mgmt
+########################################
 ---
 schema: 'drydock/Rack/v1'
 metadata:
@@ -253,9 +260,7 @@ data:
               fstype: 'ext4'
               mount_options: 'defaults'
       sdb:
-        volume_group: 'failure'
-########################################
-# FAILS HERE: log_vg is unassigned
+        volume_group: 'log_vg'
     volume_groups:
       log_vg:
         logical_volumes:
