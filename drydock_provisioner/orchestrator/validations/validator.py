@@ -39,8 +39,7 @@ class Validator():
             output = rule(site_design)
             result_status.message_list.extend(output)
             error_msg = [m for m in output if m.error]
-            result_status.error_count = result_status.error_count + len(
-                error_msg)
+            result_status.error_count = result_status.error_count + len(error_msg)
             if len(error_msg) > 0:
                 validation_error = True
 
@@ -51,21 +50,64 @@ class Validator():
 
         return result_status
 
-    # TODO: (sh8121att) actually implement validation logic
     @classmethod
-    def no_duplicate_IPs_check(cls, site_design):
+    def rational_network_bond(cls, site_design):
+        """
+        Ensures that NetworkLink 'bonding' is rational
+        """
         message_list = []
-        message_list.append(TaskStatusMessage(msg='Unique Ip', error=False, ctx_type='NA', ctx='NA'))
+        site_design = site_design.obj_to_simple()
+
+        network_links = site_design.get('network_links', [])
+
+        for network_link in network_links:
+            bonding_mode = network_link.get('bonding_mode', [])
+
+            if bonding_mode == 'disabled':
+                # check to make sure nothing else is specified
+                if any([network_link.get(x) for x in ['bonding_peer_rate', 'bonding_xmit_hash',
+                        'bonding_mon_rate', 'bonding_up_delay', 'bonding_down_delay']]):
+
+                    msg = ('Network Link Bonding Error: If bonding mode is disabled no other bond option can be'
+                           'specified; on BaremetalNode %s' % network_link.get('name'))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+            elif bonding_mode == '802.3ad':
+                # check if up_delay and down_delay are >= mon_rate
+                mon_rate = network_link.get('bonding_mon_rate')
+                if network_link.get('bonding_up_delay') < mon_rate:
+                    msg = ('Network Link Bonding Error: Up delay is less '
+                           'than mon rate on BaremetalNode %s' % (network_link.get('name')))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                if network_link.get('bonding_down_delay') < mon_rate:
+                    msg = ('Network Link Bonding Error: Down delay is '
+                           'less than mon rate on BaremetalNode %s' % (network_link.get('name')))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+            elif bonding_mode in ['active-backup', 'balanced-rr']:
+                # make sure hash and peer_rate are NOT defined
+                if network_link.get('bonding_xmit_hash'):
+                    msg = ('Network Link Bonding Error: Hash cannot be defined if bond mode is '
+                           '%s, on BaremetalNode %s' % (bonding_mode, network_link.get('name')))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                if network_link.get('bonding_peer_rate'):
+                    msg = ('Network Link Bonding Error: Peer rate cannot be defined if bond mode is '
+                           '%s, on BaremetalNode %s' % (bonding_mode, network_link.get('name')))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+        if not message_list:
+            message_list.append(TaskStatusMessage(msg='Network Link Bonding', error=False, ctx_type='NA', ctx='NA'))
 
         return message_list
 
-    # TODO: (sh8121att) actually implement validation logic
-    @classmethod
-    def no_outside_IPs_check(cls, site_design):
-        message_list = []
-        message_list.append(TaskStatusMessage(msg='No outside Ip', error=False, ctx_type='NA', ctx='NA'))
 
-        return message_list
-
-
-rule_set = [Validator.no_duplicate_IPs_check, Validator.no_outside_IPs_check]
+rule_set = [
+    Validator.rational_network_bond,
+]
