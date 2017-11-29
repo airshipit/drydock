@@ -14,10 +14,12 @@
 """Business Logic Validation"""
 
 import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.error as errors
 
-from drydock_provisioner.objects.task import TaskStatus
-from drydock_provisioner.objects.task import TaskStatusMessage
 from netaddr import IPNetwork, IPAddress
+from drydock_provisioner.orchestrator.util import SimpleBytes
+from drydock_provisioner.objects.task import TaskStatus, TaskStatusMessage
+
 
 class Validator():
     def validate_design(self, site_design, result_status=None):
@@ -393,6 +395,68 @@ class Validator():
             message_list.append(
                 TaskStatusMessage(
                     msg=msg, error=False, ctx_type='NA', ctx='NA'))
+
+        return message_list
+
+    @classmethod
+    def boot_storage_rational(cls, site_design):
+        """
+        Ensures that root volume is defined and is at least 20GB and that boot volume is at least 1 GB
+        """
+        message_list = []
+        site_design = site_design.obj_to_simple()
+        BYTES_IN_GB = SimpleBytes.calulate_bytes('1GB')
+
+        baremetal_node_list = site_design.get('baremetal_nodes', [])
+
+        for baremetal_node in baremetal_node_list:
+            storage_devices_list = baremetal_node.get('storage_devices', [])
+
+            root_set = False
+
+            for storage_device in storage_devices_list:
+                partitions_list = storage_device.get('partitions', [])
+
+                for host_partition in partitions_list:
+                    if host_partition.get('name') == 'root':
+                        size = host_partition.get('size')
+                        try:
+                            cal_size = SimpleBytes.calulate_bytes(size)
+                            root_set = True
+                            # check if size < 20GB
+                            if cal_size < 20 * BYTES_IN_GB:
+                                msg = ('Boot Storage Error: Root volume must be > 20GB on BaremetalNode '
+                                       '%s' % baremetal_node.get('name'))
+                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        except errors.InvalidSizeFormat as e:
+                            msg = ('Boot Storage Error: Root volume has an invalid size format on BaremetalNode'
+                                   '%s.' % baremetal_node.get('name'))
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                    # check make sure root has been defined and boot volume > 1GB
+                    if root_set and host_partition.get('name') == 'boot':
+                        size = host_partition.get('size')
+
+                        try:
+                            cal_size = SimpleBytes.calulate_bytes(size)
+                            # check if size < 1GB
+                            if cal_size < BYTES_IN_GB:
+                                msg = ('Boot Storage Error: Boot volume must be > 1GB on BaremetalNode '
+                                       '%s' % baremetal_node.get('name'))
+                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        except errors.InvalidSizeFormat as e:
+                            msg = ('Boot Storage Error: Boot volume has an invalid size format on BaremetalNode '
+                                   '%s.' % baremetal_node.get('name'))
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+            # This must be set
+            if not root_set:
+                msg = ('Boot Storage Error: Root volume has to be set and must be > 20GB on BaremetalNode '
+                       '%s' % baremetal_node.get('name'))
+                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+        if not message_list:
+            message_list.append(TaskStatusMessage(msg='Boot Storage', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
     @classmethod
@@ -486,4 +550,5 @@ rule_set = [
     Validator.storage_sizing,
     Validator.ip_locality_check,
     Validator.no_duplicate_IPs_check,
+    Validator.boot_storage_rational,
 ]

@@ -13,28 +13,23 @@
 # limitations under the License.
 
 import drydock_provisioner.objects.fields as hd_fields
-from drydock_provisioner.statemgmt.state import DrydockState
-from drydock_provisioner.ingester.ingester import Ingester
+from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
 
 
 class TestDesignValidator(object):
-    def test_validate_design(self, input_files, setup):
+    def test_validate_design(self, deckhand_ingester, drydock_state, input_files):
         """Test the basic validation engine."""
 
-        input_file = input_files.join("fullsite.yaml")
-
-        design_state = DrydockState()
+        input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        ingester = Ingester()
-        ingester.enable_plugin(
-            'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
-        design_status, design_data = ingester.ingest_data(
-            design_state=design_state, design_ref=design_ref)
+        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+
+        status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         val = Validator()
-        response = val.validate_design(design_data)
+        response = val.validate_design(site_design)
 
         for msg in response.message_list:
             assert msg.error is False
