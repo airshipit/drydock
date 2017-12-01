@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Business Logic Validation"""
-
 import drydock_provisioner.objects.fields as hd_fields
 
 from drydock_provisioner.objects.task import TaskStatus
@@ -140,11 +139,77 @@ class Validator():
         if not message_list:
             message_list.append(
                 TaskStatusMessage(msg='Rational Network Trunking', error=False, ctx_type='NA', ctx='NA'))
+        return message_list
 
+    @classmethod
+    def storage_partitioning(cls, site_design):
+        """
+        Checks storage partitioning
+        """
+        message_list = []
+        site_design = site_design.obj_to_simple()
+
+        baremetal_nodes = site_design.get('baremetal_nodes', [])
+
+        volume_group_check_list = []
+
+        for baremetal_node in baremetal_nodes:
+            storage_devices_list = baremetal_node.get('storage_devices', [])
+
+            for storage_device in storage_devices_list:
+                partitions_list = storage_device.get('partitions')
+                volume_group = storage_device.get('volume_group')
+
+                # error if both or neither is defined
+                if all([partitions_list, volume_group]) or not any([partitions_list, volume_group]):
+                    msg = ('Storage Partitioning Error: Either a volume group '
+                           'OR partitions must be defined for each storage '
+                           'device; on BaremetalNode '
+                           '%s' % baremetal_node.get('name'))
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                # if there is a volume group add to list
+                if volume_group is not None:
+                    volume_group_check_list.append(volume_group)
+
+                if partitions_list is not None:
+                    for partition in partitions_list:
+                        partition_volume_group = partition.get('volume_group')
+                        fstype = partition.get('fstype')
+
+                        # error if both or neither is defined
+                        if all([fstype, partition_volume_group]) or not any([fstype, partition_volume_group]):
+                            msg = ('Storage Partitioning Error: Either a '
+                                   'volume group OR file system must be '
+                                   'defined defined in a sigle partition; on '
+                                   'BaremetalNode %s' % baremetal_node.get('name'))
+
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                        # if there is a volume group add to list
+                        if partition_volume_group is not None:
+                            volume_group_check_list.append(volume_group)
+
+            # checks all volume groups are assigned to a partition or storage device
+            # if one exist that wasn't found earlier it is unassigned
+            all_volume_groups = baremetal_node.get('volume_groups', [])
+            for volume_group in all_volume_groups:
+                if volume_group.get('name') not in volume_group_check_list:
+
+                    msg = ('Storage Partitioning Error: A volume group must be '
+                           'assigned to a storage device or partition; '
+                           'volume group %s ' % volume_group.get('name') + ''
+                           'on BaremetalNode %s' % baremetal_node.get('name'))
+
+                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+        if not message_list:
+            message_list.append(TaskStatusMessage(msg='Storage Partitioning', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
 
 rule_set = [
     Validator.rational_network_bond,
     Validator.network_trunking_rational,
+    Validator.storage_partitioning,
 ]
