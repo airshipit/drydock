@@ -300,6 +300,64 @@ class Validator():
             message_list.append(TaskStatusMessage(msg='Mtu', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
+    @classmethod
+    def storage_sizing(cls, site_design):
+        """
+        Ensures that for a partitioned physical device or logical volumes
+        in a volume group, if sizing is a percentage then those percentages
+        do not sum > 99% and have no negitive values
+        """
+
+        message_list = []
+        site_design = site_design.obj_to_simple()
+
+        baremetal_nodes = site_design.get('baremetal_nodes', [])
+
+        for baremetal_node in baremetal_nodes:
+            storage_device_list = baremetal_node.get('storage_devices', [])
+
+            for storage_device in storage_device_list:
+                partition_list = storage_device.get('partitions', [])
+                partition_sum = 0
+                for partition in partition_list:
+                    size = partition.get('size')
+                    percent = size.split('%')
+                    if len(percent) == 2:
+                        if int(percent[0]) < 0:
+                            msg = ('Storage Sizing Error: Storage partition size is < 0 '
+                                   'on Baremetal Node %s' % baremetal_node.get('name'))
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                        partition_sum += int(percent[0])
+
+                    if partition_sum > 99:
+                        msg = ('Storage Sizing Error: Storage partition size is greater than '
+                               '99 on Baremetal Node %s' % baremetal_node.get('name'))
+                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+                volume_groups = baremetal_node.get('volume_groups', [])
+                volume_sum = 0
+                for volume_group in volume_groups:
+                    logical_volume_list = volume_group.get('logical_volumes', [])
+                    for logical_volume in logical_volume_list:
+                        size = logical_volume.get('size')
+                        percent = size.split('%')
+                        if len(percent) == 2:
+                            if int(percent[0]) < 0:
+                                msg = ('Storage Sizing Error: Storage volume size is < 0 '
+                                       'on Baremetal Node %s' % baremetal_node.get('name'))
+                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            volume_sum += int(percent[0])
+
+                    if volume_sum > 99:
+                        msg = ('Storage Sizing Error: Storage volume size is greater '
+                               'than 99 on Baremetal Node %s.' % baremetal_node.get('name'))
+                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+
+        if not message_list:
+            message_list.append(TaskStatusMessage(msg='Storage Sizing', error=False, ctx_type='NA', ctx='NA'))
+        return message_list
+
 
 rule_set = [
     Validator.rational_network_bond,
@@ -307,4 +365,5 @@ rule_set = [
     Validator.storage_partitioning,
     Validator.unique_network_check,
     Validator.mtu_rational,
+    Validator.storage_sizing,
 ]
