@@ -358,6 +358,47 @@ class Validator():
             message_list.append(TaskStatusMessage(msg='Storage Sizing', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
+    @classmethod
+    def no_duplicate_IPs_check(cls, site_design):
+        """
+        Ensures that the same IP is not assigned to multiple baremetal nodes.
+        """
+        found_ips = {}  # Dictionary Format - IP address: BaremetalNode name
+        message_list = []
+
+        site_design = site_design.obj_to_simple()
+        baremetal_nodes_list = site_design.get('baremetal_nodes', [])
+
+        if not baremetal_nodes_list:
+            msg = 'No BaremetalNodes Found.'
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+        else:
+            for node in baremetal_nodes_list:
+                addressing_list = node.get('addressing', [])
+
+                for ip_address in addressing_list:
+                    address = ip_address.get('address')
+                    node_name = node.get('name')
+
+                    if address in found_ips and address is not None:
+                        msg = ('Error! Duplicate IP Address Found: %s '
+                               'is in use by both %s and %s.'
+                               % (address, found_ips[address], node_name))
+                        message_list.append(
+                            TaskStatusMessage(
+                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    elif address is not None:
+                        found_ips[address] = node_name
+
+        if not message_list:
+            msg = 'No Duplicate IP Addresses.'
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+        return message_list
+
 
 rule_set = [
     Validator.rational_network_bond,
