@@ -17,7 +17,7 @@ import drydock_provisioner.objects.fields as hd_fields
 
 from drydock_provisioner.objects.task import TaskStatus
 from drydock_provisioner.objects.task import TaskStatusMessage
-
+from netaddr import IPNetwork, IPAddress
 
 class Validator():
     def validate_design(self, site_design, result_status=None):
@@ -399,6 +399,87 @@ class Validator():
                     msg=msg, error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
+    @classmethod
+    def ip_locality_check(cls, site_design):
+        """
+        Ensures that IP addresses are within defined CIDR ranges.
+        """
+        network_dict = {}  # Dictionary Format - network name: cidr
+        message_list = []
+
+        site_design = site_design.obj_to_simple()
+        baremetal_nodes_list = site_design.get('baremetal_nodes', [])
+        network_list = site_design.get('networks', [])
+
+        if not network_list:
+            msg = 'No networks found.'
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+        else:
+            for net in network_list:
+                name = net.get('name')
+                cidr = net.get('cidr')
+                routes = net.get('routes', [])
+
+                cidr_range = IPNetwork(cidr)
+                network_dict[name] = cidr_range
+
+                if routes:
+                    for r in routes:
+                        gateway = r.get('gateway')
+
+                        if not gateway:
+                            msg = 'No gateway found for route %s.' % routes
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        else:
+                            ip = IPAddress(gateway)
+                            if ip not in cidr_range:
+                                msg = ('IP Locality Error: The gateway IP Address %s '
+                                       'is not within the defined CIDR: %s of %s.'
+                                       % (gateway, cidr, name))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
+        if not baremetal_nodes_list:
+            msg = 'No baremetal_nodes found.'
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+        else:
+            for node in baremetal_nodes_list:
+                addressing_list = node.get('addressing', [])
+
+                for ip_address in addressing_list:
+                    ip_address_network_name = ip_address.get('network')
+                    address = ip_address.get('address')
+                    ip_type = ip_address.get('type')
+
+                    if ip_type is not 'dhcp':
+                        if ip_address_network_name not in network_dict:
+                            msg = 'IP Locality Error: %s is not a valid network.' \
+                                  % (ip_address_network_name)
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        else:
+                            if IPAddress(address) not in IPNetwork(network_dict[ip_address_network_name]):
+                                msg = ('IP Locality Error: The IP Address %s '
+                                       'is not within the defined CIDR: %s of %s .'
+                                       % (address, network_dict[ip_address_network_name],
+                                          ip_address_network_name))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
+        if not message_list:
+            msg = 'IP Locality Success'
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+        return message_list
+
 
 rule_set = [
     Validator.rational_network_bond,
@@ -407,4 +488,6 @@ rule_set = [
     Validator.unique_network_check,
     Validator.mtu_rational,
     Validator.storage_sizing,
+    Validator.ip_locality_check,
+    Validator.no_duplicate_IPs_check,
 ]
