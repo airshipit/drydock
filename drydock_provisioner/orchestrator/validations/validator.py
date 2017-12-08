@@ -41,7 +41,8 @@ class Validator():
             output = rule(site_design)
             result_status.message_list.extend(output)
             error_msg = [m for m in output if m.error]
-            result_status.error_count = result_status.error_count + len(error_msg)
+            result_status.error_count = result_status.error_count + len(
+                error_msg)
             if len(error_msg) > 0:
                 validation_error = True
 
@@ -70,47 +71,71 @@ class Validator():
                 if any([
                         network_link.get(x)
                         for x in [
-                            'bonding_peer_rate', 'bonding_xmit_hash', 'bonding_mon_rate', 'bonding_up_delay',
+                            'bonding_peer_rate', 'bonding_xmit_hash',
+                            'bonding_mon_rate', 'bonding_up_delay',
                             'bonding_down_delay'
                         ]
                 ]):
 
-                    msg = ('Network Link Bonding Error: If bonding mode is disabled no other bond option can be'
-                           'specified; on BaremetalNode %s' % network_link.get('name'))
+                    msg = (
+                        'Network Link Bonding Error: If bonding mode is disabled no other bond option can be'
+                        'specified; on BaremetalNode %s' %
+                        network_link.get('name'))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
             elif bonding_mode == '802.3ad':
                 # check if up_delay and down_delay are >= mon_rate
                 mon_rate = network_link.get('bonding_mon_rate')
                 if network_link.get('bonding_up_delay') < mon_rate:
                     msg = ('Network Link Bonding Error: Up delay is less '
-                           'than mon rate on BaremetalNode %s' % (network_link.get('name')))
+                           'than mon rate on BaremetalNode %s' %
+                           (network_link.get('name')))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
                 if network_link.get('bonding_down_delay') < mon_rate:
                     msg = ('Network Link Bonding Error: Down delay is '
-                           'less than mon rate on BaremetalNode %s' % (network_link.get('name')))
+                           'less than mon rate on BaremetalNode %s' %
+                           (network_link.get('name')))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
             elif bonding_mode in ['active-backup', 'balanced-rr']:
                 # make sure hash and peer_rate are NOT defined
                 if network_link.get('bonding_xmit_hash'):
-                    msg = ('Network Link Bonding Error: Hash cannot be defined if bond mode is '
-                           '%s, on BaremetalNode %s' % (bonding_mode, network_link.get('name')))
+                    msg = (
+                        'Network Link Bonding Error: Hash cannot be defined if bond mode is '
+                        '%s, on BaremetalNode %s' % (bonding_mode,
+                                                     network_link.get('name')))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
                 if network_link.get('bonding_peer_rate'):
-                    msg = ('Network Link Bonding Error: Peer rate cannot be defined if bond mode is '
-                           '%s, on BaremetalNode %s' % (bonding_mode, network_link.get('name')))
+                    msg = (
+                        'Network Link Bonding Error: Peer rate cannot be defined if bond mode is '
+                        '%s, on BaremetalNode %s' % (bonding_mode,
+                                                     network_link.get('name')))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Network Link Bonding', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Network Link Bonding',
+                    error=False,
+                    ctx_type='NA',
+                    ctx='NA'))
         return message_list
 
     @classmethod
@@ -127,26 +152,39 @@ class Validator():
         for network_link in network_link_list:
             allowed_networks = network_link.get('allowed_networks', [])
             # if allowed networks > 1 trunking must be enabled
-            if (len(allowed_networks) > 1
-                    and network_link.get('trunk_mode') == hd_fields.NetworkLinkTrunkingMode.Disabled):
+            if (len(allowed_networks) > 1 and network_link.get('trunk_mode') ==
+                    hd_fields.NetworkLinkTrunkingMode.Disabled):
 
-                msg = ('Rational Network Trunking Error: If there is more than 1 allowed network,'
-                       'trunking mode must be enabled; on NetworkLink %s' % network_link.get('name'))
+                msg = (
+                    'Rational Network Trunking Error: If there is more than 1 allowed network,'
+                    'trunking mode must be enabled; on NetworkLink %s' %
+                    network_link.get('name'))
 
-                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                message_list.append(
+                    TaskStatusMessage(
+                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
             # trunking mode is disabled, default_network must be defined
-            if (network_link.get('trunk_mode') == hd_fields.NetworkLinkTrunkingMode.Disabled
+            if (network_link.get(
+                    'trunk_mode') == hd_fields.NetworkLinkTrunkingMode.Disabled
                     and network_link.get('native_network') is None):
 
-                msg = ('Rational Network Trunking Error: Trunking mode is disabled, a trunking'
-                       'default_network must be defined; on NetworkLink %s' % network_link.get('name'))
+                msg = (
+                    'Rational Network Trunking Error: Trunking mode is disabled, a trunking'
+                    'default_network must be defined; on NetworkLink %s' %
+                    network_link.get('name'))
 
-                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                message_list.append(
+                    TaskStatusMessage(
+                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
             message_list.append(
-                TaskStatusMessage(msg='Rational Network Trunking', error=False, ctx_type='NA', ctx='NA'))
+                TaskStatusMessage(
+                    msg='Rational Network Trunking',
+                    error=False,
+                    ctx_type='NA',
+                    ctx='NA'))
         return message_list
 
     @classmethod
@@ -169,12 +207,15 @@ class Validator():
                 volume_group = storage_device.get('volume_group')
 
                 # error if both or neither is defined
-                if all([partitions_list, volume_group]) or not any([partitions_list, volume_group]):
+                if all([partitions_list, volume_group
+                        ]) or not any([partitions_list, volume_group]):
                     msg = ('Storage Partitioning Error: Either a volume group '
                            'OR partitions must be defined for each storage '
                            'device; on BaremetalNode '
                            '%s' % baremetal_node.get('name'))
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
                 # if there is a volume group add to list
                 if volume_group is not None:
@@ -190,7 +231,12 @@ class Validator():
                             msg = ('Storage Partitioning Error: Both a volume group AND file system cannot be '
                                    'defined in a sigle partition; on BaremetalNode %s' % baremetal_node.get('name'))
 
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
 
                         # if there is a volume group add to list
                         if partition_volume_group is not None:
@@ -206,10 +252,17 @@ class Validator():
                            'partition; volume group %s on BaremetalNode %s' %
                            (volume_group.get('name'), baremetal_node.get('name')))
 
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Storage Partitioning', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Storage Partitioning',
+                    error=False,
+                    ctx_type='NA',
+                    ctx='NA'))
         return message_list
 
     @classmethod
@@ -236,11 +289,16 @@ class Validator():
 
             for network_link_name_2 in compare:
                 if (network_link_name is not network_link_name_2
-                        and sorted([network_link_name, network_link_name_2]) not in checked_pairs):
-                    checked_pairs.append(sorted([network_link_name, network_link_name_2]))
+                        and sorted([network_link_name, network_link_name_2
+                                    ]) not in checked_pairs):
+                    checked_pairs.append(
+                        sorted([network_link_name, network_link_name_2]))
                     allowed_network_list_2 = compare[network_link_name_2]
                     # creates a list of duplicated allowed networks
-                    duplicated_names = [i for i in allowed_network_list_1 if i in allowed_network_list_2]
+                    duplicated_names = [
+                        i for i in allowed_network_list_1
+                        if i in allowed_network_list_2
+                    ]
 
                     for name in duplicated_names:
                         msg = ('Unique Network Error: Allowed network %s duplicated on NetworkLink %s and NetworkLink '
@@ -248,7 +306,10 @@ class Validator():
                         message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Unique Network', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Unique Network', error=False, ctx_type='NA',
+                    ctx='NA'))
         return message_list
 
     @classmethod

@@ -72,7 +72,9 @@ class ValidationResource(StatefulResource):
                 design_ref)
 
             resp_message['details']['errorCount'] = message.error_count
-            resp_message['details']['messageList'] = [m.to_dict() for m in message.message_list]
+            resp_message['details']['messageList'] = [
+                m.to_dict() for m in message.message_list
+            ]
 
             if message.error_count == 0:
                 resp_message['status'] = 'Valid'

@@ -125,8 +125,7 @@ class DrydockPolicy(object):
     validation_rules = [
         policy.DocumentedRuleDefault(
             'physical_provisioner:validate_site_design', 'role:admin',
-            'Validate site design',
-            [{
+            'Validate site design', [{
                 'path': '/api/v1.0/validatedesign',
                 'method': 'POST'
             }]),

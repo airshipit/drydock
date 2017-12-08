@@ -33,6 +33,7 @@ def deckhand_ingester():
         'drydock_provisioner.ingester.plugins.deckhand.DeckhandIngester')
     return ingester
 
+
 @pytest.fixture()
 def yaml_ingester():
     ingester = Ingester()
@@ -40,17 +41,20 @@ def yaml_ingester():
         'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
     return ingester
 
+
 @pytest.fixture()
 def deckhand_orchestrator(drydock_state, deckhand_ingester):
     orchestrator = Orchestrator(
         state_manager=drydock_state, ingester=deckhand_ingester)
     return orchestrator
 
+
 @pytest.fixture()
 def yaml_orchestrator(drydock_state, yaml_ingester):
     orchestrator = Orchestrator(
         state_manager=drydock_state, ingester=yaml_ingester)
     return orchestrator
+
 
 @pytest.fixture()
 def blank_state(drydock_state):

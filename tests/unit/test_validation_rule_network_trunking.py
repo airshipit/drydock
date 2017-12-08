@@ -18,12 +18,13 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 import re
 
 class TestRationalNetworkTrunking(object):
-    def test_rational_network_trunking(self, deckhand_ingester, drydock_state, input_files):
-
+    def test_rational_network_trunking(self, deckhand_ingester, drydock_state,
+                                       input_files):
         input_file = input_files.join("rational_network_trunking.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -33,12 +34,13 @@ class TestRationalNetworkTrunking(object):
         assert msg.get('message') == 'Rational Network Trunking'
         assert msg.get('error') is False
 
-    def test_invalid_rational_network_trunking(self, deckhand_ingester, drydock_state, input_files):
-
+    def test_invalid_rational_network_trunking(self, deckhand_ingester,
+                                               drydock_state, input_files):
         input_file = input_files.join("invalid_rational_network_trunking.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

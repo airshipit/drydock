@@ -29,6 +29,7 @@ from .base import StatefulResource
 
 logger = logging.getLogger('drydock')
 
+
 class BootactionResource(StatefulResource):
     bootaction_schema = {
         '$schema': 'http://json-schema.org/schema#',

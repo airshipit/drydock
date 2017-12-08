@@ -23,7 +23,8 @@ from drydock_provisioner.control.bootaction import BootactionUtils
 
 
 class TestClass(object):
-    def test_bootaction_tarbuilder(self, input_files, deckhand_ingester, setup):
+    def test_bootaction_tarbuilder(self, input_files, deckhand_ingester,
+                                   setup):
         objects.register_all()
 
         input_file = input_files.join("deckhand_fullsite.yaml")

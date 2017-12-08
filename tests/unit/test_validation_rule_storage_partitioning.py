@@ -17,13 +17,15 @@ from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
 import re
 
-class TestRationalStoragePartitioning(object):
-    def test_storage_partitioning(self, deckhand_ingester, drydock_state, input_files):
 
+class TestRationalNetworkTrunking(object):
+    def test_storage_partitioning(self, deckhand_ingester, drydock_state,
+                                  input_files):
         input_file = input_files.join("storage_partitioning.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -35,7 +37,6 @@ class TestRationalStoragePartitioning(object):
         assert msg.get('error') is False
 
     def test_storage_partitioning_unassigned_partition(self, deckhand_ingester, drydock_state, input_files):
-
         input_file = input_files.join("storage_partitioning_unassigned_partition.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -50,12 +51,13 @@ class TestRationalStoragePartitioning(object):
         assert msg.get('message') == 'Storage Partitioning'
         assert msg.get('error') is False
 
-    def test_invalid_storage_partitioning(self, deckhand_ingester, drydock_state, input_files):
-
+    def test_invalid_storage_partitioning(self, deckhand_ingester,
+                                          drydock_state, input_files):
         input_file = input_files.join("invalid_storage_partitioning.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

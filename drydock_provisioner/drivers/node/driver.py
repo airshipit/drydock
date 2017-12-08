@@ -50,6 +50,9 @@ class NodeDriver(ProviderDriver):
         task_action = task.action
 
         if task_action in self.supported_actions:
+            task.success()
+            task.set_status(hd_fields.TaskStatus.Complete)
+            task.save()
             return
         else:
             raise errors.DriverError("Unsupported action %s for driver %s" %

@@ -1,4 +1,3 @@
-
 import yaml
 import jsonschema
 import pkg_resources
@@ -7,6 +6,7 @@ import shutil
 import pytest
 
 from jsonschema.exceptions import ValidationError
+
 
 class BaseSchemaValidationTest(object):
     def _test_validate(self, schema, expect_failure, input_files, input):
@@ -35,94 +35,121 @@ class BaseSchemaValidationTest(object):
 
 class TestValidation(BaseSchemaValidationTest):
     def test_validate_baremetalNode(self, input_files):
-        self._test_validate('baremetalNode.yaml', False, input_files, "baremetalNode.yaml")
+        self._test_validate('baremetalNode.yaml', False, input_files,
+                            "baremetalNode.yaml")
 
     def test_validate_baremetalNode2(self, input_files):
-        self._test_validate('baremetalNode.yaml', False, input_files, "baremetalNode2.yaml")
+        self._test_validate('baremetalNode.yaml', False, input_files,
+                            "baremetalNode2.yaml")
 
     def test_invalidate_baremetalNode(self, input_files):
-        self._test_validate('baremetalNode.yaml', True, input_files, "invalid_baremetalNode.yaml")
+        self._test_validate('baremetalNode.yaml', True, input_files,
+                            "invalid_baremetalNode.yaml")
 
     def test_invalidate_baremetalNode2(self, input_files):
-        self._test_validate('baremetalNode.yaml', True, input_files, "invalid_baremetalNode2.yaml")
+        self._test_validate('baremetalNode.yaml', True, input_files,
+                            "invalid_baremetalNode2.yaml")
 
     def test_validate_hardwareProfile(self, input_files):
-        self._test_validate('hardwareProfile.yaml', False, input_files, "hardwareProfile.yaml")
+        self._test_validate('hardwareProfile.yaml', False, input_files,
+                            "hardwareProfile.yaml")
 
     def test_invalidate_hardwareProfile(self, input_files):
-        self._test_validate('hardwareProfile.yaml', True, input_files, "invalid_hardwareProfile.yaml")
+        self._test_validate('hardwareProfile.yaml', True, input_files,
+                            "invalid_hardwareProfile.yaml")
 
     def test_validate_hostProfile(self, input_files):
-        self._test_validate('hostProfile.yaml', False, input_files, "hostProfile.yaml")
+        self._test_validate('hostProfile.yaml', False, input_files,
+                            "hostProfile.yaml")
 
     def test_validate_hostProfile2(self, input_files):
-        self._test_validate('hostProfile.yaml', False, input_files, "hostProfile2.yaml")
+        self._test_validate('hostProfile.yaml', False, input_files,
+                            "hostProfile2.yaml")
 
     def test_invalidate_hostProfile(self, input_files):
-        self._test_validate('hostProfile.yaml', True, input_files, "invalid_hostProfile.yaml")
+        self._test_validate('hostProfile.yaml', True, input_files,
+                            "invalid_hostProfile.yaml")
 
     def test_invalidate_hostProfile2(self, input_files):
-        self._test_validate('hostProfile.yaml', True, input_files, "invalid_hostProfile2.yaml")
+        self._test_validate('hostProfile.yaml', True, input_files,
+                            "invalid_hostProfile2.yaml")
 
     def test_validate_network(self, input_files):
         self._test_validate('network.yaml', False, input_files, "network.yaml")
 
     def test_validate_network2(self, input_files):
-        self._test_validate('network.yaml', False, input_files, "network2.yaml")
+        self._test_validate('network.yaml', False, input_files,
+                            "network2.yaml")
 
     def test_validate_network3(self, input_files):
-        self._test_validate('network.yaml', False, input_files, "network3.yaml")
+        self._test_validate('network.yaml', False, input_files,
+                            "network3.yaml")
 
     def test_validate_network4(self, input_files):
-        self._test_validate('network.yaml', False, input_files, "network4.yaml")
+        self._test_validate('network.yaml', False, input_files,
+                            "network4.yaml")
 
     def test_validate_network5(self, input_files):
-        self._test_validate('network.yaml', False, input_files, "network5.yaml")
+        self._test_validate('network.yaml', False, input_files,
+                            "network5.yaml")
 
     def test_invalidate_network(self, input_files):
-        self._test_validate('network.yaml', True, input_files, "invalid_network.yaml")
+        self._test_validate('network.yaml', True, input_files,
+                            "invalid_network.yaml")
 
     def test_invalidate_network2(self, input_files):
-        self._test_validate('network.yaml', True, input_files, "invalid_network2.yaml")
+        self._test_validate('network.yaml', True, input_files,
+                            "invalid_network2.yaml")
 
     def test_invalidate_network3(self, input_files):
-        self._test_validate('network.yaml', True, input_files, "invalid_network3.yaml")
+        self._test_validate('network.yaml', True, input_files,
+                            "invalid_network3.yaml")
 
     def test_invalidate_network4(self, input_files):
-        self._test_validate('network.yaml', True, input_files, "invalid_network4.yaml")
+        self._test_validate('network.yaml', True, input_files,
+                            "invalid_network4.yaml")
 
     def test_invalidate_network5(self, input_files):
-        self._test_validate('network.yaml', True, input_files, "invalid_network5.yaml")
+        self._test_validate('network.yaml', True, input_files,
+                            "invalid_network5.yaml")
 
     def test_validate_networkLink(self, input_files):
-        self._test_validate('networkLink.yaml', False, input_files, "networkLink.yaml")
+        self._test_validate('networkLink.yaml', False, input_files,
+                            "networkLink.yaml")
 
     def test_validate_networkLink2(self, input_files):
-        self._test_validate('networkLink.yaml', False, input_files, "networkLink2.yaml")
+        self._test_validate('networkLink.yaml', False, input_files,
+                            "networkLink2.yaml")
 
     def test_validate_networkLink3(self, input_files):
-        self._test_validate('networkLink.yaml', False, input_files, "networkLink3.yaml")
+        self._test_validate('networkLink.yaml', False, input_files,
+                            "networkLink3.yaml")
 
     def test_invalidate_networkLink(self, input_files):
-        self._test_validate('networkLink.yaml', True, input_files, "invalid_networkLink.yaml")
+        self._test_validate('networkLink.yaml', True, input_files,
+                            "invalid_networkLink.yaml")
 
     def test_invalidate_networkLink2(self, input_files):
-        self._test_validate('networkLink.yaml', True, input_files, "invalid_networkLink2.yaml")
+        self._test_validate('networkLink.yaml', True, input_files,
+                            "invalid_networkLink2.yaml")
 
     def test_invalidate_networkLink3(self, input_files):
-        self._test_validate('networkLink.yaml', True, input_files, "invalid_networkLink3.yaml")
+        self._test_validate('networkLink.yaml', True, input_files,
+                            "invalid_networkLink3.yaml")
 
     def test_validate_region(self, input_files):
         self._test_validate('region.yaml', False, input_files, "region.yaml")
 
     def test_invalidate_region(self, input_files):
-        self._test_validate('region.yaml', True, input_files, "invalid_region.yaml")
+        self._test_validate('region.yaml', True, input_files,
+                            "invalid_region.yaml")
 
     def test_validate_rack(self, input_files):
         self._test_validate('rack.yaml', False, input_files, "rack.yaml")
 
     def test_invalidate_rack(self, input_files):
-        self._test_validate('rack.yaml', True, input_files, "invalid_rack.yaml")
+        self._test_validate('rack.yaml', True, input_files,
+                            "invalid_rack.yaml")
 
     @pytest.fixture(scope='module')
     def input_files(self, tmpdir_factory, request):

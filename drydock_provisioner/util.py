@@ -39,6 +39,7 @@ class KeystoneUtils(object):
         auth = v3.Password(**auth_info)
         return session.Session(auth=auth)
 
+
 class NoAuthFilter(object):
     """PasteDeploy filter for NoAuth to be used in testing."""
 
@@ -58,8 +59,10 @@ class NoAuthFilter(object):
 
         environ['HTTP_X_IDENTITY_STATUS'] = 'Confirmed'
 
-        for envvar in ['USER_NAME', 'USER_ID', 'USER_DOMAIN_ID', 'PROJECT_ID',
-                       'PROJECT_DOMAIN_NAME']:
+        for envvar in [
+                'USER_NAME', 'USER_ID', 'USER_DOMAIN_ID', 'PROJECT_ID',
+                'PROJECT_DOMAIN_NAME'
+        ]:
             varname = "HTTP_X_%s" % envvar
             environ[varname] = 'noauth'
 
@@ -75,6 +78,7 @@ class NoAuthFilter(object):
 
         return self.app(environ, start_response)
 
+
 def noauth_filter_factory(global_conf, forged_roles):
     """Create a NoAuth paste deploy filter
 
@@ -84,4 +88,5 @@ def noauth_filter_factory(global_conf, forged_roles):
 
     def filter(app):
         return NoAuthFilter(app, forged_roles)
+
     return filter

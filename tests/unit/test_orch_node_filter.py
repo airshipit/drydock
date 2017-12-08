@@ -18,7 +18,8 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_node_filter_obj(self, input_files, setup, deckhand_orchestrator, deckhand_ingester):
+    def test_node_filter_obj(self, input_files, setup, deckhand_orchestrator,
+                             deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
@@ -37,7 +38,8 @@ class TestClass(object):
 
         assert len(node_list) == 1
 
-    def test_node_filter_dict(self, input_files, setup, deckhand_orchestrator, deckhand_ingester):
+    def test_node_filter_dict(self, input_files, setup, deckhand_orchestrator,
+                              deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()

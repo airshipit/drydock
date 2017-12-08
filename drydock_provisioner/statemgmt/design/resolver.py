@@ -95,14 +95,16 @@ class ReferenceResolver(object):
         """
         ks_sess = KeystoneUtils.get_session()
         (new_scheme, foo) = re.subn('^[^+]+\+', '', design_uri.scheme)
-        url = urllib.parse.urlunparse((new_scheme, design_uri.netloc, design_uri.path,
-                                       design_uri.params, design_uri.query, design_uri.fragment))
+        url = urllib.parse.urlunparse(
+            (new_scheme, design_uri.netloc, design_uri.path, design_uri.params,
+             design_uri.query, design_uri.fragment))
         logger = logging.getLogger(__name__)
         logger.debug("Calling Keystone session for url %s" % str(url))
         resp = ks_sess.get(url)
         if resp.status_code >= 400:
             raise errors.InvalidDesignReference(
-                "Received error code for reference %s: %s - %s" % (url, str(resp.status_code), resp.text))
+                "Received error code for reference %s: %s - %s" %
+                (url, str(resp.status_code), resp.text))
         return resp.content
 
     scheme_handlers = {

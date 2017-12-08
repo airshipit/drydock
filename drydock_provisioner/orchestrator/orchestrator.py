@@ -567,22 +567,27 @@ class Orchestrator(object):
             for n in site_design.networks:
                 if n.routedomain is not None:
                     if n.routedomain not in routedomains:
-                        self.logger.info("Adding routedomain %s to render map." % n.routedomain)
+                        self.logger.info("Adding routedomain %s to render map."
+                                         % n.routedomain)
                         routedomains[n.routedomain] = list()
                     routedomains[n.routedomain].append(n)
             for rd, nl in routedomains.items():
                 rd_cidrs = [n.cidr for n in nl]
-                self.logger.debug("Target CIDRs for routedomain %s: %s" % (rd, ','.join(rd_cidrs)))
+                self.logger.debug("Target CIDRs for routedomain %s: %s" %
+                                  (rd, ','.join(rd_cidrs)))
                 for n in site_design.networks:
                     gw = None
                     metric = None
                     for r in n.routes:
-                        if 'routedomain' in r and r.get('routedomain', None) == rd:
+                        if 'routedomain' in r and r.get('routedomain',
+                                                        None) == rd:
                             gw = r.get('gateway')
                             metric = r.get('metric')
-                            self.logger.debug("Use gateway %s for routedomain %s on network %s." %
-                                              (gw, rd, n.get_name()))
+                            self.logger.debug(
+                                "Use gateway %s for routedomain %s on network %s."
+                                % (gw, rd, n.get_name()))
                             break
                     if gw is not None and metric is not None:
                         for cidr in rd_cidrs:
-                            n.routes.append(dict(subnet=cidr, gateway=gw, metric=metric))
+                            n.routes.append(
+                                dict(subnet=cidr, gateway=gw, metric=metric))

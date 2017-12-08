@@ -78,9 +78,11 @@ class DeckhandIngester(IngesterPlugin):
         ps.set_status(hd_fields.ActionResult.Success)
         for d in parsed_data:
             try:
-                (schema_ns, doc_kind, doc_version) = d.get('schema', '').split('/')
+                (schema_ns, doc_kind, doc_version) = d.get('schema',
+                                                           '').split('/')
             except ValueError as ex:
-                self.logger.error("Error with document structure.", exc_info=ex)
+                self.logger.error(
+                    "Error with document structure.", exc_info=ex)
                 self.logger.debug("Error document\n%s" % yaml.dump(d))
                 continue
             if schema_ns == 'drydock':

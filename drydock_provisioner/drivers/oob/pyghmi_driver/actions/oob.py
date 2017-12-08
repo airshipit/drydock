@@ -70,8 +70,8 @@ class PyghmiBaseAction(BaseAction):
                 self.logger.debug("Initializing IPMI session")
                 ipmi_session = self.get_ipmi_session(node)
             except (IpmiException, errors.DriverError) as iex:
-                self.logger.error("Error initializing IPMI session for node %s"
-                                  % node.name)
+                self.logger.error(
+                    "Error initializing IPMI session for node %s" % node.name)
                 self.logger.debug("IPMI Exception: %s" % str(iex))
                 self.logger.warning(
                     "IPMI command failed, retrying after 15 seconds...")

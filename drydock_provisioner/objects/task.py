@@ -300,8 +300,8 @@ class Task(object):
         for st in self.statemgr.get_complete_subtasks(self.task_id):
             if action_filter is None or (action_filter is not None
                                          and st.action == action_filter):
-                self.logger.debug(
-                    "Collecting result status from subtask %s." % str(st.task_id))
+                self.logger.debug("Collecting result status from subtask %s." %
+                                  str(st.task_id))
                 if st.get_result() in [
                         hd_fields.ActionResult.Success,
                         hd_fields.ActionResult.PartialSuccess
