@@ -39,7 +39,7 @@ class ValidationResource(StatefulResource):
         # create resp message
         resp_message = {
             'kind': 'Status',
-            'apiVersion': 'v1',
+            'apiVersion': 'v1.0',
             'metaData': {},
             'status': '',
             'message': '',
@@ -77,13 +77,13 @@ class ValidationResource(StatefulResource):
             ]
 
             if message.error_count == 0:
-                resp_message['status'] = 'Valid'
+                resp_message['status'] = 'Success'
                 resp_message['message'] = 'Drydock Validations succeeded'
                 resp_message['code'] = 200
                 resp.status = falcon.HTTP_200
                 resp.body = json.dumps(resp_message)
             else:
-                resp_message['status'] = 'Invalid'
+                resp_message['status'] = 'Failure'
                 resp_message['message'] = 'Drydock Validations failed'
                 resp_message['code'] = 400
                 resp.status = falcon.HTTP_400
