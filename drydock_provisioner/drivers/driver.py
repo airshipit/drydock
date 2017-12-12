@@ -17,8 +17,9 @@ from threading import Thread
 import time
 
 import drydock_provisioner.objects.fields as hd_fields
-import drydock_provisioner.statemgmt as statemgmt
 import drydock_provisioner.error as errors
+
+from drydock_provisioner.orchestrator.actions.orchestrator import Noop
 
 
 class ProviderDriver(object):
@@ -47,8 +48,9 @@ class ProviderDriver(object):
         task_action = task.action
 
         if task_action in self.supported_actions:
-            task_runner = DriverActionRunner(task_id, self.state_manager,
-                                             self.orchestrator)
+            # Just use the Noop action
+            task_action = Noop(task, self.orchestrator, self.state_manager)
+            task_runner = DriverActionRunner(task_action)
             task_runner.start()
 
             while task_runner.is_alive():
@@ -62,17 +64,12 @@ class ProviderDriver(object):
 
 # Execute a single task in a separate thread
 class DriverActionRunner(Thread):
-    def __init__(self, action=None, state_manager=None, orchestrator=None):
+    def __init__(self, action=None):
         super().__init__()
 
-        self.orchestrator = orchestrator
-
-        if isinstance(state_manager, statemgmt.DesignState):
-            self.state_manager = state_manager
-        else:
-            raise errors.DriverError("Invalid state manager specified")
-
         self.action = action
+        self.orchestrator = action.orchestrator
+        self.state_manager = action.state_manager
 
     def run(self):
         self.run_action()

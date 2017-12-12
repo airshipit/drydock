@@ -86,7 +86,8 @@ class BaseAction(object):
                     self.task.register_subtask(split_task)
                     action = self.__class__(split_task, self.orchestrator,
                                             self.state_manager)
-                    split_tasks[split_task.get_id().bytes] = te.submit(action.start)
+                    split_tasks[split_task.get_id().bytes] = te.submit(
+                        action.start)
 
             return split_tasks
 
@@ -185,7 +186,9 @@ class Noop(BaseAction):
         else:
             self.logger.debug("Marked task as successful.")
             self.task.set_status(hd_fields.TaskStatus.Complete)
-            self.task.success()
+            target_nodes = self.orchestrator.get_target_nodes(self.task)
+            for n in target_nodes:
+                self.task.success(focus=n.name)
             self.task.add_status_msg(
                 msg="Noop action.", ctx_type='NA', ctx='NA', error=False)
         self.task.save()

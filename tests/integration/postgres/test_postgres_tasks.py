@@ -38,6 +38,33 @@ class TestPostgres(object):
 
         assert result
 
+    def task_task_node_filter(self, blank_state):
+        """Test that a persisted task persists node filter."""
+        ctx = DrydockRequestContext()
+        ctx.user = 'sh8121'
+        ctx.external_marker = str(uuid.uuid4())
+
+        node_filter = {
+            'filter_set_type': 'union',
+            'filter_set': [{
+                'node_names': ['foo'],
+                'filter_type': 'union'
+            }]
+        }
+        task = objects.Task(
+            action='deploy_node',
+            node_filter=node_filter,
+            design_ref='http://foo.bar/design',
+            context=ctx)
+
+        result = blank_state.post_task(task)
+
+        assert result
+
+        saved_task = blank_state.get_task(task.get_id())
+
+        assert saved_task.node_filter == node_filter
+
     def test_subtask_append(self, blank_state):
         """Test that the atomic subtask append method works."""
 

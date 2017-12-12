@@ -302,7 +302,6 @@ class Orchestrator(object):
 
     def get_target_nodes(self, task, failures=False, successes=False):
         """Compute list of target nodes for given ``task``.
-
         If failures is true, then create a node_filter based on task result
         failures. If successes is true, then create a node_filter based on
         task result successes. If both are true, raise an exception. If neither

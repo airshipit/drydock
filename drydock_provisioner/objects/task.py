@@ -380,7 +380,8 @@ class Task(object):
             'request_context':
             json.dumps(self.request_context.to_dict())
             if self.request_context is not None else None,
-            'node_filter': self.node_filter,
+            'node_filter':
+            self.node_filter,
             'action':
             self.action,
             'terminated':

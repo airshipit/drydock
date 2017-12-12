@@ -15,12 +15,12 @@
 import drydock_provisioner.orchestrator.orchestrator as orch
 import drydock_provisioner.objects.fields as hd_fields
 
-from drydock_provisioner.orchestrator.actions.orchestrator import PrepareSite
+from drydock_provisioner.orchestrator.actions.orchestrator import PrepareNodes
 
 
-class TestActionPrepareSite(object):
-    def test_preparesite(self, input_files, deckhand_ingester, setup,
-                         drydock_state):
+class TestActionPrepareNodes(object):
+    def test_preparenodes(self, input_files, deckhand_ingester, setup,
+                          drydock_state):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_ref = "file://%s" % str(input_file)
@@ -28,7 +28,7 @@ class TestActionPrepareSite(object):
         # Build a dummy object that looks like an oslo_config object
         # so the orchestrator is configured w/ Noop drivers
         class DummyConf(object):
-            oob_driver = list()
+            oob_driver = ['drydock_provisioner.drivers.oob.driver.OobDriver']
             node_driver = 'drydock_provisioner.drivers.node.driver.NodeDriver'
             network_driver = None
 
@@ -39,11 +39,19 @@ class TestActionPrepareSite(object):
 
         task = orchestrator.create_task(
             design_ref=design_ref,
-            action=hd_fields.OrchestratorAction.PrepareSite)
+            action=hd_fields.OrchestratorAction.PrepareNodes)
 
-        action = PrepareSite(task, orchestrator, drydock_state)
+        action = PrepareNodes(task, orchestrator, drydock_state)
         action.start()
 
         task = drydock_state.get_task(task.get_id())
 
         assert task.result.status == hd_fields.ActionResult.Success
+
+        # check that the PrepareNodes action was split
+        # with 2 nodes in the definition
+        assert len(task.subtask_id_list) == 2
+
+        for st_id in task.subtask_id_list:
+            st = drydock_state.get_task(st_id)
+            assert st.action == hd_fields.OrchestratorAction.PrepareNodes

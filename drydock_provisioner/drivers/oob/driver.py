@@ -21,7 +21,7 @@ from drydock_provisioner.drivers.driver import ProviderDriver
 class OobDriver(ProviderDriver):
     """Genneric driver for OOB actions."""
 
-    oob_types_supported = ['']
+    oob_types_supported = ['ipmi']
 
     def __init__(self, **kwargs):
         super(OobDriver, self).__init__(**kwargs)
