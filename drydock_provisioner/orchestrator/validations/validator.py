@@ -183,12 +183,10 @@ class Validator():
                         partition_volume_group = partition.get('volume_group')
                         fstype = partition.get('fstype')
 
-                        # error if both or neither is defined
-                        if all([fstype, partition_volume_group]) or not any([fstype, partition_volume_group]):
-                            msg = ('Storage Partitioning Error: Either a '
-                                   'volume group OR file system must be '
-                                   'defined defined in a sigle partition; on '
-                                   'BaremetalNode %s' % baremetal_node.get('name'))
+                        # error if both are defined
+                        if all([fstype, partition_volume_group]):
+                            msg = ('Storage Partitioning Error: Both a volume group AND file system cannot be '
+                                   'defined in a sigle partition; on BaremetalNode %s' % baremetal_node.get('name'))
 
                             message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
@@ -202,10 +200,9 @@ class Validator():
             for volume_group in all_volume_groups:
                 if volume_group.get('name') not in volume_group_check_list:
 
-                    msg = ('Storage Partitioning Error: A volume group must be '
-                           'assigned to a storage device or partition; '
-                           'volume group %s ' % volume_group.get('name') + ''
-                           'on BaremetalNode %s' % baremetal_node.get('name'))
+                    msg = ('Storage Partitioning Error: A volume group must be assigned to a storage device or '
+                           'partition; volume group %s on BaremetalNode %s' %
+                           (volume_group.get('name'), baremetal_node.get('name')))
 
                     message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
@@ -244,9 +241,8 @@ class Validator():
                     duplicated_names = [i for i in allowed_network_list_1 if i in allowed_network_list_2]
 
                     for name in duplicated_names:
-                        msg = ('Unique Network Error: Allowed network '
-                               '%s duplicated on NetworkLink %s ' % (name, network_link_name) + ''
-                               ' and NetworkLink %s' % network_link_name_2)
+                        msg = ('Unique Network Error: Allowed network %s duplicated on NetworkLink %s and NetworkLink '
+                               '%s' % (name, network_link_name, network_link_name_2))
                         message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
