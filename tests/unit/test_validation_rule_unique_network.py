@@ -15,11 +15,10 @@
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-
+import re
 
 class TestUniqueNetwork(object):
-    def test_unique_network(self, mocker, deckhand_ingester, drydock_state,
-                            input_files):
+    def test_unique_network(self, mocker, deckhand_ingester, drydock_state, input_files):
 
         input_file = input_files.join("unique_network.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -35,8 +34,7 @@ class TestUniqueNetwork(object):
         assert msg.get('error') is False
         assert len(message_list) == 1
 
-    def test_invalid_unique_network(self, mocker, deckhand_ingester,
-                                    drydock_state, input_files):
+    def test_invalid_unique_network(self, mocker, deckhand_ingester, drydock_state, input_files):
 
         input_file = input_files.join("invalid_unique_network.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -47,7 +45,11 @@ class TestUniqueNetwork(object):
 
         message_list = Validator.unique_network_check(site_design)
 
-        msg = message_list[0].to_dict()
-        assert 'Unique Network Error' in msg.get('message')
-        assert msg.get('error') is True
+        regex = re.compile('Unique Network Error: Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+')
+
+        for msg in message_list:
+            msg = msg.to_dict()
+            assert msg.get('error')
+            assert regex.match(msg.get('message')) is not None
+
         assert len(message_list) == 1

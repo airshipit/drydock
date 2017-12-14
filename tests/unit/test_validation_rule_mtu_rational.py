@@ -15,7 +15,7 @@
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-
+import re
 
 class TestMtu(object):
     def test_mtu(self, mocker, deckhand_ingester, drydock_state, input_files):
@@ -44,8 +44,13 @@ class TestMtu(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.mtu_rational(site_design)
-        msg = message_list[0].to_dict()
 
-        assert 'Mtu Error' in msg.get('message')
-        assert msg.get('error') is True
-        assert len(message_list) == 1
+        regex = re.compile('Mtu Error: Mtu must be between 1400 and 64000; on Network .+')
+        regex_1 = re.compile('Mtu Error: Mtu must be <= the parent Network Link; for Network .+')
+
+        for msg in message_list:
+            msg = msg.to_dict()
+            assert msg.get('error')
+            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
+
+        assert len(message_list) == 4

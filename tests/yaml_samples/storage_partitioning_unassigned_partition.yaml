@@ -66,9 +66,7 @@ metadata:
 data:
   bonding:
     mode: disabled
-########################################
-# FAILS HERE: mtu of < 1400
-  mtu: 700
+  mtu: 1500
   linkspeed: auto
   trunking:
     mode: disabled
@@ -165,9 +163,7 @@ metadata:
     application: 'drydock'
 data:
   vlan: '100'
-########################################
-# FAILS HERE: mtu of parent is 9000
-  mtu: 15000
+  mtu: 1500
   cidr: 172.16.1.0/24
   ranges:
     - type: static
@@ -190,9 +186,7 @@ metadata:
     application: 'drydock'
 data:
   vlan: '101'
-########################################
-# FAILS HERE: mtu of > 64000
-  mtu: 74000
+  mtu: 9000
   cidr: 172.16.2.0/24
   ranges:
     - type: static
@@ -247,17 +241,9 @@ data:
           - name: root
             size: 20g
             bootable: true
-            filesystem:
-              mountpoint: '/'
-              fstype: 'ext4'
-              mount_options: 'defaults'
           - name: boot
             size: 1g
             bootable: false
-            filesystem:
-              mountpoint: '/boot'
-              fstype: 'ext4'
-              mount_options: 'defaults'
       sdb:
         volume_group: 'log_vg'
     volume_groups:

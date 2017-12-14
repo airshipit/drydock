@@ -15,11 +15,10 @@
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-
+import re
 
 class TestRationalNetworkLinkBond(object):
-    def test_rational_network_bond(
-            self, mocker, deckhand_ingester, drydock_state, input_files):
+    def test_rational_network_bond(self, mocker, deckhand_ingester, drydock_state, input_files):
 
         input_file = input_files.join("rational_network_bond.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -35,8 +34,7 @@ class TestRationalNetworkLinkBond(object):
         assert msg.get('error') is False
         assert len(message_list) == 1
 
-    def test_invalid_rational_network_bond(
-            self, mocker, deckhand_ingester, drydock_state, input_files):
+    def test_invalid_rational_network_bond(self, mocker, deckhand_ingester, drydock_state, input_files):
 
         input_file = input_files.join("invalid_rational_network_bond.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -47,14 +45,12 @@ class TestRationalNetworkLinkBond(object):
 
         message_list = Validator.rational_network_bond(site_design)
 
-        msg = message_list[0].to_dict()
+        regex = re.compile('Network Link Bonding Error: Down delay is less than mon rate on BaremetalNode .+')
+        regex_1 = re.compile('Network Link Bonding Error: Up delay is less than mon rate on BaremetalNode .+')
 
-        exp_msg = 'Network Link Bonding Error: Up delay'
-        assert exp_msg in msg.get('message')
-        assert msg.get('error') is True
+        for msg in message_list:
+            msg = msg.to_dict()
+            assert msg.get('error') is True
+            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
 
-        msg = message_list[1].to_dict()
-
-        exp_msg = 'Network Link Bonding Error: Down delay'
-        assert exp_msg in msg.get('message')
-        assert msg.get('error') is True
+        assert len(message_list) == 2
