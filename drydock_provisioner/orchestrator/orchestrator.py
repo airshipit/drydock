@@ -546,9 +546,17 @@ class Orchestrator(object):
                     identity_key = os.urandom(32)
                     self.state_manager.post_boot_action_context(
                         nodename, task.get_id(), identity_key)
-                action_id = ulid2.generate_binary_ulid()
-                self.state_manager.post_boot_action(
-                    nodename, task.get_id(), identity_key, action_id, ba.name)
+                if ba.signaling:
+                    self.logger.debug(
+                        "Adding boot action %s for node %s to the database." %
+                        (ba.name, nodename))
+                    action_id = ulid2.generate_binary_ulid()
+                    self.state_manager.post_boot_action(
+                        nodename,
+                        task.get_id(), identity_key, action_id, ba.name)
+                else:
+                    self.logger.debug(
+                        "Boot action %s has disabled signaling." % ba.name)
 
         return identity_key
 

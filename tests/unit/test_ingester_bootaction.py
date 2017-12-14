@@ -17,11 +17,11 @@ from drydock_provisioner.statemgmt.state import DrydockState
 import drydock_provisioner.objects as objects
 
 
-class TestClass(object):
+class TestBootAction(object):
     def test_bootaction_parse(self, input_files, deckhand_ingester, setup):
         objects.register_all()
 
-        input_file = input_files.join("bootaction.yaml")
+        input_file = input_files.join("deckhand_bootaction.yaml")
 
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
@@ -31,4 +31,4 @@ class TestClass(object):
 
         ba = design_data.get_bootaction('helloworld')
 
-        assert len(ba.asset_list) == 2
+        assert len(ba.asset_list) == 3

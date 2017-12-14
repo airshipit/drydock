@@ -179,6 +179,7 @@ class BootactionAssetsResource(StatefulResource):
                             hostname,
                             site_design,
                             action_id,
+                            task.design_ref,
                             type_filter=asset_type_filter))
 
             tarball = BootactionUtils.tarbuilder(asset_list=assets)

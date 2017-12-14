@@ -1,0 +1,53 @@
+#Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+schema: 'drydock/BootAction/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: helloworld
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  signaling: true
+  assets:
+    - path: /var/tmp/hello.sh
+      type: file
+      permissions: '555'
+      data: |-
+        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
+        Jwo=
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+    - path: /lib/systemd/system/hello.service
+      type: unit
+      permissions: '600'
+      data: |-
+        W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
+        ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
+        dGFyZ2V0Cg==
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+    - path: /var/tmp/designref.sh
+      type: file
+      permissions: '500'
+      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+...

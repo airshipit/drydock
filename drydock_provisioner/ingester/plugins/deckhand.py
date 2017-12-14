@@ -396,6 +396,7 @@ class DeckhandIngester(IngesterPlugin):
             nfs = self.process_bootaction_nodefilter(node_filter)
             model.node_filter = nfs
 
+        model.signaling = data.get('signaling', None)
         return model
 
     def process_bootaction_asset(self, asset_dict):

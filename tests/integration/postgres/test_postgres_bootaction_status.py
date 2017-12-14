@@ -20,7 +20,7 @@ import ulid2
 from drydock_provisioner import objects
 
 
-class TestPostgres(object):
+class TestPostgresBootAction(object):
     def test_bootaction_post(self, populateddb, drydock_state):
         """Test that a boot action status can be added."""
         id_key = os.urandom(32)

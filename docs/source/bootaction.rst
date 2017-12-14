@@ -18,6 +18,7 @@ for these YAML documents is described below.
 .. code-block:: yaml
 
   data:
+    signaling: true
     assets:
       - path: /save/file/here
         location: http://get.data.here/data
@@ -34,6 +35,10 @@ for these YAML documents is described below.
     node_filter:
       ...
 
+
+``signaling`` is a boolean noting whether Drydock should expect a signal at the completion
+of this boot action. If set to ``true`` for a boot action that does not send a signal, it
+will elongate the deployment step and consider the boot action failed.
 
 ``assets`` is a list of data assets. More details below on how each data asset is rendered.
 
@@ -98,6 +103,7 @@ template
     - node.labels - Key, value pairs of both explicit and dynamic labels for this node
     - action.key - A key that uniquely identifies this boot action on this node. Can be used for signaling boot action result.
     - action.report_url - The URL that can be POSTed to for reporting boot action result.
+    - action.design_ref - The design reference for the deployment that initiated the bootaction
 
     Also available in the Jinja2 template is the ``urlencode`` filter to encode a string for inclusion
     in a URL.

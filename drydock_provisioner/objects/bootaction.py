@@ -43,6 +43,8 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
         ovo_fields.ObjectField('NodeFilterSet', nullable=True),
         'target_nodes':
         ovo_fields.ListOfStringsField(nullable=True),
+        'signaling':
+        ovo_fields.BooleanField(default=True),
     }
 
     def __init__(self, **kwargs):
@@ -55,7 +57,7 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
     def get_name(self):
         return self.name
 
-    def render_assets(self, nodename, site_design, action_id,
+    def render_assets(self, nodename, site_design, action_id, design_ref,
                       type_filter=None):
         """Render all of the assets in this bootaction.
 
@@ -68,13 +70,14 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
         :param site_design: a objects.SiteDesign instance holding the design sets
         :param action_id: a 128-bit ULID action_id of the boot action
                           the assets are part of
+        :param design_ref: the design ref this boot action was initiated under
         :param type_filter: optional filter of the types of assets to render
         """
         assets = list()
         for a in self.asset_list:
             if type_filter is None or (type_filter is not None
                                        and a.type == type_filter):
-                a.render(nodename, site_design, action_id)
+                a.render(nodename, site_design, action_id, design_ref)
                 assets.append(a)
 
         return assets
@@ -116,7 +119,7 @@ class BootActionAsset(base.DrydockObject):
         super().__init__(permissions=mode, **kwargs)
         self.rendered_bytes = None
 
-    def render(self, nodename, site_design, action_id):
+    def render(self, nodename, site_design, action_id, design_ref):
         """Render this asset into a base64 encoded string.
 
         The ``nodename`` and ``action_id`` will be used to construct
@@ -125,6 +128,7 @@ class BootActionAsset(base.DrydockObject):
         :param nodename: the name of the node where the asset will be deployed
         :param site_design: instance of objects.SiteDesign
         :param action_id: a 128-bit ULID boot action id
+        :param design_ref: The design ref this bootaction was initiated under
         """
         node = site_design.get_baremetal_node(nodename)
 
@@ -139,6 +143,7 @@ class BootActionAsset(base.DrydockObject):
             'action': {
                 'key': ulid2.ulid_to_base32(action_id),
                 'report_url': config.config_mgr.conf.bootactions.report_url,
+                'design_ref': design_ref,
             }
         }
 
