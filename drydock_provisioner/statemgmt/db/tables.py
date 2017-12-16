@@ -1,7 +1,20 @@
+# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Definitions for Drydock database tables."""
 
 from sqlalchemy.schema import Table, Column
-from sqlalchemy.types import Boolean, DateTime, String, Integer
+from sqlalchemy.types import Boolean, DateTime, String, Integer, Text
 from sqlalchemy.dialects import postgresql as pg
 
 
@@ -89,10 +102,25 @@ class BootActionStatus(ExtendTable):
     __tablename__ = 'boot_action_status'
 
     __schema__ = [
-        Column('node_name', String(32)),
+        Column('node_name', String(32), index=True),
         Column('action_id', pg.BYTEA(16), primary_key=True),
         Column('action_name', String(64)),
-        Column('task_id', pg.BYTEA(16)),
+        Column('task_id', pg.BYTEA(16), index=True),
         Column('identity_key', pg.BYTEA(32)),
         Column('action_status', String(32)),
+    ]
+
+
+class BuildData(ExtendTable):
+    """Table for persisting node build data."""
+
+    __tablename__ = 'build_data'
+
+    __schema__ = [
+        Column('node_name', String(32), index=True),
+        Column('task_id', pg.BYTEA(16), index=True),
+        Column('collected_date', DateTime),
+        Column('generator', String(256)),
+        Column('format', String(32)),
+        Column('data_element', Text),
     ]
