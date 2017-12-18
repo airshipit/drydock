@@ -300,7 +300,6 @@ class TaskResource(StatefulResource):
         """Handler for GET method."""
         try:
             task = self.state_manager.get_task(uuid.UUID(task_id))
-
             if task is None:
                 self.info(req.context, "Task %s does not exist" % task_id)
                 self.return_error(
@@ -310,7 +309,15 @@ class TaskResource(StatefulResource):
                     retry=False)
                 return
 
-            resp.body = json.dumps(task.to_dict())
+            resp_data = task.to_dict()
+            builddata = req.params.get('builddata', 'false').upper()
+
+            if builddata == "TRUE":
+                task_bd = self.state_manager.get_build_data(
+                    task_id=task.get_id())
+                resp_data['build_data'] = [bd.to_dict() for bd in task_bd]
+
+            resp.body = json.dumps(resp_data)
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % (str(ex)))

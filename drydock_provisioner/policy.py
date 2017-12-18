@@ -95,6 +95,13 @@ class DrydockPolicy(object):
                                          'path': '/api/v1.0/tasks',
                                          'method': 'POST'
                                      }]),
+        policy.DocumentedRuleDefault(
+            'physical_provisioner:read_build_data', 'role:admin',
+            'Read build data for a node',
+            [{
+                'path': '/api/v1.0/nodes/{nodename}/builddata',
+                'method': 'GET',
+            }]),
     ]
 
     # Data Management Policy

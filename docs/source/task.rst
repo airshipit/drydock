@@ -88,7 +88,7 @@ When querying the state of an existing task, the below document will be returned
 
     {
       "Kind": "Task",
-      "apiVersion": "v1",
+      "apiVersion": "v1.0",
       "task_id": "uuid",
       "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node",
       "design_ref": "http_uri|deckhand_uri|file_uri",
@@ -144,4 +144,24 @@ consist of the below::
     "ts": iso8601 UTC timestamp,
   }
 
+Task Build Data
+~~~~~~~~~~~~~~~
 
+When querying the detail state of an existing task, adding the parameter ``builddata=true``
+in the query string will add one additional field with a list of build data elements
+collected by this task.::
+
+    {
+      "Kind": "Task",
+      "apiVersion": "v1",
+      ....
+      "build_data": [
+        {
+          "node_name": "foo",
+          "task_id": "uuid",
+          "collected_data": iso8601 UTC timestamp,
+          "generator": "lshw",
+          "data_format": "application/json",
+          "data_element": "{ \"id\": \"foo\", \"class\": \"system\" ...}"
+        }
+      ]

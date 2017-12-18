@@ -558,7 +558,7 @@ class TaskStatus(object):
     def to_dict(self):
         return {
             'kind': 'Status',
-            'apiVersion': 'v1',
+            'apiVersion': 'v1.0',
             'metadata': {},
             'message': self.message,
             'reason': self.reason,

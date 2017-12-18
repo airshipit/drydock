@@ -12,96 +12,106 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test tasks API with Postgres backend."""
+import pytest
+from falcon import testing
 
-import uuid
 import json
 
-from drydock_provisioner import policy
-from drydock_provisioner.orchestrator.orchestrator import Orchestrator
+import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.objects as objects
 
+from drydock_provisioner import policy
+from drydock_provisioner.control.api import start_api
 from drydock_provisioner.control.base import DrydockRequestContext
-from drydock_provisioner.control.tasks import TasksResource
 
 import falcon
 
 
 class TestTasksApi():
-    def test_read_tasks(self, mocker, blank_state):
-        ''' DrydockPolicy.authorized() should correctly use oslo_policy to enforce
-            RBAC policy based on a DrydockRequestContext instance
-        '''
+    def test_read_tasks(self, falcontest, blank_state):
+        """Test that the tasks API responds with list of tasks."""
+        url = '/api/v1.0/tasks'
 
-        mocker.patch('oslo_policy.policy.Enforcer')
+        # TODO(sh8121att) Make fixture for request header forging
+        hdr = {
+            'Content-Type': 'application/json',
+            'X-IDENTITY-STATUS': 'Confirmed',
+            'X-USER-NAME': 'Test',
+            'X-ROLES': 'admin'
+        }
 
-        ctx = DrydockRequestContext()
-        policy_engine = policy.DrydockPolicy()
-
-        # Mock policy enforcement
-        policy_mock_config = {'authorize.return_value': True}
-        policy_engine.enforcer.configre_mock(**policy_mock_config)
-
-        api = TasksResource(state_manager=blank_state)
-
-        # Configure context
-        project_id = str(uuid.uuid4().hex)
-        ctx.project_id = project_id
-        user_id = str(uuid.uuid4().hex)
-        ctx.user_id = user_id
-        ctx.roles = ['admin']
-        ctx.set_policy_engine(policy_engine)
-
-        # Configure mocked request and response
-        req = mocker.MagicMock()
-        resp = mocker.MagicMock()
-        req.context = ctx
-
-        api.on_get(req, resp)
+        resp = falcontest.simulate_get(url, headers=hdr)
 
         assert resp.status == falcon.HTTP_200
 
-    def test_create_task(self, mocker, blank_state):
-        mocker.patch('oslo_policy.policy.Enforcer')
-
-        ingester = mocker.MagicMock()
-        orch = mocker.MagicMock(
-            spec=Orchestrator,
-            wraps=Orchestrator(state_manager=blank_state, ingester=ingester))
-
+    def test_read_tasks_builddata(self, falcontest, blank_state,
+                                  deckhand_orchestrator):
+        """Test that the tasks API includes build data when prompted."""
+        req_hdr = {
+            'Content-Type': 'application/json',
+            'X-IDENTITY-STATUS': 'Confirmed',
+            'X-USER-NAME': 'Test',
+            'X-ROLES': 'admin',
+        }
+        # Seed DB with a task
         ctx = DrydockRequestContext()
-        policy_engine = policy.DrydockPolicy()
+        task = deckhand_orchestrator.create_task(
+            action=hd_fields.OrchestratorAction.PrepareNodes,
+            design_ref='http://foo.com',
+            context=ctx)
+
+        # Seed DB with build data for task
+        build_data = objects.BuildData(
+            node_name='foo',
+            task_id=task.get_id(),
+            generator='hello_world',
+            data_format='text/plain',
+            data_element='Hello World!')
+        blank_state.post_build_data(build_data)
+
+        url = '/api/v1.0/tasks/%s' % str(task.get_id())
+
+        resp = falcontest.simulate_get(
+            url, headers=req_hdr, query_string="builddata=true")
+
+        assert resp.status == falcon.HTTP_200
+
+        resp_body = resp.json
+
+        assert isinstance(resp_body.get('build_data'), list)
+
+        assert len(resp_body.get('build_data')) == 1
+
+    def test_create_task(self, falcontest, blank_state):
+        url = '/api/v1.0/tasks'
+
+        req_hdr = {
+            'Content-Type': 'application/json',
+            'X-IDENTITY-STATUS': 'Confirmed',
+            'X-USER-NAME': 'Test',
+            'X-ROLES': 'admin',
+        }
 
         json_body = json.dumps({
             'action': 'verify_site',
             'design_ref': 'http://foo.com',
-        }).encode('utf-8')
+        })
 
-        # Mock policy enforcement
-        policy_mock_config = {'authorize.return_value': True}
-        policy_engine.enforcer.configure_mock(**policy_mock_config)
-
-        api = TasksResource(orchestrator=orch, state_manager=blank_state)
-
-        # Configure context
-        project_id = str(uuid.uuid4().hex)
-        ctx.project_id = project_id
-        user_id = str(uuid.uuid4().hex)
-        ctx.user_id = user_id
-        ctx.roles = ['admin']
-        ctx.set_policy_engine(policy_engine)
-
-        # Configure mocked request and response
-        req = mocker.MagicMock(spec=falcon.Request)
-        req.content_type = 'application/json'
-        req.stream.read.return_value = json_body
-        resp = mocker.MagicMock(spec=falcon.Response)
-
-        req.context = ctx
-
-        api.on_post(req, resp)
+        resp = falcontest.simulate_post(url, headers=req_hdr, body=json_body)
 
         assert resp.status == falcon.HTTP_201
-        assert resp.get_header('Location') is not None
+        assert resp.headers.get('Location') is not None
 
-    @policy.ApiEnforcer('physical_provisioner:read_task')
-    def target_function(self, req, resp):
-        return True
+    # TODO(sh8121att) Make this a general fixture in conftest.py
+    @pytest.fixture()
+    def falcontest(self, drydock_state, deckhand_ingester,
+                   deckhand_orchestrator):
+        """Create a test harness for the the Falcon API framework."""
+        policy.policy_engine = policy.DrydockPolicy()
+        policy.policy_engine.register_policy()
+
+        return testing.TestClient(
+            start_api(
+                state_manager=drydock_state,
+                ingester=deckhand_ingester,
+                orchestrator=deckhand_orchestrator))

@@ -20,7 +20,7 @@ from drydock_provisioner import config
 from drydock_provisioner.drivers.node.maasdriver.api_client import MaasRequestFactory
 from drydock_provisioner.drivers.node.maasdriver.models.machine import Machines
 
-from .base import BaseResource
+from .base import BaseResource, StatefulResource
 
 
 class NodesResource(BaseResource):
@@ -53,6 +53,35 @@ class NodesResource(BaseResource):
 
             resp.body = json.dumps(node_view)
             resp.status = falcon.HTTP_200
+        except Exception as ex:
+            self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+
+
+class NodeBuildDataResource(StatefulResource):
+    """Resource for returning build data for a node."""
+
+    @policy.ApiEnforcer('physical_provisioner:read_build_data')
+    def on_get(self, req, resp, hostname):
+        try:
+            latest = req.params.get('latest', 'false').upper()
+            latest = True if latest == 'TRUE' else False
+
+            node_bd = self.state_manager.get_build_data(
+                node_name=hostname, latest=latest)
+
+            if not node_bd:
+                self.return_error(
+                    resp,
+                    falcon.HTTP_404,
+                    message="No build data found",
+                    retry=False)
+            else:
+                node_bd = [bd.to_dict() for bd in node_bd]
+                resp.status = falcon.HTTP_200
+                resp.body = json.dumps(node_bd)
+                resp.content_type = falcon.MEDIA_JSON
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
             self.return_error(

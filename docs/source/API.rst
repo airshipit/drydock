@@ -20,6 +20,34 @@ tasks API
 The Tasks API is used for creating and listing asynchronous tasks to be executed by the
 Drydock orchestrator. See :ref:`task` for details on creating tasks and field information.
 
+nodes API
+---------
+
+GET nodes
+^^^^^^^^^
+
+The Nodes API will provide a report of current nodes as known by the node provisioner
+and their status with a few hardware details.
+
+GET nodes/hostname/builddata
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Get all the build data record for node ``hostname``. The response will be a list of
+objects in the below form.::
+
+    {
+      "node_name": "hostname",
+      "generator": "description of how data was generated",
+      "collected_date": ios8601 UTC datestamp,
+      "task_id": "UUID of task initiating collection",
+      "data_format": "MIME-type of data_element",
+      "data_element": "Collected data"
+    }
+
+If the query parameter ``latest`` is passed with a value of ``true``, then only
+the most recently collected data for each ``generator`` will be included in the
+response.
+
 bootdata
 --------
 
