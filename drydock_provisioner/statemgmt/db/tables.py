@@ -121,6 +121,6 @@ class BuildData(ExtendTable):
         Column('task_id', pg.BYTEA(16), index=True),
         Column('collected_date', DateTime),
         Column('generator', String(256)),
-        Column('format', String(32)),
+        Column('data_format', String(32)),
         Column('data_element', Text),
     ]

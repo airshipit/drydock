@@ -364,8 +364,8 @@ class HostVolumeGroup(base.DrydockObject):
                         for f in inheritable_field_list:
                             setattr(p, f,
                                     objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None),
-                                        getattr(i, f, None)))
+                                        getattr(j, f, None), getattr(
+                                            i, f, None)))
 
                         p.partitions = HostPartitionList.from_basic_list(
                             HostPartition.merge_lists(
@@ -478,8 +478,8 @@ class HostStorageDevice(base.DrydockObject):
                         for f in inherit_field_list:
                             setattr(p, f,
                                     objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None),
-                                        getattr(i, f, None)))
+                                        getattr(j, f, None), getattr(
+                                            i, f, None)))
 
                         p.labels = objects.Utils.merge_dicts(
                             getattr(j, 'labels', None),
@@ -625,8 +625,8 @@ class HostPartition(base.DrydockObject):
                         for f in inherit_field_list:
                             setattr(p, f,
                                     objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None),
-                                        getattr(i, f, None)))
+                                        getattr(j, f, None), getattr(
+                                            i, f, None)))
                         add = False
                         p.source = hd_fields.ModelSource.Compiled
                         effective_list.append(p)
@@ -752,8 +752,8 @@ class HostVolume(base.DrydockObject):
                         for f in inherit_field_list:
                             setattr(p, f,
                                     objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None),
-                                        getattr(i, f, None)))
+                                        getattr(j, f, None), getattr(
+                                            i, f, None)))
                         add = False
                         p.source = hd_fields.ModelSource.Compiled
                         effective_list.append(p)

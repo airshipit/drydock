@@ -15,15 +15,16 @@
 
 from drydock_provisioner.objects import fields as hd_fields
 
+
 class TestBootActionSignal(object):
-    def test_bootaction_signal_disable(self, deckhand_orchestrator, drydock_state, input_files):
+    def test_bootaction_signal_disable(self, deckhand_orchestrator,
+                                       drydock_state, input_files):
         """Test that disabled signaling omits a status entry in the DB."""
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
         task = deckhand_orchestrator.create_task(
-            design_ref=design_ref,
-            action=hd_fields.OrchestratorAction.Noop)
+            design_ref=design_ref, action=hd_fields.OrchestratorAction.Noop)
 
         deckhand_orchestrator.create_bootaction_context("compute01", task)
 

@@ -25,7 +25,8 @@ class TestMtu(object):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -36,23 +37,30 @@ class TestMtu(object):
         assert msg.get('error') is False
         assert len(message_list) == 1
 
-    def test_invalid_mtu(self, mocker, deckhand_ingester, drydock_state, input_files):
+    def test_invalid_mtu(self, mocker, deckhand_ingester, drydock_state,
+                         input_files):
 
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.mtu_rational(site_design)
 
-        regex = re.compile('Mtu Error: Mtu must be between 1400 and 64000; on Network .+')
-        regex_1 = re.compile('Mtu Error: Mtu must be <= the parent Network Link; for Network .+')
+        regex = re.compile(
+            'Mtu Error: Mtu must be between 1400 and 64000; on Network .+')
+        regex_1 = re.compile(
+            'Mtu Error: Mtu must be <= the parent Network Link; for Network .+'
+        )
 
         for msg in message_list:
             msg = msg.to_dict()
             assert msg.get('error')
-            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
+            assert regex.match(
+                msg.get('message')) is not None or regex_1.match(
+                    msg.get('message')) is not None
 
         assert len(message_list) == 4

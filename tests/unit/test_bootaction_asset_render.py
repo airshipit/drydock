@@ -20,7 +20,8 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_bootaction_render_nodename(self, input_files, deckhand_ingester, setup):
+    def test_bootaction_render_nodename(self, input_files, deckhand_ingester,
+                                        setup):
         """Test the bootaction render routine provides expected output."""
         objects.register_all()
 
@@ -34,11 +35,13 @@ class TestClass(object):
 
         ba = design_data.get_bootaction('helloworld')
         action_id = ulid2.generate_binary_ulid()
-        assets = ba.render_assets('compute01', design_data, action_id, design_ref)
+        assets = ba.render_assets('compute01', design_data, action_id,
+                                  design_ref)
 
         assert 'compute01' in assets[0].rendered_bytes.decode('utf-8')
 
-    def test_bootaction_render_design_ref(self, input_files, deckhand_ingester, setup):
+    def test_bootaction_render_design_ref(self, input_files, deckhand_ingester,
+                                          setup):
         """Test the bootaction render routine provides expected output."""
         objects.register_all()
 
@@ -52,6 +55,8 @@ class TestClass(object):
 
         ba = design_data.get_bootaction('helloworld')
         action_id = ulid2.generate_binary_ulid()
-        assets = ba.render_assets('compute01', design_data, action_id, design_ref)
+        assets = ba.render_assets('compute01', design_data, action_id,
+                                  design_ref)
 
-        assert 'deckhand_fullsite.yaml' in assets[2].rendered_bytes.decode('utf-8')
+        assert 'deckhand_fullsite.yaml' in assets[2].rendered_bytes.decode(
+            'utf-8')

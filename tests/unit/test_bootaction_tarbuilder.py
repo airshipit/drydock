@@ -39,7 +39,8 @@ class TestClass(object):
 
         ba = design_data.get_bootaction('helloworld')
         action_id = ulid2.generate_binary_ulid()
-        assets = ba.render_assets(target_host, design_data, action_id, design_ref)
+        assets = ba.render_assets(target_host, design_data, action_id,
+                                  design_ref)
 
         assert len(assets) > 0
 

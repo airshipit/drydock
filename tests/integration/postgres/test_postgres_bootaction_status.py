@@ -26,9 +26,8 @@ class TestPostgresBootAction(object):
         id_key = os.urandom(32)
         action_id = ulid2.generate_binary_ulid()
         nodename = 'testnode'
-        result = drydock_state.post_boot_action(nodename,
-                                                populateddb.get_id(), id_key,
-                                                action_id, 'helloworld')
+        result = drydock_state.post_boot_action(
+            nodename, populateddb.get_id(), id_key, action_id, 'helloworld')
 
         assert result
 
@@ -37,9 +36,8 @@ class TestPostgresBootAction(object):
         id_key = os.urandom(32)
         action_id = ulid2.generate_binary_ulid()
         nodename = 'testnode'
-        drydock_state.post_boot_action(nodename,
-                                       populateddb.get_id(), id_key, action_id,
-                                       'helloworld')
+        drydock_state.post_boot_action(nodename, populateddb.get_id(), id_key,
+                                       action_id, 'helloworld')
 
         result = drydock_state.put_bootaction_status(
             ulid2.encode_ulid_base32(action_id),
@@ -52,9 +50,8 @@ class TestPostgresBootAction(object):
         id_key = os.urandom(32)
         action_id = ulid2.generate_binary_ulid()
         nodename = 'testnode'
-        drydock_state.post_boot_action(nodename,
-                                       populateddb.get_id(), id_key, action_id,
-                                       'helloworld')
+        drydock_state.post_boot_action(nodename, populateddb.get_id(), id_key,
+                                       action_id, 'helloworld')
 
         ba = drydock_state.get_boot_action(ulid2.encode_ulid_base32(action_id))
 

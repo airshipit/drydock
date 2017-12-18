@@ -18,13 +18,15 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 
 class TestDesignValidator(object):
-    def test_validate_design(self, deckhand_ingester, drydock_state, input_files):
+    def test_validate_design(self, deckhand_ingester, drydock_state,
+                             input_files):
         """Test the basic validation engine."""
 
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

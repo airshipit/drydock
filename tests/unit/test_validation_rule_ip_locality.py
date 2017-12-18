@@ -23,7 +23,8 @@ class TestIPLocality(object):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -33,11 +34,13 @@ class TestIPLocality(object):
         assert msg.get('message') == 'IP Locality Success'
         assert msg.get('error') is False
 
-    def test_ip_locality_no_networks(self, input_files, drydock_state, deckhand_ingester):
+    def test_ip_locality_no_networks(self, input_files, drydock_state,
+                                     deckhand_ingester):
         input_file = input_files.join("ip_locality_no_networks.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -47,11 +50,13 @@ class TestIPLocality(object):
         assert msg.get('message') == 'No networks found.'
         assert msg.get('error') is False
 
-    def test_ip_locality_no_gateway(self, input_files, drydock_state, deckhand_ingester):
+    def test_ip_locality_no_gateway(self, input_files, drydock_state,
+                                    deckhand_ingester):
         input_file = input_files.join("ip_locality_no_gateway.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -61,11 +66,13 @@ class TestIPLocality(object):
         assert 'No gateway found' in msg.get('message')
         assert msg.get('error') is True
 
-    def test_no_baremetal_node(self, input_files, drydock_state, deckhand_ingester):
+    def test_no_baremetal_node(self, input_files, drydock_state,
+                               deckhand_ingester):
         input_file = input_files.join("no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -75,24 +82,30 @@ class TestIPLocality(object):
         assert msg.get('message') == 'No baremetal_nodes found.'
         assert msg.get('error') is False
 
-    def test_invalid_ip_locality_invalid_network(self, input_files, drydock_state, deckhand_ingester):
+    def test_invalid_ip_locality_invalid_network(
+            self, input_files, drydock_state, deckhand_ingester):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.ip_locality_check(site_design)
 
-        regex = re.compile('IP Locality Error: The gateway IP Address .+ is not within the defined CIDR: .+ of .+')
+        regex = re.compile(
+            'IP Locality Error: The gateway IP Address .+ is not within the defined CIDR: .+ of .+'
+        )
         regex_1 = re.compile('IP Locality Error: .+ is not a valid network.')
-        regex_2 = re.compile('IP Locality Error: The IP Address .+ is not within the defined CIDR: .+ of .+ .')
+        regex_2 = re.compile(
+            'IP Locality Error: The IP Address .+ is not within the defined CIDR: .+ of .+ .'
+        )
 
         assert len(message_list) == 3
         for msg in message_list:
             msg = msg.to_dict()
             assert msg.get('error')
-            assert (regex.match(msg.get('message')) is not None or
-                    regex_1.match(msg.get('message')) is not None or
-                    regex_2.match(msg.get('message')) is not None)
+            assert (regex.match(msg.get('message')) is not None
+                    or regex_1.match(msg.get('message')) is not None
+                    or regex_2.match(msg.get('message')) is not None)

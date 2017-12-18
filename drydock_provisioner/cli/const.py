@@ -14,6 +14,7 @@
 """Constants for the CLI and API client."""
 from enum import Enum
 
+
 class TaskStatus(Enum):
     Requested = 'requested'
     Queued = 'queued'

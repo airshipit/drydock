@@ -24,6 +24,7 @@ from sqlalchemy import MetaData
 
 import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.fields as hd_fields
+import drydock_provisioner.error as errors
 
 from .db import tables
 
@@ -49,6 +50,7 @@ class DrydockState(object):
         self.active_instance_tbl = tables.ActiveInstance(self.db_metadata)
         self.boot_action_tbl = tables.BootAction(self.db_metadata)
         self.ba_status_tbl = tables.BootActionStatus(self.db_metadata)
+        self.build_data_tbl = tables.BuildData(self.db_metadata)
         return
 
     def tabularasa(self):
@@ -62,6 +64,7 @@ class DrydockState(object):
             'active_instance',
             'boot_action',
             'boot_action_status',
+            'build_data',
         ]
 
         conn = self.db_engine.connect()
@@ -585,3 +588,85 @@ class DrydockState(object):
         except Exception as ex:
             self.logger.error(
                 "Error querying boot action %s" % action_id, exc_info=ex)
+
+    def post_build_data(self, build_data):
+        """Write a new build data element to the database.
+
+        :param build_data: objects.BuildData instance to write
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.build_data_tbl.insert().values(
+                    **build_data.to_db())
+                conn.execute(query)
+                return True
+        except Exception as ex:
+            self.logger.error("Error saving build data.", exc_info=ex)
+            return False
+
+    def get_build_data(self,
+                       node_name=None,
+                       task_id=None,
+                       latest=False,
+                       verbosity=2):
+        """Retrieve build data from the database.
+
+        If ``node_name`` or ``task_id`` are defined, use them as
+        filters for the build_data retrieved. If ``task_id`` is not
+        defined, ``latest`` determines if all build data is returned,
+        or only the chronologically latest version for each generator
+        description.
+
+        :param node_name: String name of the node to filter on
+        :param task_id: uuid.UUID ID of the task to filter on
+        :param latest: boolean whether to return only the latest
+                       version for each generator
+        :param verbosity: integer of how verbose the response should
+                          be. 1 is summary, 2 includes the collected data
+        :returns: list of objects.BuildData instances
+        """
+        # TODO(sh8121att) possibly optimize queries by changing select column
+        # list based on verbosity
+        try:
+            with self.db_engine.connect() as conn:
+                if node_name and task_id:
+                    query = self.build_data_tbl.select().where(
+                        self.build_data_tbl.c.node_name == node_name
+                        and self.build_data_tbl.c.task_id == task_id.bytes
+                    ).order_by(self.build_data_tbl.c.collected_date.desc())
+                    rs = conn.execute(query)
+                elif node_name:
+                    if latest:
+                        query = sql.text(
+                            'SELECT DISTINCT ON (generator) build_data.* '
+                            'FROM build_data '
+                            'WHERE build_data.node_name = :nodename '
+                            'ORDER BY generator, build_data.collected_date DESC'
+                        )
+                        rs = conn.execute(query, nodename=node_name)
+                    else:
+                        query = self.build_data_tbl.select().where(
+                            self.build_data_tbl.c.node_name == node_name)
+                        rs = conn.execute(query)
+                elif task_id:
+                    query = self.build_data_tbl.select().where(
+                        self.build_data_tbl.c.task_id == task_id.bytes)
+                    rs = conn.execute(query)
+                else:
+                    if latest:
+                        query = sql.text(
+                            'SELECT DISTINCT ON (generator), build_data.* '
+                            'FROM build_data '
+                            'ORDER BY generator, build_data.collected.date DESC'
+                        )
+                        rs = conn.execute(query)
+                    else:
+                        query = self.build_data_tbl.select()
+                        rs = conn.execute(query)
+
+                result_data = rs.fetchall()
+
+            return [objects.BuildData.from_db(dict(r)) for r in result_data]
+        except Exception as ex:
+            self.logger.error("Error selecting build data.", exc_info=ex)
+            raise errors.BuildDataError("Error selecting build data.")

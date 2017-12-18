@@ -55,34 +55,41 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
     v1_0_routes = [
         # API for managing orchestrator tasks
         ('/health', HealthResource()),
-        ('/tasks', TasksResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
+        ('/tasks',
+         TasksResource(state_manager=state_manager,
+                       orchestrator=orchestrator)),
         ('/tasks/{task_id}', TaskResource(state_manager=state_manager)),
 
         # API for managing site design data
         ('/designs', DesignsResource(state_manager=state_manager)),
-        ('/designs/{design_id}', DesignResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
-        ('/designs/{design_id}/parts', DesignsPartsResource(
-            state_manager=state_manager, ingester=ingester)),
+        ('/designs/{design_id}',
+         DesignResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
+        ('/designs/{design_id}/parts',
+         DesignsPartsResource(state_manager=state_manager, ingester=ingester)),
         ('/designs/{design_id}/parts/{kind}',
          DesignsPartsKindsResource(state_manager=state_manager)),
-        ('/designs/{design_id}/parts/{kind}/{name}', DesignsPartResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
+        ('/designs/{design_id}/parts/{kind}/{name}',
+         DesignsPartResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
 
         # API to list current MaaS nodes
         ('/nodes', NodesResource()),
         # API for nodes to discover their boot actions during curtin install
-        ('/bootactions/nodes/{hostname}/units', BootactionUnitsResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
-        ('/bootactions/nodes/{hostname}/files', BootactionFilesResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
-        ('/bootactions/{action_id}', BootactionResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
+        ('/bootactions/nodes/{hostname}/units',
+         BootactionUnitsResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
+        ('/bootactions/nodes/{hostname}/files',
+         BootactionFilesResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
+        ('/bootactions/{action_id}',
+         BootactionResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
 
         # API to validate schemas
-        ('/validatedesign', ValidationResource(
-            state_manager=state_manager, orchestrator=orchestrator)),
+        ('/validatedesign',
+         ValidationResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
     ]
 
     for path, res in v1_0_routes:

@@ -57,7 +57,11 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
     def get_name(self):
         return self.name
 
-    def render_assets(self, nodename, site_design, action_id, design_ref,
+    def render_assets(self,
+                      nodename,
+                      site_design,
+                      action_id,
+                      design_ref,
                       type_filter=None):
         """Render all of the assets in this bootaction.
 

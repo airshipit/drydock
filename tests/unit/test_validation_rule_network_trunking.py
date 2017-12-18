@@ -48,15 +48,19 @@ class TestRationalNetworkTrunking(object):
 
         message_list = Validator.network_trunking_rational(site_design)
 
-        regex = re.compile('Rational Network Trunking Error: Trunking mode is disabled, a trunking'
-                           'default_network must be defined; on NetworkLink .+')
+        regex = re.compile(
+            'Rational Network Trunking Error: Trunking mode is disabled, a trunking'
+            'default_network must be defined; on NetworkLink .+')
 
-        regex_1 = re.compile('Rational Network Trunking Error: If there is more than 1 allowed network,'
-                             'trunking mode must be enabled; on NetworkLink .+')
+        regex_1 = re.compile(
+            'Rational Network Trunking Error: If there is more than 1 allowed network,'
+            'trunking mode must be enabled; on NetworkLink .+')
 
         for msg in message_list:
             msg = msg.to_dict()
             assert msg.get('error')
-            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
+            assert regex.match(
+                msg.get('message')) is not None or regex_1.match(
+                    msg.get('message')) is not None
 
         assert len(message_list) == 2

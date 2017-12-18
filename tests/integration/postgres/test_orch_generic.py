@@ -20,15 +20,15 @@ import drydock_provisioner.objects.fields as hd_fields
 
 
 class TestClass(object):
-    def test_task_complete(self, yaml_ingester, input_files, setup, blank_state):
+    def test_task_complete(self, yaml_ingester, input_files, setup,
+                           blank_state):
         input_file = input_files.join("fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orchestrator = orch.Orchestrator(
             state_manager=blank_state, ingester=yaml_ingester)
         orch_task = orchestrator.create_task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref=design_ref)
+            action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
         orch_task.set_status(hd_fields.TaskStatus.Queued)
         orch_task.save()
 
@@ -45,15 +45,15 @@ class TestClass(object):
             orchestrator.stop_orchestrator()
             orch_thread.join(10)
 
-    def test_task_termination(self, input_files, yaml_ingester, setup, blank_state):
+    def test_task_termination(self, input_files, yaml_ingester, setup,
+                              blank_state):
         input_file = input_files.join("fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orchestrator = orch.Orchestrator(
             state_manager=blank_state, ingester=yaml_ingester)
         orch_task = orchestrator.create_task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref=design_ref)
+            action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
 
         orch_task.set_status(hd_fields.TaskStatus.Queued)
         orch_task.save()

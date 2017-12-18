@@ -45,8 +45,9 @@ class TasksResource(StatefulResource):
             resp.body = json.dumps(task_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:
-            self.error(req.context, "Unknown error: %s\n%s" %
-                       (str(ex), traceback.format_exc()))
+            self.error(req.context,
+                       "Unknown error: %s\n%s" % (str(ex),
+                                                  traceback.format_exc()))
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
@@ -78,8 +79,9 @@ class TasksResource(StatefulResource):
             else:
                 supported_actions.get(action)(self, req, resp, json_data)
         except Exception as ex:
-            self.error(req.context, "Unknown error: %s\n%s" %
-                       (str(ex), traceback.format_exc()))
+            self.error(req.context,
+                       "Unknown error: %s\n%s" % (str(ex),
+                                                  traceback.format_exc()))
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 

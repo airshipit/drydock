@@ -50,12 +50,18 @@ class TestRationalNetworkLinkBond(object):
 
         message_list = Validator.rational_network_bond(site_design)
 
-        regex = re.compile('Network Link Bonding Error: Down delay is less than mon rate on BaremetalNode .+')
-        regex_1 = re.compile('Network Link Bonding Error: Up delay is less than mon rate on BaremetalNode .+')
+        regex = re.compile(
+            'Network Link Bonding Error: Down delay is less than mon rate on BaremetalNode .+'
+        )
+        regex_1 = re.compile(
+            'Network Link Bonding Error: Up delay is less than mon rate on BaremetalNode .+'
+        )
 
         for msg in message_list:
             msg = msg.to_dict()
             assert msg.get('error') is True
-            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
+            assert regex.match(
+                msg.get('message')) is not None or regex_1.match(
+                    msg.get('message')) is not None
 
         assert len(message_list) == 2

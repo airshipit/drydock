@@ -70,6 +70,10 @@ class InvalidAssetLocation(BootactionError):
     pass
 
 
+class BuildDataError(Exception):
+    pass
+
+
 class DriverError(Exception):
     pass
 

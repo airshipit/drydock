@@ -252,7 +252,9 @@ class Orchestrator(object):
             for n in nodes or []:
                 n.compile_applied_model(site_design)
         except AttributeError:
-            self.logger.debug("Model inheritance skipped, no node definitions in site design.")
+            self.logger.debug(
+                "Model inheritance skipped, no node definitions in site design."
+            )
 
         return
 
@@ -552,8 +554,8 @@ class Orchestrator(object):
                         (ba.name, nodename))
                     action_id = ulid2.generate_binary_ulid()
                     self.state_manager.post_boot_action(
-                        nodename,
-                        task.get_id(), identity_key, action_id, ba.name)
+                        nodename, task.get_id(), identity_key, action_id,
+                        ba.name)
                 else:
                     self.logger.debug(
                         "Boot action %s has disabled signaling." % ba.name)

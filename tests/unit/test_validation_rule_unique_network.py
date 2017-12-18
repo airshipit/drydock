@@ -20,7 +20,8 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 
 class TestUniqueNetwork(object):
-    def test_unique_network(self, mocker, deckhand_ingester, drydock_state, input_files):
+    def test_unique_network(self, mocker, deckhand_ingester, drydock_state,
+                            input_files):
 
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -37,7 +38,8 @@ class TestUniqueNetwork(object):
         assert msg.get('error') is False
         assert len(message_list) == 1
 
-    def test_invalid_unique_network(self, mocker, deckhand_ingester, drydock_state, input_files):
+    def test_invalid_unique_network(self, mocker, deckhand_ingester,
+                                    drydock_state, input_files):
 
         input_file = input_files.join("invalid_unique_network.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -49,7 +51,9 @@ class TestUniqueNetwork(object):
 
         message_list = Validator.unique_network_check(site_design)
 
-        regex = re.compile('Unique Network Error: Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+')
+        regex = re.compile(
+            'Unique Network Error: Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+'
+        )
 
         for msg in message_list:
             msg = msg.to_dict()

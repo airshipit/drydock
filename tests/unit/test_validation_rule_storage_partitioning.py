@@ -37,11 +37,14 @@ class TestRationalNetworkTrunking(object):
         assert msg.get('message') == 'Storage Partitioning'
         assert msg.get('error') is False
 
-    def test_storage_partitioning_unassigned_partition(self, deckhand_ingester, drydock_state, input_files):
-        input_file = input_files.join("storage_partitioning_unassigned_partition.yaml")
+    def test_storage_partitioning_unassigned_partition(
+            self, deckhand_ingester, drydock_state, input_files):
+        input_file = input_files.join(
+            "storage_partitioning_unassigned_partition.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -65,8 +68,9 @@ class TestRationalNetworkTrunking(object):
 
         message_list = Validator.storage_partitioning(site_design)
 
-        regex = re.compile('Storage Partitioning Error: A volume group must be assigned to a storage device or '
-                           'partition; volume group .+ on BaremetalNode .+')
+        regex = re.compile(
+            'Storage Partitioning Error: A volume group must be assigned to a storage device or '
+            'partition; volume group .+ on BaremetalNode .+')
 
         for msg in message_list:
             msg = msg.to_dict()

@@ -235,8 +235,10 @@ class Validator():
 
                         # error if both are defined
                         if all([fstype, partition_volume_group]):
-                            msg = ('Storage Partitioning Error: Both a volume group AND file system cannot be '
-                                   'defined in a sigle partition; on BaremetalNode %s' % baremetal_node.get('name'))
+                            msg = (
+                                'Storage Partitioning Error: Both a volume group AND file system cannot be '
+                                'defined in a sigle partition; on BaremetalNode %s'
+                                % baremetal_node.get('name'))
 
                             message_list.append(
                                 TaskStatusMessage(
@@ -255,9 +257,10 @@ class Validator():
             for volume_group in all_volume_groups:
                 if volume_group.get('name') not in volume_group_check_list:
 
-                    msg = ('Storage Partitioning Error: A volume group must be assigned to a storage device or '
-                           'partition; volume group %s on BaremetalNode %s' % (volume_group.get('name'),
-                                                                               baremetal_node.get('name')))
+                    msg = (
+                        'Storage Partitioning Error: A volume group must be assigned to a storage device or '
+                        'partition; volume group %s on BaremetalNode %s' %
+                        (volume_group.get('name'), baremetal_node.get('name')))
 
                     message_list.append(
                         TaskStatusMessage(
@@ -308,9 +311,13 @@ class Validator():
                     ]
 
                     for name in duplicated_names:
-                        msg = ('Unique Network Error: Allowed network %s duplicated on NetworkLink %s and NetworkLink '
-                               '%s' % (name, network_link_name, network_link_name_2))
-                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        msg = (
+                            'Unique Network Error: Allowed network %s duplicated on NetworkLink %s and NetworkLink '
+                            '%s' % (name, network_link_name,
+                                    network_link_name_2))
+                        message_list.append(
+                            TaskStatusMessage(
+                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
             message_list.append(
@@ -339,8 +346,11 @@ class Validator():
             mtu = network_link.get('mtu')
             # check mtu > 1400 and < 64000
             if mtu and (mtu < 1400 or mtu > 64000):
-                msg = 'Mtu Error: Mtu must be between 1400 and 64000; on Network Link %s.' % network_link.get('name')
-                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                msg = 'Mtu Error: Mtu must be between 1400 and 64000; on Network Link %s.' % network_link.get(
+                    'name')
+                message_list.append(
+                    TaskStatusMessage(
+                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
             # add assigned network to dict with parent mtu
             assigned_network = network_link.get('native_network')
@@ -351,19 +361,27 @@ class Validator():
 
             # check mtu > 1400 and < 64000
             if network_mtu and (network_mtu < 1400 or network_mtu > 64000):
-                msg = 'Mtu Error: Mtu must be between 1400 and 64000; on Network %s.' % network.get('name')
-                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                msg = 'Mtu Error: Mtu must be between 1400 and 64000; on Network %s.' % network.get(
+                    'name')
+                message_list.append(
+                    TaskStatusMessage(
+                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
             name = network.get('name')
             parent_mtu = parent_mtu_check.get(name)
             if network_mtu and parent_mtu:
                 # check to make sure mtu for network is <= parent network link
                 if network_mtu > parent_mtu:
-                    msg = 'Mtu Error: Mtu must be <= the parent Network Link; for Network %s' % (network.get('name'))
-                    message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    msg = 'Mtu Error: Mtu must be <= the parent Network Link; for Network %s' % (
+                        network.get('name'))
+                    message_list.append(
+                        TaskStatusMessage(
+                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Mtu', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Mtu', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
     @classmethod
@@ -390,38 +408,64 @@ class Validator():
                     percent = size.split('%')
                     if len(percent) == 2:
                         if int(percent[0]) < 0:
-                            msg = ('Storage Sizing Error: Storage partition size is < 0 '
-                                   'on Baremetal Node %s' % baremetal_node.get('name'))
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            msg = (
+                                'Storage Sizing Error: Storage partition size is < 0 '
+                                'on Baremetal Node %s' %
+                                baremetal_node.get('name'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
 
                         partition_sum += int(percent[0])
 
                     if partition_sum > 99:
-                        msg = ('Storage Sizing Error: Storage partition size is greater than '
-                               '99 on Baremetal Node %s' % baremetal_node.get('name'))
-                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        msg = (
+                            'Storage Sizing Error: Storage partition size is greater than '
+                            '99 on Baremetal Node %s' %
+                            baremetal_node.get('name'))
+                        message_list.append(
+                            TaskStatusMessage(
+                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
                 volume_groups = baremetal_node.get('volume_groups', [])
                 volume_sum = 0
                 for volume_group in volume_groups:
-                    logical_volume_list = volume_group.get('logical_volumes', [])
+                    logical_volume_list = volume_group.get(
+                        'logical_volumes', [])
                     for logical_volume in logical_volume_list:
                         size = logical_volume.get('size')
                         percent = size.split('%')
                         if len(percent) == 2:
                             if int(percent[0]) < 0:
-                                msg = ('Storage Sizing Error: Storage volume size is < 0 '
-                                       'on Baremetal Node %s' % baremetal_node.get('name'))
-                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                msg = (
+                                    'Storage Sizing Error: Storage volume size is < 0 '
+                                    'on Baremetal Node %s' %
+                                    baremetal_node.get('name'))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg,
+                                        error=True,
+                                        ctx_type='NA',
+                                        ctx='NA'))
                             volume_sum += int(percent[0])
 
                     if volume_sum > 99:
-                        msg = ('Storage Sizing Error: Storage volume size is greater '
-                               'than 99 on Baremetal Node %s.' % baremetal_node.get('name'))
-                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        msg = (
+                            'Storage Sizing Error: Storage volume size is greater '
+                            'than 99 on Baremetal Node %s.' %
+                            baremetal_node.get('name'))
+                        message_list.append(
+                            TaskStatusMessage(
+                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Storage Sizing', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Storage Sizing', error=False, ctx_type='NA',
+                    ctx='NA'))
         return message_list
 
     @classmethod
@@ -450,8 +494,11 @@ class Validator():
 
                     if address in found_ips and address is not None:
                         msg = ('Error! Duplicate IP Address Found: %s '
-                               'is in use by both %s and %s.' % (address, found_ips[address], node_name))
-                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                               'is in use by both %s and %s.' %
+                               (address, found_ips[address], node_name))
+                        message_list.append(
+                            TaskStatusMessage(
+                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
                     elif address is not None:
                         found_ips[address] = node_name
 
@@ -488,13 +535,25 @@ class Validator():
                             root_set = True
                             # check if size < 20GB
                             if cal_size < 20 * BYTES_IN_GB:
-                                msg = ('Boot Storage Error: Root volume must be > 20GB on BaremetalNode '
-                                       '%s' % baremetal_node.get('name'))
-                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                msg = (
+                                    'Boot Storage Error: Root volume must be > 20GB on BaremetalNode '
+                                    '%s' % baremetal_node.get('name'))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg,
+                                        error=True,
+                                        ctx_type='NA',
+                                        ctx='NA'))
                         except errors.InvalidSizeFormat as e:
-                            msg = ('Boot Storage Error: Root volume has an invalid size format on BaremetalNode'
-                                   '%s.' % baremetal_node.get('name'))
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            msg = (
+                                'Boot Storage Error: Root volume has an invalid size format on BaremetalNode'
+                                '%s.' % baremetal_node.get('name'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
 
                     # check make sure root has been defined and boot volume > 1GB
                     if root_set and host_partition.get('name') == 'boot':
@@ -504,22 +563,39 @@ class Validator():
                             cal_size = SimpleBytes.calulate_bytes(size)
                             # check if size < 1GB
                             if cal_size < BYTES_IN_GB:
-                                msg = ('Boot Storage Error: Boot volume must be > 1GB on BaremetalNode '
-                                       '%s' % baremetal_node.get('name'))
-                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                msg = (
+                                    'Boot Storage Error: Boot volume must be > 1GB on BaremetalNode '
+                                    '%s' % baremetal_node.get('name'))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg,
+                                        error=True,
+                                        ctx_type='NA',
+                                        ctx='NA'))
                         except errors.InvalidSizeFormat as e:
-                            msg = ('Boot Storage Error: Boot volume has an invalid size format on BaremetalNode '
-                                   '%s.' % baremetal_node.get('name'))
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            msg = (
+                                'Boot Storage Error: Boot volume has an invalid size format on BaremetalNode '
+                                '%s.' % baremetal_node.get('name'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
 
             # This must be set
             if not root_set:
-                msg = ('Boot Storage Error: Root volume has to be set and must be > 20GB on BaremetalNode '
-                       '%s' % baremetal_node.get('name'))
-                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                msg = (
+                    'Boot Storage Error: Root volume has to be set and must be > 20GB on BaremetalNode '
+                    '%s' % baremetal_node.get('name'))
+                message_list.append(
+                    TaskStatusMessage(
+                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
 
         if not message_list:
-            message_list.append(TaskStatusMessage(msg='Boot Storage', error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg='Boot Storage', error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
     @classmethod
@@ -553,13 +629,25 @@ class Validator():
 
                         if not gateway:
                             msg = 'No gateway found for route %s.' % routes
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
                         else:
                             ip = IPAddress(gateway)
                             if ip not in cidr_range:
-                                msg = ('IP Locality Error: The gateway IP Address %s '
-                                       'is not within the defined CIDR: %s of %s.' % (gateway, cidr, name))
-                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                msg = (
+                                    'IP Locality Error: The gateway IP Address %s '
+                                    'is not within the defined CIDR: %s of %s.'
+                                    % (gateway, cidr, name))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg,
+                                        error=True,
+                                        ctx_type='NA',
+                                        ctx='NA'))
         if not baremetal_nodes_list:
             msg = 'No baremetal_nodes found.'
             message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
@@ -576,13 +664,27 @@ class Validator():
                         if ip_address_network_name not in network_dict:
                             msg = 'IP Locality Error: %s is not a valid network.' \
                                   % (ip_address_network_name)
-                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            message_list.append(
+                                TaskStatusMessage(
+                                    msg=msg,
+                                    error=True,
+                                    ctx_type='NA',
+                                    ctx='NA'))
                         else:
-                            if IPAddress(address) not in IPNetwork(network_dict[ip_address_network_name]):
-                                msg = ('IP Locality Error: The IP Address %s '
-                                       'is not within the defined CIDR: %s of %s .' %
-                                       (address, network_dict[ip_address_network_name], ip_address_network_name))
-                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            if IPAddress(address) not in IPNetwork(
+                                    network_dict[ip_address_network_name]):
+                                msg = (
+                                    'IP Locality Error: The IP Address %s '
+                                    'is not within the defined CIDR: %s of %s .'
+                                    % (address,
+                                       network_dict[ip_address_network_name],
+                                       ip_address_network_name))
+                                message_list.append(
+                                    TaskStatusMessage(
+                                        msg=msg,
+                                        error=True,
+                                        ctx_type='NA',
+                                        ctx='NA'))
         if not message_list:
             msg = 'IP Locality Success'
             message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))

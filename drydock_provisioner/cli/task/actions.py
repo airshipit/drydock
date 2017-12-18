@@ -17,6 +17,7 @@ import time
 from drydock_provisioner.cli.action import CliAction
 from drydock_provisioner.cli.const import TaskStatus
 
+
 class TaskList(CliAction):  # pylint: disable=too-few-public-methods
     """Action to list tasks."""
 
@@ -99,7 +100,8 @@ class TaskCreate(CliAction):  # pylint: disable=too-few-public-methods
         while True:
             time.sleep(self.poll_interval)
             task = self.api_client.get_task(task_id=task_id)
-            if task.get('status', '') in [TaskStatus.Complete, TaskStatus.Terminated]:
+            if task.get('status',
+                        '') in [TaskStatus.Complete, TaskStatus.Terminated]:
                 return task
 
 

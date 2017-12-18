@@ -24,8 +24,8 @@ class TestDuplicateIPs(object):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state,
-                            ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -37,12 +37,11 @@ class TestDuplicateIPs(object):
 
     def test_no_duplicate_IPs_no_baremetal_node(
             self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join(
-            "no_baremetal_node.yaml")
+        input_file = input_files.join("no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state,
-                            ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -52,13 +51,13 @@ class TestDuplicateIPs(object):
         assert msg.get('message') == 'No BaremetalNodes Found.'
         assert msg.get('error') is False
 
-    def test_no_duplicate_IPs_no_addressing(
-            self, input_files, drydock_state, deckhand_ingester):
+    def test_no_duplicate_IPs_no_addressing(self, input_files, drydock_state,
+                                            deckhand_ingester):
         input_file = input_files.join("no_duplicate_IPs_no_addressing.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state,
-                            ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -68,19 +67,21 @@ class TestDuplicateIPs(object):
         assert msg.get('message') == 'No BaremetalNodes Found.'
         assert msg.get('error') is False
 
-    def test_invalid_no_duplicate_IPs(
-            self, input_files, drydock_state, deckhand_ingester):
+    def test_invalid_no_duplicate_IPs(self, input_files, drydock_state,
+                                      deckhand_ingester):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state,
-                            ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.no_duplicate_IPs_check(site_design)
 
-        regex = re.compile('Error! Duplicate IP Address Found: .+ is in use by both .+ and .+.')
+        regex = re.compile(
+            'Error! Duplicate IP Address Found: .+ is in use by both .+ and .+.'
+        )
         for msg in message_list:
             msg = msg.to_dict()
             assert msg.get('error') is True

@@ -625,8 +625,8 @@ class TaskStatusMessage(object):
         :param d: dictionary of values
         """
         i = TaskStatusMessage(
-            d.get('message', None),
-            d.get('error'), d.get('context_type'), d.get('context'))
+            d.get('message', None), d.get('error'), d.get('context_type'),
+            d.get('context'))
         if 'extra' in d:
             i.extra = d.get('extra')
         i.ts = d.get('ts', None)

@@ -20,12 +20,14 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 
 class TestStorageSizing(object):
-    def test_storage_sizing(self, deckhand_ingester, drydock_state, input_files):
+    def test_storage_sizing(self, deckhand_ingester, drydock_state,
+                            input_files):
 
         input_file = input_files.join("storage_sizing.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -36,22 +38,30 @@ class TestStorageSizing(object):
         assert msg.get('message') == 'Storage Sizing'
         assert msg.get('error') is False
 
-    def test_invalid_storage_sizing(self, deckhand_ingester, drydock_state, input_files):
+    def test_invalid_storage_sizing(self, deckhand_ingester, drydock_state,
+                                    input_files):
 
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.storage_sizing(site_design)
 
-        regex = re.compile('Storage Sizing Error: Storage .+ size is < 0 on Baremetal Node .+')
-        regex_1 = re.compile('Storage Sizing Error: Storage .+ size is greater than 99 on Baremetal Node .+')
+        regex = re.compile(
+            'Storage Sizing Error: Storage .+ size is < 0 on Baremetal Node .+'
+        )
+        regex_1 = re.compile(
+            'Storage Sizing Error: Storage .+ size is greater than 99 on Baremetal Node .+'
+        )
 
         assert len(message_list) == 6
         for msg in message_list:
             msg = msg.to_dict()
-            assert regex.match(msg.get('message')) is not None or regex_1.match(msg.get('message')) is not None
+            assert regex.match(
+                msg.get('message')) is not None or regex_1.match(
+                    msg.get('message')) is not None
             assert msg.get('error') is True
