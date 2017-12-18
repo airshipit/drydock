@@ -73,3 +73,9 @@ object in details can be extended with additional fields as needed.
 
 Once a POST containing the ``status`` field is made to a bootaction-id, that bootaction-id can no
 longer be updated with status changes nor additional detailed status messages.
+
+validatedesign API
+------------------
+
+The Validatedesign API is used for validating documents before they will be used by Drydock. See
+:ref:`validatedesign` for more details on validating documents.
