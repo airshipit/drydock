@@ -13,14 +13,16 @@
 # limitations under the License.
 """Test Validation Rule Rational Network Trunking"""
 
+import re
+
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-import re
+
 
 class TestRationalNetworkTrunking(object):
     def test_rational_network_trunking(self, deckhand_ingester, drydock_state,
                                        input_files):
-        input_file = input_files.join("rational_network_trunking.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(

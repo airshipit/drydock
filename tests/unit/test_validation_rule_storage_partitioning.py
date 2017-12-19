@@ -13,15 +13,16 @@
 # limitations under the License.
 """Test Validation Rule Storage Partitioning"""
 
+import re
+
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-import re
 
 
 class TestRationalNetworkTrunking(object):
     def test_storage_partitioning(self, deckhand_ingester, drydock_state,
                                   input_files):
-        input_file = input_files.join("storage_partitioning.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(
@@ -53,7 +54,8 @@ class TestRationalNetworkTrunking(object):
 
     def test_invalid_storage_partitioning(self, deckhand_ingester,
                                           drydock_state, input_files):
-        input_file = input_files.join("invalid_storage_partitioning.yaml")
+        input_file = input_files.join("invalid_validation.yaml")
+
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(

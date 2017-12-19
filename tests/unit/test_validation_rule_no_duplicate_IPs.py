@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from drydock_provisioner.orchestrator.validations.validator import Validator
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
@@ -19,7 +21,7 @@ from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 class TestDuplicateIPs(object):
     def test_no_duplicate_IPs(self, input_files, drydock_state,
                               deckhand_ingester):
-        input_file = input_files.join("no_duplicate_IPs.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state,
@@ -36,7 +38,7 @@ class TestDuplicateIPs(object):
     def test_no_duplicate_IPs_no_baremetal_node(
             self, input_files, drydock_state, deckhand_ingester):
         input_file = input_files.join(
-            "no_duplicate_IPs_no_baremetal_node.yaml")
+            "no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state,
@@ -68,8 +70,7 @@ class TestDuplicateIPs(object):
 
     def test_invalid_no_duplicate_IPs(
             self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join(
-            "invalid_no_duplicate_IPs_addresses_duplicated.yaml")
+        input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state,
@@ -78,7 +79,9 @@ class TestDuplicateIPs(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.no_duplicate_IPs_check(site_design)
-        msg = message_list[0].to_dict()
 
-        assert msg.get('error') is True
-        assert 'Error! Duplicate IP Address Found:' in msg.get('message')
+        regex = re.compile('Error! Duplicate IP Address Found: .+ is in use by both .+ and .+.')
+        for msg in message_list:
+            msg = msg.to_dict()
+            assert msg.get('error') is True
+            assert regex.match(msg.get('message')) is not None

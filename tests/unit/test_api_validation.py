@@ -81,6 +81,28 @@ class TestValidationApi(object):
 
         assert result.status == falcon.HTTP_400
 
+    def test_invalid_post_resp(self, input_files, falcontest):
+        input_file = input_files.join("invalid_validation.yaml")
+        design_ref = "file://%s" % str(input_file)
+
+        url = '/api/v1.0/validatedesign'
+        hdr = {
+            'Content-Type': 'application/json',
+            'X-IDENTITY-STATUS': 'Confirmed',
+            'X-USER-NAME': 'Test',
+            'X-ROLES': 'admin'
+        }
+        body = {
+            'rel': "design",
+            'href': design_ref,
+            'type': "application/x-yaml",
+        }
+
+        result = falcontest.simulate_post(
+            url, headers=hdr, body=json.dumps(body))
+
+        assert result.status == falcon.HTTP_400
+
     @pytest.fixture()
     def falcontest(self, drydock_state, deckhand_ingester,
                    deckhand_orchestrator):

@@ -13,14 +13,16 @@
 # limitations under the License.
 """Test Validation Rule Unique Network"""
 
+import re
+
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-import re
+
 
 class TestMtu(object):
     def test_mtu(self, mocker, deckhand_ingester, drydock_state, input_files):
 
-        input_file = input_files.join("mtu_rational.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
@@ -36,7 +38,7 @@ class TestMtu(object):
 
     def test_invalid_mtu(self, mocker, deckhand_ingester, drydock_state, input_files):
 
-        input_file = input_files.join("invalid_mtu.yaml")
+        input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)

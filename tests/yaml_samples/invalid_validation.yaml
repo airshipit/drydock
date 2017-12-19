@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ####################
-#
-# bootstrap_seed.yaml - Site server design definition for physical layer
-#
-####################
-# version the schema in this file so consumers can rationally parse it
 ---
 schema: 'drydock/Region/v1'
 metadata:
@@ -50,9 +45,10 @@ data:
     mode: disabled
   mtu: 1500
   linkspeed: 100full
+########################################
+# FAILS HERE: no default_network is defined when trunking mode is disabled
   trunking:
     mode: disabled
-    default_network: oob
   allowed_networks:
     - oob
 ---
@@ -66,7 +62,9 @@ metadata:
 data:
   bonding:
     mode: disabled
-  mtu: 1500
+########################################
+# FAILS HERE: mtu < 1400
+  mtu: 700
   linkspeed: auto
   trunking:
     mode: disabled
@@ -86,6 +84,12 @@ data:
     mode: 802.3ad
     hash: layer3+4
     peer_rate: slow
+########################################
+# FAILS HERE: down delay and up delay < mon rate
+    mon_rate: 150
+    down_delay: 50
+    up_delay: 50
+########################################
   mtu: 9000
   linkspeed: auto
   trunking:
@@ -163,7 +167,9 @@ metadata:
     application: 'drydock'
 data:
   vlan: '100'
-  mtu: 1500
+########################################
+# FAILS HERE: mtu of parent is 9000
+  mtu: 15000
   cidr: 172.16.1.0/24
   ranges:
     - type: static
@@ -171,7 +177,9 @@ data:
       end: 172.16.1.254
   routes:
     - subnet: 0.0.0.0/0
-      gateway: 172.16.1.1
+#######################################
+# FAILS HERE: ip not in cidr
+      gateway: 141.16.1.1
       metric: 10
   dns:
     domain: mgmt.sitename.example.com
@@ -186,7 +194,9 @@ metadata:
     application: 'drydock'
 data:
   vlan: '101'
-  mtu: 9000
+########################################
+# FAILS HERE: mtu of > 64000
+  mtu: 74000
   cidr: 172.16.2.0/24
   ranges:
     - type: static
@@ -237,32 +247,38 @@ data:
       sda:
         labels:
           role: rootdisk
-#############################################
-# FAILS HERE: partitions size > 99
         partitions:
-          - name: root
-            size: 77%
+###############################################
+# FAILS HERE: root not set
+#############################################
+# FAILS HERE: partitions size > 99%
+          - name: test
+            size: 100%
             bootable: true
             filesystem:
               mountpoint: '/'
               fstype: 'ext4'
               mount_options: 'defaults'
+###############################################
+# FAILS HERE: boot volume < 1GB
           - name: boot
-            size: 42%
+            size: 500m
             bootable: false
             filesystem:
               mountpoint: '/boot'
               fstype: 'ext4'
               mount_options: 'defaults'
       sdb:
-        volume_group: 'log_vg'
+        volume_group: 'failure'
+########################################
+# FAILS HERE: log_vg is unassigned
+##############################################
+# FAILS HERE: size is < 0
     volume_groups:
       log_vg:
         logical_volumes:
           - name: 'log_lv'
-##############################################
-# FAILS HERE: size is > 99
-            size: '100%'
+            size: '-77%'
             filesystem:
               mountpoint: '/var/log'
               fstype: 'xfs'
@@ -325,12 +341,17 @@ data:
   addressing:
     - network: pxe
       address: dhcp
-    - network: mgmt
-      address: 172.16.1.20
-    - network: public
-      address: 172.16.3.20
+##################################
+# FAILS HERE: invalid network
+    - network: invalid
+      address: 172.10.1.20
+##################################
+# FAILS HERE: ip address not in network
+      address: 141.16.1.20
+#################################
+# FAILS HERE: address duplicated for oob on both controller01 and computer01
     - network: oob
-      address: 172.16.100.20
+      address: 172.16.100.21
   metadata:
     rack: rack1
 ---
@@ -346,10 +367,14 @@ data:
   addressing:
     - network: pxe
       address: dhcp
+#################################
+# FAILS HERE: address duplicated fro both mgmt and private
     - network: mgmt
       address: 172.16.1.21
     - network: private
-      address: 172.16.2.21
+      address: 172.16.1.21
+#################################
+# FAILS HERE: address duplicated for oob on both controller01 and computer01
     - network: oob
       address: 172.16.100.21
   metadata:
