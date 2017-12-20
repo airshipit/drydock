@@ -18,10 +18,13 @@ import logging
 import re
 import math
 
+from datetime import datetime
+
 import drydock_provisioner.error as errors
 import drydock_provisioner.config as config
 import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.objects.hostprofile as hostprofile
+import drydock_provisioner.objects as objects
 
 from drydock_provisioner.orchestrator.actions.orchestrator import BaseAction
 
@@ -815,6 +818,7 @@ class ConfigureHardware(BaseMaasAction):
                                 ctx=n.name,
                                 ctx_type='node')
                             self.task.success(focus=n.get_id())
+                            self.collect_build_data(machine)
                     elif machine.status_name == 'Commissioning':
                         msg = "Located node %s in MaaS, node already being commissioned. Skipping..." % (
                             n.name)
@@ -852,6 +856,37 @@ class ConfigureHardware(BaseMaasAction):
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
+
+    def collect_build_data(self, machine):
+        """Collect MaaS build data after commissioning."""
+        self.logger.debug("Collecting build data for %s" % machine.hostname)
+        try:
+            data = machine.get_details()
+            if data:
+                for t, d in data.items():
+                    if t in ('lshw', 'lldp'):
+                        df = 'text/xml'
+                    else:
+                        df = 'text/plain'
+                    bd = objects.BuildData(
+                        node_name=machine.hostname,
+                        task_id=self.task.get_id(),
+                        generator=t,
+                        collected_date=datetime.utcnow(),
+                        data_format=df,
+                        data_element=d.decode())
+                    self.logger.debug(
+                        "Saving build data from generator %s" % t)
+                    self.state_manager.post_build_data(bd)
+                    self.task.add_status_msg(
+                        msg="Saving build data element.",
+                        error=False,
+                        ctx=machine.hostname,
+                        ctx_type='node')
+        except Exception as ex:
+            self.logger.error(
+                "Error collecting node build data for %s" % machine.hostname,
+                exc_info=ex)
 
 
 class ApplyNodeNetworking(BaseMaasAction):

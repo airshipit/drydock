@@ -270,7 +270,7 @@ class Machine(model_base.ResourceBase):
         resp = self.api_client.get(url, op='details')
 
         if resp.status_code == 200:
-            detail_config = bson.loads(resp.text)
+            detail_config = bson.loads(resp.content)
             return detail_config
 
     def set_owner_data(self, key, value):
