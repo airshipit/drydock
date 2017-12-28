@@ -14,39 +14,52 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */}}
 
-{{- if .Values.manifests.job_drydock_db_sync }}
+{{- if .Values.manifests.job_drydock_db_init }}
 {{- $envAll := . }}
-{{- $dependencies := .Values.dependencies.db_sync }}
+{{- $dependencies := .Values.dependencies.db_init }}
+{{- $serviceAccountName := "drydock-db-init" }}
+{{ tuple $envAll $dependencies $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: drydock-db-sync
+  name: drydock-db-init
 spec:
   template:
     metadata:
       labels:
-{{ tuple $envAll "drydock" "db-sync" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
+{{ tuple $envAll "drydock" "db-init" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
     spec:
+      serviceAccountName: {{ $serviceAccountName }}
       restartPolicy: OnFailure
       nodeSelector:
         {{ .Values.labels.node_selector_key }}: {{ .Values.labels.node_selector_value }}
       initContainers:
-{{ tuple $envAll $dependencies "[]" | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
+{{ tuple $envAll $dependencies list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
-        - name: drydock-db-sync
-          image: {{ .Values.images.tags.drydock_db_sync | quote }}
+        - name: drydock-db-init
+          image: {{ .Values.images.tags.drydock_db_init | quote }}
           imagePullPolicy: {{ .Values.images.pull_policy | quote }}
-{{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_sync | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
+{{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_init | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:
-            - name: DRYDOCK_DB_URL
-              value: {{ tuple "postgresql" "internal" "user" "postgresql" . | include "helm-toolkit.endpoints.authenticated_endpoint_uri_lookup" | quote }}
+            - name: DB_NAME
+              value: {{ .Values.database.postgresql.db_name | quote }}
+            - name: DB_USER
+              value: {{ .Values.endpoints.postgresql.auth.user.username | quote }}
+            - name: DB_PASS
+              value: {{ .Values.endpoints.postgresql.auth.user.password | quote}}
+            - name: DB_FQDN
+              value: {{ tuple "postgresql" "internal" . | include "helm-toolkit.endpoints.hostname_fqdn_endpoint_lookup" | quote}}
+            - name: DB_PORT
+              value: {{ tuple "postgresql" "internal" "postgresql" . | include "helm-toolkit.endpoints.endpoint_port_lookup" | quote }}
+            - name: ROOT_DB_USER
+              value: {{ .Values.endpoints.postgresql.auth.admin.username | quote }}
           command:
-            - /tmp/db-sync.sh
+            - /tmp/db-init.sh
           volumeMounts:
             - name: drydock-bin
-              mountPath: /tmp/db-sync.sh
-              subPath: db-sync.sh
+              mountPath: /tmp/db-init.sh
+              subPath: db-init.sh
               readOnly: true
       volumes:
         - name: drydock-bin

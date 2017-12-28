@@ -17,6 +17,8 @@
 
 {{- $envAll := . }}
 {{- $dependencies := .Values.dependencies.ks_user }}
+{{- $serviceAccountName := "drydock-ks-user" }}
+{{ tuple $envAll $dependencies $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -28,11 +30,12 @@ spec:
       labels:
 {{ tuple $envAll "drydock" "ks-user" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
     spec:
+      serviceAccountName: {{ $serviceAccountName }}
       restartPolicy: OnFailure
       nodeSelector:
         {{ .Values.labels.node_selector_key }}: {{ .Values.labels.node_selector_value }}
       initContainers:
-{{ tuple $envAll $dependencies "[]" | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
+{{ tuple $envAll $dependencies list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
         - name: drydock-ks-user
           image: {{ .Values.images.tags.ks_user }}
