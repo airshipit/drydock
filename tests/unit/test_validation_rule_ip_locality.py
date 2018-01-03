@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from drydock_provisioner.orchestrator.validations.validator import Validator
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
+
 class TestIPLocality(object):
     def test_ip_locality(self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join("ip_locality.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
@@ -59,7 +62,7 @@ class TestIPLocality(object):
         assert msg.get('error') is True
 
     def test_no_baremetal_node(self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join("ip_locality_no_baremetal_node.yaml")
+        input_file = input_files.join("no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
@@ -73,7 +76,7 @@ class TestIPLocality(object):
         assert msg.get('error') is False
 
     def test_invalid_ip_locality_invalid_network(self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join("invalid_ip_locality_invalid_network.yaml")
+        input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
@@ -81,35 +84,15 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
 
-        assert 'is not a valid network.' in msg.get('message')
-        assert msg.get('error') is True
+        regex = re.compile('IP Locality Error: The gateway IP Address .+ is not within the defined CIDR: .+ of .+')
+        regex_1 = re.compile('IP Locality Error: .+ is not a valid network.')
+        regex_2 = re.compile('IP Locality Error: The IP Address .+ is not within the defined CIDR: .+ of .+ .')
 
-    def test_invalid_ip_locality_address_not_in_network(self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join("invalid_ip_locality_address_not_in_network.yaml")
-        design_ref = "file://%s" % str(input_file)
-
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
-
-        status, site_design = Orchestrator.get_effective_site(orch, design_ref)
-
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
-
-        assert 'IP Locality Error: The IP Address' in msg.get('message')
-        assert msg.get('error') is True
-
-    def test_invalid_ip_locality_ip_not_in_cidr(self, input_files, drydock_state, deckhand_ingester):
-        input_file = input_files.join("invalid_ip_locality_ip_not_in_cidr.yaml")
-        design_ref = "file://%s" % str(input_file)
-
-        orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
-
-        status, site_design = Orchestrator.get_effective_site(orch, design_ref)
-
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
-
-        assert 'IP Locality Error: The gateway IP Address' in msg.get('message')
-        assert msg.get('error') is True
+        assert len(message_list) == 3
+        for msg in message_list:
+            msg = msg.to_dict()
+            assert msg.get('error')
+            assert (regex.match(msg.get('message')) is not None or
+                    regex_1.match(msg.get('message')) is not None or
+                    regex_2.match(msg.get('message')) is not None)

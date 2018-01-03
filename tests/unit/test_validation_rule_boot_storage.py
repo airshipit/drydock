@@ -13,15 +13,16 @@
 # limitations under the License.
 """Test Validation Rule Rational Boot Storage"""
 
+import re
+
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.validator import Validator
-import re
 
 
 class TestRationalBootStorage(object):
     def test_boot_storage_rational(self, deckhand_ingester, drydock_state, input_files):
 
-        input_file = input_files.join("boot_storage_rational.yaml")
+        input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
@@ -57,7 +58,7 @@ class TestRationalBootStorage(object):
 
     def test_invalid_boot_storage_root_not_set(self, deckhand_ingester, drydock_state, input_files):
 
-        input_file = input_files.join("invalid_boot_storage_root_not_set.yaml")
+        input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
         orch = Orchestrator(state_manager=drydock_state, ingester=deckhand_ingester)
