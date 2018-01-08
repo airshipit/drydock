@@ -51,6 +51,8 @@ function test_drydock {
       -v ${TMPETC}:/etc/drydock \
       ${DRYDOCK_IMAGE}
 
+    sleep 10
+
     RESULT=$(curl --noproxy '*' -i 'http://127.0.0.1:9000/api/v1.0/tasks' | tr '\r' '\n' | head -1)
     GOOD="HTTP/1.1 200 OK"
     if [[ ${RESULT} == ${GOOD} ]]
