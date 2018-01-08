@@ -44,6 +44,7 @@ API Documentation
    API
    task
    bootaction
+   validatedesign
 
 Client Documentation
 --------------------

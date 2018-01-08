@@ -56,7 +56,12 @@ class Validator():
     @classmethod
     def rational_network_bond(cls, site_design):
         """
-        Ensures that NetworkLink 'bonding' is rational
+        This check ensures that each NetworkLink has a rational bonding setup.
+        If the bonding mode is set to 'disabled' then it ensures that no other options are specified.
+        If the bonding mode it set to '802.3ad' then it ensures that the bonding up delay and the bonding down delay
+        are both greater then or equal to the mon rate.
+        If the bonding mode is set to active-backup or balanced-rr then it ensures that the bonding hash and the
+        bonding peer rate are both NOT defined.
         """
         message_list = []
         site_design = site_design.obj_to_simple()
@@ -141,7 +146,8 @@ class Validator():
     @classmethod
     def network_trunking_rational(cls, site_design):
         """
-        Ensures that Network Trunking is Rational
+        This check ensures that for each NetworkLink if the allowed networks are greater then 1 trunking mode is
+        enabled. It also makes sure that if trunking mode is disabled then a default network is defined.
         """
 
         message_list = []
@@ -190,7 +196,8 @@ class Validator():
     @classmethod
     def storage_partitioning(cls, site_design):
         """
-        Checks storage partitioning
+        This checks that for each storage device a partition list OR volume group is defined. Also for each partition
+        list it ensures that a file system and partition volume group are not defined in the same partition.
         """
         message_list = []
         site_design = site_design.obj_to_simple()
@@ -249,8 +256,8 @@ class Validator():
                 if volume_group.get('name') not in volume_group_check_list:
 
                     msg = ('Storage Partitioning Error: A volume group must be assigned to a storage device or '
-                           'partition; volume group %s on BaremetalNode %s' %
-                           (volume_group.get('name'), baremetal_node.get('name')))
+                           'partition; volume group %s on BaremetalNode %s' % (volume_group.get('name'),
+                                                                               baremetal_node.get('name')))
 
                     message_list.append(
                         TaskStatusMessage(
@@ -420,7 +427,9 @@ class Validator():
     @classmethod
     def no_duplicate_IPs_check(cls, site_design):
         """
-        Ensures that the same IP is not assigned to multiple baremetal nodes.
+        Ensures that the same IP is not assigned to multiple baremetal node definitions by checking each new IP against
+        the list of known IPs. If the IP is unique no error is thrown and the new IP will be added to the list to be
+        checked against in the future.
         """
         found_ips = {}  # Dictionary Format - IP address: BaremetalNode name
         message_list = []
@@ -430,9 +439,7 @@ class Validator():
 
         if not baremetal_nodes_list:
             msg = 'No BaremetalNodes Found.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for node in baremetal_nodes_list:
                 addressing_list = node.get('addressing', [])
@@ -443,19 +450,14 @@ class Validator():
 
                     if address in found_ips and address is not None:
                         msg = ('Error! Duplicate IP Address Found: %s '
-                               'is in use by both %s and %s.'
-                               % (address, found_ips[address], node_name))
-                        message_list.append(
-                            TaskStatusMessage(
-                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                               'is in use by both %s and %s.' % (address, found_ips[address], node_name))
+                        message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
                     elif address is not None:
                         found_ips[address] = node_name
 
         if not message_list:
             msg = 'No Duplicate IP Addresses.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
 
         return message_list
 
@@ -523,7 +525,8 @@ class Validator():
     @classmethod
     def ip_locality_check(cls, site_design):
         """
-        Ensures that IP addresses are within defined CIDR ranges.
+        Ensures that each IP addresses assigned to a baremetal node is within the defined CIDR for the network. Also
+        verifies that the gateway IP for each static route of a network is within that network's CIDR.
         """
         network_dict = {}  # Dictionary Format - network name: cidr
         message_list = []
@@ -534,9 +537,7 @@ class Validator():
 
         if not network_list:
             msg = 'No networks found.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for net in network_list:
                 name = net.get('name')
@@ -552,23 +553,16 @@ class Validator():
 
                         if not gateway:
                             msg = 'No gateway found for route %s.' % routes
-                            message_list.append(
-                                TaskStatusMessage(
-                                    msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
                         else:
                             ip = IPAddress(gateway)
                             if ip not in cidr_range:
                                 msg = ('IP Locality Error: The gateway IP Address %s '
-                                       'is not within the defined CIDR: %s of %s.'
-                                       % (gateway, cidr, name))
-                                message_list.append(
-                                    TaskStatusMessage(
-                                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                       'is not within the defined CIDR: %s of %s.' % (gateway, cidr, name))
+                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
         if not baremetal_nodes_list:
             msg = 'No baremetal_nodes found.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for node in baremetal_nodes_list:
                 addressing_list = node.get('addressing', [])
@@ -582,23 +576,16 @@ class Validator():
                         if ip_address_network_name not in network_dict:
                             msg = 'IP Locality Error: %s is not a valid network.' \
                                   % (ip_address_network_name)
-                            message_list.append(
-                                TaskStatusMessage(
-                                    msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
                         else:
                             if IPAddress(address) not in IPNetwork(network_dict[ip_address_network_name]):
                                 msg = ('IP Locality Error: The IP Address %s '
-                                       'is not within the defined CIDR: %s of %s .'
-                                       % (address, network_dict[ip_address_network_name],
-                                          ip_address_network_name))
-                                message_list.append(
-                                    TaskStatusMessage(
-                                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                                       'is not within the defined CIDR: %s of %s .' %
+                                       (address, network_dict[ip_address_network_name], ip_address_network_name))
+                                message_list.append(TaskStatusMessage(msg=msg, error=True, ctx_type='NA', ctx='NA'))
         if not message_list:
             msg = 'IP Locality Success'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
 
