@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
+import mock
 import responses
 
 import drydock_provisioner.drydock_client.session as dc_session
@@ -40,38 +41,6 @@ def test_session_init_minimal_no_port():
     assert dd_ses.base_url == "http://%s/api/" % (host)
 
 
-def test_session_init_uuid_token():
-    host = 'foo.bar.baz'
-    token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
-
-    dd_ses = dc_session.DrydockSession(host, token=token)
-
-    assert dd_ses.base_url == "http://%s/api/" % (host)
-    assert dd_ses.token == token
-
-
-def test_session_init_fernet_token():
-    host = 'foo.bar.baz'
-    token = 'gAAAAABU7roWGiCuOvgFcckec-0ytpGnMZDBLG9hA7Hr9qfvdZDHjsak39YN98HXxoYLIqVm' \
-            '19Egku5YR3wyI7heVrOmPNEtmr-fIM1rtahudEdEAPM4HCiMrBmiA1Lw6SU8jc2rPLC7FK7n' \
-            'BCia_BGhG17NVHuQu0S7waA306jyKNhHwUnpsBQ'
-
-    dd_ses = dc_session.DrydockSession(host, token=token)
-
-    assert dd_ses.base_url == "http://%s/api/" % (host)
-    assert dd_ses.token == token
-
-
-def test_session_init_marker():
-    host = 'foo.bar.baz'
-    marker = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
-
-    dd_ses = dc_session.DrydockSession(host, marker=marker)
-
-    assert dd_ses.base_url == "http://%s/api/" % (host)
-    assert dd_ses.marker == marker
-
-
 @responses.activate
 def test_session_get():
     responses.add(
@@ -83,7 +52,10 @@ def test_session_get():
     token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
     marker = '40c3eaf6-6a8a-11e7-a4bd-080027ef795a'
 
-    dd_ses = dc_session.DrydockSession(host, token=token, marker=marker)
+    def auth_gen():
+        return [('X-Auth-Token', token)]
+
+    dd_ses = dc_session.DrydockSession(host, auth_gen=auth_gen, marker=marker)
 
     resp = dd_ses.get('v1.0/test')
     req = resp.request
@@ -91,6 +63,31 @@ def test_session_get():
     assert req.headers.get('X-Auth-Token', None) == token
     assert req.headers.get('X-Context-Marker', None) == marker
 
+
+@responses.activate
+@mock.patch.object(dc_session.KeystoneClient, 'get_token',
+                   return_value='5f1e08b6-38ec-4a99-9d0f-00d29c4e325b')
+def test_session_get_returns_401(*args):
+    responses.add(
+        responses.GET,
+        'http://foo.bar.baz/api/v1.0/test',
+        body='okay',
+        status=401)
+    host = 'foo.bar.baz'
+    token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
+    marker = '40c3eaf6-6a8a-11e7-a4bd-080027ef795a'
+
+    def auth_gen():
+        return [('X-Auth-Token', dc_session.KeystoneClient.get_token())]
+
+    dd_ses = dc_session.DrydockSession(host, auth_gen=auth_gen, marker=marker)
+
+    resp = dd_ses.get('v1.0/test')
+    req = resp.request
+
+    assert req.headers.get('X-Auth-Token', None) == token
+    assert req.headers.get('X-Context-Marker', None) == marker
+    assert dc_session.KeystoneClient.get_token.call_count == 2
 
 @responses.activate
 def test_client_task_get():

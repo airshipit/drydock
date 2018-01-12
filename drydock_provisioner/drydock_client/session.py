@@ -24,17 +24,24 @@ class DrydockSession(object):
 
     :param string host: The Drydock server hostname or IP
     :param int port: (optional) The service port appended if specified
-    :param string token: Auth token
+    :param function auth_gen: Callable that will generate a list of authentication
+                              header names and values (2 part tuple)
     :param string marker: (optional) external context marker
     """
 
-    def __init__(self, host, port=None, scheme='http', token=None,
+    def __init__(self, host, port=None, scheme='http', auth_gen=None,
                  marker=None):
+        self.logger = logging.getLogger(__name__)
         self.__session = requests.Session()
+        self.auth_gen = auth_gen
+
+        self.set_auth()
+
+        self.marker = marker
         self.__session.headers.update({
-            'X-Auth-Token': token,
             'X-Context-Marker': marker
         })
+
         self.host = host
         self.scheme = scheme
 
@@ -46,10 +53,14 @@ class DrydockSession(object):
             # assume default port for scheme
             self.base_url = "%s://%s/api/" % (self.scheme, self.host)
 
-        self.token = token
-        self.marker = marker
-
-        self.logger = logging.getLogger(__name__)
+    def set_auth(self):
+        """Set the session's auth header."""
+        if self.auth_gen:
+            self.logger.debug("Updating session authentication header.")
+            auth_header = self.auth_gen()
+            self.__session.headers.update(auth_header)
+        else:
+            self.logger.debug("Cannot set auth header, no generator defined.")
 
     def get(self, endpoint, query=None):
         """
@@ -59,8 +70,16 @@ class DrydockSession(object):
         :param dict query: A dict of k, v pairs to add to the query string
         :return: A requests.Response object
         """
-        resp = self.__session.get(
-            self.base_url + endpoint, params=query, timeout=10)
+        auth_refresh = False
+        while True:
+            resp = self.__session.get(
+                self.base_url + endpoint, params=query, timeout=10)
+
+            if resp.status_code == 401 and not auth_refresh:
+                self.set_auth()
+                auth_refresh = True
+            else:
+                break
 
         return resp
 
@@ -75,16 +94,23 @@ class DrydockSession(object):
         :param data: Something json.dumps(s) can serialize. Result will be used as the request body
         :return: A requests.Response object
         """
+        auth_refresh = False
+        while True:
+            self.logger.debug("Sending POST with drydock_client session")
+            if body is not None:
+                self.logger.debug("Sending POST with explicit body: \n%s" % body)
+                resp = self.__session.post(
+                    self.base_url + endpoint, params=query, data=body, timeout=10)
+            else:
+                self.logger.debug("Sending POST with JSON body: \n%s" % str(data))
+                resp = self.__session.post(
+                    self.base_url + endpoint, params=query, json=data, timeout=10)
 
-        self.logger.debug("Sending POST with drydock_client session")
-        if body is not None:
-            self.logger.debug("Sending POST with explicit body: \n%s" % body)
-            resp = self.__session.post(
-                self.base_url + endpoint, params=query, data=body, timeout=10)
-        else:
-            self.logger.debug("Sending POST with JSON body: \n%s" % str(data))
-            resp = self.__session.post(
-                self.base_url + endpoint, params=query, json=data, timeout=10)
+            if resp.status_code == 401 and not auth_refresh:
+                self.set_auth()
+                auth_refresh = True
+            else:
+                break
 
         return resp
 

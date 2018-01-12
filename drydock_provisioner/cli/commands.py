@@ -103,11 +103,8 @@ def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name,
     # setup the drydock client using the passed parameters.
     url_parse_result = urlparse(url)
 
-    if not os_token:
-        token = KeystoneClient.get_token(ks_sess=ks_sess)
-        logger.debug("Creating Drydock client with token %s." % token)
-    else:
-        token = os_token
+    def auth_gen():
+        return list(ks_sess.get_auth_headers().items())
 
     if not url_parse_result.scheme:
         ctx.fail('URL must specify a scheme and hostname, optionally a port')
@@ -116,7 +113,7 @@ def drydock(ctx, debug, url, os_project_domain_name, os_user_domain_name,
             scheme=url_parse_result.scheme,
             host=url_parse_result.hostname,
             port=url_parse_result.port,
-            token=token))
+            auth_gen=auth_gen))
 
 
 drydock.add_command(task.task)
