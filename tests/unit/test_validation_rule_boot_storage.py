@@ -21,7 +21,7 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 class TestRationalBootStorage(object):
     def test_boot_storage_rational(self, deckhand_ingester, drydock_state,
-                                   input_files):
+                                   input_files, mock_get_build_data):
 
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -39,7 +39,7 @@ class TestRationalBootStorage(object):
         assert len(message_list) == 1
 
     def test_invalid_boot_storage_small(self, deckhand_ingester, drydock_state,
-                                        input_files):
+                                        input_files, mock_get_build_data):
 
         input_file = input_files.join("invalid_boot_storage_small.yaml")
         design_ref = "file://%s" % str(input_file)

@@ -66,7 +66,8 @@ class TestClass(object):
         assert result.status == falcon.HTTP_403
 
     @pytest.fixture()
-    def seed_bootaction(self, blank_state, yaml_orchestrator, input_files):
+    def seed_bootaction(self, blank_state, yaml_orchestrator, input_files,
+                        mock_get_build_data):
         """Add a task and boot action to the database for testing."""
         input_file = input_files.join("fullsite.yaml")
         design_ref = "file://%s" % input_file
@@ -83,7 +84,8 @@ class TestClass(object):
         return ba_ctx
 
     @pytest.fixture()
-    def falcontest(self, drydock_state, yaml_ingester, yaml_orchestrator):
+    def falcontest(self, drydock_state, yaml_ingester, yaml_orchestrator,
+                   mock_get_build_data):
         """Create a test harness for the the Falcon API framework."""
         return testing.TestClient(
             start_api(

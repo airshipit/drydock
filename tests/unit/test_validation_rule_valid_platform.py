@@ -21,7 +21,7 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 class TestValidPlatform(object):
     def test_valid_platform(self, mocker, deckhand_ingester, drydock_state,
-                            input_files):
+                            input_files, mock_get_build_data):
         mock_images = mocker.patch(
             "drydock_provisioner.drivers.node.maasdriver.driver."
             "MaasNodeDriver.get_available_images")

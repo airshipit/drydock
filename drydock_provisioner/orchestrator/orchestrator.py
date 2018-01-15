@@ -244,17 +244,19 @@ class Orchestrator(object):
     def compute_model_inheritance(self, site_design):
         """Compute inheritance of the design model.
 
-        Given a fully populated Site model, compute the effecitve
+        Given a fully populated Site model, compute the effective
         design by applying inheritance and references
         """
         try:
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
-                n.compile_applied_model(site_design)
+                n.compile_applied_model(site_design, state_manager=self.state_manager)
         except AttributeError:
             self.logger.debug(
                 "Model inheritance skipped, no node definitions in site design."
             )
+        except errors.BuildDataError:
+            self.logger.info("No Build Data found.")
 
         return
 

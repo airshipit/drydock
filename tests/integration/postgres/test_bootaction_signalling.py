@@ -18,7 +18,7 @@ from drydock_provisioner.objects import fields as hd_fields
 
 class TestBootActionSignal(object):
     def test_bootaction_signal_disable(self, deckhand_orchestrator,
-                                       drydock_state, input_files):
+                                       drydock_state, input_files, mock_get_build_data):
         """Test that disabled signaling omits a status entry in the DB."""
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)

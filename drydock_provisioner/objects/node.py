@@ -16,8 +16,12 @@
 #
 """Drydock model of a baremetal node."""
 
+from defusedxml.ElementTree import fromstring
+import logging
 from oslo_versionedobjects import fields as ovo_fields
 
+import drydock_provisioner.config as config
+import drydock_provisioner.error as errors
 import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.hostprofile
 import drydock_provisioner.objects.base as base
@@ -39,20 +43,24 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
     # the same set of CIs
     def __init__(self, **kwargs):
         super(BaremetalNode, self).__init__(**kwargs)
+        self.logicalnames = {}
+        self.logger = logging.getLogger(
+            config.config_mgr.conf.logging.global_logger_name)
 
     # Compile the applied version of this model sourcing referenced
     # data from the passed site design
-    def compile_applied_model(self, site_design):
+    def compile_applied_model(self, site_design, state_manager):
         self.apply_host_profile(site_design)
         self.apply_hardware_profile(site_design)
         self.source = hd_fields.ModelSource.Compiled
+        self.apply_logicalnames(site_design, state_manager)
         return
 
     def apply_host_profile(self, site_design):
         self.apply_inheritance(site_design)
         return
 
-    # Translate device alises to physical selectors and copy
+    # Translate device aliases to physical selectors and copy
     # other hardware attributes into this object
     def apply_hardware_profile(self, site_design):
         if self.hardware_profile is None:
@@ -112,6 +120,64 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                             return (sd, p)
         return (None, None)
 
+    def _apply_logicalname(self, xml_root, alias_name, bus_type, address):
+        """Given xml_data, checks for a matching businfo and returns the logicalname
+
+        :param xml_root: Parsed ElementTree, it is searched for the logicalname.
+        :param alias_name: String value of the current device alias, it is returned
+                           if a logicalname is not found.
+        :param bus_type: String value that is used to find the logicalname.
+        :param address: String value that is used to find the logicalname.
+        :return: String value of the logicalname or the alias_name if logicalname is not found.
+        """
+        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
+        if len(nodes) >= 1 and nodes[0].text:
+            # TODO (as1452): log.info() when more than one result after the logger refactor.
+            for logicalname in reversed(nodes[0].text.split("/")):
+                self.logger.debug("Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, "
+                                  "to logicalname = %s" % (alias_name, bus_type, address, logicalname))
+                return logicalname
+        self.logger.debug("Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found" %
+                          (alias_name, bus_type, address))
+        return alias_name
+
+    def apply_logicalnames(self, site_design, state_manager):
+        """Gets the logicalnames for devices from lshw.
+
+        :param site_design: SiteDesign object.
+        :param state_manager: DrydockState object.
+        :return: Returns sets a dictionary of aliases that map to logicalnames in self.logicalnames.
+        """
+        logicalnames = {}
+
+        results = state_manager.get_build_data(node_name=self.get_name(), latest=True)
+        xml_data = None
+        for result in results:
+            if result.generator == "lshw":
+                xml_data = result.data_element
+                break
+
+        if xml_data:
+            xml_root = fromstring(xml_data)
+            for hardware_profile in site_design.hardware_profiles:
+                for device in hardware_profile.devices:
+                    logicalname = self._apply_logicalname(xml_root, device.alias, device.bus_type,
+                                                          device.address)
+                    logicalnames[device.alias] = logicalname
+        else:
+            raise errors.BuildDataError("No Build Data found for node_name %s" % (self.get_name()))
+
+        self.logicalnames = logicalnames
+
+    def get_logicalname(self, alias):
+        """Gets the logicalname from self.logicalnames for an alias or returns the alias if not in the dictionary.
+        """
+        if (self.logicalnames and self.logicalnames.get(alias)):
+            self.logger.debug("Logicalname input = %s with output %s." % (alias, self.logicalnames[alias]))
+            return self.logicalnames[alias]
+        else:
+            self.logger.debug("Logicalname input = %s not in logicalnames dictionary." % alias)
+            return alias
 
 @base.DrydockObjectRegistry.register
 class BaremetalNodeList(base.DrydockObjectListBase, base.DrydockObject):

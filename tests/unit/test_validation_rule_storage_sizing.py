@@ -39,7 +39,7 @@ class TestStorageSizing(object):
         assert msg.get('error') is False
 
     def test_invalid_storage_sizing(self, deckhand_ingester, drydock_state,
-                                    input_files):
+                                    input_files, mock_get_build_data):
 
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)

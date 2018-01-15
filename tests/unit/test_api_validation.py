@@ -24,7 +24,8 @@ import falcon
 
 
 class TestValidationApi(object):
-    def test_post_validation_resp(self, input_files, falcontest):
+    def test_post_validation_resp(self, input_files, falcontest, drydock_state,
+                                  mock_get_build_data):
 
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -81,7 +82,7 @@ class TestValidationApi(object):
 
         assert result.status == falcon.HTTP_400
 
-    def test_invalid_post_resp(self, input_files, falcontest):
+    def test_invalid_post_resp(self, input_files, falcontest, drydock_state, mock_get_build_data):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -105,7 +106,7 @@ class TestValidationApi(object):
 
     @pytest.fixture()
     def falcontest(self, drydock_state, deckhand_ingester,
-                   deckhand_orchestrator):
+                   deckhand_orchestrator, mock_get_build_data):
         """Create a test harness for the the Falcon API framework."""
         policy.policy_engine = policy.DrydockPolicy()
         policy.policy_engine.register_policy()

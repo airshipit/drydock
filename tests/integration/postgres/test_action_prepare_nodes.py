@@ -20,7 +20,7 @@ from drydock_provisioner.orchestrator.actions.orchestrator import PrepareNodes
 
 class TestActionPrepareNodes(object):
     def test_preparenodes(self, mocker, input_files, deckhand_ingester, setup,
-                          drydock_state):
+                          drydock_state, mock_get_build_data):
         mock_images = mocker.patch("drydock_provisioner.drivers.node.driver.NodeDriver"
                                    ".get_available_images")
         mock_images.return_value = ['xenial']

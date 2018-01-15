@@ -15,6 +15,7 @@
 import logging
 import os
 import shutil
+from unittest.mock import Mock
 
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
@@ -128,3 +129,20 @@ def setup_logging():
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+
+@pytest.fixture(scope='module')
+def mock_get_build_data(drydock_state):
+    def side_effect(**kwargs):
+        build_data = objects.BuildData(
+            node_name="test",
+            task_id="tid",
+            generator="lshw",
+            data_format="text/plain",
+            data_element="<mocktest></mocktest>")
+        return [build_data]
+    drydock_state.real_get_build_data = drydock_state.get_build_data
+    drydock_state.get_build_data = Mock(side_effect=side_effect)
+
+    yield
+    drydock_state.get_build_data = Mock(wraps=None, side_effect=None)
+    drydock_state.get_build_data = drydock_state.real_get_build_data

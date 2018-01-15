@@ -1001,9 +1001,12 @@ class ApplyNodeNetworking(BaseMaasAction):
                                         ctx=n.name,
                                         ctx_type='node')
                                     hw_iface_list = i.get_hw_slaves()
+                                    hw_iface_logicalname_list = []
+                                    for hw_iface in hw_iface_list:
+                                        hw_iface_logicalname_list.append(n.get_logicalname(hw_iface))
                                     iface = machine.interfaces.create_bond(
                                         device_name=i.device_name,
-                                        parent_names=hw_iface_list,
+                                        parent_names=hw_iface_logicalname_list,
                                         mtu=nl.mtu,
                                         fabric=fabric.resource_id,
                                         mode=nl.bonding_mode,
@@ -1012,7 +1015,6 @@ class ApplyNodeNetworking(BaseMaasAction):
                                         updelay=nl.bonding_up_delay,
                                         lacp_rate=nl.bonding_peer_rate,
                                         hash_policy=nl.bonding_xmit_hash)
-                                    self.task.success(focus=n.name)
                                 else:
                                     msg = "Network link %s indicates bonding, " \
                                           "interface %s has less than 2 slaves." % \
@@ -1059,8 +1061,7 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     hw_iface = i.get_hw_slaves()[0]
                                     # TODO(sh8121att): HardwareProfile device alias integration
                                     iface = machine.get_network_interface(
-                                        hw_iface)
-                                    self.task.success(focus=n.name)
+                                        n.get_logicalname(hw_iface))
 
                             if iface is None:
                                 msg = "Interface %s not found on node %s, skipping configuration" % (
@@ -1448,7 +1449,7 @@ class ApplyNodeStorage(BaseMaasAction):
                 storage_layout = dict()
                 if isinstance(root_block, hostprofile.HostPartition):
                     storage_layout['layout_type'] = 'flat'
-                    storage_layout['root_device'] = root_dev.name
+                    storage_layout['root_device'] = n.get_logicalname(root_dev.name)
                     storage_layout['root_size'] = root_block.size
                 elif isinstance(root_block, hostprofile.HostVolume):
                     storage_layout['layout_type'] = 'lvm'
@@ -1460,8 +1461,7 @@ class ApplyNodeStorage(BaseMaasAction):
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
                         self.task.failure(focus=n.get_id())
                         continue
-                    storage_layout['root_device'] = root_dev.physical_devices[
-                        0]
+                    storage_layout['root_device'] = n.get_logicalname(root_dev.physical_devices[0])
                     storage_layout['root_lv_size'] = root_block.size
                     storage_layout['root_lv_name'] = root_block.name
                     storage_layout['root_vg_name'] = root_dev.name
@@ -1479,24 +1479,24 @@ class ApplyNodeStorage(BaseMaasAction):
 
                 for d in n.storage_devices:
                     maas_dev = machine.block_devices.singleton({
-                        'name': d.name
+                        'name': n.get_logicalname(d.name)
                     })
                     if maas_dev is None:
-                        self.logger.warning("Dev %s not found on node %s" %
-                                            (d.name, n.name))
+                        self.logger.warning("Dev %s (%s) not found on node %s" %
+                                            (d.name, n.get_logicalname(d.name), n.name))
                         continue
 
                     if d.volume_group is not None:
-                        self.logger.debug("Adding dev %s to volume group %s" %
-                                          (d.name, d.volume_group))
+                        self.logger.debug("Adding dev %s (%s) to volume group %s" %
+                                          (d.name, n.get_logicalname(d.name), d.volume_group))
                         if d.volume_group not in vg_devs:
                             vg_devs[d.volume_group] = {'b': [], 'p': []}
                         vg_devs[d.volume_group]['b'].append(
                             maas_dev.resource_id)
                         continue
 
-                    self.logger.debug("Partitioning dev %s on node %s" %
-                                      (d.name, n.name))
+                    self.logger.debug("Partitioning dev %s (%s) on node %s" %
+                                      (d.name, n.get_logicalname(d.name), n.name))
                     for p in d.partitions:
                         if p.is_sys():
                             self.logger.debug(
@@ -1510,8 +1510,9 @@ class ApplyNodeStorage(BaseMaasAction):
                             self.maas_client, size=size, bootable=p.bootable)
                         if p.part_uuid is not None:
                             part.uuid = p.part_uuid
-                        msg = "Creating partition %s on dev %s" % (p.name,
-                                                                   d.name)
+                        msg = "Creating partition %s on dev %s (%s)" % (p.name,
+                                                                        d.name,
+                                                                        n.get_logicalname(d.name))
                         self.logger.debug(msg)
                         part = maas_dev.create_partition(part)
                         self.task.add_status_msg(

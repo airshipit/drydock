@@ -21,7 +21,7 @@ import drydock_provisioner.objects.fields as hd_fields
 
 class TestClass(object):
     def test_task_complete(self, yaml_ingester, input_files, setup,
-                           blank_state):
+                           blank_state, mock_get_build_data):
         input_file = input_files.join("fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 

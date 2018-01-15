@@ -19,7 +19,7 @@ from drydock_provisioner.orchestrator.validations.validator import Validator
 
 class TestDesignValidator(object):
     def test_validate_design(self, deckhand_ingester, drydock_state,
-                             input_files):
+                             input_files, mock_get_build_data):
         """Test the basic validation engine."""
 
         input_file = input_files.join("deckhand_fullsite.yaml")
