@@ -168,7 +168,7 @@ class NodeStatusField(fields.BaseEnumField):
 class NetworkLinkBondingMode(BaseDrydockEnum):
     Disabled = 'disabled'
     LACP = '802.3ad'
-    RoundRobin = 'balanced-rr'
+    RoundRobin = 'balance-rr'
     Standby = 'active-backup'
 
     ALL = (Disabled, LACP, RoundRobin, Standby)

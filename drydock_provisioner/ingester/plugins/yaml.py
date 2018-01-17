@@ -253,12 +253,17 @@ class YamlIngester(IngesterPlugin):
         model.bonding_mode = bonding.get(
             'mode', hd_fields.NetworkLinkBondingMode.Disabled)
 
-        if model.bonding_mode == hd_fields.NetworkLinkBondingMode.LACP:
-            model.bonding_xmit_hash = bonding.get('hash', 'layer3+4')
-            model.bonding_peer_rate = bonding.get('peer_rate', 'fast')
+        if model.bonding_mode in \
+            (hd_fields.NetworkLinkBondingMode.LACP,
+             hd_fields.NetworkLinkBondingMode.RoundRobin,
+             hd_fields.NetworkLinkBondingMode.Standby):
             model.bonding_mon_rate = bonding.get('mon_rate', '100')
             model.bonding_up_delay = bonding.get('up_delay', '200')
             model.bonding_down_delay = bonding.get('down_delay', '200')
+
+        if model.bonding_mode == hd_fields.NetworkLinkBondingMode.LACP:
+            model.bonding_xmit_hash = bonding.get('hash', 'layer3+4')
+            model.bonding_peer_rate = bonding.get('peer_rate', 'fast')
 
         model.mtu = data.get('mtu', None)
         model.linkspeed = data.get('linkspeed', None)
