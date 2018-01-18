@@ -90,7 +90,7 @@ class BootAction(ExtendTable):
     __tablename__ = 'boot_action'
 
     __schema__ = [
-        Column('node_name', String(16), primary_key=True),
+        Column('node_name', String(280), primary_key=True),
         Column('task_id', pg.BYTEA(16)),
         Column('identity_key', pg.BYTEA(32)),
     ]
@@ -102,7 +102,7 @@ class BootActionStatus(ExtendTable):
     __tablename__ = 'boot_action_status'
 
     __schema__ = [
-        Column('node_name', String(32), index=True),
+        Column('node_name', String(280), index=True),
         Column('action_id', pg.BYTEA(16), primary_key=True),
         Column('action_name', String(64)),
         Column('task_id', pg.BYTEA(16), index=True),
