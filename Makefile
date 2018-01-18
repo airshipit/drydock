@@ -18,6 +18,7 @@ IMAGE_TAG                  ?= latest
 HELM                       ?= helm
 PROXY                      ?= http://one.proxy.att.com:8080
 USE_PROXY                  ?= false
+PUSH_IMAGE                 ?= false
 
 export
 
@@ -68,6 +69,10 @@ ifeq ($(USE_PROXY), true)
 else
 	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) -f images/drydock/Dockerfile .
 endif
+ifeq ($(PUSH_IMAGE), true)
+	docker push $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG)
+endif
+
 
 .PHONY: clean
 clean:
