@@ -22,6 +22,13 @@ from drydock_provisioner.objects.task import TaskStatus, TaskStatusMessage
 
 
 class Validator():
+    def __init__(self, orchestrator):
+        """Create a validator with a reference to the orchestrator.
+
+        :param orchestrator: instance of Orchestrator
+        """
+        self.orchestrator = orchestrator
+
     def validate_design(self, site_design, result_status=None):
         """Validate the design in site_design passes all validation rules.
 
@@ -32,13 +39,12 @@ class Validator():
         :param site_design: instance of objects.SiteDesign
         :param result_status: instance of objects.TaskStatus
         """
-
         if result_status is None:
             result_status = TaskStatus()
 
         validation_error = False
         for rule in rule_set:
-            output = rule(site_design)
+            output = rule(site_design, orchestrator=self.orchestrator)
             result_status.message_list.extend(output)
             error_msg = [m for m in output if m.error]
             result_status.error_count = result_status.error_count + len(
@@ -54,7 +60,66 @@ class Validator():
         return result_status
 
     @classmethod
-    def rational_network_bond(cls, site_design):
+    def valid_platform_selection(cls, site_design, orchestrator=None):
+        """Validate that the platform selection for all nodes is valid.
+
+        Each node specifies an ``image`` and a ``kernel`` to use for
+        deployment. Check that these are valid for the image repoistory
+        configured in MAAS.
+        """
+        message_list = list()
+
+        try:
+            node_driver = orchestrator.enabled_drivers['node']
+        except KeyError:
+            message_list.append(
+                TaskStatusMessage(
+                    msg="Platform Validation: No enabled node driver, image"
+                    "and kernel selections not validated.",
+                    error=False,
+                    ctx_type='NA',
+                    ctx='NA'))
+            return message_list
+
+        valid_images = node_driver.get_available_images()
+
+        valid_kernels = dict()
+
+        for i in valid_images:
+            valid_kernels[i] = node_driver.get_available_kernels(i)
+
+        for n in site_design.baremetal_nodes:
+            if n.image in valid_images:
+                if n.kernel in valid_kernels[n.image]:
+                    continue
+                message_list.append(
+                    TaskStatusMessage(
+                        msg="Platform Validation: invalid kernel %s for node %s."
+                        % (n.kernel, n.name),
+                        error=True,
+                        ctx_type='NA',
+                        ctx='NA'))
+                continue
+            message_list.append(
+                TaskStatusMessage(
+                    msg="Platform Validation: invalid image %s for node %s." %
+                    (n.image, n.name),
+                    error=True,
+                    ctx_type='NA',
+                    ctx='NA'))
+        if not message_list:
+            message_list.append(
+                TaskStatusMessage(
+                    msg="Platform Validation: all nodes have valid "
+                    "image and kernel selections.",
+                    error=False,
+                    ctx_type='NA',
+                    ctx='NA'))
+
+        return message_list
+
+    @classmethod
+    def rational_network_bond(cls, site_design, orchestrator=None):
         """
         This check ensures that each NetworkLink has a rational bonding setup.
         If the bonding mode is set to 'disabled' then it ensures that no other options are specified.
@@ -74,8 +139,7 @@ class Validator():
             if bonding_mode == 'disabled':
                 # check to make sure nothing else is specified
                 if any([
-                        network_link.get(x)
-                        for x in [
+                        network_link.get(x) for x in [
                             'bonding_peer_rate', 'bonding_xmit_hash',
                             'bonding_mon_rate', 'bonding_up_delay',
                             'bonding_down_delay'
@@ -144,7 +208,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def network_trunking_rational(cls, site_design):
+    def network_trunking_rational(cls, site_design, orchestrator=None):
         """
         This check ensures that for each NetworkLink if the allowed networks are greater then 1 trunking mode is
         enabled. It also makes sure that if trunking mode is disabled then a default network is defined.
@@ -194,7 +258,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def storage_partitioning(cls, site_design):
+    def storage_partitioning(cls, site_design, orchestrator=None):
         """
         This checks that for each storage device a partition list OR volume group is defined. Also for each partition
         list it ensures that a file system and partition volume group are not defined in the same partition.
@@ -276,7 +340,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def unique_network_check(cls, site_design):
+    def unique_network_check(cls, site_design, orchestrator=None):
         """
         Ensures that each network name appears at most once between all NetworkLink
         allowed networks
@@ -327,7 +391,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def mtu_rational(cls, site_design):
+    def mtu_rational(cls, site_design, orchestrator=None):
         """
         Ensure that the MTU for each network is equal or less than the MTU defined
         for the parent NetworkLink for that network.
@@ -385,7 +449,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def storage_sizing(cls, site_design):
+    def storage_sizing(cls, site_design, orchestrator=None):
         """
         Ensures that for a partitioned physical device or logical volumes
         in a volume group, if sizing is a percentage then those percentages
@@ -469,7 +533,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def no_duplicate_IPs_check(cls, site_design):
+    def no_duplicate_IPs_check(cls, site_design, orchestrator=None):
         """
         Ensures that the same IP is not assigned to multiple baremetal node definitions by checking each new IP against
         the list of known IPs. If the IP is unique no error is thrown and the new IP will be added to the list to be
@@ -483,7 +547,9 @@ class Validator():
 
         if not baremetal_nodes_list:
             msg = 'No BaremetalNodes Found.'
-            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for node in baremetal_nodes_list:
                 addressing_list = node.get('addressing', [])
@@ -504,12 +570,14 @@ class Validator():
 
         if not message_list:
             msg = 'No Duplicate IP Addresses.'
-            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
 
         return message_list
 
     @classmethod
-    def boot_storage_rational(cls, site_design):
+    def boot_storage_rational(cls, site_design, orchestrator=None):
         """
         Ensures that root volume is defined and is at least 20GB and that boot volume is at least 1 GB
         """
@@ -599,7 +667,7 @@ class Validator():
         return message_list
 
     @classmethod
-    def ip_locality_check(cls, site_design):
+    def ip_locality_check(cls, site_design, orchestrator=None):
         """
         Ensures that each IP addresses assigned to a baremetal node is within the defined CIDR for the network. Also
         verifies that the gateway IP for each static route of a network is within that network's CIDR.
@@ -613,7 +681,9 @@ class Validator():
 
         if not network_list:
             msg = 'No networks found.'
-            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for net in network_list:
                 name = net.get('name')
@@ -650,7 +720,9 @@ class Validator():
                                         ctx='NA'))
         if not baremetal_nodes_list:
             msg = 'No baremetal_nodes found.'
-            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
         else:
             for node in baremetal_nodes_list:
                 addressing_list = node.get('addressing', [])
@@ -687,7 +759,9 @@ class Validator():
                                         ctx='NA'))
         if not message_list:
             msg = 'IP Locality Success'
-            message_list.append(TaskStatusMessage(msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            message_list.append(
+                TaskStatusMessage(
+                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
         return message_list
 
 
@@ -701,4 +775,5 @@ rule_set = [
     Validator.ip_locality_check,
     Validator.no_duplicate_IPs_check,
     Validator.boot_storage_rational,
+    Validator.valid_platform_selection,
 ]

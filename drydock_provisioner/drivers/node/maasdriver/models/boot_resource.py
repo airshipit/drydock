@@ -37,6 +37,28 @@ class BootResource(model_base.ResourceBase):
     def __init__(self, api_client, **kwargs):
         super().__init__(api_client, **kwargs)
 
+    def get_image_name(self):
+        """Return the name that would be specified in a deployment.
+
+        Return None if this is not an ubuntu image, otherwise
+        the distro series name
+        """
+        (os, release) = self.name.split('/')
+
+        # Only supply image names for ubuntu-based images
+        if os == 'ubuntu':
+            return release
+        else:
+            # Non-ubuntu images such as the uefi bootloader
+            # should never be selectable
+            return None
+
+    def get_kernel_name(self):
+        """Return the kernel name that would be specified in a deployment."""
+        (_, kernel) = self.architecture.split('/')
+
+        return kernel
+
 
 class BootResources(model_base.ResourceCollectionBase):
 
@@ -62,3 +84,26 @@ class BootResources(model_base.ResourceCollectionBase):
                 resp.status_code, resp.text)
             self.logger.error(msg)
             raise errors.DriverError(msg)
+
+    def get_available_images(self):
+        """Get list of available deployable images."""
+        image_options = list()
+        for k, v in self.resources.items():
+            if v.get_image_name() not in image_options:
+                image_options.append(v.get_image_name())
+        return image_options
+
+    def get_available_kernels(self, image_name):
+        """Get kernels available for image_name
+
+        Return list of kernel names available for
+        ``image_name``.
+
+        :param image_name: str image_name (e.g. 'xenial')
+        """
+        kernel_options = list()
+        for k, v in self.resources.items():
+            if (v.get_image_name() == image_name
+                    and v.get_kernel_name() not in kernel_options):
+                kernel_options.append(v.get_kernel_name())
+        return kernel_options

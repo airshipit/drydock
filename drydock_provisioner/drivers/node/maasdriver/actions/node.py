@@ -1801,10 +1801,11 @@ class DeployNode(BaseMaasAction):
                     "Error setting boot action id key tag for %s." % n.name,
                     exc_info=ex)
 
-            self.logger.info("Deploying node %s" % (n.name))
+            self.logger.info("Deploying node %s: image=%s, kernel=%s" %
+                             (n.name, n.image, n.kernel))
 
             try:
-                machine.deploy()
+                machine.deploy(platform=n.image, kernel=n.kernel)
             except errors.DriverError:
                 msg = "Error deploying node %s, skipping" % n.name
                 self.logger.warning(msg)

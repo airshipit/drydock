@@ -91,6 +91,11 @@ def setup(setup_logging):
 
     config.config_mgr.conf([])
     config.config_mgr.conf.set_override(
+        name="node_driver",
+        group="plugins",
+        override=
+        "drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver")
+    config.config_mgr.conf.set_override(
         name="database_connect_string",
         group="database",
         override="postgresql+psycopg2://drydock:drydock@localhost:5432/drydock"

@@ -457,8 +457,7 @@ class Machines(model_base.ResourceCollectionBase):
             if k.startswith('power_params.'):
                 field = k[13:]
                 result = [
-                    i for i in result
-                    if str(
+                    i for i in result if str(
                         getattr(i, 'power_parameters', {}).get(field, None)) ==
                     str(v)
                 ]

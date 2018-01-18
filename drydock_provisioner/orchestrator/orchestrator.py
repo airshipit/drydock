@@ -281,7 +281,7 @@ class Orchestrator(object):
         """
         status = None
         site_design = None
-        val = Validator()
+        val = Validator(self)
         try:
             status, site_design = self.get_described_site(design_ref)
             if status.status == hd_fields.ActionResult.Success:

@@ -24,6 +24,7 @@ import drydock_provisioner.config as config
 
 from drydock_provisioner.drivers.node.driver import NodeDriver
 from drydock_provisioner.drivers.node.maasdriver.api_client import MaasRequestFactory
+from drydock_provisioner.drivers.node.maasdriver.models.boot_resource import BootResources
 
 from .actions.node import ValidateNodeServices
 from .actions.node import CreateStorageTemplate
@@ -206,6 +207,31 @@ class MaasNodeDriver(NodeDriver):
         task.save()
 
         return
+
+    def get_available_images(self):
+        """Return images available in MAAS."""
+        maas_client = MaasRequestFactory(
+            config.config_mgr.conf.maasdriver.maas_api_url,
+            config.config_mgr.conf.maasdriver.maas_api_key)
+
+        br = BootResources(maas_client)
+        br.refresh()
+
+        return br.get_available_images()
+
+    def get_available_kernels(self, image_name):
+        """Return kernels available for ``image_name``.
+
+        :param image_name: str image name (e.g. 'xenial')
+        """
+        maas_client = MaasRequestFactory(
+            config.config_mgr.conf.maasdriver.maas_api_url,
+            config.config_mgr.conf.maasdriver.maas_api_key)
+
+        br = BootResources(maas_client)
+        br.refresh()
+
+        return br.get_available_kernels(image_name)
 
 
 def list_opts():
