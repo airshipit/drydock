@@ -43,7 +43,10 @@ spec:
 {{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_sync | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:
             - name: DRYDOCK_DB_URL
-              value: {{ tuple "postgresql" "internal" "user" "postgresql" . | include "helm-toolkit.endpoints.authenticated_endpoint_uri_lookup" | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_URI
           command:
             - /tmp/db-sync.sh
           volumeMounts:

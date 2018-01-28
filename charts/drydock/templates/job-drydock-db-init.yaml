@@ -43,17 +43,40 @@ spec:
 {{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_init | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:
             - name: DB_NAME
-              value: {{ .Values.database.postgresql.db_name | quote }}
-            - name: DB_USER
-              value: {{ .Values.endpoints.postgresql.auth.user.username | quote }}
-            - name: DB_PASS
-              value: {{ .Values.endpoints.postgresql.auth.user.password | quote}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_NAME
+            - name: DB_SERVICE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_USERNAME
+            - name: DB_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_PASSWORD
             - name: DB_FQDN
-              value: {{ tuple "postgresql" "internal" . | include "helm-toolkit.endpoints.hostname_fqdn_endpoint_lookup" | quote}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_HOST
             - name: DB_PORT
-              value: {{ tuple "postgresql" "internal" "postgresql" . | include "helm-toolkit.endpoints.endpoint_port_lookup" | quote }}
-            - name: ROOT_DB_USER
-              value: {{ .Values.endpoints.postgresql.auth.admin.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.user }}
+                  key: DATABASE_PORT
+            - name: DB_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.admin }}
+                  key: DATABASE_USERNAME
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.postgresql.admin }}
+                  key: DATABASE_PASSWORD
           command:
             - /tmp/db-init.sh
           volumeMounts:

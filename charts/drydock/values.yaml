@@ -112,6 +112,7 @@ manifests:
   job_drydock_db_init: true
   job_drydock_db_sync: true
   secret_keystone: true
+  secret_database: true
   configmap_etc: true
   configmap_bin: true
   service_drydock: true
@@ -214,6 +215,7 @@ endpoints:
       user:
         username: drydock
         password: password
+        database: drydock
     hosts:
       default: postgresql
     path: /drydock
@@ -228,10 +230,9 @@ secrets:
   identity:
     admin: drydock-keystone-admin
     user: drydock-keystone-user
-
-database:
   postgresql:
-    db_name: drydock
+    admin: drydock-postgresql-admin
+    user: drydock-postgresql-user
 
 # Settings for drydock.conf
 conf:
