@@ -106,26 +106,12 @@ class DrydockState(object):
 
         :param task_id: uuid.UUID ID of the parent task for subtasks
         """
-        try:
-            conn = self.db_engine.connect()
-            query_text = sql.text(
-                "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
-                "parent_task_id = :parent_task_id AND "
-                "status IN ('" + hd_fields.TaskStatus.Terminated + "','" +
-                hd_fields.TaskStatus.Complete + "')")
-
-            rs = conn.execute(query_text, parent_task_id=task_id.bytes)
-            task_list = [objects.Task.from_db(dict(r)) for r in rs]
-            conn.close()
-
-            self._assemble_tasks(task_list=task_list)
-            for t in task_list:
-                t.statemgr = self
-
-            return task_list
-        except Exception as ex:
-            self.logger.error("Error querying complete subtask: %s" % str(ex))
-            return []
+        query_text = sql.text(
+            "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
+            "parent_task_id = :parent_task_id AND "
+            "status IN ('" + hd_fields.TaskStatus.Terminated + "','" +
+            hd_fields.TaskStatus.Complete + "')")
+        return self._query_subtasks(task_id, query_text, "Error querying complete subtask: %s")
 
     def get_active_subtasks(self, task_id):
         """Query database for subtasks of the provided task that are active.
@@ -135,27 +121,35 @@ class DrydockState(object):
 
         :param task_id: uuid.UUID ID of the parent task for subtasks
         """
+        query_text = sql.text(
+            "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
+            "parent_task_id = :parent_task_id AND "
+            "status NOT IN ['" + hd_fields.TaskStatus.Terminated + "','" +
+            hd_fields.TaskStatus.Complete + "']")
+        return self._query_subtasks(task_id, query_text, "Error querying active subtask: %s")
+
+    def get_all_subtasks(self, task_id):
+        """Query database for all subtasks of the provided task.
+
+        :param task_id: uuid.UUID ID of the parent task for subtasks
+        """
+        query_text = sql.text(
+            "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
+            "parent_task_id = :parent_task_id")
+        return self._query_subtasks(task_id, query_text, "Error querying all subtask: %s")
+
+    def _query_subtasks(self, task_id, query_text, error):
         try:
-            conn = self.db_engine.connect()
-            query_text = sql.text(
-                "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
-                "parent_task_id = :parent_task_id AND "
-                "status NOT IN ['" + hd_fields.TaskStatus.Terminated + "','" +
-                hd_fields.TaskStatus.Complete + "']")
+            with self.db_engine.connect() as conn:
+                rs = conn.execute(query_text, parent_task_id=task_id.bytes)
+                task_list = [objects.Task.from_db(dict(r)) for r in rs]
 
-            rs = conn.execute(query_text, parent_task_id=task_id.bytes)
-
-            task_list = [objects.Task.from_db(dict(r)) for r in rs]
-            conn.close()
-
-            self._assemble_tasks(task_list=task_list)
-
-            for t in task_list:
-                t.statemgr = self
-
-            return task_list
+                self._assemble_tasks(task_list=task_list)
+                for t in task_list:
+                    t.statemgr = self
+                return task_list
         except Exception as ex:
-            self.logger.error("Error querying active subtask: %s" % str(ex))
+            self.logger.error(error % str(ex))
             return []
 
     def get_next_queued_task(self, allowed_actions=None):

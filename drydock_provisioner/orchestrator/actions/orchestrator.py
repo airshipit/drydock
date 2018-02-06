@@ -529,7 +529,6 @@ class PrepareNodes(BaseAction):
 
         :param node_driver: driver instance to use for execution
         :param node_list: a list of objects.BaremetalNode instances
-        :return: list of uuid.UUID task ids of the tasks executing this step
         """
         if len(node_list) > 0:
             self.logger.info(
@@ -560,12 +559,10 @@ class PrepareNodes(BaseAction):
                 except errors.MaxRetriesReached:
                     self.task.failure()
                     break
-            return [node_commission_task.get_id()]
         else:
             self.logger.warning(
                 "No nodes successfully identified, skipping commissioning subtask"
             )
-            return list()
 
     def step_node_identify(self, node_driver, node_list):
         """Execute the IdentifyNode step of this action on a list of nodes.

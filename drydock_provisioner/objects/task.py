@@ -296,7 +296,11 @@ class Task(object):
         :param reset_status: Whether to reset the result status of this task before aligning
         """
         if reset_status:
-            self.result.status = hd_fields.ActionResult.Incomplete
+            # Defaults the ActionResult to Success if there are no tasks
+            if not self.statemgr.get_all_subtasks(self.task_id):
+                self.result.status = hd_fields.ActionResult.Success
+            else:
+                self.result.status = hd_fields.ActionResult.Incomplete
         for st in self.statemgr.get_complete_subtasks(self.task_id):
             if action_filter is None or (action_filter is not None
                                          and st.action == action_filter):
