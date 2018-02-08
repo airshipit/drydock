@@ -35,6 +35,8 @@ Drydock Configuration Guide
    configuration
    sampleconf
    policy-enforcement
+   exceptions/index
+
 
 API Documentation
 -----------------

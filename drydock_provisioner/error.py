@@ -15,14 +15,42 @@ import json
 
 
 class DesignError(Exception):
+    """
+    **Message:** *Invalid Network model*.
+
+    **Troubleshoot:**
+
+    **Message:** *Network <network_key> not found in design state*.
+
+    **Troubleshoot:**
+
+    **Message:** *Design <design_id> not found*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class IngesterError(DesignError):
+    """
+    **Message:** *Error parsing YAML <various>*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class InvalidDesignReference(DesignError):
+    """
+    **Message:** *Invalid reference scheme <design_url.scheme>: no handler*.
+
+    **Troubleshoot:**
+
+    **Message:** *Cannot resolve design reference <design_ref>: unable to
+    parse as valid URI*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
@@ -35,10 +63,41 @@ class TaskNotFoundError(StateError):
 
 
 class OrchestratorError(Exception):
+    """
+    **Message:** *Could find task <task_id>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Unable to render effective site design.*
+
+    **Troubleshoot:**
+
+    **Message:** *Cannot specify both failures and successes*.
+
+    **Troubleshoot:**
+
+    **Message:** *Unknow filter set type*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error processing node filter*.
+
+    **Troubleshoot:**
+
+    **Message:** *Orchestrator requires instantiated state manager and
+    ingester*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class MaxRetriesReached(OrchestratorError):
+    """
+    **Message:** *Retries reached max attempts*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
@@ -59,38 +118,212 @@ class BootactionError(Exception):
 
 
 class UnknownPipelineSegment(BootactionError):
+    """
+    **Message:** *Bootaction pipeline segment <various> unknown*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class PipelineFailure(BootactionError):
+    """
+    **Message:** *Error when running bootaction pipeline segment <various>*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class InvalidAssetLocation(BootactionError):
+    """
+    **Message:** *Unable to resolve asset reference <various>*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class BuildDataError(Exception):
+    """
+    **Message:** *Error saving build data - data_element type <data_element>
+    could not be cast to string.
+
+    **Troubleshoot:**
+
+    **Message:** *Error selecting build data*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class DriverError(Exception):
+    """
+    **Message:** *Invalid task <task_id>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Driver <driver_desc> doesn't support task action <action>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Fabric not found in MaaS for fabric_id <fabric_id>,
+    fabric_name <fabric_name>*.
+
+    **Troubeshoot:**
+
+    **Message:** *Cannot locate untagged VLAN on fabric <fabric_id>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error retrieving node/tag pairs, received HTTP
+    <resp.status_code> from MaaS*.
+
+    **Troubleshoot:**
+
+    **Message:** *Tag <res.name> already exists*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error resetting network on node <resource_id>:
+    <resp.status_code>, <resp.text>*.
+
+    **Troubleshoot:**
+
+    **Message:** *"Error: cannot find storage device <root_device> to set as
+    root device*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error: failed configuring node <resource_id> storage layout:
+    <various>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error commissioning node, received HTTP <resp.status_code>
+    from MaaS*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error deploying node, received HTTP <resp.status_code> from
+    MaaS*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error setting node metadata, received HTTP <resp.status_code>
+    from MaaS*.
+
+    **Troubleshoot:**
+
+    **Message:** *Node <node_name> not found*.
+
+    **Troubleshoot:**
+
+    **Message:** *Node <node_name> status '<node.status_name>' does not allow
+    deployment, should be 'Ready'*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error acquiring node, MaaS returned <resp.status_code>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Failed updating MAAS url <url> - return code
+    <resp.status_code>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Node OOB type is not IPMI*.
+
+    **Troubleshoot:**
+
+    **Message:** *Node <node_name> has no IPMI address*.
+
+    **Troubleshoot:**
+
+    **Message:** *IPMI command failed*.
+
+    **Troubleshoot:**
+
+    **Message:** *Unsupported action <task_action> for driver <driver_desc>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Failed updating MAAS url <url> - return code
+    <resp.status_code> <resp.text>*
+
+    **Troubleshoot:**
+
+    **Message:** *Invalid JSON for class <class_name>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error: Could not create logical volume <various>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Error: Could not delete logical volume <various>*.
+
+    **Troubleshoot:**
+
+    **Message:** *Inconsistent data from MaaS*.
+
+    **Troubleshoot:**
+    """
     pass
 
 
 class TransientDriverError(DriverError):
+    """
+    **Message:** *Timeout connection to MaaS*
+
+    **Troubleshoot:** *Coming Soon*
+
+    **Message:** *Recieved 50x error from MaaS*
+
+    **Troubleshoot:** *Coming Soon*
+    """
     pass
 
 
 class PersistentDriverError(DriverError):
+    """
+    **Message:** *Recieved unexpected error from MaaS*
+
+    **Troubleshoot:** *Coming Soon*
+
+    **Message:** *Error accessing MaaS: <details>*
+
+    **Troubleshoot:** *Coming Soon*
+
+    **Message:** *MaaS API Authentication Failed*
+
+    **Troubleshoot:** *Coming Soon*
+    """
     pass
 
 
 class NotEnoughStorage(DriverError):
+    """
+    **Message:** *The calcuted size is not available.*
+
+    **Troubleshoot:** *Coming Soon*
+    """
     pass
 
 
 class InvalidSizeFormat(DriverError):
+    """
+    **Message:** *Invalid size string format: <size of string>*
+
+    **Troubleshoot:** *Coming Soon*
+
+    **Message:** *Sizes using the ">" or "%" format must specify a block device
+    or volume group context*
+
+    **Troubleshoot:** *Coming Soon*
+    """
     pass
 
 
@@ -106,20 +339,48 @@ class ApiError(Exception):
 
 
 class InvalidFormat(ApiError):
+    """
+    **Message:** *Invalid JSON in body: <path>*
+
+    **Code:** 400
+
+    **Troubleshoot:** *Coming Soon*
+    """
     def __init__(self, msg, code=400):
         super(InvalidFormat, self).__init__(msg, code=code)
 
 
 class ClientError(ApiError):
+    """
+    **Message:** *Error - recieved <status code>: <details>*
+
+    **Code:** 500
+
+    **Troubleshoot:** *Coming Soon*
+    """
     def __init__(self, msg, code=500):
         super().__init__(msg)
 
 
 class ClientUnauthorizedError(ClientError):
+    """
+    **Message:** *Unauthorized access to <url>, include valid token.*
+
+    **Code:** 401
+
+    **Troubleshoot:** *Try requesting a new token.*
+    """
     def __init__(self, msg):
         super().__init__(msg, code=401)
 
 
 class ClientForbiddenError(ClientError):
+    """
+    **Message:** *Forbidden access to <url>.*
+
+    **Code:** 403
+
+    **Troubleshoot:** *Coming Soon*
+    """
     def __init__(self, msg):
         super().__init__(msg, code=403)
