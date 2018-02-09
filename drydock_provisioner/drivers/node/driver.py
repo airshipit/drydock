@@ -57,3 +57,17 @@ class NodeDriver(ProviderDriver):
         else:
             raise errors.DriverError("Unsupported action %s for driver %s" %
                                      (task_action, self.driver_desc))
+
+    def get_available_images(self):
+        """Return images that can be deployed to nodes by this driver."""
+
+        return []
+
+    def get_available_kernels(self, image):
+        """Return a list of kernels that can be specified for deployment.
+
+        :param image: str specifying what image the kernel will be activated
+                      within
+        """
+
+        return []

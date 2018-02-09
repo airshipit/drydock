@@ -939,8 +939,7 @@ class BootactionReport(BaseAction):
                 bas = self.state_manager.get_boot_actions_for_node(n)
                 running_bas = {
                     k: v
-                    for (k, v) in bas.items()
-                    if v.get('action_status') ==
+                    for (k, v) in bas.items() if v.get('action_status') ==
                     hd_fields.ActionResult.Incomplete
                 }
                 if len(running_bas) > 0:

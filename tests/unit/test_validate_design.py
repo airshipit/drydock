@@ -30,7 +30,7 @@ class TestDesignValidator(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        val = Validator()
+        val = Validator(orch)
         response = val.validate_design(site_design)
 
         for msg in response.message_list:

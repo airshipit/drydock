@@ -227,6 +227,7 @@ metadata:
   labels:
     application: 'drydock'
 data:
+  hardware_profile: HPGen9v3
   oob:
     type: ipmi
     network: oob
@@ -239,14 +240,14 @@ data:
           role: rootdisk
         partitions:
           - name: root
-            size: 20g
+            size: 39%
             bootable: true
             filesystem:
               mountpoint: '/'
               fstype: 'ext4'
               mount_options: 'defaults'
           - name: boot
-            size: 1g
+            size: 42%
             bootable: false
             filesystem:
               mountpoint: '/boot'
@@ -258,52 +259,20 @@ data:
       log_vg:
         logical_volumes:
           - name: 'log_lv'
-            size: '500m'
+            size: '25%'
             filesystem:
               mountpoint: '/var/log'
               fstype: 'xfs'
               mount_options: 'defaults'
   platform:
-    image: 'xenial'
-    kernel: 'ga-16.04'
+    image: xenial
+    kernel: lts
     kernel_params:
       quiet: true
       console: ttyS2
   metadata:
     owner_data:
       foo: bar
----
-schema: 'drydock/HostProfile/v1'
-metadata:
-  schema: 'metadata/Document/v1'
-  name: 'k8-node'
-  storagePolicy: 'cleartext'
-  labels:
-    application: 'drydock'
-data:
-  host_profile: defaults
-  hardware_profile: HPGen9v3
-  primary_network: mgmt
-  interfaces:
-    pxe:
-      device_link: pxe
-      labels:
-        noconfig: true
-      slaves:
-        - prim_nic01
-      networks:
-        - pxe
-    bond0:
-      device_link: gp
-      slaves:
-        - prim_nic01
-        - prim_nic02
-      networks:
-        - mgmt
-        - private
-  metadata:
-    tags:
-      - 'test'
 ---
 schema: 'drydock/BaremetalNode/v1'
 metadata:
@@ -313,7 +282,7 @@ metadata:
   labels:
     application: 'drydock'
 data:
-  host_profile: k8-node
+  host_profile: defaults
   interfaces:
     bond0:
       networks:
@@ -329,27 +298,6 @@ data:
       address: 172.16.100.20
   metadata:
     rack: rack1
----
-schema: 'drydock/BaremetalNode/v1'
-metadata:
-  schema: 'metadata/Document/v1'
-  name: compute01
-  storagePolicy: 'cleartext'
-  labels:
-    application: 'drydock'
-data:
-  host_profile: k8-node
-  addressing:
-    - network: pxe
-      address: dhcp
-    - network: mgmt
-      address: 172.16.1.21
-    - network: private
-      address: 172.16.2.21
-    - network: oob
-      address: 172.16.100.21
-  metadata:
-    rack: rack2
 ---
 schema: 'drydock/HardwareProfile/v1'
 metadata:
@@ -379,80 +327,3 @@ data:
       address: '2:0.0.0'
       dev_type: 'VBOX HARDDISK'
       bus_type: 'scsi'
----
-schema: 'drydock/BootAction/v1'
-metadata:
-  schema: 'metadata/Document/v1'
-  name: hw_filtered
-  storagePolicy: 'cleartext'
-  labels:
-    application: 'drydock'
-data:
-  signaling: false
-  node_filter:
-    filter_set_type: 'union'
-    filter_set:
-      - filter_type: 'union'
-        node_names:
-          - 'compute01'
-  assets:
-    - path: /var/tmp/hello.sh
-      type: file
-      permissions: '555'
-      data: |-
-        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
-        Jwo=
-      data_pipeline:
-        - base64_decode
-        - utf8_decode
-        - template
-    - path: /lib/systemd/system/hello.service
-      type: unit
-      permissions: '600'
-      data: |-
-        W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
-        ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
-        dGFyZ2V0Cg==
-      data_pipeline:
-        - base64_decode
-        - utf8_decode
-...
----
-schema: 'drydock/BootAction/v1'
-metadata:
-  schema: 'metadata/Document/v1'
-  name: helloworld
-  storagePolicy: 'cleartext'
-  labels:
-    application: 'drydock'
-data:
-  assets:
-    - path: /var/tmp/hello.sh
-      type: file
-      permissions: '555'
-      data: |-
-        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
-        Jwo=
-      data_pipeline:
-        - base64_decode
-        - utf8_decode
-        - template
-    - path: /lib/systemd/system/hello.service
-      type: unit
-      permissions: '600'
-      data: |-
-        W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
-        ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
-        dGFyZ2V0Cg==
-      data_pipeline:
-        - base64_decode
-        - utf8_decode
-    - path: /var/tmp/designref.sh
-      type: file
-      permissions: '500'
-      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
-      data_pipeline:
-        - base64_decode
-        - utf8_decode
-        - template
-...

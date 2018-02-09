@@ -264,8 +264,8 @@ data:
               fstype: 'xfs'
               mount_options: 'defaults'
   platform:
-    image: ubuntu_16.04
-    kernel: generic
+    image: 'xenial'
+    kernel: 'ga-16.04'
     kernel_params:
       quiet: true
       console: ttyS2
