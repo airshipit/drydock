@@ -193,15 +193,26 @@ class MaasNodeDriver(NodeDriver):
             task.bubble_results()
             task.align_result()
         else:
-            maas_client = MaasRequestFactory(
-                config.config_mgr.conf.maasdriver.maas_api_url,
-                config.config_mgr.conf.maasdriver.maas_api_key)
-            action = self.action_class_map.get(task.action, None)(
-                task,
-                self.orchestrator,
-                self.state_manager,
-                maas_client=maas_client)
-            action.start()
+            try:
+                maas_client = MaasRequestFactory(
+                    config.config_mgr.conf.maasdriver.maas_api_url,
+                    config.config_mgr.conf.maasdriver.maas_api_key)
+                action = self.action_class_map.get(task.action, None)(
+                    task,
+                    self.orchestrator,
+                    self.state_manager,
+                    maas_client=maas_client)
+                action.start()
+            except Exception as e:
+                msg = "Subtask for action %s raised unexpected exceptions" % task.action
+                self.logger.error(
+                    msg, exc_info=e.exception())
+                task.add_status_msg(
+                    msg,
+                    error=True,
+                    ctx=str(task.get_id()),
+                    ctx_type='task')
+                task.failure()
 
         task.set_status(hd_fields.TaskStatus.Complete)
         task.save()

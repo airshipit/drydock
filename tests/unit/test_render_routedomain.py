@@ -44,10 +44,35 @@ class TestRouteDomains(object):
             if 'subnet' in r and r.get('subnet') is not None:
                 route_cidrs.append(r.get('subnet'))
 
-        assert len(route_cidrs) == 3
+        assert len(route_cidrs) == 2
 
         assert '172.16.1.0/24' in route_cidrs
 
         assert '172.16.2.0/24' in route_cidrs
 
-        assert '172.16.3.0/24' in route_cidrs
+    def test_routedomain_omit_source_subnet(self, input_files, setup):
+        input_file = input_files.join("deckhand_routedomain.yaml")
+
+        design_state = DrydockState()
+        design_ref = "file://%s" % str(input_file)
+
+        ingester = Ingester()
+        ingester.enable_plugin(
+            'drydock_provisioner.ingester.plugins.deckhand.DeckhandIngester')
+
+        orchestrator = Orchestrator(
+            state_manager=design_state, ingester=ingester)
+
+        design_status, design_data = orchestrator.get_effective_site(
+            design_ref)
+
+        assert design_status.status == hd_fields.ActionResult.Success
+
+        net_rack3 = design_data.get_network('storage_rack3')
+
+        route_cidrs = list()
+        for r in net_rack3.routes:
+            if 'subnet' in r and r.get('subnet') is not None:
+                route_cidrs.append(r.get('subnet'))
+
+        assert '172.16.3.0/24' not in route_cidrs

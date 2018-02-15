@@ -598,5 +598,6 @@ class Orchestrator(object):
                             break
                     if gw is not None and metric is not None:
                         for cidr in rd_cidrs:
-                            n.routes.append(
-                                dict(subnet=cidr, gateway=gw, metric=metric))
+                            if cidr != n.cidr:
+                                n.routes.append(
+                                    dict(subnet=cidr, gateway=gw, metric=metric))

@@ -302,8 +302,11 @@ class CreateNetworkTemplate(BaseMaasAction):
             self.task.add_status_msg(
                 msg=msg, error=False, ctx=l.name, ctx_type='network_link')
             vlan = vlan_list.singleton({'vid': 0})
-            vlan.mtu = l.mtu
-            vlan.update()
+            if vlan:
+                vlan.mtu = l.mtu
+                vlan.update()
+            else:
+                self.logger.warning("Unable to find native VLAN on fabric %s." % link_fabric.resource_id)
 
             # Now that we have the fabrics sorted out, check
             # that VLAN tags and subnet attributes are correct
@@ -455,9 +458,19 @@ class CreateNetworkTemplate(BaseMaasAction):
                     dhcp_on = False
 
                     for r in n.ranges:
-                        subnet.add_address_range(r)
-                        if r.get('type', None) == 'dhcp':
-                            dhcp_on = True
+                        try:
+                            subnet.add_address_range(r)
+                            if r.get('type', None) == 'dhcp':
+                                dhcp_on = True
+                        except Exception as e:
+                            msg = "Error adding range to network %s: %s" % (
+                                n.name, str(r))
+                            self.logger.error(msg, exc_info=e)
+                            self.task.add_status_msg(
+                                msg=msg,
+                                error=True,
+                                ctx=n.name,
+                                ctx_type='network')
 
                     vlan_list = maas_vlan.Vlans(
                         self.maas_client, fabric_id=subnet.fabric)
