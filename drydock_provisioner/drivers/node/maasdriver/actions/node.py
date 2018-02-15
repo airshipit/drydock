@@ -130,7 +130,7 @@ class ValidateNodeServices(BaseMaasAction):
                                     self.logger.info(
                                         "Service %s on rackd %s is %s" %
                                         (s, rack_name, rack_svc[s]))
-                                    self.task.add_result_msg(
+                                    self.task.add_status_msg(
                                         msg="Service %s on rackd %s is %s" %
                                         (s, rack_name, rack_svc[s]),
                                         error=is_error,
