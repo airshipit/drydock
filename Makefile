@@ -19,7 +19,7 @@ HELM                       ?= helm
 PROXY                      ?= http://one.proxy.att.com:8080
 USE_PROXY                  ?= false
 PUSH_IMAGE                 ?= false
-
+LABEL                      ?= commit-id
 export
 
 # Build all docker images for this project
@@ -65,9 +65,9 @@ dry-run: clean
 .PHONY: build_drydock
 build_drydock:
 ifeq ($(USE_PROXY), true)
-	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
+	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
 else
-	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) -f images/drydock/Dockerfile .
+	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) --label $(LABEL) -f images/drydock/Dockerfile .
 endif
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG)
