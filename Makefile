@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DRYDOCK_IMAGE_NAME         ?= drydock
+DOCKER_REGISTRY            ?= quay.io
+IMAGE_NAME                 ?= drydock
 IMAGE_PREFIX               ?= attcomdev
 IMAGE_TAG                  ?= latest
 HELM                       ?= helm
@@ -20,6 +21,7 @@ PROXY                      ?= http://one.proxy.att.com:8080
 USE_PROXY                  ?= false
 PUSH_IMAGE                 ?= false
 LABEL                      ?= commit-id
+IMAGE                      ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
 export
 
 # Build all docker images for this project
@@ -65,12 +67,12 @@ dry-run: clean
 .PHONY: build_drydock
 build_drydock:
 ifeq ($(USE_PROXY), true)
-	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
+	docker build -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
 else
-	docker build -t $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG) --label $(LABEL) -f images/drydock/Dockerfile .
+	docker build -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile .
 endif
 ifeq ($(PUSH_IMAGE), true)
-	docker push $(IMAGE_PREFIX)/$(DRYDOCK_IMAGE_NAME):$(IMAGE_TAG)
+	docker push $(IMAGE)
 endif
 
 

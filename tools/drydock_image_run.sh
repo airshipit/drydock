@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-DRYDOCK_IMAGE="${IMAGE_PREFIX}/${DRYDOCK_IMAGE_NAME}:${IMAGE_TAG}"
+IMAGE=${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
 
 function start_db {
     if [[ ! -z $(docker ps | grep 'psql_integration') ]]
@@ -40,7 +40,7 @@ function init_db {
     docker run --rm -t --net=host \
       -e DRYDOCK_DB_URL="${DRYDOCK_DB_URL}" \
       --entrypoint /usr/local/bin/alembic \
-      ${DRYDOCK_IMAGE} \
+      ${IMAGE} \
       upgrade head
 }
 
@@ -49,7 +49,7 @@ function test_drydock {
     docker run \
       -d --name 'drydock_test' --net host \
       -v ${TMPETC}:/etc/drydock \
-      ${DRYDOCK_IMAGE}
+      ${IMAGE}
 
     sleep 10
 
