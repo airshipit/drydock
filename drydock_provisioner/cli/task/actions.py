@@ -71,19 +71,22 @@ class TaskCreate(CliAction):  # pylint: disable=too-few-public-methods
         self.block = block
         self.poll_interval = poll_interval
 
-        filter_items = {'filter_type': 'union'}
+        if any([node_names, rack_names, node_tags]):
+            filter_items = {'filter_type': 'union'}
 
-        if node_names is not None:
-            filter_items['node_names'] = node_names
-        if rack_names is not None:
-            filter_items['rack_names'] = rack_names
-        if node_tags is None:
-            filter_items['node_tags'] = node_tags
+            if node_names is not None:
+                filter_items['node_names'] = node_names
+            if rack_names is not None:
+                filter_items['rack_names'] = rack_names
+            if node_tags is None:
+                filter_items['node_tags'] = node_tags
 
-        self.node_filter = {
-            'filter_set_type': 'intersection',
-            'filter_set': [filter_items]
-        }
+            self.node_filter = {
+                'filter_set_type': 'intersection',
+                'filter_set': [filter_items]
+            }
+        else:
+            self.node_filter = None
 
     def invoke(self):
         """Invoke execution of this action."""
