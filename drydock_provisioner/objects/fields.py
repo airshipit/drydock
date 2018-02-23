@@ -81,8 +81,9 @@ class ActionResult(BaseDrydockEnum):
     Success = 'success'
     PartialSuccess = 'partial_success'
     Failure = 'failure'
+    Unreported = 'unreported'
 
-    ALL = (Incomplete, Success, PartialSuccess, Failure)
+    ALL = (Incomplete, Success, PartialSuccess, Failure, Unreported)
 
 
 class ActionResultField(fields.BaseEnumField):

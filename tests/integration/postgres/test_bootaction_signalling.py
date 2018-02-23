@@ -34,7 +34,21 @@ class TestBootActionSignal(object):
 
         bootactions = drydock_state.get_boot_actions_for_node('compute01')
 
-        assert len(bootactions) == 1
+        assert len(bootactions) == 2
+
+        # one bootaction should expecting signaling
+        reported_bas = [x
+                        for x
+                        in bootactions.values()
+                        if x.get('action_status') == hd_fields.ActionResult.Incomplete]
+        assert len(reported_bas) == 1
+
+        # one bootaction should not expect signaling
+        unreported_bas = [x
+                          for x
+                          in bootactions.values()
+                          if not x.get('action_status') == hd_fields.ActionResult.Unreported]
+        assert len(unreported_bas) == 1
 
         design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref=design_ref)

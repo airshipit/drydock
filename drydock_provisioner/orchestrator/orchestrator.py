@@ -550,18 +550,19 @@ class Orchestrator(object):
                     identity_key = os.urandom(32)
                     self.state_manager.post_boot_action_context(
                         nodename, task.get_id(), identity_key)
+                self.logger.debug(
+                    "Adding boot action %s for node %s to the database." %
+                    (ba.name, nodename))
                 if ba.signaling:
-                    self.logger.debug(
-                        "Adding boot action %s for node %s to the database." %
-                        (ba.name, nodename))
-                    action_id = ulid2.generate_binary_ulid()
-                    self.state_manager.post_boot_action(
-                        nodename, task.get_id(), identity_key, action_id,
-                        ba.name)
+                    init_status = hd_fields.ActionResult.Incomplete
                 else:
+                    init_status = hd_fields.ActionResult.Unreported
                     self.logger.debug(
-                        "Boot action %s has disabled signaling." % ba.name)
-
+                        "Boot action %s has disabled signaling, marking unreported." % ba.name)
+                action_id = ulid2.generate_binary_ulid()
+                self.state_manager.post_boot_action(
+                    nodename, task.get_id(), identity_key, action_id,
+                    ba.name, action_status=init_status)
         return identity_key
 
     def render_route_domains(self, site_design):
