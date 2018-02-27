@@ -16,7 +16,7 @@
 import re
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.storage_sizing import StorageSizing
 
 
 class TestStorageSizing(object):
@@ -31,10 +31,11 @@ class TestStorageSizing(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.storage_sizing(site_design)
-        msg = message_list[0].to_dict()
+        validator = StorageSizing()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
-        assert len(message_list) == 1
+        assert len(results) == 1
         assert msg.get('message') == 'Storage Sizing'
         assert msg.get('error') is False
 
@@ -49,7 +50,8 @@ class TestStorageSizing(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.storage_sizing(site_design)
+        validator = StorageSizing()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'Storage Sizing Error: Storage .+ size is < 0 on Baremetal Node .+'
@@ -58,8 +60,8 @@ class TestStorageSizing(object):
             'Storage Sizing Error: Storage .+ size is greater than 99 on Baremetal Node .+'
         )
 
-        assert len(message_list) == 6
-        for msg in message_list:
+        assert len(results) == 6
+        for msg in results:
             msg = msg.to_dict()
             assert regex.match(
                 msg.get('message')) is not None or regex_1.match(

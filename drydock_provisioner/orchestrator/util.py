@@ -18,7 +18,7 @@ import drydock_provisioner.error as errors
 
 
 class SimpleBytes():
-    def calulate_bytes(size_str):
+    def calculate_bytes(size_str):
         """
         Calculate the size in bytes of a size_str.
 

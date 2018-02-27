@@ -14,7 +14,7 @@
 
 import re
 
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.ip_locality_check import IpLocalityCheck
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
 
@@ -28,8 +28,9 @@ class TestIPLocality(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = IpLocalityCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'IP Locality Success'
         assert msg.get('error') is False
@@ -44,8 +45,9 @@ class TestIPLocality(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = IpLocalityCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'No networks found.'
         assert msg.get('error') is False
@@ -60,8 +62,9 @@ class TestIPLocality(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = IpLocalityCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert 'No gateway found' in msg.get('message')
         assert msg.get('error') is True
@@ -76,8 +79,9 @@ class TestIPLocality(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.ip_locality_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = IpLocalityCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'No baremetal_nodes found.'
         assert msg.get('error') is False
@@ -92,7 +96,8 @@ class TestIPLocality(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.ip_locality_check(site_design)
+        validator = IpLocalityCheck()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'IP Locality Error: The gateway IP Address .+ is not within the defined CIDR: .+ of .+'
@@ -102,8 +107,8 @@ class TestIPLocality(object):
             'IP Locality Error: The IP Address .+ is not within the defined CIDR: .+ of .+ .'
         )
 
-        assert len(message_list) == 3
-        for msg in message_list:
+        assert len(results) == 3
+        for msg in results:
             msg = msg.to_dict()
             assert msg.get('error')
             assert (regex.match(msg.get('message')) is not None

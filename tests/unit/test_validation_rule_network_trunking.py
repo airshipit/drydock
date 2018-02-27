@@ -16,7 +16,7 @@
 import re
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.network_trunking_rational import NetworkTrunkingRational
 
 
 class TestRationalNetworkTrunking(object):
@@ -30,8 +30,9 @@ class TestRationalNetworkTrunking(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.network_trunking_rational(site_design)
-        msg = message_list[0].to_dict()
+        validator = NetworkTrunkingRational()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'Rational Network Trunking'
         assert msg.get('error') is False
@@ -46,7 +47,8 @@ class TestRationalNetworkTrunking(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.network_trunking_rational(site_design)
+        validator = NetworkTrunkingRational()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'Rational Network Trunking Error: Trunking mode is disabled, a trunking'
@@ -56,11 +58,11 @@ class TestRationalNetworkTrunking(object):
             'Rational Network Trunking Error: If there is more than 1 allowed network,'
             'trunking mode must be enabled; on NetworkLink .+')
 
-        for msg in message_list:
+        for msg in results:
             msg = msg.to_dict()
             assert msg.get('error')
             assert regex.match(
                 msg.get('message')) is not None or regex_1.match(
                     msg.get('message')) is not None
 
-        assert len(message_list) == 2
+        assert len(results) == 2

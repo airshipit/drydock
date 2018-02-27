@@ -14,7 +14,7 @@
 
 import re
 
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.no_duplicate_ips_check import NoDuplicateIpsCheck
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
 
@@ -29,8 +29,9 @@ class TestDuplicateIPs(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.no_duplicate_IPs_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = NoDuplicateIpsCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'No Duplicate IP Addresses.'
         assert msg.get('error') is False
@@ -45,8 +46,9 @@ class TestDuplicateIPs(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.no_duplicate_IPs_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = NoDuplicateIpsCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'No BaremetalNodes Found.'
         assert msg.get('error') is False
@@ -61,8 +63,9 @@ class TestDuplicateIPs(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.no_duplicate_IPs_check(site_design)
-        msg = message_list[0].to_dict()
+        validator = NoDuplicateIpsCheck()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'No BaremetalNodes Found.'
         assert msg.get('error') is False
@@ -77,12 +80,13 @@ class TestDuplicateIPs(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.no_duplicate_IPs_check(site_design)
+        validator = NoDuplicateIpsCheck()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'Error! Duplicate IP Address Found: .+ is in use by both .+ and .+.'
         )
-        for msg in message_list:
+        for msg in results:
             msg = msg.to_dict()
             assert msg.get('error') is True
             assert regex.match(msg.get('message')) is not None

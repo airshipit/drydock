@@ -16,7 +16,7 @@
 import re
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.storage_partititioning import StoragePartitioning
 
 
 class TestRationalNetworkTrunking(object):
@@ -30,10 +30,11 @@ class TestRationalNetworkTrunking(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.storage_partitioning(site_design)
-        msg = message_list[0].to_dict()
+        validator = StoragePartitioning()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
-        assert len(message_list) == 1
+        assert len(results) == 1
         assert msg.get('message') == 'Storage Partitioning'
         assert msg.get('error') is False
 
@@ -48,10 +49,11 @@ class TestRationalNetworkTrunking(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.storage_partitioning(site_design)
-        msg = message_list[0].to_dict()
+        validator = StoragePartitioning()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
-        assert len(message_list) == 1
+        assert len(results) == 1
         assert msg.get('message') == 'Storage Partitioning'
         assert msg.get('error') is False
 
@@ -67,15 +69,16 @@ class TestRationalNetworkTrunking(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.storage_partitioning(site_design)
+        validator = StoragePartitioning()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'Storage Partitioning Error: A volume group must be assigned to a storage device or '
             'partition; volume group .+ on BaremetalNode .+')
 
-        for msg in message_list:
+        for msg in results:
             msg = msg.to_dict()
             assert msg.get('error')
             assert regex.match(msg.get('message')) is not None
 
-        assert len(message_list) == 2
+        assert len(results) == 2

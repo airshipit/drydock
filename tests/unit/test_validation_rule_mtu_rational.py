@@ -16,7 +16,7 @@
 import re
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
-from drydock_provisioner.orchestrator.validations.validator import Validator
+from drydock_provisioner.orchestrator.validations.mtu_rational import MtuRational
 
 
 class TestMtu(object):
@@ -30,12 +30,13 @@ class TestMtu(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.mtu_rational(site_design)
-        msg = message_list[0].to_dict()
+        validator = MtuRational()
+        results, message_list = validator.execute(site_design)
+        msg = results[0].to_dict()
 
         assert msg.get('message') == 'Mtu'
         assert msg.get('error') is False
-        assert len(message_list) == 1
+        assert len(results) == 1
 
     def test_invalid_mtu(self, mocker, deckhand_ingester, drydock_state,
                          input_files):
@@ -48,7 +49,8 @@ class TestMtu(object):
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
-        message_list = Validator.mtu_rational(site_design)
+        validator = MtuRational()
+        results, message_list = validator.execute(site_design)
 
         regex = re.compile(
             'Mtu Error: Mtu must be between 1400 and 64000; on Network .+')
@@ -56,11 +58,11 @@ class TestMtu(object):
             'Mtu Error: Mtu must be <= the parent Network Link; for Network .+'
         )
 
-        for msg in message_list:
+        for msg in results:
             msg = msg.to_dict()
             assert msg.get('error')
             assert regex.match(
                 msg.get('message')) is not None or regex_1.match(
                     msg.get('message')) is not None
 
-        assert len(message_list) == 4
+        assert len(results) == 4
