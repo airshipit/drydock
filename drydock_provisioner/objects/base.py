@@ -34,6 +34,11 @@ class DrydockObject(base.VersionedObject):
 
     OBJ_PROJECT_NAMESPACE = 'drydock_provisioner.objects'
 
+    # Maintain a reference to the source document for the model
+    fields = {
+        'doc_ref': obj_fields.ObjectField('DocumentReference', nullable=True)
+    }
+
     # Return None for undefined attributes
     def obj_load_attr(self, attrname):
         if attrname in self.fields.keys():

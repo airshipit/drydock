@@ -53,6 +53,14 @@ class InvalidDesignReference(DesignError):
     """
     pass
 
+class UnsupportedDocumentType(DesignError):
+    """
+    **Message:** *Site definition document in an unknown format*.
+
+    **Troubleshoot:**
+    """
+    pass
+
 
 class StateError(Exception):
     pass

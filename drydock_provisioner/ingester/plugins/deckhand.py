@@ -74,8 +74,8 @@ class DeckhandIngester(IngesterPlugin):
                 raise errors.IngesterError("Error parsing YAML: %s" % (err))
 
         # tracking processing status to provide a complete summary of issues
-        ps = objects.TaskStatus()
-        ps.set_status(hd_fields.ActionResult.Success)
+        ps = objects.Validation()
+        ps.set_status(hd_fields.ValidationResult.Success)
         for d in parsed_data:
             try:
                 (schema_ns, doc_kind, doc_version) = d.get('schema',
@@ -87,45 +87,56 @@ class DeckhandIngester(IngesterPlugin):
                 continue
             if schema_ns == 'drydock':
                 try:
+                    doc_ref = objects.DocumentReference(
+                        doc_type=hd_fields.DocumentType.Deckhand,
+                        doc_schema=d.get('schema'),
+                        doc_name=d.get('metadata', {}).get('name', 'Unknown'))
                     doc_errors = self.validate_drydock_document(d)
                     if len(doc_errors) > 0:
-                        doc_ctx = d.get('metadata', {}).get('name', 'Unknown')
                         for e in doc_errors:
-                            ps.add_status_msg(
-                                msg="%s:%s validation error: %s" %
-                                (doc_kind, doc_version, e),
-                                error=True,
-                                ctx_type='document',
-                                ctx=doc_ctx)
+                            ps.add_detail_msg(
+                                objects.ValidationMessage(
+                                    msg="%s:%s schema validation error: %s" %
+                                    (doc_kind, doc_version, e),
+                                    name="DD001",
+                                    docs=[doc_ref],
+                                    error=True,
+                                    level=hd_fields.MessageLevels.ERROR,
+                                    diagnostic=
+                                    "Invalid input file - see Drydock Troubleshooting Guide for DD001"
+                                ))
                         ps.set_status(hd_fields.ActionResult.Failure)
                         continue
                     model = self.process_drydock_document(d)
-                    ps.add_status_msg(
-                        msg="Successfully processed Drydock document type %s."
-                        % doc_kind,
-                        error=False,
-                        ctx_type='document',
-                        ctx=model.get_id())
+                    model.doc_ref = doc_ref
                     models.append(model)
                 except errors.IngesterError as ie:
                     msg = "Error processing document: %s" % str(ie)
                     self.logger.warning(msg)
-                    if d.get('metadata', {}).get('name', None) is not None:
-                        ctx = d.get('metadata').get('name')
-                    else:
-                        ctx = 'Unknown'
-                    ps.add_status_msg(
-                        msg=msg, error=True, ctx_type='document', ctx=ctx)
+                    ps.add_detail_msg(
+                        objects.ValidationMessage(
+                            msg=msg,
+                            name="DD000",
+                            error=True,
+                            level=hd_fields.MessageLevels.ERROR,
+                            docs=[doc_ref],
+                            diagnostic="Exception during document processing "
+                            "- see Drydock Troubleshooting Guide "
+                            "for DD000"))
                     ps.set_status(hd_fields.ActionResult.Failure)
                 except Exception as ex:
                     msg = "Unexpected error processing document: %s" % str(ex)
                     self.logger.error(msg, exc_info=True)
-                    if d.get('metadata', {}).get('name', None) is not None:
-                        ctx = d.get('metadata').get('name')
-                    else:
-                        ctx = 'Unknown'
-                    ps.add_status_msg(
-                        msg=msg, error=True, ctx_type='document', ctx=ctx)
+                    ps.add_detail_msg(
+                        objects.ValidationMessage(
+                            msg=msg,
+                            name="DD000",
+                            error=True,
+                            level=hd_fields.MessageLevels.ERROR,
+                            docs=[doc_ref],
+                            diagnostic="Unexpected exception during document "
+                            "processing - see Drydock Troubleshooting "
+                            "Guide for DD000"))
                     ps.set_status(hd_fields.ActionResult.Failure)
         return (ps, models)
 

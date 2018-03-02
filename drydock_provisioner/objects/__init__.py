@@ -32,6 +32,7 @@ def register_all():
     importlib.import_module('drydock_provisioner.objects.bootaction')
     importlib.import_module('drydock_provisioner.objects.task')
     importlib.import_module('drydock_provisioner.objects.builddata')
+    importlib.import_module('drydock_provisioner.objects.validation')
 
 
 # Utility class for calculating inheritance
