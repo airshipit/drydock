@@ -250,10 +250,7 @@ class Orchestrator(object):
         try:
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
-                try:
-                    n.compile_applied_model(site_design, state_manager=self.state_manager)
-                except errors.BuildDataError:
-                    self.logger.info("No Build Data found for node %s." % n.name)
+                n.compile_applied_model(site_design, state_manager=self.state_manager)
         except AttributeError:
             self.logger.debug(
                 "Model inheritance skipped, no node definitions in site design."

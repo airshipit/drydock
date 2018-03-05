@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 from unittest.mock import Mock
 
 import drydock_provisioner.objects as objects
-import drydock_provisioner.error as errors
 
 
 class TestClass(object):
-    def test_apply_logicalnames_exception(self, input_files, deckhand_orchestrator,
-                                          drydock_state, mock_get_build_data):
-        """Test node apply_logicalnames to get an exception"""
+    def test_apply_logicalnames_else(self, input_files, deckhand_orchestrator,
+                                     drydock_state, mock_get_build_data):
+        """Test node apply_logicalnames hits the else block"""
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_ref = "file://%s" % str(input_file)
@@ -35,9 +33,9 @@ class TestClass(object):
         drydock_state.get_build_data = Mock(side_effect=side_effect)
 
         nodes = design_data.baremetal_nodes
-        with pytest.raises(errors.BuildDataError):
-            for n in nodes or []:
-                n.apply_logicalnames(design_data, state_manager=drydock_state)
+        for n in nodes or []:
+            n.apply_logicalnames(design_data, state_manager=drydock_state)
+            assert n.logicalnames == {}
 
     def test_apply_logicalnames_success(self, input_files, deckhand_orchestrator,
                                         drydock_state, mock_get_build_data):

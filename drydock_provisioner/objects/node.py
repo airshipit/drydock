@@ -21,7 +21,6 @@ import logging
 from oslo_versionedobjects import fields as ovo_fields
 
 import drydock_provisioner.config as config
-import drydock_provisioner.error as errors
 import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.hostprofile
 import drydock_provisioner.objects.base as base
@@ -132,7 +131,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         """
         nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
         if len(nodes) >= 1 and nodes[0].text:
-            # TODO (as1452): log.info() when more than one result after the logger refactor.
+            if (len(nodes) > 1):
+                self.logger.info("Multiple nodes found for businfo=%s@%s" % (bus_type, address))
             for logicalname in reversed(nodes[0].text.split("/")):
                 self.logger.debug("Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, "
                                   "to logicalname = %s" % (alias_name, bus_type, address, logicalname))
@@ -165,7 +165,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                                                           device.address)
                     logicalnames[device.alias] = logicalname
         else:
-            raise errors.BuildDataError("No Build Data found for node_name %s" % (self.get_name()))
+            self.logger.info("No Build Data found for node_name %s" % (self.get_name()))
 
         self.logicalnames = logicalnames
 
