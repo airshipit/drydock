@@ -13,91 +13,70 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class StorageSizing(Validators):
     def __init__(self):
-        super().__init__('Storage Sizing', 1009)
+        super().__init__('Storage Sizing', 'DD2003')
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         Ensures that for a partitioned physical device or logical volumes
         in a volume group, if sizing is a percentage then those percentages
         do not sum > 99% and have no negative values
         """
-        message_list = []
-        site_design = site_design.obj_to_simple()
-
-        baremetal_nodes = site_design.get('baremetal_nodes', [])
+        baremetal_nodes = site_design.baremetal_nodes or []
 
         for baremetal_node in baremetal_nodes:
-            storage_device_list = baremetal_node.get('storage_devices', [])
+            storage_device_list = baremetal_node.storage_devices or []
 
             for storage_device in storage_device_list:
-                partition_list = storage_device.get('partitions', [])
+                partition_list = storage_device.partitions or []
                 partition_sum = 0
                 for partition in partition_list:
-                    size = partition.get('size')
+                    size = partition.size
                     percent = size.split('%')
                     if len(percent) == 2:
                         if int(percent[0]) < 0:
                             msg = (
-                                'Storage Sizing Error: Storage partition size is < 0 '
-                                'on Baremetal Node %s' %
-                                baremetal_node.get('name'))
-                            message_list.append(
-                                TaskStatusMessage(
-                                    msg=msg,
-                                    error=True,
-                                    ctx_type='NA',
-                                    ctx='NA'))
+                                'Storage partition %s on device %s size is < 0'
+                                % (partition.name, storage_device.name))
+                            self.report_error(
+                                msg, [baremetal_node.doc_ref],
+                                "Partition size must be a positive number.")
 
                         partition_sum += int(percent[0])
 
                     if partition_sum > 99:
                         msg = (
-                            'Storage Sizing Error: Storage partition size is greater than '
-                            '99 on Baremetal Node %s' %
-                            baremetal_node.get('name'))
-                        message_list.append(
-                            TaskStatusMessage(
-                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                            'Cumulative partition sizes on device %s is greater than 99%%.'
+                            % (storage_device.name))
+                        self.report_error(msg, [
+                            baremetal_node.doc_ref
+                        ], "Percentage-based sizes must sum to less than 100%."
+                                          )
 
-                volume_groups = baremetal_node.get('volume_groups', [])
+                volume_groups = baremetal_node.volume_groups or []
                 volume_sum = 0
                 for volume_group in volume_groups:
-                    logical_volume_list = volume_group.get(
-                        'logical_volumes', [])
+                    logical_volume_list = volume_group.logical_volumes or []
                     for logical_volume in logical_volume_list:
-                        size = logical_volume.get('size')
+                        size = logical_volume.size
                         percent = size.split('%')
                         if len(percent) == 2:
                             if int(percent[0]) < 0:
-                                msg = (
-                                    'Storage Sizing Error: Storage volume size is < 0 '
-                                    'on Baremetal Node %s' %
-                                    baremetal_node.get('name'))
-                                message_list.append(
-                                    TaskStatusMessage(
-                                        msg=msg,
-                                        error=True,
-                                        ctx_type='NA',
-                                        ctx='NA'))
+                                msg = ('Logical Volume %s size is < 0 ' %
+                                       (logical_volume.name))
+                                self.report_error(msg,
+                                                  [baremetal_node.doc_ref], "")
                             volume_sum += int(percent[0])
 
                     if volume_sum > 99:
-                        msg = (
-                            'Storage Sizing Error: Storage volume size is greater '
-                            'than 99 on Baremetal Node %s.' %
-                            baremetal_node.get('name'))
-                        message_list.append(
-                            TaskStatusMessage(
-                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        msg = ('Cumulative logical volume size is greater '
+                               'than 99% in volume group %s' %
+                               (volume_group.name))
+                        self.report_error(msg, [
+                            baremetal_node.doc_ref
+                        ], "Percentage-based sizes must sum to less than 100%."
+                                          )
 
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg='Storage Sizing', error=False, ctx_type='NA',
-                    ctx='NA'))
-
-        return Validators.report_results(self, message_list)
+        return

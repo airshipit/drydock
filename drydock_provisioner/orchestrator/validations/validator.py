@@ -15,7 +15,7 @@
 
 import drydock_provisioner.objects.fields as hd_fields
 
-from drydock_provisioner.objects.task import TaskStatus
+from drydock_provisioner.objects.validation import Validation
 
 from drydock_provisioner.orchestrator.validations.boot_storage_rational import BootStorageRational
 from drydock_provisioner.orchestrator.validations.ip_locality_check import IpLocalityCheck
@@ -28,6 +28,7 @@ from drydock_provisioner.orchestrator.validations.storage_partititioning import 
 from drydock_provisioner.orchestrator.validations.storage_sizing import StorageSizing
 from drydock_provisioner.orchestrator.validations.unique_network_check import UniqueNetworkCheck
 
+
 class Validator():
     def __init__(self, orchestrator):
         """Create a validator with a reference to the orchestrator.
@@ -36,7 +37,10 @@ class Validator():
         """
         self.orchestrator = orchestrator
 
-    def validate_design(self, site_design, result_status=None, include_output=False):
+    def validate_design(self,
+                        site_design,
+                        result_status=None,
+                        include_output=False):
         """Validate the design in site_design passes all validation rules.
 
         Apply all validation rules to the design in site_design. If result_status is
@@ -47,16 +51,14 @@ class Validator():
         :param result_status: instance of objects.TaskStatus
         """
         if result_status is None:
-            result_status = TaskStatus()
+            result_status = Validation()
 
         validation_error = False
-        message_lists = []
         for rule in rule_set:
-            results, message_list = rule.execute(site_design=site_design, orchestrator=self.orchestrator)
-            for item in message_list:
-                message_lists.append(item)
-            result_status.message_list.extend(results)
-            error_msg = [m for m in results if m.error]
+            message_list = rule.execute(
+                site_design=site_design, orchestrator=self.orchestrator)
+            result_status.message_list.extend(message_list)
+            error_msg = [m for m in message_list if m.error]
             result_status.error_count = result_status.error_count + len(
                 error_msg)
             if len(error_msg) > 0:
@@ -64,29 +66,12 @@ class Validator():
 
         if validation_error:
             result_status.set_status(hd_fields.ValidationResult.Failure)
+            result_status.message = "Site design failed validation."
+            result_status.reason = "See detail messages."
         else:
             result_status.set_status(hd_fields.ValidationResult.Success)
+            result_status.message = "Site design passed validation"
 
-        if include_output:
-            output = {
-                "kind": "Status",
-                "api_version": "v1.0",
-                "metadata": {},
-                "status": "Success",
-                "message": "Drydock validations succeeded",
-                "reason": "Validation",
-                "details": {
-                    "error_count": 0,
-                    "message_list": []
-                },
-                "code": 200
-            }
-            if len(message_lists) > 0:
-                output['status'] = "Failure"
-                output['details']['error_count'] = len(message_lists)
-                output['details']['message_list'] = message_lists
-                output['code'] = 400
-                return output
         return result_status
 
 

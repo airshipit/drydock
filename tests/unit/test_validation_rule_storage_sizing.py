@@ -14,9 +14,12 @@
 """Test Validation Rule Rational Network Trunking"""
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.storage_sizing import StorageSizing
+
+LOG = logging.getLogger(__name__)
 
 
 class TestStorageSizing(object):
@@ -32,11 +35,10 @@ class TestStorageSizing(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StorageSizing()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert len(results) == 1
-        assert msg.get('message') == 'Storage Sizing'
+        assert len(message_list) == 1
         assert msg.get('error') is False
 
     def test_invalid_storage_sizing(self, deckhand_ingester, drydock_state,
@@ -51,19 +53,17 @@ class TestStorageSizing(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StorageSizing()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
         regex = re.compile(
-            'Storage Sizing Error: Storage .+ size is < 0 on Baremetal Node .+'
-        )
-        regex_1 = re.compile(
-            'Storage Sizing Error: Storage .+ size is greater than 99 on Baremetal Node .+'
-        )
+            '(Storage partition)|(Logical Volume) .+ size is < 0')
+        regex_1 = re.compile('greater than 99%')
 
-        assert len(results) == 6
-        for msg in results:
+        assert len(message_list) == 6
+        for msg in message_list:
             msg = msg.to_dict()
-            assert regex.match(
-                msg.get('message')) is not None or regex_1.match(
+            LOG.debug(msg)
+            assert regex.search(
+                msg.get('message')) is not None or regex_1.search(
                     msg.get('message')) is not None
             assert msg.get('error') is True

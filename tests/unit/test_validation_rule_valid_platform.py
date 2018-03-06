@@ -13,10 +13,14 @@
 # limitations under the License.
 """Test Validation Rule Rational Boot Storage"""
 
+import logging
+
 import drydock_provisioner.config as config
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.platform_selection import PlatformSelection
+
+LOG = logging.getLogger(__name__)
 
 
 class TestValidPlatform(object):
@@ -42,16 +46,15 @@ class TestValidPlatform(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = PlatformSelection()
-        results, message_list = validator.execute(
-            site_design, orchestrator=orch)
-        for r in results:
-            print(r.to_dict())
+        message_list = validator.execute(site_design, orchestrator=orch)
 
-        msg = results[0].to_dict()
+        for r in message_list:
+            LOG.debug(r.to_dict())
 
-        assert 'all nodes have valid' in msg.get('message')
+        msg = message_list[0].to_dict()
+
         assert msg.get('error') is False
-        assert len(results) == 1
+        assert len(message_list) == 1
 
     def test_invalid_platform(self, mocker, deckhand_ingester, drydock_state,
                               input_files):
@@ -75,13 +78,13 @@ class TestValidPlatform(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = PlatformSelection()
-        results, message_list = validator.execute(
-            site_design, orchestrator=orch)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
-        for r in results:
-            print(r.to_dict())
+        for r in message_list:
+            LOG.debug(r.to_dict())
 
-        msg = results[0].to_dict()
+        msg = message_list[0].to_dict()
         assert 'invalid kernel lts' in msg.get('message')
         assert msg.get('error')
-        assert len(results) == 1
+        assert len(msg.get('documents')) > 0
+        assert len(message_list) == 1

@@ -285,7 +285,7 @@ class Orchestrator(object):
         val = Validator(self)
         try:
             status, site_design = self.get_described_site(design_ref)
-            if status.status == hd_fields.ActionResult.Success:
+            if status.status == hd_fields.ValidationResult.Success:
                 self.compute_model_inheritance(site_design)
                 self.compute_bootaction_targets(site_design)
                 self.render_route_domains(site_design)

@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.validations.no_duplicate_ips_check import NoDuplicateIpsCheck
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
+
+LOG = logging.getLogger(__name__)
 
 
 class TestDuplicateIPs(object):
@@ -30,10 +33,9 @@ class TestDuplicateIPs(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = NoDuplicateIpsCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'No Duplicate IP Addresses.'
         assert msg.get('error') is False
 
     def test_no_duplicate_IPs_no_baremetal_node(
@@ -47,10 +49,10 @@ class TestDuplicateIPs(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = NoDuplicateIpsCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'No BaremetalNodes Found.'
+        assert 'No BaremetalNodes Found.' in msg.get('message')
         assert msg.get('error') is False
 
     def test_no_duplicate_IPs_no_addressing(self, input_files, drydock_state,
@@ -64,10 +66,10 @@ class TestDuplicateIPs(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = NoDuplicateIpsCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'No BaremetalNodes Found.'
+        assert 'No BaremetalNodes Found.' in msg.get('message')
         assert msg.get('error') is False
 
     def test_invalid_no_duplicate_IPs(self, input_files, drydock_state,
@@ -81,12 +83,13 @@ class TestDuplicateIPs(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = NoDuplicateIpsCheck()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design)
 
-        regex = re.compile(
-            'Error! Duplicate IP Address Found: .+ is in use by both .+ and .+.'
-        )
-        for msg in results:
+        regex = re.compile('Duplicate IP Address Found: [0-9.]+')
+
+        for msg in message_list:
             msg = msg.to_dict()
+            LOG.debug(msg)
+            assert len(msg.get('documents')) > 0
             assert msg.get('error') is True
-            assert regex.match(msg.get('message')) is not None
+            assert regex.search(msg.get('message')) is not None

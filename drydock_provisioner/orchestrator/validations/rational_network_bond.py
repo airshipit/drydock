@@ -13,13 +13,12 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class RationalNetworkBond(Validators):
     def __init__(self):
-        super().__init__('Rational Network Bond', 1007)
+        super().__init__('Network Bond Rationality', 'DD1006')
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         This check ensures that each NetworkLink has a rational bonding setup.
         If the bonding mode is set to 'disabled' then it ensures that no other options are specified.
@@ -28,82 +27,58 @@ class RationalNetworkBond(Validators):
         If the bonding mode is set to active-backup or balanced-rr then it ensures that the bonding hash and the
         bonding peer rate are both NOT defined.
         """
-        message_list = []
-        site_design = site_design.obj_to_simple()
-
-        network_links = site_design.get('network_links', [])
+        network_links = site_design.network_links or []
 
         for network_link in network_links:
-            bonding_mode = network_link.get('bonding_mode', [])
+            bonding_mode = network_link.bonding_mode
 
             if bonding_mode == 'disabled':
                 # check to make sure nothing else is specified
                 if any([
-                        network_link.get(x) for x in [
+                        getattr(network_link, x) for x in [
                             'bonding_peer_rate', 'bonding_xmit_hash',
                             'bonding_mon_rate', 'bonding_up_delay',
                             'bonding_down_delay'
                         ]
                 ]):
-
-                    msg = (
-                        'Network Link Bonding Error: If bonding mode is disabled no other bond option can be'
-                        'specified; on BaremetalNode %s' %
-                        network_link.get('name'))
-
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    msg = 'If bonding mode is disabled no other bond option can be specified'
+                    self.report_error(
+                        msg, [network_link.doc_ref],
+                        "Enable a bonding mode or remove the bond options.")
 
             elif bonding_mode == '802.3ad':
                 # check if up_delay and down_delay are >= mon_rate
-                mon_rate = network_link.get('bonding_mon_rate')
-                if network_link.get('bonding_up_delay') < mon_rate:
-                    msg = ('Network Link Bonding Error: Up delay is less '
-                           'than mon rate on BaremetalNode %s' %
-                           (network_link.get('name')))
+                mon_rate = network_link.bonding_mon_rate
+                if network_link.bonding_up_delay < mon_rate:
+                    msg = ('Up delay %d is less than mon rate %d' %
+                           (network_link.bonding_up_delay, mon_rate))
+                    self.report_error(msg, [
+                        network_link.doc_ref
+                    ], "Link up delay must be equal or greater than the mon_rate"
+                                      )
 
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
-
-                if network_link.get('bonding_down_delay') < mon_rate:
-                    msg = ('Network Link Bonding Error: Down delay is '
-                           'less than mon rate on BaremetalNode %s' %
-                           (network_link.get('name')))
-
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                if network_link.bonding_down_delay < mon_rate:
+                    msg = ('Down delay %d is less than mon rate %d' %
+                           (network_link.bonding_down_delay, mon_rate))
+                    self.report_error(msg, [
+                        network_link.doc_ref
+                    ], "Link down delay must be equal or greater than the mon_rate"
+                                      )
 
             elif bonding_mode in ['active-backup', 'balanced-rr']:
                 # make sure hash and peer_rate are NOT defined
                 if network_link.get('bonding_xmit_hash'):
-                    msg = (
-                        'Network Link Bonding Error: Hash cannot be defined if bond mode is '
-                        '%s, on BaremetalNode %s' % (bonding_mode,
-                                                     network_link.get('name')))
-
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    msg = ('Hash cannot be defined if bond mode is %s' %
+                           (bonding_mode))
+                    self.report_error(
+                        msg, [network_link.doc_ref],
+                        "Hash mode is only applicable to LACP (802.3ad)")
 
                 if network_link.get('bonding_peer_rate'):
-                    msg = (
-                        'Network Link Bonding Error: Peer rate cannot be defined if bond mode is '
-                        '%s, on BaremetalNode %s' % (bonding_mode,
-                                                     network_link.get('name')))
+                    msg = ('Peer rate cannot be defined if bond mode is %s' %
+                           (bonding_mode))
+                    self.report_error(
+                        msg, [network_link.doc_ref],
+                        "Peer rate is only applicable to LACP (802.3ad)")
 
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
-
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg='Network Link Bonding',
-                    error=False,
-                    ctx_type='NA',
-                    ctx='NA'))
-
-        return Validators.report_results(self, message_list)
+        return

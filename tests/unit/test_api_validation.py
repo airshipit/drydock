@@ -16,11 +16,14 @@ from falcon import testing
 
 import pytest
 import json
+import logging
 
 from drydock_provisioner import policy
 from drydock_provisioner.control.api import start_api
 
 import falcon
+
+LOG = logging.getLogger(__name__)
 
 
 class TestValidationApi(object):
@@ -46,6 +49,7 @@ class TestValidationApi(object):
         result = falcontest.simulate_post(
             url, headers=hdr, body=json.dumps(body))
 
+        LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
 
     def test_href_error(self, input_files, falcontest):
@@ -65,6 +69,7 @@ class TestValidationApi(object):
         result = falcontest.simulate_post(
             url, headers=hdr, body=json.dumps(body))
 
+        LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
 
     def test_json_data_error(self, input_files, falcontest):
@@ -80,6 +85,7 @@ class TestValidationApi(object):
         result = falcontest.simulate_post(
             url, headers=hdr, body=json.dumps(body))
 
+        LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
 
     def test_invalid_post_resp(self, input_files, falcontest, drydock_state,

@@ -13,32 +13,28 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class PlatformSelection(Validators):
     def __init__(self):
-        super().__init__('Platform Selection', 1006)
+        super().__init__('Platform Selection', 'DD3001')
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """Validate that the platform selection for all nodes is valid.
 
         Each node specifies an ``image`` and a ``kernel`` to use for
         deployment. Check that these are valid for the image repository
         configured in MAAS.
         """
-        message_list = list()
-
         try:
             node_driver = orchestrator.enabled_drivers['node']
         except KeyError:
-            message_list.append(
-                TaskStatusMessage(
-                    msg="Platform Validation: No enabled node driver, image"
-                    "and kernel selections not validated.",
-                    error=False,
-                    ctx_type='NA',
-                    ctx='NA'))
-            return Validators.report_results(self, message_list)
+            msg = ("Platform Validation: No enabled node driver, image"
+                   "and kernel selections not validated.")
+            self.report_warn(
+                msg, [],
+                "Cannot validate platform selection without accessing the node provisioner."
+            )
+            return
 
         valid_images = node_driver.get_available_images()
 
@@ -51,28 +47,14 @@ class PlatformSelection(Validators):
             if n.image in valid_images:
                 if n.kernel in valid_kernels[n.image]:
                     continue
-                message_list.append(
-                    TaskStatusMessage(
-                        msg="Platform Validation: invalid kernel %s for node %s."
-                        % (n.kernel, n.name),
-                        error=True,
-                        ctx_type='NA',
-                        ctx='NA'))
+                msg = "Platform Validation: invalid kernel %s" % (n.kernel)
+                self.report_error(msg, [n.doc_ref],
+                                  "Select a valid kernel from: %s" % ",".join(
+                                      valid_kernels[n.image]))
                 continue
-            message_list.append(
-                TaskStatusMessage(
-                    msg="Platform Validation: invalid image %s for node %s." %
-                    (n.image, n.name),
-                    error=True,
-                    ctx_type='NA',
-                    ctx='NA'))
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg="Platform Validation: all nodes have valid "
-                    "image and kernel selections.",
-                    error=False,
-                    ctx_type='NA',
-                    ctx='NA'))
+            msg = "Platform Validation: invalid image %s" % (n.image)
+            self.report_error(
+                msg, [n.doc_ref],
+                "Select a valid image from: %s" % ",".join(valid_images))
 
-        return Validators.report_results(self, message_list)
+        return

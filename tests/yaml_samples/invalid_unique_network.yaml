@@ -308,6 +308,10 @@ data:
       networks:
         - mgmt
         - private
+############
+### This fails here
+############
+        - foo
   metadata:
     tags:
       - 'test'

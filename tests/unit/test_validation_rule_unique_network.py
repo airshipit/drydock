@@ -14,9 +14,12 @@
 """Test Validation Rule Unique Network"""
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.unique_network_check import UniqueNetworkCheck
+
+LOG = logging.getLogger(__name__)
 
 
 class TestUniqueNetwork(object):
@@ -32,12 +35,11 @@ class TestUniqueNetwork(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = UniqueNetworkCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'Unique Network'
         assert msg.get('error') is False
-        assert len(results) == 1
+        assert len(message_list) == 1
 
     def test_invalid_unique_network(self, mocker, deckhand_ingester,
                                     drydock_state, input_files):
@@ -51,15 +53,22 @@ class TestUniqueNetwork(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = UniqueNetworkCheck()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
         regex = re.compile(
-            'Unique Network Error: Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+'
+            'Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+'
+        )
+        regex_1 = re.compile(
+            'Interface \S+ attached to network \S+ not allowed on interface link'
         )
 
-        for msg in results:
-            msg = msg.to_dict()
-            assert msg.get('error')
-            assert regex.match(msg.get('message')) is not None
+        assert len(message_list) >= 2
 
-        assert len(results) == 1
+        for msg in message_list:
+            msg = msg.to_dict()
+            LOG.debug(msg)
+            assert msg.get('error')
+            assert any([
+                regex.search(msg.get('message')),
+                regex_1.search(msg.get('message'))
+            ])

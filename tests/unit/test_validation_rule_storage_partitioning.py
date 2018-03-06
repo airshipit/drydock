@@ -14,9 +14,12 @@
 """Test Validation Rule Storage Partitioning"""
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.storage_partititioning import StoragePartitioning
+
+LOG = logging.getLogger(__name__)
 
 
 class TestRationalNetworkTrunking(object):
@@ -31,11 +34,10 @@ class TestRationalNetworkTrunking(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StoragePartitioning()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert len(results) == 1
-        assert msg.get('message') == 'Storage Partitioning'
+        assert len(message_list) == 1
         assert msg.get('error') is False
 
     def test_storage_partitioning_unassigned_partition(
@@ -50,11 +52,10 @@ class TestRationalNetworkTrunking(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StoragePartitioning()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert len(results) == 1
-        assert msg.get('message') == 'Storage Partitioning'
+        assert len(message_list) == 1
         assert msg.get('error') is False
 
     def test_invalid_storage_partitioning(self, deckhand_ingester,
@@ -70,15 +71,15 @@ class TestRationalNetworkTrunking(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StoragePartitioning()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design)
 
-        regex = re.compile(
-            'Storage Partitioning Error: A volume group must be assigned to a storage device or '
-            'partition; volume group .+ on BaremetalNode .+')
+        regex = re.compile('Volume group .+ not assigned any physical volumes')
 
-        for msg in results:
+        for msg in message_list:
             msg = msg.to_dict()
+            LOG.debug(msg)
+            assert len(msg.get('documents')) > 0
             assert msg.get('error')
-            assert regex.match(msg.get('message')) is not None
+            assert regex.search(msg.get('message')) is not None
 
-        assert len(results) == 2
+        assert len(message_list) == 2

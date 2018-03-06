@@ -27,6 +27,7 @@ class HealthResource(StatefulResource):
     """
     Returns empty response body that Drydock is healthy
     """
+
     def __init__(self, orchestrator=None, **kwargs):
         """Object initializer.
 
@@ -39,15 +40,18 @@ class HealthResource(StatefulResource):
         """
         Returns 204 on healthy, otherwise 503, without response body.
         """
-        hc = HealthCheckCombined(state_manager=self.state_manager,
-                                 orchestrator=self.orchestrator,
-                                 extended=False)
+        hc = HealthCheckCombined(
+            state_manager=self.state_manager,
+            orchestrator=self.orchestrator,
+            extended=False)
         return hc.get(req, resp)
+
 
 class HealthExtendedResource(StatefulResource):
     """
     Returns response body that Drydock is healthy
     """
+
     def __init__(self, orchestrator=None, **kwargs):
         """Object initializer.
 
@@ -61,15 +65,18 @@ class HealthExtendedResource(StatefulResource):
         """
         Returns 200 on success, otherwise 503, with a response body.
         """
-        hc = HealthCheckCombined(state_manager=self.state_manager,
-                                 orchestrator=self.orchestrator,
-                                 extended=True)
+        hc = HealthCheckCombined(
+            state_manager=self.state_manager,
+            orchestrator=self.orchestrator,
+            extended=True)
         return hc.get(req, resp)
+
 
 class HealthCheckCombined(object):
     """
     Returns Drydock health check status.
     """
+
     def __init__(self, state_manager=None, orchestrator=None, extended=False):
         """Object initializer.
 
@@ -90,18 +97,22 @@ class HealthCheckCombined(object):
             if now is None:
                 raise Exception('None received from database for now()')
         except Exception as ex:
-            hcm = HealthCheckMessage(msg='Unable to connect to database', error=True)
+            hcm = HealthCheckMessage(
+                msg='Unable to connect to database', error=True)
             health_check.add_detail_msg(msg=hcm)
 
         # Test MaaS connection
         try:
-            task = self.orchestrator.create_task(action=hd_fields.OrchestratorAction.Noop)
-            maas_validation = ValidateNodeServices(task, self.orchestrator, self.state_manager)
+            task = self.orchestrator.create_task(
+                action=hd_fields.OrchestratorAction.Noop)
+            maas_validation = ValidateNodeServices(task, self.orchestrator,
+                                                   self.state_manager)
             maas_validation.start()
             if maas_validation.task.get_status() == ActionResult.Failure:
                 raise Exception('MaaS task failure')
         except Exception as ex:
-            hcm = HealthCheckMessage(msg='Unable to connect to MaaS', error=True)
+            hcm = HealthCheckMessage(
+                msg='Unable to connect to MaaS', error=True)
             health_check.add_detail_msg(msg=hcm)
 
         if self.extended:

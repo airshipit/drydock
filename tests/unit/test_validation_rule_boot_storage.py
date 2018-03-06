@@ -14,15 +14,17 @@
 """Test Validation Rule Rational Boot Storage"""
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.boot_storage_rational import BootStorageRational
+
+LOG = logging.getLogger(__name__)
 
 
 class TestRationalBootStorage(object):
     def test_boot_storage_rational(self, deckhand_ingester, drydock_state,
                                    input_files, mock_get_build_data):
-
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -32,16 +34,14 @@ class TestRationalBootStorage(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = BootStorageRational()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'Boot Storage'
         assert msg.get('error') is False
-        assert len(results) == 1
+        assert len(message_list) == 1
 
     def test_invalid_boot_storage_small(self, deckhand_ingester, drydock_state,
                                         input_files, mock_get_build_data):
-
         input_file = input_files.join("invalid_boot_storage_small.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -51,21 +51,21 @@ class TestRationalBootStorage(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = BootStorageRational()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
-        regex = re.compile(
-            'Boot Storage Error: .+ volume must be > .+GB on BaremetalNode .+')
+        regex = re.compile('.+ volume must be > .+GB')
 
-        for msg in results:
+        for msg in message_list:
             msg = msg.to_dict()
-            assert regex.match(msg.get('message')) is not None
+            LOG.debug(msg)
+            assert len(msg.get('documents')) > 0
+            assert regex.search(msg.get('message')) is not None
             assert msg.get('error')
 
-        assert len(results) == 4
+        assert len(message_list) == 4
 
     def test_invalid_boot_storage_root_not_set(self, deckhand_ingester,
                                                drydock_state, input_files):
-
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -75,15 +75,15 @@ class TestRationalBootStorage(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = BootStorageRational()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design)
 
-        regex = re.compile(
-            'Boot Storage Error: Root volume has to be set and must be > 20GB on BaremetalNode .+'
-        )
+        regex = re.compile('Root volume has to be set and must be > 20GB')
 
-        for msg in results:
+        for msg in message_list:
             msg = msg.to_dict()
-            assert regex.match(msg.get('message')) is not None
+            LOG.debug(msg)
+            assert len(msg.get('documents')) > 0
+            assert regex.search(msg.get('message')) is not None
             assert msg.get('error')
 
-        assert len(results) == 2
+        assert len(message_list) == 2

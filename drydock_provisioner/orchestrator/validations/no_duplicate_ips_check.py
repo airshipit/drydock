@@ -13,51 +13,40 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class NoDuplicateIpsCheck(Validators):
     def __init__(self):
-        super().__init__('No Duplicate IPs Check', 1005)
+        super().__init__('Duplicated IP Check', "DD2005")
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         Ensures that the same IP is not assigned to multiple baremetal node definitions by checking each new IP against
         the list of known IPs. If the IP is unique no error is thrown and the new IP will be added to the list to be
         checked against in the future.
         """
         found_ips = {}  # Dictionary Format - IP address: BaremetalNode name
-        message_list = []
 
-        site_design = site_design.obj_to_simple()
-        baremetal_nodes_list = site_design.get('baremetal_nodes', [])
+        baremetal_nodes_list = site_design.baremetal_nodes or []
 
         if not baremetal_nodes_list:
             msg = 'No BaremetalNodes Found.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
+            self.report_warn(
+                msg, [],
+                "Site design unlikely complete with no defined baremetal nodes."
+            )
         else:
             for node in baremetal_nodes_list:
-                addressing_list = node.get('addressing', [])
+                addressing_list = node.addressing or []
 
                 for ip_address in addressing_list:
-                    address = ip_address.get('address')
-                    node_name = node.get('name')
+                    address = ip_address.address
 
                     if address in found_ips and address is not None:
-                        msg = ('Error! Duplicate IP Address Found: %s '
-                               'is in use by both %s and %s.' %
-                               (address, found_ips[address], node_name))
-                        message_list.append(
-                            TaskStatusMessage(
-                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        msg = ('Duplicate IP Address Found: %s ' % address)
+                        self.report_error(
+                            msg, [node.doc_ref, found_ips[address].doc_ref],
+                            "Select unique IP addresses for each node.")
                     elif address is not None:
-                        found_ips[address] = node_name
+                        found_ips[address] = node
 
-        if not message_list:
-            msg = 'No Duplicate IP Addresses.'
-            message_list.append(
-                TaskStatusMessage(
-                    msg=msg, error=False, ctx_type='NA', ctx='NA'))
-
-        return Validators.report_results(self, message_list)
+        return

@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.validations.ip_locality_check import IpLocalityCheck
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
+
+LOG = logging.getLogger(__name__)
 
 
 class TestIPLocality(object):
@@ -29,10 +32,9 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = IpLocalityCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'IP Locality Success'
         assert msg.get('error') is False
 
     def test_ip_locality_no_networks(self, input_files, drydock_state,
@@ -46,10 +48,10 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = IpLocalityCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'No networks found.'
+        assert 'No networks found' in msg.get('message')
         assert msg.get('error') is False
 
     def test_ip_locality_no_gateway(self, input_files, drydock_state,
@@ -63,8 +65,8 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = IpLocalityCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
         assert 'No gateway found' in msg.get('message')
         assert msg.get('error') is True
@@ -80,10 +82,10 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = IpLocalityCheck()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'No baremetal_nodes found.'
+        assert 'No baremetal_nodes found' in msg.get('message')
         assert msg.get('error') is False
 
     def test_invalid_ip_locality_invalid_network(
@@ -97,20 +99,24 @@ class TestIPLocality(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = IpLocalityCheck()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
         regex = re.compile(
-            'IP Locality Error: The gateway IP Address .+ is not within the defined CIDR: .+ of .+'
+            'The gateway IP Address .+ is not within the defined CIDR: .+ of .+'
         )
-        regex_1 = re.compile('IP Locality Error: .+ is not a valid network.')
+        regex_1 = re.compile('.+ is not a valid network.')
         regex_2 = re.compile(
-            'IP Locality Error: The IP Address .+ is not within the defined CIDR: .+ of .+ .'
-        )
+            'The IP Address .+ is not within the defined CIDR: .+ of .+ .')
 
-        assert len(results) == 3
-        for msg in results:
+        assert len(message_list) == 3
+
+        for msg in message_list:
             msg = msg.to_dict()
+            LOG.debug(msg)
+            assert len(msg.get('documents')) > 0
             assert msg.get('error')
-            assert (regex.match(msg.get('message')) is not None
-                    or regex_1.match(msg.get('message')) is not None
-                    or regex_2.match(msg.get('message')) is not None)
+            assert any([
+                regex.search(msg.get('message')),
+                regex_1.search(msg.get('message')),
+                regex_2.search(msg.get('message'))
+            ])

@@ -14,57 +14,49 @@
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
 import drydock_provisioner.objects.fields as hd_fields
-from drydock_provisioner.objects.task import TaskStatusMessage
+
 
 class NetworkTrunkingRational(Validators):
     def __init__(self):
-        super().__init__('Network Trunking Rational', 1004)
+        super().__init__('Network Trunking Rationalty', "DD2004")
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         This check ensures that for each NetworkLink if the allowed networks are greater then 1 trunking mode is
         enabled. It also makes sure that if trunking mode is disabled then a default network is defined.
         """
-        message_list = []
-        site_design = site_design.obj_to_simple()
-
-        network_link_list = site_design.get('network_links', [])
+        network_link_list = site_design.network_links or []
 
         for network_link in network_link_list:
-            allowed_networks = network_link.get('allowed_networks', [])
+            allowed_networks = network_link.allowed_networks
             # if allowed networks > 1 trunking must be enabled
-            if (len(allowed_networks) > 1 and network_link.get('trunk_mode') ==
+            if (len(allowed_networks) > 1 and network_link.trunk_mode ==
                     hd_fields.NetworkLinkTrunkingMode.Disabled):
-
-                msg = (
-                    'Rational Network Trunking Error: If there is more than 1 allowed network,'
-                    'trunking mode must be enabled; on NetworkLink %s' %
-                    network_link.get('name'))
-
-                message_list.append(
-                    TaskStatusMessage(
-                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                msg = ('If there is more than 1 allowed network,'
+                       'trunking mode must be enabled')
+                self.report_error(msg, [
+                    network_link.doc_ref
+                ], "Reduce the allowed network list to 1 or enable trunking on the link."
+                                  )
 
             # trunking mode is disabled, default_network must be defined
-            if (network_link.get(
-                    'trunk_mode') == hd_fields.NetworkLinkTrunkingMode.Disabled
-                    and network_link.get('native_network') is None):
+            if (network_link.trunk_mode ==
+                    hd_fields.NetworkLinkTrunkingMode.Disabled
+                    and network_link.native_network is None):
 
-                msg = (
-                    'Rational Network Trunking Error: Trunking mode is disabled, a trunking'
-                    'default_network must be defined; on NetworkLink %s' %
-                    network_link.get('name'))
+                msg = 'Trunking mode is disabled, a trunking default_network must be defined'
+                self.report_error(
+                    msg, [network_link.doc_ref],
+                    "Non-trunked links must have a native network defined.")
+            elif (network_link.trunk_mode ==
+                  hd_fields.NetworkLinkTrunkingMode.Disabled
+                  and network_link.native_network is not None):
+                network = site_design.get_network(network_link.native_network)
+                if network and network.vlan_id:
+                    msg = "Network link native network has a defined VLAN tag."
+                    self.report_error(msg, [
+                        network.doc_ref, network_link.doc_ref
+                    ], "Tagged network not allowed on non-trunked network links."
+                                      )
 
-                message_list.append(
-                    TaskStatusMessage(
-                        msg=msg, error=True, ctx_type='NA', ctx='NA'))
-
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg='Rational Network Trunking',
-                    error=False,
-                    ctx_type='NA',
-                    ctx='NA'))
-
-        return Validators.report_results(self, message_list)
+        return

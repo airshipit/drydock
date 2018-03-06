@@ -13,6 +13,7 @@
 # limitations under the License.
 """Models for representing health check status."""
 
+
 class HealthCheck(object):
     """Specialized status for health check status."""
 

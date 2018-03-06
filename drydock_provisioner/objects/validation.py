@@ -60,7 +60,13 @@ class Validation(TaskStatus):
 class ValidationMessage(TaskStatusMessage):
     """Message describing details of a validation."""
 
-    def __init__(self, msg, name, error=False, level=None, docs=None, diagnostic=None):
+    def __init__(self,
+                 msg,
+                 name,
+                 error=False,
+                 level=None,
+                 docs=None,
+                 diagnostic=None):
         self.name = name
         self.message = msg
         self.error = error
@@ -100,7 +106,8 @@ class DocumentReference(base.DrydockObject):
         super().__init__(**kwargs)
         if (self.doc_type == hd_fields.DocumentType.Deckhand):
             if not all([self.doc_schema, self.doc_name]):
-                raise ValueError("doc_schema and doc_name required for Deckhand sources.")
+                raise ValueError(
+                    "doc_schema and doc_name required for Deckhand sources.")
         else:
             raise errors.UnsupportedDocumentType(
                 "Document type %s not supported." % self.doc_type)

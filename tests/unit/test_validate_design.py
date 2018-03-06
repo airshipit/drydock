@@ -33,7 +33,4 @@ class TestDesignValidator(object):
         val = Validator(orch)
         response = val.validate_design(site_design)
 
-        for msg in response.message_list:
-            assert msg.error is False
-        assert response.error_count == 0
         assert response.status == hd_fields.ValidationResult.Success

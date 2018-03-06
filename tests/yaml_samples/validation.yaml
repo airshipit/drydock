@@ -93,6 +93,7 @@ data:
     default_network: mgmt
   allowed_networks:
     - public
+    - private
     - mgmt
 ---
 schema: 'drydock/Rack/v1'

@@ -126,13 +126,12 @@ class DrydockPolicy(object):
                 'path': '/api/v1.0/designs/{design_id}/parts',
                 'method': 'POST'
             }]),
-        policy.DocumentedRuleDefault(
-            'physical_provisioner:health_data', 'role:admin',
-            'et health status',
-            [{
-                'path': '/api/v1.0/health/extended',
-                'method': 'GET'
-            }])
+        policy.DocumentedRuleDefault('physical_provisioner:health_data',
+                                     'role:admin', 'et health status',
+                                     [{
+                                         'path': '/api/v1.0/health/extended',
+                                         'method': 'GET'
+                                     }])
     ]
 
     # Validate Design Policy

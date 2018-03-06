@@ -14,14 +14,16 @@
 """Test Validation Rule Unique Network"""
 
 import re
+import logging
 
 from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 from drydock_provisioner.orchestrator.validations.mtu_rational import MtuRational
 
+LOG = logging.getLogger(__name__)
+
 
 class TestMtu(object):
     def test_mtu(self, mocker, deckhand_ingester, drydock_state, input_files):
-
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -31,12 +33,12 @@ class TestMtu(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = MtuRational()
-        results, message_list = validator.execute(site_design)
-        msg = results[0].to_dict()
+        message_list = validator.execute(site_design, orchestrator=orch)
+        msg = message_list[0].to_dict()
 
-        assert msg.get('message') == 'Mtu'
+        assert 'MTU' in msg.get('message')
         assert msg.get('error') is False
-        assert len(results) == 1
+        assert len(message_list) == 1
 
     def test_invalid_mtu(self, mocker, deckhand_ingester, drydock_state,
                          input_files):
@@ -50,19 +52,19 @@ class TestMtu(object):
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = MtuRational()
-        results, message_list = validator.execute(site_design)
+        message_list = validator.execute(site_design, orchestrator=orch)
 
-        regex = re.compile(
-            'Mtu Error: Mtu must be between 1400 and 64000; on Network .+')
-        regex_1 = re.compile(
-            'Mtu Error: Mtu must be <= the parent Network Link; for Network .+'
-        )
+        regex = re.compile('MTU must be between \d+ and \d+')
+        regex_1 = re.compile('MTU must be <= the parent Network Link')
 
-        for msg in results:
+        for msg in message_list:
             msg = msg.to_dict()
+            LOG.debug(msg)
             assert msg.get('error')
-            assert regex.match(
-                msg.get('message')) is not None or regex_1.match(
-                    msg.get('message')) is not None
+            assert len(msg.get('documents')) > 0
+            assert any([
+                regex.search(msg.get('message')),
+                regex_1.search(msg.get('message'))
+            ])
 
-        assert len(results) == 4
+        assert len(message_list) == 4

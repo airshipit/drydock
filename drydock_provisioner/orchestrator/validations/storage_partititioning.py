@@ -13,90 +13,69 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class StoragePartitioning(Validators):
     def __init__(self):
-        super().__init__('Storage Partitioning', 1008)
+        super().__init__('Storage Partitioning', "DD2002")
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         This checks that for each storage device a partition list OR volume group is defined. Also for each partition
         list it ensures that a file system and partition volume group are not defined in the same partition.
         """
-        message_list = []
-        site_design = site_design.obj_to_simple()
-
-        baremetal_nodes = site_design.get('baremetal_nodes', [])
-
+        baremetal_nodes = site_design.baremetal_nodes or []
         volume_group_check_list = []
 
         for baremetal_node in baremetal_nodes:
-            storage_devices_list = baremetal_node.get('storage_devices', [])
+            storage_devices_list = baremetal_node.storage_devices or []
 
             for storage_device in storage_devices_list:
-                partitions_list = storage_device.get('partitions')
-                volume_group = storage_device.get('volume_group')
+                partitions_list = storage_device.partitions or []
+                volume_group = storage_device.volume_group
 
                 # error if both or neither is defined
                 if all([partitions_list, volume_group
                         ]) or not any([partitions_list, volume_group]):
-                    msg = ('Storage Partitioning Error: Either a volume group '
-                           'OR partitions must be defined for each storage '
-                           'device; on BaremetalNode '
-                           '%s' % baremetal_node.get('name'))
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                    msg = (
+                        'Either a volume group OR partitions must be defined for each storage '
+                        'device.')
+                    self.report_error(
+                        msg, [baremetal_node.doc_ref],
+                        "A storage device must be used for exactly one of a volume group "
+                        "physical volume or carved into partitions.")
 
                 # if there is a volume group add to list
                 if volume_group is not None:
                     volume_group_check_list.append(volume_group)
 
-                if partitions_list is not None:
-                    for partition in partitions_list:
-                        partition_volume_group = partition.get('volume_group')
-                        fstype = partition.get('fstype')
+                for partition in partitions_list:
+                    partition_volume_group = partition.volume_group
+                    fstype = partition.fstype
 
-                        # error if both are defined
-                        if all([fstype, partition_volume_group]):
-                            msg = (
-                                'Storage Partitioning Error: Both a volume group AND file system cannot be '
-                                'defined in a sigle partition; on BaremetalNode %s'
-                                % baremetal_node.get('name'))
+                    # error if both are defined
+                    if all([fstype, partition_volume_group]):
+                        msg = ('Both a volume group AND file system cannot be '
+                               'defined in a single partition')
+                        self.report_error(
+                            msg, [baremetal_node.doc_ref],
+                            "A partition can be used for only one of a volume group "
+                            "physical volume or formatted as a filesystem.")
 
-                            message_list.append(
-                                TaskStatusMessage(
-                                    msg=msg,
-                                    error=True,
-                                    ctx_type='NA',
-                                    ctx='NA'))
-
-                        # if there is a volume group add to list
-                        if partition_volume_group is not None:
-                            volume_group_check_list.append(volume_group)
+                    # if there is a volume group add to list
+                    if partition_volume_group is not None:
+                        volume_group_check_list.append(volume_group)
 
             # checks all volume groups are assigned to a partition or storage device
             # if one exist that wasn't found earlier it is unassigned
-            all_volume_groups = baremetal_node.get('volume_groups', [])
+            all_volume_groups = baremetal_node.volume_groups or []
             for volume_group in all_volume_groups:
-                if volume_group.get('name') not in volume_group_check_list:
-
+                if volume_group.name not in volume_group_check_list:
                     msg = (
-                        'Storage Partitioning Error: A volume group must be assigned to a storage device or '
-                        'partition; volume group %s on BaremetalNode %s' %
-                        (volume_group.get('name'), baremetal_node.get('name')))
+                        'Volume group %s not assigned any physical volumes' %
+                        (volume_group.name))
+                    self.report_error(msg, [
+                        baremetal_node.doc_ref
+                    ], "Each volume group should be assigned at least one storage device "
+                                      "or partition as a physical volume.")
 
-                    message_list.append(
-                        TaskStatusMessage(
-                            msg=msg, error=True, ctx_type='NA', ctx='NA'))
-
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg='Storage Partitioning',
-                    error=False,
-                    ctx_type='NA',
-                    ctx='NA'))
-
-        return Validators.report_results(self, message_list)
+        return

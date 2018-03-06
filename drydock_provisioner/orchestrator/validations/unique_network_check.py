@@ -13,39 +13,37 @@
 # limitations under the License.
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
-from drydock_provisioner.objects.task import TaskStatusMessage
 
 class UniqueNetworkCheck(Validators):
     def __init__(self):
-        super().__init__('Unique Network Check', 1010)
+        super().__init__('Allowed Network Check', 'DD1007')
 
-    def execute(self, site_design, orchestrator=None):
+    def run_validation(self, site_design, orchestrator=None):
         """
         Ensures that each network name appears at most once between all NetworkLink
         allowed networks
         """
-        message_list = []
-        site_design = site_design.obj_to_simple()
-        network_link_list = site_design.get('network_links', [])
-        compare = {}
+        network_link_list = site_design.network_links or []
+        link_allowed_nets = {}
 
         for network_link in network_link_list:
-            allowed_network_list = network_link.get('allowed_networks', [])
-            compare[network_link.get('name')] = allowed_network_list
+            allowed_network_list = network_link.allowed_networks
+            link_allowed_nets[network_link.name] = allowed_network_list
 
         # This checks the allowed networks for each network link against
         # the other allowed networks
         checked_pairs = []
-        for network_link_name in compare:
-            allowed_network_list_1 = compare[network_link_name]
+        for network_link_name in link_allowed_nets:
+            allowed_network_list_1 = link_allowed_nets[network_link_name]
 
-            for network_link_name_2 in compare:
+            for network_link_name_2 in link_allowed_nets:
                 if (network_link_name is not network_link_name_2
                         and sorted([network_link_name, network_link_name_2
                                     ]) not in checked_pairs):
                     checked_pairs.append(
                         sorted([network_link_name, network_link_name_2]))
-                    allowed_network_list_2 = compare[network_link_name_2]
+                    allowed_network_list_2 = link_allowed_nets[
+                        network_link_name_2]
                     # creates a list of duplicated allowed networks
                     duplicated_names = [
                         i for i in allowed_network_list_1
@@ -54,17 +52,36 @@ class UniqueNetworkCheck(Validators):
 
                     for name in duplicated_names:
                         msg = (
-                            'Unique Network Error: Allowed network %s duplicated on NetworkLink %s and NetworkLink '
+                            'Allowed network %s duplicated on NetworkLink %s and NetworkLink '
                             '%s' % (name, network_link_name,
                                     network_link_name_2))
-                        message_list.append(
-                            TaskStatusMessage(
-                                msg=msg, error=True, ctx_type='NA', ctx='NA'))
+                        self.report_error(
+                            msg, [],
+                            "Each network is only allowed to cross a single network link."
+                        )
 
-        if not message_list:
-            message_list.append(
-                TaskStatusMessage(
-                    msg='Unique Network', error=False, ctx_type='NA',
-                    ctx='NA'))
+        node_list = site_design.baremetal_nodes or []
 
-        return Validators.report_results(self, message_list)
+        for n in node_list:
+            node_interfaces = n.interfaces or []
+            for i in node_interfaces:
+                nic_link = i.network_link
+                for nw in i.networks:
+                    try:
+                        if nw not in link_allowed_nets[nic_link]:
+                            msg = (
+                                "Interface %s attached to network %s not allowed on interface link"
+                                % (i.get_name(), nw))
+                            self.report_error(msg, [
+                                n.doc_ref
+                            ], "Interfaces can only be attached to networks allowed on the network link "
+                                              "connected to the interface.")
+                    except KeyError:
+                        msg = (
+                            "Interface %s connected to undefined network link %s."
+                            % (i.get_name(), nic_link))
+                        self.report_error(msg, [
+                            n.doc_ref
+                        ], "Define the network link attached to this interface."
+                                          )
+        return

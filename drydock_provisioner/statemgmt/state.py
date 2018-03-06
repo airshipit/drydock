@@ -684,7 +684,5 @@ class DrydockState(object):
                     return None
         except Exception as ex:
             self.logger.error(str(ex))
-            self.logger.error(
-                "Error querying for now()",
-                exc_info=True)
+            self.logger.error("Error querying for now()", exc_info=True)
             return None
