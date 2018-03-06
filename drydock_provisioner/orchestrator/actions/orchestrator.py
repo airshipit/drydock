@@ -889,7 +889,9 @@ class DeployNodes(BaseAction):
                 "Unable to configure platform on any nodes, skipping deploy subtask"
             )
 
-        if len(node_deploy_task.result.successes) > 0:
+        if (node_deploy_task is not None
+                and node_deploy_task.result is not None
+                and len(node_deploy_task.result.successes) > 0):
             node_bootaction_task = self.orchestrator.create_task(
                 design_ref=self.task.design_ref,
                 action=hd_fields.OrchestratorAction.BootactionReport,
