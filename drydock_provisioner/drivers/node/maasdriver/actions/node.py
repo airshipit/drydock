@@ -1180,14 +1180,24 @@ class ApplyNodeNetworking(BaseMaasAction):
                         self.logger.info(msg)
                         self.task.add_status_msg(
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
-                        self.task.failure()
+                        self.task.failure(focus=n.name)
+                    elif machine.status_name == 'Deployed':
+                        msg = (
+                            "Located node %s in MaaS, status deployed. Skipping "
+                            "and considering success. Destroy node first if redeploy needed." %
+                            (n.name))
+                        self.logger.info(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.success(focus=n.name)
+
                     else:
                         msg = "Located node %s in MaaS, unknown status %s. Skipping..." % (
                             n.name, machine.status_name)
                         self.logger.warning(msg)
                         self.task.add_status_msg(
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
-                        self.task.failure()
+                        self.task.failure(focus=n.name)
                 else:
                     msg = "Node %s not found in MaaS" % n.name
                     self.logger.warning(msg)
@@ -1268,6 +1278,17 @@ class ApplyNodePlatform(BaseMaasAction):
                 self.logger.error(msg)
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
+                continue
+
+            if machine.status_name == 'Deployed':
+                msg = (
+                    "Located node %s in MaaS, status deployed. Skipping "
+                    "and considering success. Destroy node first if redeploy needed." %
+                    (n.name))
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.success(focus=n.name)
                 continue
 
             try:
@@ -1427,6 +1448,17 @@ class ApplyNodeStorage(BaseMaasAction):
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
+                continue
+
+            if machine.status_name == 'Deployed':
+                msg = (
+                    "Located node %s in MaaS, status deployed. Skipping "
+                    "and considering success. Destroy node first if redeploy needed." %
+                    (n.name))
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.success(focus=n.name)
                 continue
 
             try:
@@ -1746,6 +1778,7 @@ class DeployNode(BaseMaasAction):
                     self.logger.info(msg)
                     self.task.add_status_msg(
                         msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.name)
                     continue
                 elif machine.status_name == 'Ready':
                     msg = "Acquiring node %s for deployment" % (n.name)
