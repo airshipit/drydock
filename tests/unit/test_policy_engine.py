@@ -58,9 +58,10 @@ class TestDefaultRules():
         policy_engine.authorize(policy_action, ctx)
 
         expected_calls = [
-            mocker.call.authorize(
-                policy_action, {'project_id': project_id,
-                                'user_id': user_id}, ctx.to_policy_view())
+            mocker.call.authorize(policy_action, {
+                'project_id': project_id,
+                'user_id': user_id
+            }, ctx.to_policy_view())
         ]
 
         policy_engine.enforcer.assert_has_calls(expected_calls)

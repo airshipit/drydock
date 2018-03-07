@@ -18,7 +18,8 @@ from drydock_provisioner.objects import fields as hd_fields
 
 class TestBootActionSignal(object):
     def test_bootaction_signal_disable(self, deckhand_orchestrator,
-                                       drydock_state, input_files, mock_get_build_data):
+                                       drydock_state, input_files,
+                                       mock_get_build_data):
         """Test that disabled signaling omits a status entry in the DB."""
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -37,17 +38,17 @@ class TestBootActionSignal(object):
         assert len(bootactions) == 2
 
         # one bootaction should expecting signaling
-        reported_bas = [x
-                        for x
-                        in bootactions.values()
-                        if x.get('action_status') == hd_fields.ActionResult.Incomplete]
+        reported_bas = [
+            x for x in bootactions.values()
+            if x.get('action_status') == hd_fields.ActionResult.Incomplete
+        ]
         assert len(reported_bas) == 1
 
         # one bootaction should not expect signaling
-        unreported_bas = [x
-                          for x
-                          in bootactions.values()
-                          if not x.get('action_status') == hd_fields.ActionResult.Unreported]
+        unreported_bas = [
+            x for x in bootactions.values()
+            if not x.get('action_status') == hd_fields.ActionResult.Unreported
+        ]
         assert len(unreported_bas) == 1
 
         design_status, design_data = deckhand_orchestrator.get_effective_site(

@@ -65,8 +65,10 @@ def test_session_get():
 
 
 @responses.activate
-@mock.patch.object(dc_session.KeystoneClient, 'get_token',
-                   return_value='5f1e08b6-38ec-4a99-9d0f-00d29c4e325b')
+@mock.patch.object(
+    dc_session.KeystoneClient,
+    'get_token',
+    return_value='5f1e08b6-38ec-4a99-9d0f-00d29c4e325b')
 def test_session_get_returns_401(*args):
     responses.add(
         responses.GET,
@@ -88,6 +90,7 @@ def test_session_get_returns_401(*args):
     assert req.headers.get('X-Auth-Token', None) == token
     assert req.headers.get('X-Context-Marker', None) == marker
     assert dc_session.KeystoneClient.get_token.call_count == 2
+
 
 @responses.activate
 def test_client_task_get():

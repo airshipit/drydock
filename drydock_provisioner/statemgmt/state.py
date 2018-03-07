@@ -111,7 +111,8 @@ class DrydockState(object):
             "parent_task_id = :parent_task_id AND "
             "status IN ('" + hd_fields.TaskStatus.Terminated + "','" +
             hd_fields.TaskStatus.Complete + "')")
-        return self._query_subtasks(task_id, query_text, "Error querying complete subtask: %s")
+        return self._query_subtasks(task_id, query_text,
+                                    "Error querying complete subtask: %s")
 
     def get_active_subtasks(self, task_id):
         """Query database for subtasks of the provided task that are active.
@@ -126,7 +127,8 @@ class DrydockState(object):
             "parent_task_id = :parent_task_id AND "
             "status NOT IN ['" + hd_fields.TaskStatus.Terminated + "','" +
             hd_fields.TaskStatus.Complete + "']")
-        return self._query_subtasks(task_id, query_text, "Error querying active subtask: %s")
+        return self._query_subtasks(task_id, query_text,
+                                    "Error querying active subtask: %s")
 
     def get_all_subtasks(self, task_id):
         """Query database for all subtasks of the provided task.
@@ -136,7 +138,8 @@ class DrydockState(object):
         query_text = sql.text(
             "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
             "parent_task_id = :parent_task_id")
-        return self._query_subtasks(task_id, query_text, "Error querying all subtask: %s")
+        return self._query_subtasks(task_id, query_text,
+                                    "Error querying all subtask: %s")
 
     def _query_subtasks(self, task_id, query_text, error):
         try:
@@ -279,8 +282,8 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.tasks_tbl.insert().values(
-                **(task.to_db(include_id=True)))
+            query = self.tasks_tbl.insert().values(**(
+                task.to_db(include_id=True)))
             conn.execute(query)
             conn.close()
             return True

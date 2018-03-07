@@ -70,9 +70,7 @@ class Tag(model_base.ResourceBase):
             url = self.interpolate_url()
 
             resp = self.api_client.post(
-                url, op='update_nodes', files={
-                    'add': system_id
-                })
+                url, op='update_nodes', files={'add': system_id})
 
             if not resp.ok:
                 self.logger.error(

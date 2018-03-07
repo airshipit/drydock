@@ -306,7 +306,8 @@ class CreateNetworkTemplate(BaseMaasAction):
                 vlan.mtu = l.mtu
                 vlan.update()
             else:
-                self.logger.warning("Unable to find native VLAN on fabric %s." % link_fabric.resource_id)
+                self.logger.warning("Unable to find native VLAN on fabric %s."
+                                    % link_fabric.resource_id)
 
             # Now that we have the fabrics sorted out, check
             # that VLAN tags and subnet attributes are correct
@@ -1003,7 +1004,8 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     hw_iface_list = i.get_hw_slaves()
                                     hw_iface_logicalname_list = []
                                     for hw_iface in hw_iface_list:
-                                        hw_iface_logicalname_list.append(n.get_logicalname(hw_iface))
+                                        hw_iface_logicalname_list.append(
+                                            n.get_logicalname(hw_iface))
                                     iface = machine.interfaces.create_bond(
                                         device_name=i.device_name,
                                         parent_names=hw_iface_logicalname_list,
@@ -1184,8 +1186,8 @@ class ApplyNodeNetworking(BaseMaasAction):
                     elif machine.status_name == 'Deployed':
                         msg = (
                             "Located node %s in MaaS, status deployed. Skipping "
-                            "and considering success. Destroy node first if redeploy needed." %
-                            (n.name))
+                            "and considering success. Destroy node first if redeploy needed."
+                            % (n.name))
                         self.logger.info(msg)
                         self.task.add_status_msg(
                             msg=msg, error=False, ctx=n.name, ctx_type='node')
@@ -1283,8 +1285,8 @@ class ApplyNodePlatform(BaseMaasAction):
             if machine.status_name == 'Deployed':
                 msg = (
                     "Located node %s in MaaS, status deployed. Skipping "
-                    "and considering success. Destroy node first if redeploy needed." %
-                    (n.name))
+                    "and considering success. Destroy node first if redeploy needed."
+                    % (n.name))
                 self.logger.info(msg)
                 self.task.add_status_msg(
                     msg=msg, error=False, ctx=n.name, ctx_type='node')
@@ -1453,8 +1455,8 @@ class ApplyNodeStorage(BaseMaasAction):
             if machine.status_name == 'Deployed':
                 msg = (
                     "Located node %s in MaaS, status deployed. Skipping "
-                    "and considering success. Destroy node first if redeploy needed." %
-                    (n.name))
+                    "and considering success. Destroy node first if redeploy needed."
+                    % (n.name))
                 self.logger.info(msg)
                 self.task.add_status_msg(
                     msg=msg, error=False, ctx=n.name, ctx_type='node')
@@ -1481,7 +1483,8 @@ class ApplyNodeStorage(BaseMaasAction):
                 storage_layout = dict()
                 if isinstance(root_block, hostprofile.HostPartition):
                     storage_layout['layout_type'] = 'flat'
-                    storage_layout['root_device'] = n.get_logicalname(root_dev.name)
+                    storage_layout['root_device'] = n.get_logicalname(
+                        root_dev.name)
                     storage_layout['root_size'] = root_block.size
                 elif isinstance(root_block, hostprofile.HostVolume):
                     storage_layout['layout_type'] = 'lvm'
@@ -1493,7 +1496,8 @@ class ApplyNodeStorage(BaseMaasAction):
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
                         self.task.failure(focus=n.get_id())
                         continue
-                    storage_layout['root_device'] = n.get_logicalname(root_dev.physical_devices[0])
+                    storage_layout['root_device'] = n.get_logicalname(
+                        root_dev.physical_devices[0])
                     storage_layout['root_lv_size'] = root_block.size
                     storage_layout['root_lv_name'] = root_block.name
                     storage_layout['root_vg_name'] = root_dev.name
@@ -1511,16 +1515,20 @@ class ApplyNodeStorage(BaseMaasAction):
 
                 for d in n.storage_devices:
                     maas_dev = machine.block_devices.singleton({
-                        'name': n.get_logicalname(d.name)
+                        'name':
+                        n.get_logicalname(d.name)
                     })
                     if maas_dev is None:
-                        self.logger.warning("Dev %s (%s) not found on node %s" %
-                                            (d.name, n.get_logicalname(d.name), n.name))
+                        self.logger.warning(
+                            "Dev %s (%s) not found on node %s" %
+                            (d.name, n.get_logicalname(d.name), n.name))
                         continue
 
                     if d.volume_group is not None:
-                        self.logger.debug("Adding dev %s (%s) to volume group %s" %
-                                          (d.name, n.get_logicalname(d.name), d.volume_group))
+                        self.logger.debug(
+                            "Adding dev %s (%s) to volume group %s" %
+                            (d.name, n.get_logicalname(d.name),
+                             d.volume_group))
                         if d.volume_group not in vg_devs:
                             vg_devs[d.volume_group] = {'b': [], 'p': []}
                         vg_devs[d.volume_group]['b'].append(
@@ -1528,7 +1536,8 @@ class ApplyNodeStorage(BaseMaasAction):
                         continue
 
                     self.logger.debug("Partitioning dev %s (%s) on node %s" %
-                                      (d.name, n.get_logicalname(d.name), n.name))
+                                      (d.name, n.get_logicalname(d.name),
+                                       n.name))
                     for p in d.partitions:
                         if p.is_sys():
                             self.logger.debug(
@@ -1542,9 +1551,8 @@ class ApplyNodeStorage(BaseMaasAction):
                             self.maas_client, size=size, bootable=p.bootable)
                         if p.part_uuid is not None:
                             part.uuid = p.part_uuid
-                        msg = "Creating partition %s on dev %s (%s)" % (p.name,
-                                                                        d.name,
-                                                                        n.get_logicalname(d.name))
+                        msg = "Creating partition %s on dev %s (%s)" % (
+                            p.name, d.name, n.get_logicalname(d.name))
                         self.logger.debug(msg)
                         part = maas_dev.create_partition(part)
                         self.task.add_status_msg(

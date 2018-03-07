@@ -346,6 +346,7 @@ class InvalidFormat(ApiError):
 
     **Troubleshoot:** *Coming Soon*
     """
+
     def __init__(self, msg, code=400):
         super(InvalidFormat, self).__init__(msg, code=code)
 
@@ -358,6 +359,7 @@ class ClientError(ApiError):
 
     **Troubleshoot:** *Coming Soon*
     """
+
     def __init__(self, msg, code=500):
         super().__init__(msg)
 
@@ -370,6 +372,7 @@ class ClientUnauthorizedError(ClientError):
 
     **Troubleshoot:** *Try requesting a new token.*
     """
+
     def __init__(self, msg):
         super().__init__(msg, code=401)
 
@@ -382,5 +385,6 @@ class ClientForbiddenError(ClientError):
 
     **Troubleshoot:** *Coming Soon*
     """
+
     def __init__(self, msg):
         super().__init__(msg, code=403)

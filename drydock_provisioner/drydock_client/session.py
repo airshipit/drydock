@@ -27,10 +27,19 @@ class DrydockSession(object):
     :param function auth_gen: Callable that will generate a list of authentication
                               header names and values (2 part tuple)
     :param string marker: (optional) external context marker
+    :param tuple timeout: (optional) a tuple of connect, read timeout values
+        to use as the default for invocations using this session. A single
+        value may also be supplied instead of a tuple to indicate only the
+        read timeout to use
     """
 
-    def __init__(self, host, port=None, scheme='http', auth_gen=None,
-                 marker=None):
+    def __init__(self,
+                 host,
+                 port=None,
+                 scheme='http',
+                 auth_gen=None,
+                 marker=None,
+                 timeout=None):
         self.logger = logging.getLogger(__name__)
         self.__session = requests.Session()
         self.auth_gen = auth_gen
@@ -38,9 +47,7 @@ class DrydockSession(object):
         self.set_auth()
 
         self.marker = marker
-        self.__session.headers.update({
-            'X-Context-Marker': marker
-        })
+        self.__session.headers.update({'X-Context-Marker': marker})
 
         self.host = host
         self.scheme = scheme
@@ -53,6 +60,8 @@ class DrydockSession(object):
             # assume default port for scheme
             self.base_url = "%s://%s/api/" % (self.scheme, self.host)
 
+        self.default_timeout = self._calc_timeout_tuple((20, 30), timeout)
+
     def set_auth(self):
         """Set the session's auth header."""
         if self.auth_gen:
@@ -62,18 +71,23 @@ class DrydockSession(object):
         else:
             self.logger.debug("Cannot set auth header, no generator defined.")
 
-    def get(self, endpoint, query=None):
+    def get(self, endpoint, query=None, timeout=None):
         """
         Send a GET request to Drydock.
 
         :param string endpoint: The URL string following the hostname and API prefix
         :param dict query: A dict of k, v pairs to add to the query string
+        :param timeout: A single or tuple value for connect, read timeout.
+            A single value indicates the read timeout only
         :return: A requests.Response object
         """
         auth_refresh = False
         while True:
+            url = self.base_url + endpoint
+            self.logger.debug('GET ' + url)
+            self.logger.debug('Query Params: ' + str(query))
             resp = self.__session.get(
-                self.base_url + endpoint, params=query, timeout=10)
+                url, params=query, timeout=self._timeout(timeout))
 
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
@@ -83,7 +97,7 @@ class DrydockSession(object):
 
         return resp
 
-    def post(self, endpoint, query=None, body=None, data=None):
+    def post(self, endpoint, query=None, body=None, data=None, timeout=None):
         """
         Send a POST request to Drydock. If both body and data are specified,
         body will will be used.
@@ -92,20 +106,31 @@ class DrydockSession(object):
         :param dict query: A dict of k, v parameters to add to the query string
         :param string body: A string to use as the request body. Will be treated as raw
         :param data: Something json.dumps(s) can serialize. Result will be used as the request body
+        :param timeout: A single or tuple value for connect, read timeout.
+            A single value indicates the read timeout only
         :return: A requests.Response object
         """
         auth_refresh = False
+        url = self.base_url + endpoint
         while True:
-            self.logger.debug("Sending POST with drydock_client session")
+            self.logger.debug('POST ' + url)
+            self.logger.debug('Query Params: ' + str(query))
             if body is not None:
-                self.logger.debug("Sending POST with explicit body: \n%s" % body)
+                self.logger.debug(
+                    "Sending POST with explicit body: \n%s" % body)
                 resp = self.__session.post(
-                    self.base_url + endpoint, params=query, data=body, timeout=10)
+                    self.base_url + endpoint,
+                    params=query,
+                    data=body,
+                    timeout=self._timeout(timeout))
             else:
-                self.logger.debug("Sending POST with JSON body: \n%s" % str(data))
+                self.logger.debug(
+                    "Sending POST with JSON body: \n%s" % str(data))
                 resp = self.__session.post(
-                    self.base_url + endpoint, params=query, json=data, timeout=10)
-
+                    self.base_url + endpoint,
+                    params=query,
+                    json=data,
+                    timeout=self._timeout(timeout))
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
                 auth_refresh = True
@@ -113,6 +138,43 @@ class DrydockSession(object):
                 break
 
         return resp
+
+    def _timeout(self, timeout=None):
+        """Calculate the default timeouts for this session
+
+        :param timeout: A single or tuple value for connect, read timeout.
+            A single value indicates the read timeout only
+        :return: the tuple of the default timeouts used for this session
+        """
+        return self._calc_timeout_tuple(self.default_timeout, timeout)
+
+    def _calc_timeout_tuple(self, def_timeout, timeout=None):
+        """Calculate the default timeouts for this session
+
+        :param def_timeout: The default timeout tuple to be used if no specific
+            timeout value is supplied
+        :param timeout: A single or tuple value for connect, read timeout.
+            A single value indicates the read timeout only
+        :return: the tuple of the timeouts calculated
+        """
+        connect_timeout, read_timeout = def_timeout
+
+        try:
+            if isinstance(timeout, tuple):
+                if all(isinstance(v, int)
+                       for v in timeout) and len(timeout) == 2:
+                    connect_timeout, read_timeout = timeout
+                else:
+                    raise ValueError("Tuple non-integer or wrong length")
+            elif isinstance(timeout, int):
+                read_timeout = timeout
+            elif timeout is not None:
+                raise ValueError("Non integer timeout value")
+        except ValueError:
+            self.logger.warn("Timeout value must be a tuple of integers or a "
+                             "single integer. Proceeding with values of "
+                             "(%s, %s)", connect_timeout, read_timeout)
+        return (connect_timeout, read_timeout)
 
 
 class KeystoneClient(object):

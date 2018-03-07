@@ -285,9 +285,7 @@ class Machine(model_base.ResourceBase):
         url = self.interpolate_url()
 
         resp = self.api_client.post(
-            url, op='set_owner_data', files={
-                key: value
-            })
+            url, op='set_owner_data', files={key: value})
 
         if resp.status_code != 200:
             self.logger.error(
@@ -382,9 +380,7 @@ class Machines(model_base.ResourceCollectionBase):
         url = self.interpolate_url()
 
         resp = self.api_client.post(
-            url, op='allocate', files={
-                'system_id': node.resource_id
-            })
+            url, op='allocate', files={'system_id': node.resource_id})
 
         if not resp.ok:
             self.logger.error(

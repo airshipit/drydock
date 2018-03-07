@@ -30,6 +30,7 @@ class TestClass(object):
 
         def side_effect(**kwargs):
             return []
+
         drydock_state.get_build_data = Mock(side_effect=side_effect)
 
         nodes = design_data.baremetal_nodes
@@ -37,8 +38,9 @@ class TestClass(object):
             n.apply_logicalnames(design_data, state_manager=drydock_state)
             assert n.logicalnames == {}
 
-    def test_apply_logicalnames_success(self, input_files, deckhand_orchestrator,
-                                        drydock_state, mock_get_build_data):
+    def test_apply_logicalnames_success(self, input_files,
+                                        deckhand_orchestrator, drydock_state,
+                                        mock_get_build_data):
         """Test node apply_logicalnames to get the proper dictionary"""
         input_file = input_files.join("deckhand_fullsite.yaml")
 
@@ -134,6 +136,7 @@ class TestClass(object):
                 data_format="text/plain",
                 data_element=xml_example)
             return [build_data]
+
         drydock_state.get_build_data = Mock(side_effect=side_effect)
 
         design_status, design_data = deckhand_orchestrator.get_effective_site(
@@ -142,7 +145,11 @@ class TestClass(object):
         nodes = design_data.baremetal_nodes
         nodes[0].apply_logicalnames(design_data, state_manager=drydock_state)
 
-        expected = {'primary_boot': 'sda', 'prim_nic02': 'prim_nic02', 'prim_nic01': 'eno1'}
+        expected = {
+            'primary_boot': 'sda',
+            'prim_nic02': 'prim_nic02',
+            'prim_nic01': 'eno1'
+        }
         # Tests the whole dictionary
         assert nodes[0].logicalnames == expected
         # Makes sure the path and / are both removed from primary_boot

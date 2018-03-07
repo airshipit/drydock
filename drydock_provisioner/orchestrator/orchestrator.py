@@ -250,7 +250,8 @@ class Orchestrator(object):
         try:
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
-                n.compile_applied_model(site_design, state_manager=self.state_manager)
+                n.compile_applied_model(
+                    site_design, state_manager=self.state_manager)
         except AttributeError:
             self.logger.debug(
                 "Model inheritance skipped, no node definitions in site design."
@@ -556,11 +557,16 @@ class Orchestrator(object):
                 else:
                     init_status = hd_fields.ActionResult.Unreported
                     self.logger.debug(
-                        "Boot action %s has disabled signaling, marking unreported." % ba.name)
+                        "Boot action %s has disabled signaling, marking unreported."
+                        % ba.name)
                 action_id = ulid2.generate_binary_ulid()
                 self.state_manager.post_boot_action(
-                    nodename, task.get_id(), identity_key, action_id,
-                    ba.name, action_status=init_status)
+                    nodename,
+                    task.get_id(),
+                    identity_key,
+                    action_id,
+                    ba.name,
+                    action_status=init_status)
         return identity_key
 
     def render_route_domains(self, site_design):
@@ -601,4 +607,6 @@ class Orchestrator(object):
                         for cidr in rd_cidrs:
                             if cidr != n.cidr:
                                 n.routes.append(
-                                    dict(subnet=cidr, gateway=gw, metric=metric))
+                                    dict(
+                                        subnet=cidr, gateway=gw,
+                                        metric=metric))

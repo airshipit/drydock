@@ -103,9 +103,7 @@ class VolumeGroup(model_base.ResourceBase):
                 url = self.interpolate_url()
 
                 resp = self.api_client.post(
-                    url, op='delete_logical_volume', files={
-                        'id': target_lv
-                    })
+                    url, op='delete_logical_volume', files={'id': target_lv})
 
                 if not resp.ok:
                     raise Exception("MAAS error - %s - %s" % (resp.status_code,

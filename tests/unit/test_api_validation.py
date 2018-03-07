@@ -82,7 +82,8 @@ class TestValidationApi(object):
 
         assert result.status == falcon.HTTP_400
 
-    def test_invalid_post_resp(self, input_files, falcontest, drydock_state, mock_get_build_data):
+    def test_invalid_post_resp(self, input_files, falcontest, drydock_state,
+                               mock_get_build_data):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 

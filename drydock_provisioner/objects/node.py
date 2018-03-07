@@ -129,16 +129,21 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         :param address: String value that is used to find the logicalname.
         :return: String value of the logicalname or the alias_name if logicalname is not found.
         """
-        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
+        nodes = xml_root.findall(
+            ".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
         if len(nodes) >= 1 and nodes[0].text:
             if (len(nodes) > 1):
-                self.logger.info("Multiple nodes found for businfo=%s@%s" % (bus_type, address))
+                self.logger.info("Multiple nodes found for businfo=%s@%s" %
+                                 (bus_type, address))
             for logicalname in reversed(nodes[0].text.split("/")):
-                self.logger.debug("Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, "
-                                  "to logicalname = %s" % (alias_name, bus_type, address, logicalname))
+                self.logger.debug(
+                    "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, "
+                    "to logicalname = %s" % (alias_name, bus_type, address,
+                                             logicalname))
                 return logicalname
-        self.logger.debug("Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found" %
-                          (alias_name, bus_type, address))
+        self.logger.debug(
+            "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found"
+            % (alias_name, bus_type, address))
         return alias_name
 
     def apply_logicalnames(self, site_design, state_manager):
@@ -150,7 +155,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         """
         logicalnames = {}
 
-        results = state_manager.get_build_data(node_name=self.get_name(), latest=True)
+        results = state_manager.get_build_data(
+            node_name=self.get_name(), latest=True)
         xml_data = None
         for result in results:
             if result.generator == "lshw":
@@ -161,11 +167,13 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             xml_root = fromstring(xml_data)
             for hardware_profile in site_design.hardware_profiles:
                 for device in hardware_profile.devices:
-                    logicalname = self._apply_logicalname(xml_root, device.alias, device.bus_type,
-                                                          device.address)
+                    logicalname = self._apply_logicalname(
+                        xml_root, device.alias, device.bus_type,
+                        device.address)
                     logicalnames[device.alias] = logicalname
         else:
-            self.logger.info("No Build Data found for node_name %s" % (self.get_name()))
+            self.logger.info("No Build Data found for node_name %s" %
+                             (self.get_name()))
 
         self.logicalnames = logicalnames
 
@@ -173,11 +181,15 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         """Gets the logicalname from self.logicalnames for an alias or returns the alias if not in the dictionary.
         """
         if (self.logicalnames and self.logicalnames.get(alias)):
-            self.logger.debug("Logicalname input = %s with output %s." % (alias, self.logicalnames[alias]))
+            self.logger.debug("Logicalname input = %s with output %s." %
+                              (alias, self.logicalnames[alias]))
             return self.logicalnames[alias]
         else:
-            self.logger.debug("Logicalname input = %s not in logicalnames dictionary." % alias)
+            self.logger.debug(
+                "Logicalname input = %s not in logicalnames dictionary." %
+                alias)
             return alias
+
 
 @base.DrydockObjectRegistry.register
 class BaremetalNodeList(base.DrydockObjectListBase, base.DrydockObject):

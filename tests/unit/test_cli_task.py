@@ -1,4 +1,3 @@
-
 # Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +16,7 @@ import drydock_provisioner.drydock_client.client as dc_client
 
 from drydock_provisioner.cli.task.actions import TaskCreate
 
+
 def test_taskcli_blank_nodefilter():
     """If no filter values are specified, node filter should be None."""
 
@@ -25,8 +25,7 @@ def test_taskcli_blank_nodefilter():
     dd_ses = dc_session.DrydockSession(host)
     dd_client = dc_client.DrydockClient(dd_ses)
 
-    action = TaskCreate(dd_client,
-                        "http://foo.bar",
-                        action_name="deploy_nodes")
+    action = TaskCreate(
+        dd_client, "http://foo.bar", action_name="deploy_nodes")
 
     assert action.node_filter is None

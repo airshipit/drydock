@@ -23,9 +23,7 @@ class TestClass(object):
                                                 client_config['api_key'])
 
         resp = maas_client.get(
-            'account/', params={
-                'op': 'list_authorisation_tokens'
-            })
+            'account/', params={'op': 'list_authorisation_tokens'})
 
         parsed = resp.json()
 

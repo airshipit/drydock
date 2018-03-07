@@ -130,6 +130,7 @@ def setup_logging():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
+
 @pytest.fixture(scope='module')
 def mock_get_build_data(drydock_state):
     def side_effect(**kwargs):
@@ -140,6 +141,7 @@ def mock_get_build_data(drydock_state):
             data_format="text/plain",
             data_element="<mocktest></mocktest>")
         return [build_data]
+
     drydock_state.real_get_build_data = drydock_state.get_build_data
     drydock_state.get_build_data = Mock(side_effect=side_effect)
 

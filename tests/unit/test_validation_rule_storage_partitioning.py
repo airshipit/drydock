@@ -56,7 +56,8 @@ class TestRationalNetworkTrunking(object):
         assert msg.get('error') is False
 
     def test_invalid_storage_partitioning(self, deckhand_ingester,
-                                          drydock_state, input_files, mock_get_build_data):
+                                          drydock_state, input_files,
+                                          mock_get_build_data):
         input_file = input_files.join("invalid_validation.yaml")
 
         design_ref = "file://%s" % str(input_file)
