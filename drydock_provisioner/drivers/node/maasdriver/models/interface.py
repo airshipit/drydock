@@ -319,9 +319,10 @@ class Interfaces(model_base.ResourceCollectionBase):
         vlan = vlans.singleton({'vid': vlan_tag})
 
         if vlan is None:
-            self.logger.error(
-                "Cannot locate VLAN %s on fabric %s to attach interface" %
-                (vlan_tag, parent_iface.fabric_id))
+            msg = ("Cannot locate VLAN %s on fabric %s to attach interface" %
+                   (vlan_tag, parent_iface.fabric_id))
+            self.logger.warning(msg)
+            raise errors.DriverError(msg)
 
         exists = self.singleton({'vlan': vlan.resource_id})
 

@@ -1126,8 +1126,19 @@ class ApplyNodeNetworking(BaseMaasAction):
                                             % (dd_net.vlan_id, n.name,
                                                i.device_name))
 
-                                        link_iface = machine.interfaces.create_vlan(
-                                            **vlan_options)
+                                        try:
+                                            link_iface = machine.interfaces.create_vlan(
+                                                **vlan_options)
+                                        except errors.DriverError as ex:
+                                            msg = "Error creating interface: %s" % str(ex)
+                                            self.logger.info(msg)
+                                            self.task.add_status_msg(
+                                                msg=msg,
+                                                error=True,
+                                                ctx=n.name,
+                                                ctx_type='node')
+                                            self.task.failure(focus=n.name)
+                                            continue
 
                                     link_options = {}
                                     link_options[
