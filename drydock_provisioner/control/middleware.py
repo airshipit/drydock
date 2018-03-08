@@ -31,8 +31,7 @@ class AuthMiddleware(object):
 
         ctx.set_policy_engine(policy.policy_engine)
 
-        for k, v in req.headers.items():
-            self.logger.debug("Request with header %s: %s" % (k, v))
+        self.logger.debug("Request with headers: %s" % ','.join(req.headers.keys()))
 
         auth_status = req.get_header('X-SERVICE-IDENTITY-STATUS')
         service = True
@@ -96,6 +95,14 @@ class LoggingMiddleware(object):
     def __init__(self):
         self.logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
 
+    def process_request(self, req, resp):
+        extra = {
+            'user': req.context.user,
+            'req_id': req.context.request_id,
+            'external_ctx': req.context.external_marker,
+        }
+        self.logger.info("Request: %s %s %s" % (req.method, req.uri, req.query_string), extra=extra)
+
     def process_response(self, req, resp, resource, req_succeeded):
         ctx = req.context
         extra = {
@@ -104,4 +111,4 @@ class LoggingMiddleware(object):
             'external_ctx': ctx.external_marker,
         }
         resp.append_header('X-Drydock-Req', ctx.request_id)
-        self.logger.info("%s - %s" % (req.uri, resp.status), extra=extra)
+        self.logger.info("Response: %s %s - %s" % (req.method, req.uri, resp.status), extra=extra)
