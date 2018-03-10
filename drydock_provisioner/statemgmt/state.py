@@ -282,8 +282,8 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.tasks_tbl.insert().values(**(
-                task.to_db(include_id=True)))
+            query = self.tasks_tbl.insert().values(
+                **(task.to_db(include_id=True)))
             conn.execute(query)
             conn.close()
             return True

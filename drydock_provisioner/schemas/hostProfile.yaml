@@ -151,5 +151,12 @@ data:
             type: 'array'
             items:
               type: 'string'
+          sriov:
+            type: 'object'
+            properties:
+              vf_count:
+                type: 'number'
+              trustmode:
+                type: 'boolean'
   additionalProperties: false
 ...

@@ -63,6 +63,37 @@ class UnsupportedDocumentType(DesignError):
     pass
 
 
+class HugepageConfNotFound(DesignError):
+    """
+    **Message:** *Hugepage configuration not found*.
+
+    **Troubleshoot:** *Define the hugepage configuration in the HardwareProfile*.
+    """
+    pass
+
+
+class CpuSetNotFound(DesignError):
+    """
+    **Message:** *CPU set not found*.
+
+    **Troubleshoot:** *Define the CPU set in the HardwareProfile*.
+    """
+    pass
+
+
+class InvalidParameterReference(DesignError):
+    """
+    **Message:** *Invalid configuration specified*.
+
+    **Troubleshoot:** *Only ``cpuset`` and ``hugepages`` can be referenced*.
+
+    **Message:** *Invalid field specified*.
+
+    **Troubleshoot:** *For hugepages, only fields ``size`` and ``count`` are valid*.
+    """
+    pass
+
+
 class StateError(Exception):
     pass
 

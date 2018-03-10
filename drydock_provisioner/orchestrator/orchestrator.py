@@ -247,11 +247,22 @@ class Orchestrator(object):
         Given a fully populated Site model, compute the effective
         design by applying inheritance and references
         """
+        node_failed = []
+
         try:
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
-                n.compile_applied_model(
-                    site_design, state_manager=self.state_manager)
+                try:
+                    n.compile_applied_model(
+                        site_design, state_manager=self.state_manager)
+                except Exception as ex:
+                    node_failed.append(n)
+                    self.logger.error(
+                        "Failed to build applied model for node %s." % n.name)
+            if node_failed:
+                raise errors.DesignError(
+                    "Failed to build applied model for %s" % ",".join(
+                        [x.name for x in node_failed]))
         except AttributeError:
             self.logger.debug(
                 "Model inheritance skipped, no node definitions in site design."

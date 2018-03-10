@@ -372,6 +372,15 @@ class DeckhandIngester(IngesterPlugin):
             dev_model.address = v.get('address', None)
             model.devices.append(dev_model)
 
+        model.cpu_sets = data.get('cpu_sets', None) or dict()
+
+        model.hugepages_confs = objects.HugepagesConfList()
+
+        for c, d in data.get('hugepages', {}).items():
+            conf = objects.HugepagesConf(
+                name=c, size=d.get('size'), count=d.get('count'))
+            model.hugepages_confs.append(conf)
+
         return model
 
     def process_drydock_hostprofile(self, name, data):
@@ -534,6 +543,12 @@ class DeckhandIngester(IngesterPlugin):
 
             for n in networks:
                 int_model.networks.append(n)
+
+            if 'sriov' in v:
+                int_model.sriov = True
+                int_model.vf_count = v.get('sriov', {}).get('vf_count', 0)
+                int_model.trustedmode = v.get('sriov', {}).get(
+                    'trustedmode', False)
 
             model.interfaces.append(int_model)
 

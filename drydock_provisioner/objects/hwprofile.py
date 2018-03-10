@@ -16,6 +16,7 @@
 from oslo_versionedobjects import fields as ovo_fields
 
 import drydock_provisioner.objects as objects
+import drydock_provisioner.error as errors
 import drydock_provisioner.objects.base as base
 import drydock_provisioner.objects.fields as hd_fields
 
@@ -48,6 +49,10 @@ class HardwareProfile(base.DrydockPersistentObject, base.DrydockObject):
         ovo_fields.StringField(nullable=True),
         'devices':
         ovo_fields.ObjectField('HardwareDeviceAliasList', nullable=True),
+        'cpu_sets':
+        ovo_fields.DictOfStringsField(nullable=True),
+        'hugepages_confs':
+        ovo_fields.ObjectField('HugepagesConfList', nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -61,6 +66,29 @@ class HardwareProfile(base.DrydockPersistentObject, base.DrydockObject):
 
     def get_name(self):
         return self.name
+
+    def get_hugepage_conf(self, conf_name):
+        """Return the hugepages conf matching ``conf_name``"""
+        if not self.hugepages_confs:
+            raise errors.HugepageConfNotFound(
+                "Hugepage configuration %s not found." % conf_name)
+
+        for c in self.hugepages_confs:
+            if c.name == conf_name:
+                return c
+
+        raise errors.HugepageConfNotFound(
+            "Hugepage configuration %s not found." % conf_name)
+
+    def get_cpu_set(self, set_name):
+        """Return the cpu set matching ``set_name``"""
+        if not self.cpu_sets:
+            raise errors.CpuSetNotFound("CPU set %s not found." % set_name)
+
+        if set_name in self.cpu_sets:
+            return self.cpu_sets[set_name]
+
+        raise errors.CpuSetNotFound("CPU set %s not found." % set_name)
 
     def resolve_alias(self, alias_type, alias):
         for d in self.devices:
@@ -80,6 +108,26 @@ class HardwareProfileList(base.DrydockObjectListBase, base.DrydockObject):
     VERSION = '1.0'
 
     fields = {'objects': ovo_fields.ListOfObjectsField('HardwareProfile')}
+
+
+@base.DrydockObjectRegistry.register
+class HugepagesConf(base.DrydockObject):
+
+    VERSION = '1.0'
+
+    fields = {
+        'name': ovo_fields.StringField(),
+        'size': ovo_fields.StringField(),
+        'count': ovo_fields.NonNegativeIntegerField(),
+    }
+
+
+@base.DrydockObjectRegistry.register
+class HugepagesConfList(base.DrydockObjectListBase, base.DrydockObject):
+
+    VERSION = '1.0'
+
+    fields = {'objects': ovo_fields.ListOfObjectsField('HugepagesConf')}
 
 
 @base.DrydockObjectRegistry.register

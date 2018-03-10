@@ -34,4 +34,17 @@ data:
     device_aliases:
       type: 'object'
       additionalProperties: true
+    cpu_sets:
+      type: 'object'
+      additionalProperties:
+        type: 'string'
+    hugepages:
+      type: 'object'
+      additionalProperties:
+        type: 'object'
+        propertes:
+          size:
+            type: 'string'
+          count:
+            type: 'number'
   additionalProperties: false

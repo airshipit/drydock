@@ -227,6 +227,90 @@ reference to the particular physical node. The ``BaremetalNode`` definition will
 reference a ``HostProfile`` and can then extend or override any of the
 configuration values.
 
+
+Hardware Profile
+----------------
+
+The hardware profile is used to convert some abstractions in the HostProfile documents
+into concrete configurations based a particular hardware build. A host profile will
+designate how the bootdisk should be configured, but the hardware profile will
+designate which exact device is used for the bootdisk. This allows a heterogeneous mix
+of hardware in a site without duplicating definitions of how that hardware should
+be configured.
+
+An example HardwareProfile document:
+
+.. code:: yaml
+
+    ---
+    schema: 'drydock/HardwareProfile/v1'
+    metadata:
+      schema: 'metadata/Document/v1'
+      name: AcmeServer
+      storagePolicy: 'cleartext'
+      labels:
+        application: 'drydock'
+    data:
+      vendor: HP
+      generation: '8'
+      hw_version: '3'
+      bios_version: '2.2.3'
+      boot_mode: bios
+      bootstrap_protocol: pxe
+      pxe_interface: 0
+      device_aliases:
+        prim_nic01:
+          address: '0000:00:03.0'
+          dev_type: '82540EM Gigabit Ethernet Controller'
+          bus_type: 'pci'
+        prim_nic02:
+          address: '0000:00:04.0'
+          dev_type: '82540EM Gigabit Ethernet Controller'
+          bus_type: 'pci'
+        primary_boot:
+          address: '2:0.0.0'
+          dev_type: 'VBOX HARDDISK'
+          bus_type: 'scsi'
+      cpu_sets:
+        sriov: '2,4'
+      hugepages:
+        sriov:
+          size: '1G'
+          count: 300
+        dpdk:
+          size: '2M'
+          count: 530000
+
+Device Aliases
+~~~~~~~~~~~~~~
+
+Device aliases are a way of mapping a particular device bus address
+to an alias. In the example above we map the PCI address ``0000:00:03.0``
+to the alias ``prim_nic01``. A host profile or baremetal node definition
+can then provide a configuration using ``prim_nic01`` and Drydock will
+translate that to the correct operating system device name for the NIC device
+at PCI address ``0000.00.03.0``. Currently device aliases are supported
+for network interface slave devices and storage physical devices.
+
+Kernel Parameter References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some kernel parameters specified in a host profile rely on particular hardware
+builds, such as ``isolcpus``. To support the greatest flexibility in building
+host profiles, you can specify a few values in a hardware profile that will then
+be sourced when needed by a host profile or baremetal node definition.
+
+* ``cpu_sets``: Each key should have a value of a comma-separated list of CPUs/cores/hyperthreads
+  that would be appropriate for the ``isolcpus`` kernel parameters. A host profile can
+  then select any one of these CPU sets for a host.
+* ``hugepages``: Each key should have a value of a mapping containing two keys: ``size`` and
+  ``count``. Again, a host profile can then select these values when defining kernel parameters
+  for a host. Note the ``size`` field is a string and will be used as-is, so the format must
+  be usable by the kernel.
+
+Host Profiles and Baremetal Nodes
+---------------------------------
+
 Example ``HostProfile`` and ``BaremetalNode`` configuration:
 
 .. code:: yaml
@@ -273,7 +357,7 @@ adopted from *defaults*) and can then again override or append any
 configuration that is specific to that node.
 
 Defining Node Interfaces and Network Addressing
-===============================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Node network attachment can be described in a ``HostProfile`` or a
 ``BaremetalNode`` document. Node addressing is allowed only in a
@@ -286,7 +370,7 @@ Once the interface attachments to networks is defined, ``HostProfile`` and
 which network the node should use as the primary route.
 
 Interfaces
-----------
+**********
 
 Interfaces for a node can be described in either a ``HostProfile`` or
 ``BaremetalNode`` definition. This will attach a defined NetworkLink to a host
@@ -333,7 +417,7 @@ that interface for an inherited configuration.
   have trunking enabled or the design validation will fail.
 
 Addressing
-----------
+**********
 
 Addressing for a node can only be defined in a ``BaremetalNode`` definition. The
 ``addressing`` stanza simply defines a static IP address or ``dhcp`` for each
@@ -358,7 +442,7 @@ Example ``addressing`` YAML schema:
 
 
 Defining Node Storage
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 Storage can be defined in the ``storage`` stanza of either a HostProfile or
 BaremetalNode document. The storage configuration can describe the creation of
@@ -405,13 +489,13 @@ Example YAML schema of the ``storage`` stanza:
                 mount_options: 'defaults'
 
 Schema
-------
+******
 
 The ``storage`` stanza can contain two top-level keys: ``physical_devices`` and
 ``volume_groups``. The latter is optional.
 
 Physical Devices and Partitions
--------------------------------
+*******************************
 
 A physical device can either be carved up in partitions (including a single
 partition consuming the entire device) or added to a volume group as a physical
@@ -429,7 +513,7 @@ mapping with the following keys
   volume. Incompatible with the ``partitions`` specification.
 
 Partition
-~~~~~~~~~
+^^^^^^^^^
 
 A partition mapping describes a GPT partition on a physical disk. It can be left
 as a raw block device or formatted and mounted as a filesystem.
@@ -451,7 +535,7 @@ as a raw block device or formatted and mounted as a filesystem.
     * ``fs_label``: A filesystem label to assign to the filesystem. Optional.
 
 Size Format
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 The size specification for a partition or logical volume is formed from three
 parts:
@@ -468,7 +552,7 @@ parts:
     * %: The percentage of total device or volume group space
 
 Volume Groups and Logical Volumes
----------------------------------
+*********************************
 
 Logical volumes can be used to create RAID-0 volumes spanning multiple physical
 disks or partitions. Each key in the ``volume_groups`` mapping is a name
@@ -482,7 +566,7 @@ invalid. Each mapping value is another mapping describing the volume group.
   created in the volume group
 
 Logical Volume
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 A logical volume is a RAID-0 volume. Using logical volumes for ``/`` and
 ``/boot`` is supported
@@ -494,3 +578,41 @@ A logical volume is a RAID-0 volume. Using logical volumes for ``/`` and
 * ``filesystem``: A mapping specifying how the logical volume should be
   formatted and mounted. See the *Partition* section above for filesystem
   details.
+
+Platform Configuration
+----------------------
+
+In the ``platform`` stanza you can define the operating system ``image``
+and ``kernel`` to use as well as customize the kernel configuration with
+``kernel_params``.
+
+Image and Kernel Selection
+**************************
+
+The valid ``image`` and ``kernel`` values are dependent on what is supported
+by your node provisioner. In the example of Canonical MaaS using the 16.04 LTS
+image, the values would be ``image: 'xenial'`` and ``kernel: 'ga-16.04'`` for the
+LTS kernel or ``kernel: hwe-16.04`` for the hardware-enablement kernel.
+
+Kernel Parameters
+*****************
+
+The ``kernel_params`` configuration is a mapping. Each key should either be a string
+or boolean value. For boolean ``true`` values, the key will be added to the kernel
+parameter list as a flag. For string values, the key:value pair will be added to the
+kernel parameter list as ``key=value``.
+
+Parameter References
+^^^^^^^^^^^^^^^^^^^^
+
+One special case is supported for values that match a hardware profile reference.
+When the parameter is rendered for a particular node, the value included in the
+kernel parameter list will be sourced from the effective HardwareProfile assigned
+to the node.
+
+* ``hardwareprofile:cpuset.<name>``: Sourced from the hardware profile ``cpu_sets.<name>``
+  value.
+* ``hardwareprofile.hugepages.<name>.size``: Source from the hardware profile
+  ``hugepages.<name>.size`` value.
+* ``hardwareprofile.hugepages.<name>.count``: Source from the hardware profile
+  ``hugepages.<name>.count`` value.

@@ -134,31 +134,8 @@ class BootActionAsset(base.DrydockObject):
         :param action_id: a 128-bit ULID boot action id
         :param design_ref: The design ref this bootaction was initiated under
         """
-        node = site_design.get_baremetal_node(nodename)
-
-        tpl_ctx = {
-            'node': {
-                'hostname': nodename,
-                'tags': [t for t in node.tags],
-                'labels': {k: v
-                           for (k, v) in node.owner_data.items()},
-                'network': {},
-            },
-            'action': {
-                'key': ulid2.ulid_to_base32(action_id),
-                'report_url': config.config_mgr.conf.bootactions.report_url,
-                'design_ref': design_ref,
-            }
-        }
-
-        for a in node.addressing:
-            if a.address is not None:
-                tpl_ctx['node']['network'][a.network] = dict()
-                tpl_ctx['node']['network'][a.network]['ip'] = a.address
-                network = site_design.get_network(a.network)
-                tpl_ctx['node']['network'][a.network]['cidr'] = network.cidr
-                tpl_ctx['node']['network'][a.network][
-                    'dns_suffix'] = network.dns_domain
+        tpl_ctx = self._get_template_context(nodename, site_design, action_id,
+                                             design_ref)
 
         if self.location is not None:
             rendered_location = self.execute_pipeline(
@@ -173,6 +150,78 @@ class BootActionAsset(base.DrydockObject):
         if isinstance(value, str):
             value = value.encode('utf-8')
         self.rendered_bytes = value
+
+    def _get_template_context(self, nodename, site_design, action_id,
+                              design_ref):
+        """Create a context to be used for template rendering.
+
+        :param nodename: The name of the node for the bootaction
+        :param site_design: The full site design
+        :param action_id: the ULID assigned to the boot action using this context
+        :param design_ref: The design reference representing ``site_design``
+        """
+
+        return dict(
+            node=self._get_node_context(nodename, site_design),
+            action=self._get_action_context(action_id, design_ref))
+
+    def _get_action_context(self, action_id, design_ref):
+        """Create the action-specific context items for template rendering.
+
+        :param action_id: ULID of this boot action
+        :param design_ref: Design reference representing the site design
+        """
+        return dict(
+            key=ulid2.ulid_to_base32(action_id),
+            report_url=config.config_mgr.conf.bootactions.report_url,
+            design_ref=design_ref)
+
+    def _get_node_context(self, nodename, site_design):
+        """Create the node-specific context items for template rendering.
+
+        :param nodename: name of the node this boot action targets
+        :param site_design: full site design
+        """
+        node = site_design.get_baremetal_node(nodename)
+        return dict(
+            hostname=nodename,
+            tags=[t for t in node.tags],
+            labels={k: v
+                    for (k, v) in node.owner_data.items()},
+            network=self._get_node_network_context(node, site_design),
+            interfaces=self._get_node_interface_context(node))
+
+    def _get_node_network_context(self, node, site_design):
+        """Create a node's network configuration context.
+
+        :param node: node object
+        :param site_design: full site design
+        """
+        network_context = dict()
+        for a in node.addressing:
+            if a.address is not None:
+                network = site_design.get_network(a.network)
+                network_context[a.network] = dict(
+                    ip=a.address,
+                    cidr=network.cidr,
+                    dns_suffix=network.dns_domain)
+                if a.network == node.primary_network:
+                    network_context['default'] = network_context[a.network]
+
+        return network_context
+
+    def _get_node_interface_context(self, node):
+        """Create a node's network interface context.
+
+        :param node: the node object
+        """
+        interface_context = dict()
+        for i in node.interfaces:
+            interface_context[i.device_name] = dict(sriov=i.sriov)
+            if i.sriov:
+                interface_context[i.device_name]['vf_count'] = i.vf_count
+                interface_context[i.device_name]['trustedmode'] = i.trustedmode
+        return interface_context
 
     def resolve_asset_location(self, asset_url):
         """Retrieve the data asset from the url.

@@ -20,6 +20,7 @@ from defusedxml.ElementTree import fromstring
 import logging
 from oslo_versionedobjects import fields as ovo_fields
 
+import drydock_provisioner.error as errors
 import drydock_provisioner.config as config
 import drydock_provisioner.objects as objects
 import drydock_provisioner.objects.hostprofile
@@ -49,9 +50,14 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
     # Compile the applied version of this model sourcing referenced
     # data from the passed site design
     def compile_applied_model(self, site_design, state_manager):
+        self.logger.debug("Applying host profile to node %s" % self.name)
         self.apply_host_profile(site_design)
+        self.logger.debug("Applying hardware profile to node %s" % self.name)
         self.apply_hardware_profile(site_design)
         self.source = hd_fields.ModelSource.Compiled
+        self.logger.debug("Resolving kernel parameters on node %s" % self.name)
+        self.resolve_kernel_params(site_design)
+        self.logger.debug("Resolving device aliases on node %s" % self.name)
         self.apply_logicalnames(site_design, state_manager)
         return
 
@@ -86,6 +92,67 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             p.set_selector(selector)
 
         return
+
+    def resolve_kernel_params(self, site_design):
+        """Check if any kernel parameter values are supported references."""
+        if not self.hardware_profile:
+            raise ValueError("Hardware profile not set.")
+
+        hwprof = site_design.get_hardware_profile(self.hardware_profile)
+
+        if not hwprof:
+            raise ValueError("Hardware profile not found.")
+
+        resolved_params = dict()
+        for p, v in self.kernel_params.items():
+            try:
+                rv = self.get_kernel_param_value(v, hwprof)
+                resolved_params[p] = rv
+            except (errors.InvalidParameterReference, errors.CpuSetNotFound,
+                    errors.HugepageConfNotFound) as ex:
+                resolved_params[p] = v
+                msg = ("Error resolving parameter reference on node %s: %s" %
+                       (self.name, str(ex)))
+                self.logger.warning(msg)
+
+        self.kernel_params = resolved_params
+
+    def get_kernel_param_value(self, value, hwprof):
+        """If ``value`` is a reference, resolve it otherwise return ``value``
+
+        Support some referential values to extract data from the HardwareProfile
+
+        hardwareprofile:cpuset.<setname>
+        hardwareprofile:hugepages.<confname>.size
+        hardwareprofile:hugepages.<confname>.count
+
+        If ``value`` matches none of the above forms, just return the value as passed.
+
+        :param value: the value string as specified in the node definition
+        :param hwprof: the assigned HardwareProfile for this node
+        """
+        if value.startswith('hardwareprofile:'):
+            (_, ref) = value.split(':', 1)
+            if ref:
+                (ref_type, ref_val) = ref.split('.', 1)
+                if ref_type == 'cpuset':
+                    return hwprof.get_cpu_set(ref_val)
+                elif ref_type == 'hugepages':
+                    (conf, field) = ref_val.split('.', 1)
+                    hp_conf = hwprof.get_hugepage_conf(conf)
+                    if field in ['size', 'count']:
+                        return getattr(hp_conf, field)
+                    else:
+                        raise errors.InvalidParameterReference(
+                            "Invalid field %s specified." % field)
+                else:
+                    raise errors.InvalidParameterReference(
+                        "Invalid configuration %s specified." % ref_type)
+            else:
+                return value
+
+        else:
+            return value
 
     def get_applied_interface(self, iface_name):
         for i in getattr(self, 'interfaces', []):

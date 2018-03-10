@@ -968,6 +968,12 @@ class ApplyNodeNetworking(BaseMaasAction):
                         machine.refresh()
 
                         for i in n.interfaces:
+                            if not i.network_link:
+                                self.logger.debug(
+                                    "Interface %s has no network link, skipping configuration."
+                                    % (i.device_name))
+                                continue
+
                             nl = site_design.get_network_link(i.network_link)
 
                             if nl.metalabels is not None:
@@ -1130,7 +1136,8 @@ class ApplyNodeNetworking(BaseMaasAction):
                                             link_iface = machine.interfaces.create_vlan(
                                                 **vlan_options)
                                         except errors.DriverError as ex:
-                                            msg = "Error creating interface: %s" % str(ex)
+                                            msg = "Error creating interface: %s" % str(
+                                                ex)
                                             self.logger.info(msg)
                                             self.task.add_status_msg(
                                                 msg=msg,

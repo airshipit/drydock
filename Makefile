@@ -75,10 +75,19 @@ ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
 endif
 
+.PHONY: docs
+docs: clean drydock_docs
+
+.PHONY: drydock_docs
+drydock_docs:
+	tox -e docs
 
 .PHONY: clean
 clean:
 	rm -rf build
+	rm -rf docs/build
+	rm -rf charts/drydock/charts
+	rm -rf charts/drydock/requirements.lock
 
 .PHONY: pep8
 pep8:

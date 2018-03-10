@@ -302,6 +302,9 @@ data:
       networks:
         - mgmt
         - private
+      sriov:
+        vf_count: 2
+        trustedmode: false
   metadata:
     tags:
       - 'test'
@@ -349,6 +352,11 @@ data:
       address: 172.16.2.21
     - network: oob
       address: 172.16.100.21
+  platform:
+    kernel_params:
+      isolcpus: hardwareprofile:cpuset.sriov
+      hugepagesz: hardwareprofile:hugepages.sriov.size
+      hugepages: hardwareprofile:hugepages.sriov.count
   metadata:
     rack: rack2
 ---
@@ -380,6 +388,15 @@ data:
       address: '2:0.0.0'
       dev_type: 'VBOX HARDDISK'
       bus_type: 'scsi'
+  cpu_sets:
+    sriov: '2,4'
+  hugepages:
+    sriov:
+      size: '1G'
+      count: 300
+    dpdk:
+      size: '2M'
+      count: 530000
 ---
 schema: 'drydock/BootAction/v1'
 metadata:

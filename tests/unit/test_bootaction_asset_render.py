@@ -16,15 +16,12 @@
 import ulid2
 
 from drydock_provisioner.statemgmt.state import DrydockState
-import drydock_provisioner.objects as objects
 
 
-class TestClass(object):
+class TestBootactionRenderAction(object):
     def test_bootaction_render_nodename(self, input_files, deckhand_ingester,
                                         setup):
         """Test the bootaction render routine provides expected output."""
-        objects.register_all()
-
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
@@ -43,8 +40,6 @@ class TestClass(object):
     def test_bootaction_render_design_ref(self, input_files, deckhand_ingester,
                                           setup):
         """Test the bootaction render routine provides expected output."""
-        objects.register_all()
-
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
@@ -60,3 +55,38 @@ class TestClass(object):
 
         assert 'deckhand_fullsite.yaml' in assets[2].rendered_bytes.decode(
             'utf-8')
+
+    def test_bootaction_network_context(self, input_files,
+                                        deckhand_orchestrator, setup):
+        """Test that a boot action creates proper network context."""
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_ref = "file://%s" % str(input_file)
+
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
+            design_ref)
+
+        ba = design_data.get_bootaction('helloworld')
+        node = design_data.get_baremetal_node('compute01')
+        net_ctx = ba.asset_list[0]._get_node_network_context(node, design_data)
+
+        assert 'mgmt' in net_ctx
+        assert net_ctx['mgmt'].get('ip', None) == '172.16.1.21'
+
+    def test_bootaction_interface_context(self, input_files,
+                                          deckhand_orchestrator, setup):
+        """Test that a boot action creates proper network context."""
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_ref = "file://%s" % str(input_file)
+
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
+            design_ref)
+
+        ba = design_data.get_bootaction('helloworld')
+        node = design_data.get_baremetal_node('compute01')
+        iface_ctx = ba.asset_list[0]._get_node_interface_context(node)
+
+        assert 'bond0' in iface_ctx
+        assert iface_ctx['bond0'].get('sriov')
+        assert iface_ctx['bond0'].get('vf_count') == 2

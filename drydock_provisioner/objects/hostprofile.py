@@ -169,6 +169,14 @@ class HostInterface(base.DrydockObject):
         obj_fields.ObjectField('HardwareDeviceSelectorList', nullable=True),
         'networks':
         obj_fields.ListOfStringsField(nullable=True),
+        'sriov':
+        obj_fields.BooleanField(default=False),
+        # SRIOV virtual functions
+        'vf_count':
+        obj_fields.IntegerField(nullable=True),
+        # SRIOV VF trusted mode
+        'trustedmode':
+        obj_fields.BooleanField(nullable=True),
     }
 
     def __init__(self, **kwargs):
