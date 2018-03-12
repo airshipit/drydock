@@ -55,7 +55,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
     # v1.0 of Drydock API
     v1_0_routes = [
         # API for managing orchestrator tasks
-        ('/health', HealthResource()),
+        ('/health', HealthResource(state_manager=state_manager,
+                                   orchestrator=orchestrator)),
         ('/tasks',
          TasksResource(state_manager=state_manager,
                        orchestrator=orchestrator)),

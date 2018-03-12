@@ -667,3 +667,24 @@ class DrydockState(object):
         except Exception as ex:
             self.logger.error("Error selecting build data.", exc_info=ex)
             raise errors.BuildDataError("Error selecting build data.")
+
+    def get_now(self):
+        """Query the database for now() from dual.
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = sql.text("SELECT now()")
+                rs = conn.execute(query)
+
+                r = rs.first()
+
+                if r is not None and r.now:
+                    return r.now
+                else:
+                    return None
+        except Exception as ex:
+            self.logger.error(str(ex))
+            self.logger.error(
+                "Error querying for now()",
+                exc_info=True)
+            return None

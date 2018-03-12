@@ -18,8 +18,8 @@ from drydock_provisioner.control.health import HealthResource
 import falcon
 
 
-def test_get_health(mocker):
-    api = HealthResource()
+def test_get_health(mocker, deckhand_orchestrator, drydock_state):
+    api = HealthResource(state_manager=drydock_state, orchestrator=deckhand_orchestrator)
 
     # Configure mocked request and response
     req = mocker.MagicMock(spec=falcon.Request)

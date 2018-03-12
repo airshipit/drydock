@@ -66,7 +66,7 @@ class ValidateNodeServices(BaseMaasAction):
                     ctx_type='NA')
                 self.task.success()
                 if self.maas_client.test_authentication():
-                    self.logger.info("Able to authenitcate with MaaS API.")
+                    self.logger.info("Able to authenticate with MaaS API.")
                     self.task.add_status_msg(
                         msg='Able to authenticate with MaaS API.',
                         error=False,
