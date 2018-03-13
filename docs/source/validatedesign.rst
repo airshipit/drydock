@@ -3,7 +3,7 @@
 Validate Design
 ===============
 
-The DryDock Validation API is a set of logic checks that must be passed before any information from the YAMLs will be
+The Drydock Validation API is a set of logic checks that must be passed before any information from the YAMLs will be
 processed by Drydock. These checks are performed synchronously and will return a message list with a success or
 failures for each check.
 

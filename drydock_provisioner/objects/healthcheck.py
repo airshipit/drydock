@@ -33,7 +33,7 @@ class HealthCheck(object):
         if msg.error or msg.level == "Error":
             self.error_count = self.error_count + 1
             self.code = 503
-            self.message = 'DryDock failed to respond'
+            self.message = 'Drydock failed to respond'
             self.status = 'Failure'
 
     def to_dict(self):
