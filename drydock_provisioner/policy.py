@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+# Copyright 2018 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -125,6 +125,13 @@ class DrydockPolicy(object):
             }, {
                 'path': '/api/v1.0/designs/{design_id}/parts',
                 'method': 'POST'
+            }]),
+        policy.DocumentedRuleDefault(
+            'physical_provisioner:health_data', 'role:admin',
+            'et health status',
+            [{
+                'path': '/api/v1.0/health/extended',
+                'method': 'GET'
             }])
     ]
 

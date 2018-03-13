@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+# Copyright 2018 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ from .tasks import TaskResource
 from .nodes import NodesResource
 from .nodes import NodeBuildDataResource
 from .health import HealthResource
+from .health import HealthExtendedResource
 from .bootaction import BootactionUnitsResource
 from .bootaction import BootactionFilesResource
 from .bootaction import BootactionResource
@@ -57,6 +58,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
         # API for managing orchestrator tasks
         ('/health', HealthResource(state_manager=state_manager,
                                    orchestrator=orchestrator)),
+        ('/health/extended', HealthExtendedResource(state_manager=state_manager,
+                                                    orchestrator=orchestrator)),
         ('/tasks',
          TasksResource(state_manager=state_manager,
                        orchestrator=orchestrator)),

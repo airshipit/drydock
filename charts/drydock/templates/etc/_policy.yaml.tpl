@@ -44,3 +44,7 @@
 # POST  /api/v1.0/designs/{design_id}/parts
 #"physical_provisioner:ingest_data": "role:admin"
 
+# Get health status
+# GET /api/v1.0/health/extended
+#"physical_provisioner:health_data": "role:admin"
+
