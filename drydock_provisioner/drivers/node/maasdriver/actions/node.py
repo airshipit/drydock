@@ -957,6 +957,24 @@ class ApplyNodeNetworking(BaseMaasAction):
                     n, update_name=False)
 
                 if machine is not None:
+                    if machine.status_name.startswith('Failed Dep'):
+                        msg = ("Node %s has failed deployment, releasing to try again." % n.name)
+                        self.logger.debug(msg)
+                        try:
+                            machine.release()
+                            machine.refresh()
+                        except errors.DriverError as ex:
+                            msg = ("Node %s could not be released, skipping deployment." % n.name)
+                            self.logger.info(msg)
+                            self.task.add_status_msg(
+                                msg=msg, error=True, ctx=n.name, ctx_type='node')
+                            self.task.failure(focus=n.name)
+                            continue
+                        msg = ("Released failed node %s to retry deployment." % n.name)
+                        self.logger.info(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+
                     if machine.status_name == 'Ready':
                         msg = "Located node %s in MaaS, starting interface configuration" % (
                             n.name)
@@ -1327,26 +1345,20 @@ class ApplyNodePlatform(BaseMaasAction):
                     self.logger.info(
                         "Configuring kernel parameters for node %s" % (n.name))
 
-                    if node_kp_tag is None:
-                        msg = "Creating kernel_params tag for node %s: %s" % (
-                            n.name, kp_string)
-                        self.logger.debug(msg)
-                        node_kp_tag = maas_tag.Tag(
-                            self.maas_client,
-                            name="%s_kp" % (n.name),
-                            kernel_opts=kp_string)
-                        node_kp_tag = tag_list.add(node_kp_tag)
-                        node_kp_tag.apply_to_node(machine.resource_id)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
-                    else:
-                        msg = "Updating tag %s for node %s: %s" % (
-                            node_kp_tag.resource_id, n.name, kp_string)
-                        node_kp_tag.kernel_opts = kp_string
-                        node_kp_tag.update()
-                        self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    if node_kp_tag:
+                        node_kp_tag.delete()
+
+                    msg = "Creating kernel_params tag for node %s: %s" % (
+                        n.name, kp_string)
+                    self.logger.debug(msg)
+                    node_kp_tag = maas_tag.Tag(
+                        self.maas_client,
+                        name="%s_kp" % (n.name),
+                        kernel_opts=kp_string)
+                    node_kp_tag = tag_list.add(node_kp_tag)
+                    node_kp_tag.apply_to_node(machine.resource_id)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
 
                     msg = "Applied kernel parameters to node %s" % n.name
                     self.logger.info(msg)

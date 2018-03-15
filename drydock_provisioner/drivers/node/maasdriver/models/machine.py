@@ -202,6 +202,24 @@ class Machine(model_base.ResourceBase):
             self.logger.error(msg)
             raise errors.DriverError(msg)
 
+    def release(self, erase_disk=False):
+        """Release a node so it can be redeployed.
+
+        :param erase_disk: If true, the local disks on the machine will be quick wiped
+        """
+        url = self.interpolate_url()
+
+        options = {'erase': erase_disk}
+
+        resp = self.api_client.post(url, op='release', files=options)
+
+        if not resp.ok:
+            brief_msg = ("Error releasing node, received HTTP %s from MaaS" %
+                         resp.status_code)
+            self.logger.error(brief_msg)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError(brief_msg)
+
     def commission(self, debug=False):
         """Start the MaaS commissioning process.
 
