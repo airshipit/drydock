@@ -360,6 +360,27 @@ data:
   metadata:
     rack: rack2
 ---
+schema: 'drydock/BaremetalNode/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: compute02
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  host_profile: k8-node
+  addressing:
+    - network: pxe
+      address: dhcp
+    - network: mgmt
+      address: 172.16.1.23
+    - network: private
+      address: 172.16.2.23
+    - network: oob
+      address: 172.16.100.23
+  metadata:
+    rack: rack3
+---
 schema: 'drydock/HardwareProfile/v1'
 metadata:
   schema: 'metadata/Document/v1'
@@ -444,6 +465,50 @@ metadata:
   labels:
     application: 'drydock'
 data:
+  assets:
+    - path: /var/tmp/hello.sh
+      type: file
+      permissions: '555'
+      data: |-
+        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
+        Jwo=
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+    - path: /lib/systemd/system/hello.service
+      type: unit
+      permissions: '600'
+      data: |-
+        W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
+        ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
+        dGFyZ2V0Cg==
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+    - path: /var/tmp/designref.sh
+      type: file
+      permissions: '500'
+      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+---
+schema: 'drydock/BootAction/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: hw_filtered2
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  node_filter:
+    filter_set_type: 'union'
+    filter_set:
+      - filter_type: 'union'
+        node_names:
+          - 'compute02'
   assets:
     - path: /var/tmp/hello.sh
       type: file

@@ -59,7 +59,7 @@ class TestStorageSizing(object):
             '(Storage partition)|(Logical Volume) .+ size is < 0')
         regex_1 = re.compile('greater than 99%')
 
-        assert len(message_list) == 6
+        assert len(message_list) == 8
         for msg in message_list:
             msg = msg.to_dict()
             LOG.debug(msg)

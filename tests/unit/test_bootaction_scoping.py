@@ -53,5 +53,5 @@ class TestClass(object):
 
         for ba in design_data.bootactions:
             if ba.get_id() == 'hw_filtered':
-                assert 'compute01' in ba.target_nodes
                 assert 'controller01' not in ba.target_nodes
+                assert 'compute01' in ba.target_nodes

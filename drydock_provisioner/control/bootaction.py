@@ -163,6 +163,8 @@ class BootactionAssetsResource(StatefulResource):
 
         try:
             task = self.state_manager.get_task(ba_ctx['task_id'])
+            self.logger.debug("Loading design for task %s from design ref %s" %
+                              (ba_ctx['task_id'], task.design_ref))
             design_status, site_design = self.orchestrator.get_effective_site(
                 task.design_ref)
 

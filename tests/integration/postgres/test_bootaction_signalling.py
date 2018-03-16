@@ -29,7 +29,7 @@ class TestBootActionSignal(object):
 
         deckhand_orchestrator.create_bootaction_context("compute01", task)
 
-        # In the fullsite YAML, node 'compute01' is assigned two
+        # In the fullsite YAML, node 'controller01' is assigned two
         # bootactions - one with signaling enabled, one disabled.
         # Validate these counts
 
@@ -54,4 +54,4 @@ class TestBootActionSignal(object):
         design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref=design_ref)
 
-        assert len(design_data.bootactions) == 2
+        assert len(design_data.bootactions) == 3

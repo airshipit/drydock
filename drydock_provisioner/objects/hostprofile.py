@@ -88,6 +88,9 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
     def apply_inheritance(self, site_design):
         # No parent to inherit from, just apply design values
         # and return
+        if self.source == hd_fields.ModelSource.Compiled:
+            return
+
         if self.parent_profile is None:
             self.source = hd_fields.ModelSource.Compiled
             return

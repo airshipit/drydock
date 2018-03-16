@@ -59,7 +59,7 @@ class TestActionPrepareNodes(object):
 
         # check that the PrepareNodes action was split
         # with 2 nodes in the definition
-        assert len(task.subtask_id_list) == 2
+        assert len(task.subtask_id_list) == 3
 
         for st_id in task.subtask_id_list:
             st = drydock_state.get_task(st_id)

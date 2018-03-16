@@ -29,7 +29,7 @@ class TestClass(object):
 
         assert design_status.status == objects.fields.ValidationResult.Success
         assert len(design_data.host_profiles) == 2
-        assert len(design_data.baremetal_nodes) == 2
+        assert len(design_data.baremetal_nodes) == 3
 
     def test_ingest_deckhand_docref_exists(self, input_files, setup,
                                            deckhand_ingester):

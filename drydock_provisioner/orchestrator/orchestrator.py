@@ -554,7 +554,12 @@ class Orchestrator(object):
 
         identity_key = None
 
+        self.logger.debug(
+            "Creating boot action context for node %s" % nodename)
+
         for ba in site_design.bootactions:
+            self.logger.debug(
+                "Boot actions target nodes: %s" % ba.target_nodes)
             if nodename in ba.target_nodes:
                 if identity_key is None:
                     identity_key = os.urandom(32)

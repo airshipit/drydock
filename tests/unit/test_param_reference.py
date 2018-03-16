@@ -34,7 +34,7 @@ class TestKernelParameterReferences(object):
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)
 
-        assert len(design_data.baremetal_nodes) == 2
+        assert len(design_data.baremetal_nodes) == 3
 
         node = design_data.get_baremetal_node("compute01")
 
