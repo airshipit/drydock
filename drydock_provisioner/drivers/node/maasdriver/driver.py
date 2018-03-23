@@ -204,8 +204,8 @@ class MaasNodeDriver(NodeDriver):
                     maas_client=maas_client)
                 action.start()
             except Exception as e:
-                msg = "Subtask for action %s raised unexpected exceptions" % task.action
-                self.logger.error(msg, exc_info=e.exception())
+                msg = ("Subtask for action %s raised unexpected exception: %s" % (task.action, str(e)))
+                self.logger.error(msg, exc_info=e)
                 task.add_status_msg(
                     msg, error=True, ctx=str(task.get_id()), ctx_type='task')
                 task.failure()
