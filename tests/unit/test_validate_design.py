@@ -34,3 +34,20 @@ class TestDesignValidator(object):
         response = val.validate_design(site_design)
 
         assert response.status == hd_fields.ValidationResult.Success
+
+    def test_validate_no_nodes(self, deckhand_ingester, drydock_state,
+                               input_files, mock_get_build_data):
+        """Test that a design with no baremetal nodes validates."""
+
+        input_file = input_files.join("deckhand_fullsite_no_nodes.yaml")
+        design_ref = "file://%s" % str(input_file)
+
+        orch = Orchestrator(
+            state_manager=drydock_state, ingester=deckhand_ingester)
+
+        status, site_design = Orchestrator.get_effective_site(orch, design_ref)
+
+        val = Validator(orch)
+        response = val.validate_design(site_design)
+
+        assert response.status == hd_fields.ValidationResult.Success

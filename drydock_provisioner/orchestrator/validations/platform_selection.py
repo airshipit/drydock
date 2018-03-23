@@ -43,7 +43,9 @@ class PlatformSelection(Validators):
         for i in valid_images:
             valid_kernels[i] = node_driver.get_available_kernels(i)
 
-        for n in site_design.baremetal_nodes:
+        node_list = site_design.baremetal_nodes or []
+
+        for n in node_list:
             if n.image in valid_images:
                 if n.kernel in valid_kernels[n.image]:
                     continue
