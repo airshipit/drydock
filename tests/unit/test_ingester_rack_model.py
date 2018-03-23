@@ -33,7 +33,7 @@ class TestClass(object):
             design_state=design_state, design_ref=design_ref)
 
         print("%s" % str(design_status.to_dict()))
-        assert design_status.status == objects.fields.ActionResult.Success
+        assert design_status.status == objects.fields.ValidationResult.Success
         rack = design_data.get_rack('rack1')
 
         assert rack.location.get('grid') == 'EG12'

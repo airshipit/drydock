@@ -76,7 +76,7 @@ class YamlIngester(IngesterPlugin):
 
         # tracking processing status to provide a complete summary of issues
         ps = objects.TaskStatus()
-        ps.set_status(hd_fields.ActionResult.Success)
+        ps.set_status(hd_fields.ValidationResult.Success)
         for d in parsed_data:
             api = d.get('apiVersion', '')
             if api.startswith('drydock/'):
@@ -98,7 +98,7 @@ class YamlIngester(IngesterPlugin):
                         ctx = 'Unknown'
                     ps.add_status_msg(
                         msg=msg, error=True, ctx_type='document', ctx=ctx)
-                    ps.set_status(hd_fields.ActionResult.Failure)
+                    ps.set_status(hd_fields.ValidationResult.Failure)
                 except Exception as ex:
                     msg = "Unexpected error processing document: %s" % str(ex)
                     self.logger.error(msg, exc_info=True)
@@ -108,7 +108,7 @@ class YamlIngester(IngesterPlugin):
                         ctx = 'Unknown'
                     ps.add_status_msg(
                         msg=msg, error=True, ctx_type='document', ctx=ctx)
-                    ps.set_status(hd_fields.ActionResult.Failure)
+                    ps.set_status(hd_fields.ValidationResult.Failure)
             elif api.startswith('promenade/'):
                 (foo, api_version) = api.split('/')
                 if api_version == 'v1':

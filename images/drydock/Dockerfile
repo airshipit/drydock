@@ -21,7 +21,9 @@ ENV LANG C.UTF-8
 
 # Copy direct dependency requirements only to build a dependency layer
 COPY ./requirements-lock.txt /tmp/drydock/
-RUN pip3 install -r /tmp/drydock/requirements-lock.txt
+RUN pip3 install \
+    --no-cache-dir \
+    -r /tmp/drydock/requirements-lock.txt
 
 COPY . /tmp/drydock
 

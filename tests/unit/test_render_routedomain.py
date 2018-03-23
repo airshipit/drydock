@@ -35,7 +35,7 @@ class TestRouteDomains(object):
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)
 
-        assert design_status.status == hd_fields.ActionResult.Success
+        assert design_status.status == hd_fields.ValidationResult.Success
 
         net_rack3 = design_data.get_network('storage_rack3')
 
@@ -66,7 +66,7 @@ class TestRouteDomains(object):
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)
 
-        assert design_status.status == hd_fields.ActionResult.Success
+        assert design_status.status == hd_fields.ValidationResult.Success
 
         net_rack3 = design_data.get_network('storage_rack3')
 

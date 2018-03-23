@@ -27,7 +27,7 @@ class TestClass(object):
         design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref)
 
-        assert design_status.status == objects.fields.ActionResult.Success
+        assert design_status.status == objects.fields.ValidationResult.Success
 
         assert len(design_data.bootactions) > 0
 
@@ -47,7 +47,7 @@ class TestClass(object):
         design_status, design_data = deckhand_orchestrator.get_effective_site(
             design_ref)
 
-        assert design_status.status == objects.fields.ActionResult.Success
+        assert design_status.status == objects.fields.ValidationResult.Success
 
         assert len(design_data.bootactions) > 0
 

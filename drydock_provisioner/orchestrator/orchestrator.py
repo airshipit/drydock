@@ -327,7 +327,7 @@ class Orchestrator(object):
         """
         design_status, site_design = self.get_effective_site(task.design_ref)
 
-        if design_status.status != hd_fields.ActionResult.Success:
+        if design_status.status != hd_fields.ValidationResult.Success:
             raise errors.OrchestratorError(
                 "Unable to render effective site design.")
         if failures and successes:

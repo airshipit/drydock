@@ -191,8 +191,8 @@ class NetworkLinkTrunkingModeField(fields.BaseEnumField):
 
 
 class ValidationResult(BaseDrydockEnum):
-    Success = 'success'
-    Failure = 'failure'
+    Success = 'Success'
+    Failure = 'Failure'
 
 
 class MessageLevels(BaseDrydockEnum):
