@@ -378,55 +378,67 @@ class VerifyNodes(BaseAction):
         target_nodes = self.orchestrator.process_node_filter(
             node_filter, site_design)
 
-        for n in target_nodes:
-            if n.oob_type not in oob_type_partition.keys():
-                oob_type_partition[n.oob_type] = []
+        if target_nodes:
+            for n in target_nodes:
+                if n.oob_type not in oob_type_partition.keys():
+                    oob_type_partition[n.oob_type] = []
 
-            oob_type_partition[n.oob_type].append(n)
+                oob_type_partition[n.oob_type].append(n)
 
-        task_futures = dict()
-        for oob_type, oob_nodes in oob_type_partition.items():
-            oob_driver = self._get_driver('oob', oob_type)
+            task_futures = dict()
+            for oob_type, oob_nodes in oob_type_partition.items():
+                oob_driver = self._get_driver('oob', oob_type)
 
-            if oob_driver is None:
-                self.logger.warning(
-                    "Node OOB type %s has no enabled driver." % oob_type)
-                self.task.failure()
-                for n in oob_nodes:
-                    self.task.add_status_msg(
-                        msg="Node %s OOB type %s is not supported." %
-                        (n.get_name(), oob_type),
-                        error=True,
-                        ctx=n.get_name(),
-                        ctx_type='node')
-                continue
+                if oob_driver is None:
+                    self.logger.warning(
+                        "Node OOB type %s has no enabled driver." % oob_type)
+                    self.task.failure()
+                    for n in oob_nodes:
+                        self.task.add_status_msg(
+                            msg="Node %s OOB type %s is not supported." %
+                            (n.get_name(), oob_type),
+                            error=True,
+                            ctx=n.get_name(),
+                            ctx_type='node')
+                    continue
 
-            nf = self.orchestrator.create_nodefilter_from_nodelist(oob_nodes)
+                nf = self.orchestrator.create_nodefilter_from_nodelist(
+                    oob_nodes)
 
-            oob_driver_task = self.orchestrator.create_task(
-                design_ref=self.task.design_ref,
-                action=hd_fields.OrchestratorAction.InterrogateOob,
-                node_filter=nf)
-            self.task.register_subtask(oob_driver_task)
+                oob_driver_task = self.orchestrator.create_task(
+                    design_ref=self.task.design_ref,
+                    action=hd_fields.OrchestratorAction.InterrogateOob,
+                    node_filter=nf)
+                self.task.register_subtask(oob_driver_task)
 
-            self.logger.info(
-                "Starting task %s for node verification via OOB type %s" %
-                (oob_driver_task.get_id(), oob_type))
-            task_futures.update(
-                self._parallelize_subtasks(oob_driver.execute_task,
-                                           [oob_driver_task.get_id()]))
+                self.logger.info(
+                    "Starting task %s for node verification via OOB type %s" %
+                    (oob_driver_task.get_id(), oob_type))
+                task_futures.update(
+                    self._parallelize_subtasks(oob_driver.execute_task,
+                                               [oob_driver_task.get_id()]))
 
-        try:
-            self._collect_subtask_futures(
-                task_futures,
-                timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
-            self.logger.debug(
-                "Collected subtasks for task %s" % str(self.task.get_id()))
-        except errors.CollectSubtaskTimeout as ex:
-            self.logger.warning(str(ex))
+            try:
+                self._collect_subtask_futures(
+                    task_futures,
+                    timeout=(
+                        config.config_mgr.conf.timeouts.drydock_timeout * 60))
+                self.logger.debug(
+                    "Collected subtasks for task %s" % str(self.task.get_id()))
+            except errors.CollectSubtaskTimeout as ex:
+                self.logger.warning(str(ex))
+        else:
+            # no target nodes
+            self.task.add_status_msg(
+                msg="No nodes in scope, no work to to do.",
+                error=False,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.success()
 
+        # Set task complete and persist that info.
         self.task.set_status(hd_fields.TaskStatus.Complete)
-
+        self.task.save()
         return
 
 
@@ -457,6 +469,17 @@ class PrepareNodes(BaseAction):
             self.task.design_ref)
 
         target_nodes = self.orchestrator.get_target_nodes(self.task)
+
+        if not target_nodes:
+            self.task.add_status_msg(
+                msg="No nodes in scope, no work to to do.",
+                error=False,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.success()
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.save()
+            return
 
         # Parallelize this task so that node progression is
         # not interlinked
@@ -783,6 +806,19 @@ class DeployNodes(BaseAction):
             self.task.result.set_message("No NodeDriver enabled.")
             self.task.result.set_reason("Bad Configuration.")
             self.task.failure()
+            self.task.save()
+            return
+
+        target_nodes = self.orchestrator.get_target_nodes(self.task)
+
+        if not target_nodes:
+            self.task.add_status_msg(
+                msg="No nodes in scope, no work to to do.",
+                error=False,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.success()
+            self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.save()
             return
 

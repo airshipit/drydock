@@ -225,10 +225,20 @@ class CreateNetworkTemplate(BaseMaasAction):
             self.task.save()
             return
 
+        if not site_design.network_links:
+            msg = ("Site design has no network links, no work to do.")
+            self.logger.debug(msg)
+            self.task.add_status_msg(
+                msg=msg, error=False, ctx='NA', ctx_type='NA')
+            self.task.success()
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.save()
+            return
+
         # Try to true up MaaS definitions of fabrics/vlans/subnets
         # with the networks defined in Drydock
         design_networks = list()
-        design_links = site_design.network_links
+        design_links = site_design.network_links or []
 
         fabrics = maas_fabric.Fabrics(self.maas_client)
         fabrics.refresh()
@@ -645,30 +655,40 @@ class ConfigureUserCredentials(BaseMaasAction):
 
         site_model = site_design.get_site()
 
-        for k in getattr(site_model, 'authorized_keys', []):
-            try:
-                if len(key_list.query({'key': k.replace("\n", "")})) == 0:
-                    new_key = maas_keys.SshKey(self.maas_client, key=k)
-                    new_key = key_list.add(new_key)
-                    msg = "Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." % (
-                        k[:16])
-                    self.logger.debug(msg)
+        key_list = getattr(site_model, 'authorized_keys', None) or []
+
+        if key_list:
+            for k in key_list:
+                try:
+                    if len(key_list.query({'key': k.replace("\n", "")})) == 0:
+                        new_key = maas_keys.SshKey(self.maas_client, key=k)
+                        new_key = key_list.add(new_key)
+                        msg = "Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." % (
+                            k[:16])
+                        self.logger.debug(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.success()
+                    else:
+                        msg = "SSH key %s already exists in MaaS user profile." % k[:
+                                                                                    16]
+                        self.logger.debug(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.success()
+                except Exception as ex:
+                    msg = "Error adding SSH key to MaaS user profile: %s" % str(
+                        ex)
+                    self.logger.warning(msg)
                     self.task.add_status_msg(
-                        msg=msg, error=False, ctx='NA', ctx_type='NA')
-                    self.task.success()
-                else:
-                    msg = "SSH key %s already exists in MaaS user profile." % k[:
-                                                                                16]
-                    self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx='NA', ctx_type='NA')
-                    self.task.success()
-            except Exception as ex:
-                msg = "Error adding SSH key to MaaS user profile: %s" % str(ex)
-                self.logger.warning(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx='NA', ctx_type='NA')
-                self.task.failure()
+                        msg=msg, error=True, ctx='NA', ctx_type='NA')
+                    self.task.failure()
+        else:
+            msg = ("No keys to add, no work to do.")
+            self.logger.debug(msg)
+            self.task.success()
+            self.task.add_status_msg(
+                msg=msg, error=False, ctx='NA', ctx_type='NA')
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
@@ -958,19 +978,27 @@ class ApplyNodeNetworking(BaseMaasAction):
 
                 if machine is not None:
                     if machine.status_name.startswith('Failed Dep'):
-                        msg = ("Node %s has failed deployment, releasing to try again." % n.name)
+                        msg = (
+                            "Node %s has failed deployment, releasing to try again."
+                            % n.name)
                         self.logger.debug(msg)
                         try:
                             machine.release()
                             machine.refresh()
                         except errors.DriverError as ex:
-                            msg = ("Node %s could not be released, skipping deployment." % n.name)
+                            msg = (
+                                "Node %s could not be released, skipping deployment."
+                                % n.name)
                             self.logger.info(msg)
                             self.task.add_status_msg(
-                                msg=msg, error=True, ctx=n.name, ctx_type='node')
+                                msg=msg,
+                                error=True,
+                                ctx=n.name,
+                                ctx_type='node')
                             self.task.failure(focus=n.name)
                             continue
-                        msg = ("Released failed node %s to retry deployment." % n.name)
+                        msg = ("Released failed node %s to retry deployment." %
+                               n.name)
                         self.logger.info(msg)
                         self.task.add_status_msg(
                             msg=msg, error=False, ctx=n.name, ctx_type='node')
