@@ -75,5 +75,11 @@ data:
 {{- else -}}
 {{ tuple "etc/_policy.yaml.tpl" . | include "helm-toolkit.utils.template" | indent 4 }}
 {{- end }}
+{{ if .Values.manifests.secret_ssh_key }}
+  ssh-config: |+
+{{- range $option, $val := .Values.conf.ssh.config }}
+    {{ $option }}={{ $val }}
+{{ end }}
+{{- end }}
 ...
 {{- end }}

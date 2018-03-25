@@ -73,7 +73,27 @@ spec:
               subPath: policy.yaml
               mountPath: /etc/drydock/policy.yaml
               readOnly: true
+{{- if .Values.manifests.secret_ssh_key }}
+            - name: root-ssh
+              mountPath: /root/.ssh
+            - name: priv-key
+              subPath: PRIVATE_KEY
+              mountPath: /root/.ssh/id_rsa
+              readOnly: true
+            - name: drydock-etc
+              subPath: ssh-config
+              mountPath: /root/.ssh/config
+              readOnly: true
+{{- end }}
       volumes:
+{{- if .Values.manifests.secret_ssh_key }}
+        - name: root-ssh
+          emptyDir: {}
+        - name: priv-key
+          secret:
+            secretName: {{ .Release.Name }}-{{ .Values.secrets.ssh_key }}
+            defaultMode: 0400
+{{- end }}
         - name: etc-drydock
           emptyDir: {}
         - name: drydock-etc

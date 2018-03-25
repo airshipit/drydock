@@ -113,6 +113,7 @@ manifests:
   job_drydock_db_sync: true
   secret_keystone: true
   secret_database: true
+  secret_ssh_key: false
   configmap_etc: true
   configmap_bin: true
   service_drydock: true
@@ -233,9 +234,20 @@ secrets:
   postgresql:
     admin: drydock-postgresql-admin
     user: drydock-postgresql-user
+  ssh_key: ssh-private-key
 
 # Settings for drydock.conf
 conf:
+  ssh:
+    # A SSH private key strings to mount
+    # to allow Drydock access virsh over SSH
+    # The corresponding public key should be
+    # added to a authorized_keys file to a user
+    # in the libvirt group on the hypervisors
+    private_key: null
+    config:
+      UserKnownHostsFile: '/dev/null'
+      StrictHostKeyChecking: 'no'
   uwsgi:
     threads: 1
     workers: 1
@@ -255,6 +267,7 @@ conf:
       oob_driver:
         - 'drydock_provisioner.drivers.oob.pyghmi_driver.driver.PyghmiDriver'
         - 'drydock_provisioner.drivers.oob.manual_driver.driver.ManualDriver'
+        - 'drydock_provisioner.drivers.oob.libvirt_driver.driver.LibvirtDriver'
       node_driver: 'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver'
     timeouts:
       drydock_timeout: 5

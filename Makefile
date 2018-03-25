@@ -60,7 +60,7 @@ lint: pep8 helm_lint
 .PHONY: dry-run
 dry-run: clean
 	tools/helm_tk.sh $(HELM)
-	$(HELM) template charts/drydock
+	$(HELM) template --set manifests.secret_ssh_key=true --set conf.ssh.private_key=foo charts/drydock
 
 # Make targets intended for use by the primary targets above.
 
