@@ -205,4 +205,4 @@ class TestCalculateBytes():
         calc_size = ApplyNodeStorage.calculate_bytes(
             size_str=size_str, context=vg)
 
-        assert calc_size == vg_available
+        assert calc_size == vg_available - ApplyNodeStorage.PART_TABLE_RESERVATION

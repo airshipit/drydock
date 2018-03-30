@@ -1452,6 +1452,19 @@ class ApplyNodePlatform(BaseMaasAction):
 class ApplyNodeStorage(BaseMaasAction):
     """Action configure node storage."""
 
+    # NOTE(sh8121att) Partition tables take size and it seems if the first partition
+    # on a block device attempts to use the full size of the device
+    # MAAS will fail that the device is not large enough
+    # It may be that the block device available_size does not include overhead
+    # for the partition table and once the table is written, there is not
+    # enough space for the 'full size' partition. So reserve the below
+    # when calculating 'rest of device' sizing w/ the '>' operator
+    #
+    # This size is based on documentation that for backwards compatability
+    # the first partition should start on LBA 63 and we'll assume 4096 byte
+    # blocks, thus 63 (add one for safety) x 4096 = 258048
+    PART_TABLE_RESERVATION = 258048
+
     def start(self):
         try:
             machine_list = maas_machine.Machines(self.maas_client)
@@ -1609,8 +1622,8 @@ class ApplyNodeStorage(BaseMaasAction):
                             self.maas_client, size=size, bootable=p.bootable)
                         if p.part_uuid is not None:
                             part.uuid = p.part_uuid
-                        msg = "Creating partition %s on dev %s (%s)" % (
-                            p.name, d.name, n.get_logicalname(d.name))
+                        msg = "Creating partition %s sized %d bytes on dev %s (%s)" % (
+                            p.name, size, d.name, n.get_logicalname(d.name))
                         self.logger.debug(msg)
                         part = maas_dev.create_partition(part)
                         self.task.add_status_msg(
@@ -1789,7 +1802,7 @@ class ApplyNodeStorage(BaseMaasAction):
             raise errors.NotEnoughStorage()
 
         if match.group(1) == '>':
-            computed_size = int(context.available_size)
+            computed_size = int(context.available_size) - ApplyNodeStorage.PART_TABLE_RESERVATION
 
         return computed_size
 
