@@ -18,6 +18,7 @@
 HELM=$1
 HTK_REPO=${HTK_REPO:-"https://github.com/openstack/openstack-helm"}
 HTK_PATH=${HTK_PATH:-""}
+HTK_STABLE_COMMIT=${HTK_COMMIT:-"f902cd14fac7de4c4c9f7d019191268a6b4e9601"}
 DEP_UP_LIST=${DEP_UP_LIST:-"drydock"}
 
 if [[ ! -z $(echo $http_proxy) ]]
@@ -52,10 +53,10 @@ function helm_serve {
 
 mkdir -p build
 pushd build
-git clone --depth 1 $HTK_REPO || true
+git clone $HTK_REPO || true
 pushd openstack-helm/$HTK_PATH
+git reset --hard "${HTK_STABLE_COMMIT}"
 
-git pull
 helm_serve
 make helm-toolkit
 popd && popd

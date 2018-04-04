@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+BUILD_DIR                  := $(shell mktemp -d)
 DOCKER_REGISTRY            ?= quay.io
 IMAGE_NAME                 ?= drydock
 IMAGE_PREFIX               ?= attcomdev
 IMAGE_TAG                  ?= latest
-HELM                       ?= helm
+HELM                       := $(BUILD_DIR)/helm
 PROXY                      ?= http://one.proxy.att.com:8080
 USE_PROXY                  ?= false
 PUSH_IMAGE                 ?= false
@@ -34,21 +35,36 @@ run_images: run_drydock
 
 # Run tests
 .PHONY: tests
-tests: coverage_test
+tests: external_dep pep8 security docs unit_tests
+
+# Intall external (not managed by tox/pip) dependencies
+.PHONY: external_dep
+external_dep:
+	sudo ./hostdeps.sh
 
 # Run unit and Postgres integration tests in coverage mode
 .PHONY: coverage_test
-coverage_test: build_drydock
-	tox -e coverage
+coverage_test: build_drydock external_dep
+	tox -re coverage
+
+# Run just unit tests
+.PHONY: unit_tests
+unit_tests:
+	tox -re unit
 
 # Run the drydock container and exercise simple tests
 .PHONY: run_drydock
 run_drydock: build_drydock
 	tools/drydock_image_run.sh
 
+# It seems CICD expects the target 'drydock' to
+# build the chart
+.PHONY: drydock
+drydock: charts
+
 # Create tgz of the chart
 .PHONY: charts
-charts: clean
+charts: clean helm-init
 	$(HELM) dep up charts/drydock
 	$(HELM) package charts/drydock
 
@@ -58,18 +74,27 @@ lint: pep8 helm_lint
 
 # Dry run templating of chart
 .PHONY: dry-run
-dry-run: clean
-	tools/helm_tk.sh $(HELM)
+dry-run: clean helm-init
 	$(HELM) template --set manifests.secret_ssh_key=true --set conf.ssh.private_key=foo charts/drydock
+
+# Initialize local helm config
+.PHONY: helm-init
+helm-init: helm-install
+	tools/helm_tk.sh $(HELM)
+
+# Install helm binary
+.PHONY: helm-install
+helm-install:
+	tools/helm_install.sh $(HELM)
 
 # Make targets intended for use by the primary targets above.
 
 .PHONY: build_drydock
 build_drydock:
 ifeq ($(USE_PROXY), true)
-	docker build -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
+	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
 else
-	docker build -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile .
+	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile .
 endif
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
@@ -78,12 +103,17 @@ endif
 .PHONY: docs
 docs: clean drydock_docs
 
+.PHONY: security
+security:
+	tox -e bandit
+
 .PHONY: drydock_docs
 drydock_docs:
 	tox -e docs
 
 .PHONY: clean
 clean:
+	rm -rf $(BUILD_DIR)/*
 	rm -rf build
 	rm -rf docs/build
 	rm -rf charts/drydock/charts

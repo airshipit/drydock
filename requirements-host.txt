@@ -1,0 +1,8 @@
+# These are host packages needed for Drydock
+# that don't come on a minimal Ubuntu install
+libvirt-dev
+pkg-config
+python3-dev
+python-tox
+docker.io
+gcc

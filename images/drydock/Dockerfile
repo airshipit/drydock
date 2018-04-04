@@ -13,13 +13,15 @@
 # limitations under the License.
 FROM python:3.5
 
-ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
 ENV PORT 9000
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
 # Copy direct dependency requirements only to build a dependency layer
+RUN DEBIAN_FRONTEND=noninteractive apt update && \
+    apt install -y libvirt-dev --no-install-recommends
+
 COPY ./requirements-lock.txt /tmp/drydock/
 RUN pip3 install \
     --no-cache-dir \
