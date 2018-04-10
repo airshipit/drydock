@@ -22,7 +22,7 @@ class RackController(maas_machine.Machine):
 
     # These are the services that must be 'running'
     # to consider a rack controller healthy
-    REQUIRED_SERVICES = ['http', 'tgt', 'dhcpd', 'ntp_rack', 'rackd', 'tftp']
+    REQUIRED_SERVICES = ['http', 'tgt', 'dhcpd', 'rackd', 'tftp']
     resource_url = 'rackcontrollers/{resource_id}/'
     fields = [
         'resource_id',
