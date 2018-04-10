@@ -639,8 +639,8 @@ class ConfigureUserCredentials(BaseMaasAction):
             return
 
         try:
-            key_list = maas_keys.SshKeys(self.maas_client)
-            key_list.refresh()
+            current_keys = maas_keys.SshKeys(self.maas_client)
+            current_keys.refresh()
         except Exception as ex:
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -660,9 +660,9 @@ class ConfigureUserCredentials(BaseMaasAction):
         if key_list:
             for k in key_list:
                 try:
-                    if len(key_list.query({'key': k.replace("\n", "")})) == 0:
+                    if len(current_keys.query({'key': k.replace("\n", "")})) == 0:
                         new_key = maas_keys.SshKey(self.maas_client, key=k)
-                        new_key = key_list.add(new_key)
+                        new_key = current_keys.add(new_key)
                         msg = "Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." % (
                             k[:16])
                         self.logger.debug(msg)
