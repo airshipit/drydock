@@ -1393,13 +1393,19 @@ class ApplyNodePlatform(BaseMaasAction):
                     self.task.add_status_msg(
                         msg=msg, error=False, ctx=n.name, ctx_type='node')
                     self.task.success(focus=n.get_id())
+                else:
+                    msg = "No kernel parameters to apply for %s." % n.name
+                    self.logger.debug(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.get_id())
             except Exception as ex2:
-                self.task.failure(focus=n.get_id())
                 msg = "Error configuring kernel parameters for node %s" % (
                     n.name)
                 self.logger.error(msg + ": %s" % str(ex2))
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.failure(focus=n.get_id())
                 continue
 
             try:
@@ -1436,12 +1442,18 @@ class ApplyNodePlatform(BaseMaasAction):
                     self.logger.info("Applied static tags to node %s" %
                                      (n.name))
                     self.task.success(focus=n.get_id())
+                else:
+                    msg = "No node tags to apply for %s." % n.name
+                    self.logger.debug(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.get_id())
             except Exception as ex3:
-                self.task.failure(focus=n.get_id())
                 msg = "Error configuring static tags for node %s" % (n.name)
                 self.logger.error(msg + ": " + str(ex3))
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.failure(focus=n.get_id())
                 continue
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
