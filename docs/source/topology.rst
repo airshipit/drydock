@@ -357,6 +357,55 @@ additional values. ``BaremetalNode`` *compute01* then adopts all values from the
 adopted from *defaults*) and can then again override or append any
 configuration that is specific to that node.
 
+Defining Node Out-Of-Band Management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Drydock supports plugin-based OOB management. At a minimum a
+OOB driver supports configuring a node to PXE boot during the next
+boot cycle and power cycling the node to initiate the provisioning
+process. Richer features might also be supported such as BIOS
+configuration or BMC log analysis. The value of ``oob.type`` in the
+host profile or baremetal node definition will define what additional
+parameters are required for that type and what capabilities are available
+via OOB driver tasks.
+
+IPMI
+****
+
+The ``ipmi`` OOB type requires additional configuration to allow OOB
+management:
+
+  1. The ``oob`` parameters ``account`` and ``credential`` must be populated with a valid
+     account and password that can access the BMC via IPMI over LAN.
+  2. The ``oob`` parameter ``network`` must reference which node network is used for OOB
+     access.
+  3. The ``addressing`` section of the node definition must contain an IP address assignment
+     for the network referenced in ``oob.network``.
+
+Currently the IPMI driver supports only basic management by setting nodes to PXE boot and
+power-cycling the node.
+
+Libvirt
+*******
+
+The ``libvirt`` OOB type requires additional configuration within the site definition
+as well as particular configuration in the deployment of Drydock (and likely the node
+provisioning driver.):
+
+  1. A SSH public/private key-pair should be generated with the public key being added
+     to the authorized_keys file on all hypervisors hosting libvirt-based VMs being
+     deployed. The account for this must be in the ``libvirt`` group.
+  2. The private key should be provided in the Drydock and MAAS charts as an override to
+     ``conf.ssh.private_key``
+  3. The Drydock and MAAS chart should override ``manifests.secret_ssh_key: true``.
+  4. In the site definition, each libvirt-based node must define ``oob`` parameter
+     ``libvirt_uri`` of the form ``qemu+ssh://account@hostname/system`` where ``account``
+     is an account in the libvirt group on the hypervisor with an authorized_key and
+     ``hostname`` is an IP address or FQDN for the hypervisor hosting the VM.
+
+Currently the Libvirt driver supports only basic management by setting nodes to PXE boot and
+power-cycling the node.
+
 Defining Node Interfaces and Network Addressing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

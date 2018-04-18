@@ -317,6 +317,42 @@ class Machine(model_base.ResourceBase):
                 "Error setting node metadata, received HTTP %s from MaaS" %
                 resp.status_code)
 
+    def set_power_parameters(self, power_type, **kwargs):
+        """Set power parameters for this node.
+
+        Only available after the node has been added to MAAS.
+
+        :param power_type: The type of power management for the node
+        :param kwargs: Each kwargs key will be prepended with 'power_parameters_' and
+                       added to the list of updates for the node.
+        """
+        if not power_type:
+            raise errors.DriverError(
+                "Cannot set power parameters. Must specify a power type.")
+
+        url = self.interpolate_url()
+
+        if kwargs:
+            power_params = dict()
+
+            self.logger.debug("Setting node power type to %s." % power_type)
+            self.power_type = power_type
+            power_params['power_type'] = power_type
+
+            for k, v in kwargs.items():
+                power_params['power_parameters_' + k] = v
+
+            self.logger.debug("Updating node %s power parameters: %s" %
+                              (self.hostname, str(power_params)))
+            resp = self.api_client.put(url, files=power_params)
+
+            if resp.status_code == 200:
+                return True
+
+            raise errors.DriverError(
+                "Failed updating power parameters MAAS url %s - return code %s\n%s"
+                % (url, resp.status_code.resp.text))
+
     def to_dict(self):
         """Serialize this resource instance into a dict.
 
@@ -460,10 +496,22 @@ class Machines(model_base.ResourceCollectionBase):
                           (maas_node.resource_id, node_model.get_id()))
 
         if maas_node.hostname != node_model.name and update_name:
-            maas_node.hostname = node_model.name
-            maas_node.update()
-            self.logger.debug("Updated MaaS resource %s hostname to %s" %
-                              (maas_node.resource_id, node_model.name))
+            try:
+                maas_node.hostname = node_model.name
+                maas_node.update()
+                if node_model.oob_type == 'libvirt':
+                    self.logger.debug(
+                        "Updating node %s MaaS power parameters for libvirt." %
+                        (node_model.name))
+                    oob_params = node_model.oob_parameters
+                    maas_node.set_power_parameters(
+                        'virsh',
+                        power_address=oob_params.get('libvirt_uri'),
+                        power_id=node_model.name)
+                self.logger.debug("Updated MaaS resource %s hostname to %s" %
+                                  (maas_node.resource_id, node_model.name))
+            except Exception as ex:
+                self.logger.debug("Error updating MAAS node: %s" % str(ex))
 
         return maas_node
 

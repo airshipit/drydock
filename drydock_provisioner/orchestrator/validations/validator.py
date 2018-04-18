@@ -28,6 +28,8 @@ from drydock_provisioner.orchestrator.validations.storage_partititioning import 
 from drydock_provisioner.orchestrator.validations.storage_sizing import StorageSizing
 from drydock_provisioner.orchestrator.validations.unique_network_check import UniqueNetworkCheck
 from drydock_provisioner.orchestrator.validations.hostname_validity import HostnameValidity
+from drydock_provisioner.orchestrator.validations.oob_valid_ipmi import IpmiValidity
+from drydock_provisioner.orchestrator.validations.oob_valid_libvirt import LibvirtValidity
 
 
 class Validator():
@@ -88,4 +90,6 @@ rule_set = [
     StorageSizing(),
     UniqueNetworkCheck(),
     HostnameValidity(),
+    IpmiValidity(),
+    LibvirtValidity()
 ]
