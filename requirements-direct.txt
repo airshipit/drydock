@@ -6,7 +6,7 @@ oslo.versionedobjects==1.23.0
 requests
 oauthlib
 uwsgi==2.0.15
-bson==0.4.7
+pymongo==3.6.1
 oslo.config==3.16.0
 click==6.7
 PasteDeploy==1.5.2

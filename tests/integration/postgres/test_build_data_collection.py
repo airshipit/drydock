@@ -26,11 +26,11 @@ class TestBuildDataCollection(object):
             'lshw': '<xml><test>foo</test></xml>'.encode(),
             'lldp': '<xml><test>bar</test></xml>'.encode(),
         }
-        bson_data = bson.loads(bson.dumps(sample_data))
+        bson_data = bson.BSON.encode(sample_data)
 
         machine = mocker.MagicMock()
         mocker_config = {
-            'get_details.return_value': bson_data,
+            'get_details.return_value': bson.BSON.decode(bson_data),
             'hostname': 'foo',
         }
         machine.configure_mock(**mocker_config)

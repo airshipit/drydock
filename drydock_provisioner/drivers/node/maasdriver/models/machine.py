@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Model representing MAAS node/machine resource."""
+import logging
 
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
@@ -19,8 +20,9 @@ import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_inte
 import drydock_provisioner.drivers.node.maasdriver.models.blockdev as maas_blockdev
 import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
 
-import bson
+from bson import BSON
 
+LOG = logging.getLogger(__name__)
 
 class Machine(model_base.ResourceBase):
 
@@ -288,7 +290,7 @@ class Machine(model_base.ResourceBase):
         resp = self.api_client.get(url, op='details')
 
         if resp.status_code == 200:
-            detail_config = bson.loads(resp.content)
+            detail_config = BSON.decode(resp.content)
             return detail_config
 
     def set_owner_data(self, key, value):
