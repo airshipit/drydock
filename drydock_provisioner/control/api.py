@@ -81,7 +81,9 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
              state_manager=state_manager, orchestrator=orchestrator)),
 
         # API to list current MaaS nodes
-        ('/nodes', NodesResource()),
+        ('/nodes',
+         NodesResource(state_manager=state_manager,
+                       orchestrator=orchestrator)),
         # API to get build data for a node
         ('/nodes/{hostname}/builddata',
          NodeBuildDataResource(state_manager=state_manager)),

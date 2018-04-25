@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+# Copyright 2018 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,17 @@ from drydock_provisioner import config
 from drydock_provisioner.drivers.node.maasdriver.api_client import MaasRequestFactory
 from drydock_provisioner.drivers.node.maasdriver.models.machine import Machines
 
-from .base import BaseResource, StatefulResource
+from .base import StatefulResource
 
 
-class NodesResource(BaseResource):
-    def __init__(self):
-        super().__init__()
+class NodesResource(StatefulResource):
+    def __init__(self, orchestrator=None, **kwargs):
+        """Object initializer.
+
+        :param orchestrator: instance of orchestrator.Orchestrator
+        """
+        super().__init__(**kwargs)
+        self.orchestrator = orchestrator
 
     @policy.ApiEnforcer('physical_provisioner:read_data')
     def on_get(self, req, resp):
@@ -52,6 +57,37 @@ class NodesResource(BaseResource):
                         boot_ip=m.boot_ip))
 
             resp.body = json.dumps(node_view)
+            resp.status = falcon.HTTP_200
+        except Exception as ex:
+            self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+
+    @policy.ApiEnforcer('physical_provisioner:read_data')
+    def on_post(self, req, resp):
+        try:
+            json_data = self.req_json(req)
+            node_filter = json_data.get('node_filter', None)
+            site_design = json_data.get('site_design', None)
+            if node_filter is None or site_design is None:
+                not_provided = []
+                if node_filter is None:
+                    not_provided.append('node_filter')
+                if site_design is None:
+                    not_provided.append('site_design')
+                self.info(req.context, 'Missing required input value(s) %s' % not_provided)
+                self.return_error(
+                    resp,
+                    falcon.HTTP_400,
+                    message='Missing input required value(s) %s' % not_provided,
+                    retry=False)
+                return
+            nodes = self.orchestrator.process_node_filter(node_filter=node_filter,
+                                                          site_design=site_design)
+            # Guarantees an empty list is returned if there are no nodes
+            if not nodes:
+                nodes = []
+            resp.body = json.dumps(nodes)
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)

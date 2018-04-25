@@ -29,6 +29,13 @@ GET nodes
 The Nodes API will provide a report of current nodes as known by the node provisioner
 and their status with a few hardware details.
 
+POST nodes
+^^^^^^^^^
+
+The Nodes API will provide a report of current nodes as known by the node provisioner
+and their status with a few hardware details.  This API requires node_filter and site_design
+in the POST body to return the proper node list.
+
 GET nodes/hostname/builddata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

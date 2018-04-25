@@ -1,4 +1,4 @@
-# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+# Copyright 2018 AT&T Intellectual Property.  All other rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -299,27 +299,89 @@ class TaskResource(StatefulResource):
     def on_get(self, req, resp, task_id):
         """Handler for GET method."""
         try:
-            task = self.state_manager.get_task(uuid.UUID(task_id))
-            if task is None:
+            builddata = req.get_param_as_bool('builddata')
+            subtask_errors = req.get_param_as_bool('subtaskerrors')
+            try:
+                layers = int(req.params.get('layers', '0'))
+            except Exception as ex:
+                layers = 0
+
+            first_task = self.get_task(req, resp, task_id, builddata)
+
+            if first_task is None:
                 self.info(req.context, "Task %s does not exist" % task_id)
                 self.return_error(
                     resp,
                     falcon.HTTP_404,
                     message="Task %s does not exist" % task_id,
                     retry=False)
-                return
+            else:
+                # If layers is passed in then it returns a dict of tasks instead of the task dict.
+                if layers:
+                    resp_data, errors = self.handle_layers(req, resp, task_id, builddata, subtask_errors, layers,
+                                                           first_task)
+                    # Includes subtask_errors if the query param 'subtaskerrors' is passed in as true.
+                    if (subtask_errors):
+                        resp_data['subtask_errors'] = errors
+                else:
+                    resp_data = first_task
+                    # Includes subtask_errors if the query param 'subtaskerrors' is passed in as true.
+                    if (subtask_errors):
+                        _, errors = self.handle_layers(req, resp, task_id, False, subtask_errors, 1,
+                                                       first_task)
+                        resp_data['subtask_errors'] = errors
 
-            resp_data = task.to_dict()
-            builddata = req.params.get('builddata', 'false').upper()
-
-            if builddata == "TRUE":
-                task_bd = self.state_manager.get_build_data(
-                    task_id=task.get_id())
-                resp_data['build_data'] = [bd.to_dict() for bd in task_bd]
-
-            resp.body = json.dumps(resp_data)
-            resp.status = falcon.HTTP_200
+                resp.body = json.dumps(resp_data)
+                resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % (str(ex)))
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
+
+    def get_task(self, req, resp, task_id, builddata):
+        try:
+            task = self.state_manager.get_task(uuid.UUID(task_id))
+            if task is None:
+                return None
+
+            task_dict = task.to_dict()
+
+            if builddata:
+                task_bd = self.state_manager.get_build_data(
+                    task_id=task.get_id())
+                task_dict['build_data'] = [bd.to_dict() for bd in task_bd]
+
+            return task_dict
+        except Exception as ex:
+            self.error(req.context, "Unknown error: %s" % (str(ex)))
+            self.return_error(
+                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+
+    def handle_layers(self, req, resp, task_id, builddata, subtask_errors, layers, first_task):
+        resp_data = {}
+        errors = {}
+        resp_data['init_task_id'] = task_id
+        resp_data[first_task['task_id']] = first_task
+        queued_ids = first_task['subtask_id_list']
+        # first_task is layer 1
+        current_layer = 1
+        # The while loop handles each layer.
+        while queued_ids and (current_layer < layers or layers == -1 or subtask_errors):
+            # Copies the current list (a layer) then clears the queue for the next layer.
+            processing_ids = list(queued_ids)
+            queued_ids = []
+            # The for loop handles each task in a layer.
+            for id in processing_ids:
+                task = self.get_task(req, resp, id, builddata)
+                # Only adds the task if within the layers range.
+                if current_layer < layers or layers == -1:
+                    resp_data[id] = task
+                if task:
+                    queued_ids.extend(task.get('subtask_id_list', []))
+                    if task.get('result', {}).get('details', {}).get('errorCount', 0) > 0 and subtask_errors:
+                        result = task.get('result', {})
+                        result['task_id'] = id
+                        errors[id] = task.get('result', {})
+            # Finished this layer, incrementing for the next while loop.
+            current_layer = current_layer + 1
+        return resp_data, errors

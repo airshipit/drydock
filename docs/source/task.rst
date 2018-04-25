@@ -165,3 +165,10 @@ collected by this task.::
           "data_element": "{ \"id\": \"foo\", \"class\": \"system\" ...}"
         }
       ]
+
+Adding the parameter ``subtaskerrors=true`` in the query string will add one additional field
+with an object of subtask errors keyed by task_id.
+
+Adding the parameter ``layers=x`` where x is -1 for all or a positive number to limit the number
+of layers.  Will convert the response into an object of tasks and all subtasks keyed by task_id.
+It will also include the field init_task_id with the top task_id.
