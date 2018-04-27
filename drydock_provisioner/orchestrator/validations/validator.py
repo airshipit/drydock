@@ -27,6 +27,7 @@ from drydock_provisioner.orchestrator.validations.rational_network_bond import R
 from drydock_provisioner.orchestrator.validations.storage_partititioning import StoragePartitioning
 from drydock_provisioner.orchestrator.validations.storage_sizing import StorageSizing
 from drydock_provisioner.orchestrator.validations.unique_network_check import UniqueNetworkCheck
+from drydock_provisioner.orchestrator.validations.hostname_validity import HostnameValidity
 
 
 class Validator():
@@ -86,4 +87,5 @@ rule_set = [
     StoragePartitioning(),
     StorageSizing(),
     UniqueNetworkCheck(),
+    HostnameValidity(),
 ]

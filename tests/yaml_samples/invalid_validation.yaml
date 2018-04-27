@@ -358,7 +358,9 @@ data:
 schema: 'drydock/BaremetalNode/v1'
 metadata:
   schema: 'metadata/Document/v1'
-  name: compute01
+#####
+# Invalid hostname contains '__'
+  name: bad__name
   storagePolicy: 'cleartext'
   labels:
     application: 'drydock'

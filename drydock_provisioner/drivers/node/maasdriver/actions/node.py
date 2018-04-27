@@ -660,7 +660,9 @@ class ConfigureUserCredentials(BaseMaasAction):
         if key_list:
             for k in key_list:
                 try:
-                    if len(current_keys.query({'key': k.replace("\n", "")})) == 0:
+                    if len(current_keys.query({
+                            'key': k.replace("\n", "")
+                    })) == 0:
                         new_key = maas_keys.SshKey(self.maas_client, key=k)
                         new_key = current_keys.add(new_key)
                         msg = "Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." % (
@@ -1814,7 +1816,8 @@ class ApplyNodeStorage(BaseMaasAction):
             raise errors.NotEnoughStorage()
 
         if match.group(1) == '>':
-            computed_size = int(context.available_size) - ApplyNodeStorage.PART_TABLE_RESERVATION
+            computed_size = int(context.available_size
+                                ) - ApplyNodeStorage.PART_TABLE_RESERVATION
 
         return computed_size
 
@@ -1919,7 +1922,7 @@ class DeployNode(BaseMaasAction):
 
                 tag_list = maas_tag.Tags(self.maas_client)
                 tag_list.refresh()
-                node_id_tags = tag_list.startswith("%s_baid-" % (n.name))
+                node_id_tags = tag_list.startswith("%s__baid__" % (n.name))
                 for t in node_id_tags:
                     t.delete()
 
@@ -1929,7 +1932,7 @@ class DeployNode(BaseMaasAction):
                     self.logger.debug(msg)
                     node_baid_tag = maas_tag.Tag(
                         self.maas_client,
-                        name="%s_baid-%s" % (n.name, ba_key.hex()))
+                        name="%s__baid__%s" % (n.name, ba_key.hex()))
                     node_baid_tag = tag_list.add(node_baid_tag)
                     node_baid_tag.apply_to_node(machine.resource_id)
                     self.task.add_status_msg(

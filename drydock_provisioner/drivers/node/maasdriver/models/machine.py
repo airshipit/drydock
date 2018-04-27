@@ -24,6 +24,7 @@ from bson import BSON
 
 LOG = logging.getLogger(__name__)
 
+
 class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'

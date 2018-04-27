@@ -227,6 +227,7 @@ reference to the particular physical node. The ``BaremetalNode`` definition will
 reference a ``HostProfile`` and can then extend or override any of the
 configuration values.
 
+NOTE: Drydock does not support hostnames containing '__' (double underscoe)
 
 Hardware Profile
 ----------------
