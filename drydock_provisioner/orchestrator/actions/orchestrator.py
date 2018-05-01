@@ -305,11 +305,36 @@ class PrepareSite(BaseAction):
 
         self.step_networktemplate(driver)
         self.step_usercredentials(driver)
+        self.step_configureprovisioner(driver)
 
         self.task.align_result()
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
+
+    def step_configureprovisioner(self, driver):
+        """Run the ConfigureNodeProvisioner step of this action.
+
+        :param driver: The driver instance to use for execution.
+        """
+        config_prov_task = self.orchestrator.create_task(
+            design_ref=self.task.design_ref,
+            action=hd_fields.OrchestratorAction.ConfigureNodeProvisioner)
+        self.task.register_subtask(config_prov_task)
+
+        self.logger.info(
+            "Starting node drvier task %s to configure the provisioner" %
+            (config_prov_task.get_id()))
+
+        driver.execute_task(config_prov_task.get_id())
+
+        self.task.add_status_msg(
+            msg="Collected subtask %s" % str(config_prov_task.get_id()),
+            error=False,
+            ctx=str(config_prov_task.get_id()),
+            ctx_type='task')
+        self.logger.info("Node driver task %s:%s is complete." %
+                         (config_prov_task.get_id(), config_prov_task.action))
 
     def step_networktemplate(self, driver):
         """Run the CreateNetworkTemplate step of this action.

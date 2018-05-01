@@ -38,6 +38,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.boot_resource as maas_
 import drydock_provisioner.drivers.node.maasdriver.models.rack_controller as maas_rack
 import drydock_provisioner.drivers.node.maasdriver.models.partition as maas_partition
 import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
+import drydock_provisioner.drivers.node.maasdriver.models.repository as maas_repo
 
 
 class BaseMaasAction(BaseAction):
@@ -616,6 +617,113 @@ class CreateNetworkTemplate(BaseMaasAction):
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
+
+
+class ConfigureNodeProvisioner(BaseMaasAction):
+    """Action for configuring site-wide node provisioner options."""
+
+    def start(self):
+        self.task.set_status(hd_fields.TaskStatus.Running)
+        self.task.save()
+
+        try:
+            site_design = self._load_site_design()
+        except errors.OrchestratorError:
+            self.task.add_status_msg(
+                msg="Error loading site design.",
+                error=True,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.failure()
+            self.task.save()
+            return
+
+        try:
+            current_repos = maas_repo.Repositories(self.maas_client)
+            current_repos.refresh()
+        except Exception as ex:
+            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.failure()
+            self.task.add_status_msg(
+                msg='Error accessing MaaS SshKeys API',
+                error=True,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.save()
+            return
+
+        site_model = site_design.get_site()
+
+        repo_list = getattr(site_model, 'repositories', None) or []
+
+        if repo_list:
+            for r in repo_list:
+                try:
+                    existing_repo = current_repos.singleton({
+                        'name': r.get_id()
+                    })
+                    new_repo = self.create_maas_repo(self.maas_client, r)
+                    if existing_repo:
+                        new_repo.resource_id = existing_repo.resource_id
+                        new_repo.update()
+                        msg = "Updating repository definition for %s." % (
+                            r.name)
+                        self.logger.debug(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.success()
+                    else:
+                        new_repo = current_repos.add(new_repo)
+                        msg = "Adding repository definition for %s." % (r.name)
+                        self.logger.debug(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.success()
+                except Exception as ex:
+                    msg = "Error adding repository to MaaS configuration: %s" % str(
+                        ex)
+                    self.logger.warning(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=True, ctx='NA', ctx_type='NA')
+                    self.task.failure()
+        else:
+            msg = ("No repositories to add, no work to do.")
+            self.logger.debug(msg)
+            self.task.success()
+            self.task.add_status_msg(
+                msg=msg, error=False, ctx='NA', ctx_type='NA')
+
+        self.task.set_status(hd_fields.TaskStatus.Complete)
+        self.task.save()
+        return
+
+    @staticmethod
+    def create_maas_repo(api_client, repo_obj):
+        """Create a MAAS model of a repo based of a Drydock model.
+
+        If resource_id is specified, assign it the resource_id so the new instance
+        can be used to update an existing repo.
+
+        :param api_client: A MAAS API client configured to connect to MAAS
+        :param repo_obj: Instance of objects.Repository
+        """
+        model_fields = dict()
+        if repo_obj.distributions:
+            model_fields['distributions'] = ','.join(repo_obj.distributions)
+        if repo_obj.components:
+            model_fields['components'] = ','.join(repo_obj.components)
+        if repo_obj.arches:
+            model_fields['arches'] = ','.join(repo_obj.arches)
+
+        model_fields['key'] = repo_obj.gpgkey
+
+        for k in ['name', 'url']:
+            model_fields[k] = getattr(repo_obj, k)
+
+        repo_model = maas_repo.Repository(api_client, **model_fields)
+        return repo_model
 
 
 class ConfigureUserCredentials(BaseMaasAction):

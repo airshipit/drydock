@@ -42,7 +42,8 @@ class NodeDriver(ProviderDriver):
             hd_fields.OrchestratorAction.ApplyNodePlatform,
             hd_fields.OrchestratorAction.DeployNode,
             hd_fields.OrchestratorAction.DestroyNode,
-            hd_fields.OrchestratorAction.ConfigureUserCredentials
+            hd_fields.OrchestratorAction.ConfigureUserCredentials,
+            hd_fields.OrchestratorAction.ConfigureNodeProvisioner
         ]
 
     def execute_task(self, task_id):

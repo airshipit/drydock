@@ -379,7 +379,10 @@ class Orchestrator(object):
         for ba in site_design.bootactions:
             nf = ba.node_filter
             target_nodes = self.process_node_filter(nf, site_design)
-            ba.target_nodes = [x.get_id() for x in target_nodes]
+            if not target_nodes:
+                ba.target_nodes = []
+            else:
+                ba.target_nodes = [x.get_id() for x in target_nodes]
 
     def process_node_filter(self, node_filter, site_design):
         try:

@@ -47,6 +47,7 @@ class OrchestratorAction(BaseDrydockEnum):
     CreateStorageTemplate = 'create_storage_template'
     CreateBootMedia = 'create_boot_media'
     ConfigureUserCredentials = 'configure_user_credentials'
+    ConfigureNodeProvisioner = 'configure_node_provisioner'
     PrepareHardwareConfig = 'prepare_hardware_config'
     IdentifyNode = 'identify_node'
     ConfigureHardware = 'configure_hardware'
@@ -69,7 +70,8 @@ class OrchestratorAction(BaseDrydockEnum):
            PowerCycleNode, InterrogateOob, CreateNetworkTemplate,
            CreateStorageTemplate, CreateBootMedia, PrepareHardwareConfig,
            ConfigureHardware, InterrogateNode, ApplyNodeNetworking,
-           ApplyNodeStorage, ApplyNodePlatform, DeployNode, DestroyNode)
+           ApplyNodeStorage, ApplyNodePlatform, DeployNode, DestroyNode,
+           ConfigureNodeProvisioner)
 
 
 class OrchestratorActionField(fields.BaseEnumField):

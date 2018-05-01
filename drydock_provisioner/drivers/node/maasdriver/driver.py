@@ -40,6 +40,7 @@ from .actions.node import ApplyNodeNetworking
 from .actions.node import ApplyNodePlatform
 from .actions.node import ApplyNodeStorage
 from .actions.node import DeployNode
+from .actions.node import ConfigureNodeProvisioner
 
 
 class MaasNodeDriver(NodeDriver):
@@ -87,6 +88,8 @@ class MaasNodeDriver(NodeDriver):
         ApplyNodeStorage,
         hd_fields.OrchestratorAction.DeployNode:
         DeployNode,
+        hd_fields.OrchestratorAction.ConfigureNodeProvisioner:
+        ConfigureNodeProvisioner,
     }
 
     def __init__(self, **kwargs):

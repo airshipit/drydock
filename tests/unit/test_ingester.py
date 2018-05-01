@@ -31,7 +31,8 @@ class TestClass(object):
         assert len(design_data.host_profiles) == 2
         assert len(design_data.baremetal_nodes) == 3
 
-    def test_ingest_deckhand_repos(self, input_files, setup, deckhand_ingester):
+    def test_ingest_deckhand_repos(self, input_files, setup,
+                                   deckhand_ingester):
         """Test that the ingester properly parses repo definitions."""
         input_file = input_files.join("deckhand_fullsite.yaml")
 
