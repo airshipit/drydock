@@ -31,6 +31,26 @@ class TestClass(object):
         assert len(design_data.host_profiles) == 2
         assert len(design_data.baremetal_nodes) == 3
 
+    def test_ingest_deckhand_repos(self, input_files, setup, deckhand_ingester):
+        """Test that the ingester properly parses repo definitions."""
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_state = DrydockState()
+        design_ref = "file://%s" % str(input_file)
+
+        design_status, design_data = deckhand_ingester.ingest_data(
+            design_state=design_state, design_ref=design_ref)
+
+        assert design_status.status == objects.fields.ValidationResult.Success
+
+        region_def = design_data.get_site()
+
+        assert len(region_def.repositories) == 1
+        assert region_def.repositories.remove_unlisted
+
+        for r in region_def.repositories:
+            assert 'docker' in r.url
+
     def test_ingest_deckhand_docref_exists(self, input_files, setup,
                                            deckhand_ingester):
         """Test that each processed document has a doc_ref."""

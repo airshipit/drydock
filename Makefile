@@ -52,6 +52,11 @@ coverage_test: build_drydock external_dep
 unit_tests: external_dep
 	tox -re py35
 
+# Freeze full set of Python requirements
+.PHONY: req_freeze
+req_freeze:
+	tox -re freeze
+
 # Run the drydock container and exercise simple tests
 .PHONY: run_drydock
 run_drydock: build_drydock

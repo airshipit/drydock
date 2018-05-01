@@ -28,4 +28,41 @@ data:
       type: 'array'
       items:
         type: 'string'
+    repositories:
+      # top level is class (e.g. apt, rpm)
+      type: 'object'
+      properties:
+        remove_unlisted:
+          type: 'boolean'
+      additionalPropties:
+        type: 'object'
+        properties:
+          repo_type:
+            type: 'string'
+            pattern: 'apt|rpm'
+          url:
+            type: 'string'
+          distributions:
+            type: 'array'
+            items:
+              type: 'string'
+          components:
+            type: 'array'
+            items:
+              type: 'string'
+          gpgkey:
+            type: 'string'
+          arches:
+            type: 'array'
+            items:
+              type: 'string'
+          options:
+            type: 'object'
+            additionalProperties:
+              type: 'string'
+        additionalProperties: false
+        required:
+          - 'repo_type'
+          - 'url'
+          - 'arches'
   additionalProperties: false

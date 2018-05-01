@@ -90,8 +90,6 @@ class NodeTagDefinitionList(base.DrydockObjectListBase, base.DrydockObject):
     }
 
 
-# Need to determine how best to define a repository that can encompass
-# all repositories needed
 @base.DrydockObjectRegistry.register
 class Repository(base.DrydockObject):
 
@@ -99,12 +97,19 @@ class Repository(base.DrydockObject):
 
     fields = {
         'name': ovo_fields.StringField(),
+        'url': ovo_fields.StringField(),
+        'repo_type': ovo_fields.StringField(),
+        'gpgkey': ovo_fields.StringField(nullable=True),
+        'distributions': ovo_fields.ListOfStringsField(nullable=True),
+        'components': ovo_fields.ListOfStringsField(nullable=True),
+        'arches': ovo_fields.ListOfStringsField(default=['amd64']),
+        'options': ovo_fields.DictOfStringsField(nullable=True)
     }
 
     def __init__(self, **kwargs):
         super(Repository, self).__init__(**kwargs)
 
-    # TagDefinition keyed by tag
+    # Repository keyed by tag
     def get_id(self):
         return self.name
 
@@ -116,6 +121,7 @@ class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
 
     fields = {
         'objects': ovo_fields.ListOfObjectsField('Repository'),
+        'remove_unlisted': ovo_fields.BooleanField(default=False),
     }
 
 

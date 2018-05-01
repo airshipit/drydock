@@ -217,6 +217,26 @@ class DeckhandIngester(IngesterPlugin):
 
         model.authorized_keys = [k for k in auth_keys]
 
+        repos = data.get('repositories', None)
+
+        if repos:
+            model.repositories = self.process_drydock_region_repo_list(repos)
+
+        return model
+
+    def process_drydock_region_repo_list(self, data):
+        """Process a package repository list.
+
+        :param data: The data from the ``repositories`` key in a Region document
+        """
+        model = objects.RepositoryList()
+
+        for k, v in data.items():
+            if k == 'remove_unlisted':
+                model.remove_unlisted = v
+            else:
+                model.append(objects.Repository(name=k, **v))
+
         return model
 
     def process_drydock_rack(self, name, data):

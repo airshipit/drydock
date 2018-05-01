@@ -30,6 +30,17 @@ data:
     - tag: 'test'
       definition_type: 'lshw_xpath'
       definition: "//node[@id=\"display\"]/'clock units=\"Hz\"' > 1000000000"
+  repositories:
+    remove_unlisted: true
+    docker:
+      repo_type: apt
+      url: https://docker.io/repo
+      distributions:
+        - ubuntu-xenial
+      gpgkey: |+
+        -----BLAH BLAH-----
+        STUFF
+        -----BLAH BLAH-----
   authorized_keys:
     - |
       ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDENeyO5hLPbLLQRZ0oafTYWs1ieo5Q+XgyZQs51Ju
