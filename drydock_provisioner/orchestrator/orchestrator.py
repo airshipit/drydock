@@ -416,7 +416,7 @@ class Orchestrator(object):
             return self.list_intersection(*result_sets)
         else:
             raise errors.OrchestratorError(
-                "Unknow filter set type %s" % filter_set_type)
+                "Unknown filter set type %s" % filter_set_type)
 
     def process_filter(self, node_set, filter_set):
         """Take a filter and apply it to the node_set.

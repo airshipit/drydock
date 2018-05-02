@@ -39,6 +39,24 @@ class DrydockClient(object):
 
         return resp.json()
 
+    def get_nodes_for_filter(self, design_ref, node_filter=None):
+        """Get list of nodes in MaaS and their status.
+
+        :param SiteDesign design_ref: A SiteDesign object.
+        :param NodeFilter node_filter (optional): A NodeFilter object.
+        :return: A list of node names based on the node_filter and site_design.
+        """
+        endpoint = 'v1.0/nodefilter'
+        body = {
+            'node_filter': node_filter,
+            'site_design': design_ref
+        }
+        resp = self.session.post(endpoint, data=body)
+
+        self._check_response(resp)
+
+        return resp.json()
+
     def get_tasks(self):
         """
         Get a list of all the tasks, completed or running.
@@ -54,15 +72,30 @@ class DrydockClient(object):
 
         return resp.json()
 
-    def get_task(self, task_id):
+    def get_task(self, task_id, builddata=None, subtaskerrors=None, layers=None):
         """
         Get the current description of a Drydock task
 
-        :param string task_id: The string uuid task id to query
-        :return: A dict representing the current state of the task
+        :param string task_id: The string uuid task id to query.
+        :param boolean builddata: If true will include the build_data in the response.
+        :param boolean subtaskerrors: If true it will add all the errors from the subtasks as a dictionary in
+                                      subtask_errors.
+        :param int layers: If -1 will include all subtasks, if a positive integer it will include that many layers
+                           of subtasks.
+        :return: A dict representing the current state of the task.
         """
 
         endpoint = "v1.0/tasks/%s" % (task_id)
+
+        query_params = []
+        if builddata:
+            query_params.append('builddata=true')
+        if subtaskerrors:
+            query_params.append('subtaskerrors=true')
+        if layers:
+            query_params.append('layers=%s' % layers)
+        if query_params:
+            endpoint = '%s?%s' % (endpoint, '&'.join(query_params))
 
         resp = self.session.get(endpoint)
 

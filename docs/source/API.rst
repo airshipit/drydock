@@ -29,13 +29,6 @@ GET nodes
 The Nodes API will provide a report of current nodes as known by the node provisioner
 and their status with a few hardware details.
 
-POST nodes
-^^^^^^^^^
-
-The Nodes API will provide a report of current nodes as known by the node provisioner
-and their status with a few hardware details.  This API requires node_filter and site_design
-in the POST body to return the proper node list.
-
 GET nodes/hostname/builddata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -54,6 +47,16 @@ objects in the below form.::
 If the query parameter ``latest`` is passed with a value of ``true``, then only
 the most recently collected data for each ``generator`` will be included in the
 response.
+
+nodefilter API
+--------------
+
+POST nodefilter
+^^^^^^^^^^^^^^^
+
+The Nodes API will provide a list of node names based on site_design.  This API
+requires site_design in the POST body with an optional node_filter to return the node
+names.
 
 bootdata
 --------

@@ -22,6 +22,7 @@ from .tasks import TasksResource
 from .tasks import TaskResource
 from .nodes import NodesResource
 from .nodes import NodeBuildDataResource
+from .nodes import NodeFilterResource
 from .health import HealthResource
 from .health import HealthExtendedResource
 from .bootaction import BootactionUnitsResource
@@ -81,12 +82,14 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
              state_manager=state_manager, orchestrator=orchestrator)),
 
         # API to list current MaaS nodes
-        ('/nodes',
-         NodesResource(state_manager=state_manager,
-                       orchestrator=orchestrator)),
+        ('/nodes', NodesResource()),
         # API to get build data for a node
         ('/nodes/{hostname}/builddata',
          NodeBuildDataResource(state_manager=state_manager)),
+        # API to list current node names based
+        ('/nodefilter',
+         NodeFilterResource(state_manager=state_manager,
+                            orchestrator=orchestrator)),
         # API for nodes to discover their boot actions during curtin install
         ('/bootactions/nodes/{hostname}/units',
          BootactionUnitsResource(

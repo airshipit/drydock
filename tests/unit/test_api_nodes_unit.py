@@ -21,6 +21,7 @@ import logging
 
 from drydock_provisioner import policy
 from drydock_provisioner.control.api import start_api
+import drydock_provisioner.objects as objects
 
 import falcon
 
@@ -33,13 +34,8 @@ class TestNodesApiUnit(object):
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        url = '/api/v1.0/nodes'
-        hdr = {
-            'Content-Type': 'application/json',
-            'X-IDENTITY-STATUS': 'Confirmed',
-            'X-USER-NAME': 'Test',
-            'X-ROLES': 'admin'
-        }
+        url = '/api/v1.0/nodefilter'
+        hdr = self.get_standard_header()
         body = {
             'node_filter': 'filters',
             'site_design': design_ref,
@@ -50,15 +46,12 @@ class TestNodesApiUnit(object):
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
+        assert result.text.count('n1') == 1
+        assert result.text.count('n2') == 1
 
     def test_input_error(self, falcontest):
-        url = '/api/v1.0/nodes'
-        hdr = {
-            'Content-Type': 'application/json',
-            'X-IDENTITY-STATUS': 'Confirmed',
-            'X-USER-NAME': 'Test',
-            'X-ROLES': 'admin'
-        }
+        url = '/api/v1.0/nodefilter'
+        hdr = self.get_standard_header()
         body = {}
 
         result = falcontest.simulate_post(
@@ -80,10 +73,25 @@ class TestNodesApiUnit(object):
                 ingester=deckhand_ingester,
                 orchestrator=deckhand_orchestrator))
 
+    def get_standard_header(self):
+        hdr = {
+            'Content-Type': 'application/json',
+            'X-IDENTITY-STATUS': 'Confirmed',
+            'X-USER-NAME': 'Test',
+            'X-ROLES': 'admin'
+        }
+        return hdr
+
 @pytest.fixture()
 def mock_process_node_filter(deckhand_orchestrator):
     def side_effect(**kwargs):
-        return []
+        n1 = objects.BaremetalNode()
+        n1.name = 'n1'
+        n1.site = 'test1'
+        n2 = objects.BaremetalNode()
+        n2.name = 'n2'
+        n2.site = 'test2'
+        return [n1, n2]
 
     deckhand_orchestrator.real_process_node_filter = deckhand_orchestrator.process_node_filter
     deckhand_orchestrator.process_node_filter = Mock(side_effect=side_effect)
