@@ -184,6 +184,19 @@ class InvalidAssetLocation(BootactionError):
     pass
 
 
+class InvalidPackageListFormat(BootactionError):
+    """
+    **Message:** *Invalid package list format.*.
+
+    **Troubleshoot: A packagelist should be valid YAML
+                    document that is a mapping with keys being
+                    Debian package names and values being version
+                    specifiers. Null values are valid and indicate no
+                    version requirement.
+    """
+    pass
+
+
 class BuildDataError(Exception):
     """
     **Message:** *Error saving build data - data_element type <data_element>

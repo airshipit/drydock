@@ -20,13 +20,15 @@ class TestActionConfigureNodeProvisioner(object):
     def test_create_maas_repo(selfi, mocker):
         distribution_list = ['xenial', 'xenial-updates']
 
-        repo_obj = objects.Repository(name='foo',
-                                      url='https://foo.com/repo',
-                                      repo_type='apt',
-                                      gpgkey="-----START STUFF----\nSTUFF\n-----END STUFF----\n",
-                                      distributions=distribution_list,
-                                      components=['main'])
+        repo_obj = objects.Repository(
+            name='foo',
+            url='https://foo.com/repo',
+            repo_type='apt',
+            gpgkey="-----START STUFF----\nSTUFF\n-----END STUFF----\n",
+            distributions=distribution_list,
+            components=['main'])
 
-        maas_model = ConfigureNodeProvisioner.create_maas_repo(mocker.MagicMock(), repo_obj)
+        maas_model = ConfigureNodeProvisioner.create_maas_repo(
+            mocker.MagicMock(), repo_obj)
 
         assert maas_model.distributions == ",".join(distribution_list)

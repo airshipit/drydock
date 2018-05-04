@@ -28,4 +28,18 @@ data:
       data_pipeline:
         - base64_decode
         - utf8_decode
+---
+schema: 'drydock/BootAction/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: invalid_pkg_list
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  assets:
+    - type: pkg_list
+      data:
+        - pkg1
+        - pkg2
 ...

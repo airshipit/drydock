@@ -31,7 +31,13 @@ data:
               - 'file'
               - 'pkg_list'
           data:
-            type: 'string'
+            oneOf:
+              - type: 'string'
+              - type: 'object'
+                additionalProperties:
+                  oneOf:
+                    - type: 'string'
+                    - type: 'null'
           location_pipeline:
             type: 'array'
             items:

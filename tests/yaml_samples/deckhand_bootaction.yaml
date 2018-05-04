@@ -51,3 +51,29 @@ data:
         - utf8_decode
         - template
 ...
+---
+schema: 'drydock/BootAction/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: pkg_install
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  signaling: true
+  assets:
+    - path: /var/tmp/hello.sh
+      type: file
+      permissions: '555'
+      data: |-
+        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
+        Jwo=
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+    - type: pkg_list
+      data:
+        2ping: '3.2.1-1'
+        0xffff:
+...

@@ -112,6 +112,20 @@ class DocumentReference(base.DrydockObject):
             raise errors.UnsupportedDocumentType(
                 "Document type %s not supported." % self.doc_type)
 
+    def __eq__(self, other):
+        """Override equivalence operator."""
+        if isinstance(other, DocumentReference):
+            return (self.doc_type == other.doc_type
+                    and self.doc_schema == other.doc_schema
+                    and self.doc_name == other.doc_name)
+
+        return False
+
+    def __hash__(self):
+        """Override default hashing function."""
+        return hash(
+            str(self.doc_type), str(self.doc_schema), str(self.doc_name))
+
     def to_dict(self):
         """Serialize to a dictionary for further serialization."""
         d = dict()

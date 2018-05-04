@@ -15,6 +15,7 @@
 import base64
 from jinja2 import Template
 import ulid2
+import yaml
 
 import oslo_versionedobjects.fields as ovo_fields
 
@@ -107,6 +108,7 @@ class BootActionAsset(base.DrydockObject):
         'path': ovo_fields.StringField(nullable=True),
         'location': ovo_fields.StringField(nullable=True),
         'data': ovo_fields.StringField(nullable=True),
+        'package_list': ovo_fields.DictOfNullableStringsField(nullable=True),
         'location_pipeline': ovo_fields.ListOfStringsField(nullable=True),
         'data_pipeline': ovo_fields.ListOfStringsField(nullable=True),
         'permissions': ovo_fields.IntegerField(nullable=True),
@@ -119,6 +121,17 @@ class BootActionAsset(base.DrydockObject):
                 mode = int(mode, base=8)
         else:
             mode = None
+
+        ba_type = kwargs.get('type', None)
+        if ba_type == 'pkg_list':
+            if isinstance(kwargs.get('data'), dict):
+                self._extract_package_list(kwargs.pop('data'))
+            # If the data section doesn't parse as a dictionary
+            # then the package data needs to be sourced dynamically
+            # Otherwise the Bootaction is invalid
+            elif not kwargs.get('location'):
+                raise errors.InvalidPackageListFormat(
+                    "Requires a top-level mapping/object.")
 
         super().__init__(permissions=mode, **kwargs)
         self.rendered_bytes = None
@@ -141,15 +154,52 @@ class BootActionAsset(base.DrydockObject):
             rendered_location = self.execute_pipeline(
                 self.location, self.location_pipeline, tpl_ctx=tpl_ctx)
             data_block = self.resolve_asset_location(rendered_location)
-        else:
+            if self.type == 'pkg_list':
+                self._parse_package_list(data_block)
+        elif self.type != 'pkg_list':
             data_block = self.data.encode('utf-8')
 
-        value = self.execute_pipeline(
-            data_block, self.data_pipeline, tpl_ctx=tpl_ctx)
+        if self.type != 'pkg_list':
+            value = self.execute_pipeline(
+                data_block, self.data_pipeline, tpl_ctx=tpl_ctx)
 
-        if isinstance(value, str):
-            value = value.encode('utf-8')
-        self.rendered_bytes = value
+            if isinstance(value, str):
+                value = value.encode('utf-8')
+            self.rendered_bytes = value
+
+    def _parse_package_list(self, data):
+        """Parse data expecting a list of packages to install.
+
+        Expect data to be a bytearray reprsenting a JSON or YAML
+        document.
+
+        :param data: A bytearray of data to parse
+        """
+        try:
+            data_string = data.decode('utf-8')
+            parsed_data = yaml.safe_load(data_string)
+
+            if isinstance(parsed_data, dict):
+                self._extract_package_list(parsed_data)
+            else:
+                raise errors.InvalidPackageListFormat(
+                    "Package data should have a top-level mapping/object.")
+        except yaml.YAMLError as ex:
+            raise errors.InvalidPackageListFormat(
+                "Invalid YAML in package list: %s" % str(ex))
+
+    def _extract_package_list(self, pkg_dict):
+        """Extract package data into object model.
+
+        :param pkg_dict: a dictionary of packages to install
+        """
+        self.package_list = dict()
+        for k, v in pkg_dict.items():
+            if isinstance(k, str) and isinstance(v, str):
+                self.package_list[k] = v
+            else:
+                raise errors.InvalidPackageListFormat(
+                    "Keys and values must be strings.")
 
     def _get_template_context(self, nodename, site_design, action_id,
                               design_ref):
