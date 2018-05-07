@@ -50,6 +50,8 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if not self.target_nodes:
+            self.target_nodes = []
 
     # NetworkLink keyed by name
     def get_id(self):
@@ -123,9 +125,11 @@ class BootActionAsset(base.DrydockObject):
             mode = None
 
         ba_type = kwargs.get('type', None)
+
+        package_list = None
         if ba_type == 'pkg_list':
             if isinstance(kwargs.get('data'), dict):
-                self._extract_package_list(kwargs.pop('data'))
+                package_list = self._extract_package_list(kwargs.pop('data'))
             # If the data section doesn't parse as a dictionary
             # then the package data needs to be sourced dynamically
             # Otherwise the Bootaction is invalid
@@ -133,7 +137,7 @@ class BootActionAsset(base.DrydockObject):
                 raise errors.InvalidPackageListFormat(
                     "Requires a top-level mapping/object.")
 
-        super().__init__(permissions=mode, **kwargs)
+        super().__init__(package_list=package_list, permissions=mode, **kwargs)
         self.rendered_bytes = None
 
     def render(self, nodename, site_design, action_id, design_ref):
@@ -180,7 +184,7 @@ class BootActionAsset(base.DrydockObject):
             parsed_data = yaml.safe_load(data_string)
 
             if isinstance(parsed_data, dict):
-                self._extract_package_list(parsed_data)
+                self.package_list = self._extract_package_list(parsed_data)
             else:
                 raise errors.InvalidPackageListFormat(
                     "Package data should have a top-level mapping/object.")
@@ -193,13 +197,14 @@ class BootActionAsset(base.DrydockObject):
 
         :param pkg_dict: a dictionary of packages to install
         """
-        self.package_list = dict()
+        package_list = dict()
         for k, v in pkg_dict.items():
-            if isinstance(k, str) and isinstance(v, str):
-                self.package_list[k] = v
+            if (isinstance(k, str) and (not v or isinstance(v, str))):
+                package_list[k] = v
             else:
                 raise errors.InvalidPackageListFormat(
                     "Keys and values must be strings.")
+        return package_list
 
     def _get_template_context(self, nodename, site_design, action_id,
                               design_ref):

@@ -69,3 +69,4 @@ Topology Documentation
    :maxdepth: 1
 
    topology
+   troubleshooting/index

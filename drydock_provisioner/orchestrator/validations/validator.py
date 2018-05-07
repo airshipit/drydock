@@ -30,6 +30,8 @@ from drydock_provisioner.orchestrator.validations.unique_network_check import Un
 from drydock_provisioner.orchestrator.validations.hostname_validity import HostnameValidity
 from drydock_provisioner.orchestrator.validations.oob_valid_ipmi import IpmiValidity
 from drydock_provisioner.orchestrator.validations.oob_valid_libvirt import LibvirtValidity
+from drydock_provisioner.orchestrator.validations.bootaction_validity import BootactionDefined
+from drydock_provisioner.orchestrator.validations.bootaction_validity import BootactionPackageListValid
 
 
 class Validator():
@@ -91,5 +93,7 @@ rule_set = [
     UniqueNetworkCheck(),
     HostnameValidity(),
     IpmiValidity(),
-    LibvirtValidity()
+    LibvirtValidity(),
+    BootactionDefined(),
+    BootactionPackageListValid(),
 ]
