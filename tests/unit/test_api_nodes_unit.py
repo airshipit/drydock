@@ -38,7 +38,7 @@ class TestNodesApiUnit(object):
         hdr = self.get_standard_header()
         body = {
             'node_filter': 'filters',
-            'site_design': design_ref,
+            'design_ref': design_ref,
         }
 
         result = falcontest.simulate_post(

@@ -54,8 +54,8 @@ nodefilter API
 POST nodefilter
 ^^^^^^^^^^^^^^^
 
-The Nodes API will provide a list of node names based on site_design.  This API
-requires site_design in the POST body with an optional node_filter to return the node
+The Nodes API will provide a list of node names based on design_ref.  This API
+requires design_ref in the POST body with an optional node_filter to return the node
 names.
 
 bootdata

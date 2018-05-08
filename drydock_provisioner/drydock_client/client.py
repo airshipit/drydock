@@ -44,12 +44,12 @@ class DrydockClient(object):
 
         :param SiteDesign design_ref: A SiteDesign object.
         :param NodeFilter node_filter (optional): A NodeFilter object.
-        :return: A list of node names based on the node_filter and site_design.
+        :return: A list of node names based on the node_filter and design_ref.
         """
         endpoint = 'v1.0/nodefilter'
         body = {
             'node_filter': node_filter,
-            'site_design': design_ref
+            'design_ref': design_ref
         }
         resp = self.session.post(endpoint, data=body)
 
