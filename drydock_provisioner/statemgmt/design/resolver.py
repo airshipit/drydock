@@ -18,15 +18,24 @@ import re
 import logging
 
 import requests
+from beaker.cache import CacheManager
+from beaker.util import parse_cache_config_options
 
 from drydock_provisioner import error as errors
 from drydock_provisioner.util import KeystoneUtils
 
+cache_opts = {
+    'cache.type': 'memory',
+    'expire': 300,
+}
+
+cache = CacheManager(**parse_cache_config_options(cache_opts))
 
 class ReferenceResolver(object):
     """Class for handling different data references to resolve them data."""
 
     @classmethod
+    @cache.cache()
     def resolve_reference(cls, design_ref):
         """Resolve a reference to a design document.
 

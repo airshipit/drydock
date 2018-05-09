@@ -13,6 +13,7 @@
 # limitations under the License.
 """Model representing MAAS node/machine resource."""
 import logging
+import base64
 
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
@@ -250,14 +251,15 @@ class Machine(model_base.ResourceBase):
     def deploy(self, user_data=None, platform=None, kernel=None):
         """Start the MaaS deployment process.
 
-        :param user_data: cloud-init user data
+        :param user_data: ``str`` of cloud-init user data
         :param platform: Which image to install
         :param kernel: Which kernel to enable
         """
         deploy_options = {}
 
         if user_data is not None:
-            deploy_options['user_data'] = user_data
+            deploy_options['user_data'] = base64.b64encode(
+                user_data.encode('utf-8')).decode('utf-8')
 
         if platform is not None:
             deploy_options['distro_series'] = platform

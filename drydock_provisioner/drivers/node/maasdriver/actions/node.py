@@ -17,6 +17,7 @@ import time
 import logging
 import re
 import math
+import yaml
 
 from datetime import datetime
 
@@ -2049,11 +2050,32 @@ class DeployNode(BaseMaasAction):
                     "Error setting boot action id key tag for %s." % n.name,
                     exc_info=ex)
 
+            # Extract bootaction assets that are package lists as they
+            # are included in the deployment initiation
+
+            node_packages = self.orchestrator.find_node_package_lists(
+                n.name, self.task)
+            user_data_dict = dict(packages=[])
+
+            for k, v in node_packages.items():
+                if v:
+                    user_data_dict['packages'].append([k, v])
+                else:
+                    user_data_dict['packages'].append(k)
+
+            user_data_string = None
+            if user_data_dict.get('packages'):
+                user_data_string = "#cloud-config\n%s" % yaml.dump(
+                    user_data_dict)
+
             self.logger.info("Deploying node %s: image=%s, kernel=%s" %
                              (n.name, n.image, n.kernel))
 
             try:
-                machine.deploy(platform=n.image, kernel=n.kernel)
+                machine.deploy(
+                    platform=n.image,
+                    kernel=n.kernel,
+                    user_data=user_data_string)
             except errors.DriverError:
                 msg = "Error deploying node %s, skipping" % n.name
                 self.logger.warning(msg)

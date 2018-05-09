@@ -205,3 +205,14 @@ class MessageLevels(BaseDrydockEnum):
 
 class DocumentType(BaseDrydockEnum):
     Deckhand = 'deckhand'
+
+
+class BootactionAssetType(BaseDrydockEnum):
+    PackageList = "pkg_list"
+    Unit = "unit"  # SystemD Unit
+    File = "file"
+
+    ALL = (PackageList, Unit, File)
+
+class BootactionAssetTypeField(fields.BaseEnumField):
+    AUTO_TYPE = BootactionAssetType()

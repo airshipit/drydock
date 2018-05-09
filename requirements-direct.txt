@@ -23,3 +23,4 @@ jinja2==2.9.6
 ulid2==0.1.1
 defusedxml===0.5.0
 libvirt-python==3.10.0
+beaker==1.9.1

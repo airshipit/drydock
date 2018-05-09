@@ -595,6 +595,35 @@ class Orchestrator(object):
                     action_status=init_status)
         return identity_key
 
+    def find_node_package_lists(self, nodename, task):
+        """Return all packages to be installed on ``nodename``
+
+        :param nodename: The name of the node to retrieve packages for
+        :param task: The task initiating this request
+        """
+        design_status, site_design = self.get_effective_site(task.design_ref)
+
+        if site_design.bootactions is None:
+            return None
+
+        self.logger.debug(
+            "Extracting package install list for node %s" % nodename)
+
+        pkg_list = dict()
+
+        for ba in site_design.bootactions:
+            if nodename in ba.target_nodes:
+                assets = ba.render_assets(
+                    nodename,
+                    site_design,
+                    ulid2.generate_binary_ulid(),
+                    task.design_ref,
+                    type_filter=hd_fields.BootactionAssetType.PackageList)
+                for a in assets:
+                    pkg_list.update(a.package_list)
+
+        return pkg_list
+
     def render_route_domains(self, site_design):
         """Update site_design with static routes for route domains.
 
