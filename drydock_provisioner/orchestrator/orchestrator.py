@@ -382,7 +382,15 @@ class Orchestrator(object):
             ba.target_nodes = [x.get_id() for x in target_nodes]
 
     def process_node_filter(self, node_filter, site_design):
-        target_nodes = site_design.baremetal_nodes
+        try:
+            target_nodes = site_design.baremetal_nodes
+            if target_nodes is None:
+                raise AttributeError()
+        except AttributeError:
+            self.logger.debug(
+                "Invalid site design, no baremetal nodes in site_design."
+            )
+            return []
 
         if node_filter is None:
             return target_nodes
