@@ -61,3 +61,17 @@ class DesignShow(CliAction):  # pylint: disable=too-few-public-methods
     def invoke(self):
         return self.api_client.get_design(
             design_id=self.design_id, source=self.source)
+
+class DesignValidate(CliAction):  # pylint: disable=too-few-public-methods
+    """Action to validate a design.
+
+    :param string design_href: A href key to the design_ref.
+    """
+
+    def __init__(self, api_client, design_href):
+        super().__init__(api_client)
+        self.design_href = design_href
+        self.logger.debug("DesignValidate action initialized")
+
+    def invoke(self):
+        return self.api_client.validate_design(href=self.design_href)

@@ -131,6 +131,22 @@ class DrydockClient(object):
 
         return resp.json()
 
+    def validate_design(self, href):
+        """Get list of nodes in MaaS and their status.
+
+        :param href: A href that points to the design_ref.
+        :return: A dict containing the validation.
+        """
+        endpoint = 'v1.0/validatedesign'
+        body = {
+            'href': href
+        }
+        resp = self.session.post(endpoint, data=body)
+
+        self._check_response(resp)
+
+        return resp.json()
+
     def _check_response(self, resp):
         if resp.status_code == 401:
             raise errors.ClientUnauthorizedError(

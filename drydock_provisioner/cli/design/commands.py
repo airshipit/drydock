@@ -21,6 +21,7 @@ import json
 from drydock_provisioner.cli.design.actions import DesignList
 from drydock_provisioner.cli.design.actions import DesignShow
 from drydock_provisioner.cli.design.actions import DesignCreate
+from drydock_provisioner.cli.design.actions import DesignValidate
 
 
 @click.group()
@@ -57,3 +58,14 @@ def design_show(ctx, design_id):
         ctx.fail('The design id must be specified by --design-id')
 
     click.echo(json.dumps(DesignShow(ctx.obj['CLIENT'], design_id).invoke()))
+
+@design.command(name='validate')
+@click.option(
+    '--design-href',
+    '-h',
+    help='The design href key to the design ref')
+@click.pass_context
+def design_validate(ctx, design_href=None):
+    """Validate a design."""
+    click.echo(
+        json.dumps(DesignValidate(ctx.obj['CLIENT'], design_href).invoke()))
