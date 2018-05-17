@@ -1,7 +1,7 @@
 """create base database tables
 
 Revision ID: 9593a123e7c5
-Revises: 
+Revises:
 Create Date: 2017-09-21 14:56:13.866443
 
 """

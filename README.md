@@ -3,14 +3,14 @@
 A python REST orchestrator to translate a YAML host topology to a provisioned
 set of hosts and provide a set of post-provisioning instructions.
 
-See full documentation in [docs/source/index.rst](docs/source/index.rst).
+See full documentation at [http://att-comdev-drydock.readthedocs.io/](http://att-comdev-drydock.readthedocs.io/).
 
 ## Required
 
 * Python 3.5+
 * A running instance of Postgres v9.5+
 * A running instance of Openstack Keystone w/ the v3 API enabled
-* A running instance of Canonical MaaS v2.2+
+* A running instance of Canonical MaaS v2.3+
 
 ## Recommended
 
@@ -47,7 +47,7 @@ to deploy Drydock into a Kubernetes cluster. Additionally use of
 the rest of the UCP services provides additional functionality
 for deploying (Armada) and using (Promenade, Deckhand) Drydock.
 
-You can see an example of a full UCP deployment in the [UCP Integration](https://github.comatt-comdev/ucp-integration) repository.
+You can see an example of a full UCP deployment in the [UCP Integration](https://github.com/att-comdev/ucp-integration) repository.
 
 ### Stand up Kubernetes
 

@@ -20,7 +20,7 @@ Will provide attributes for configuring Node/Machine interfaces
 MaaS will be configured with a single 'space'. Each Network in Drydock
 will translate to a unique MaaS fabric+vlan+subnet. Any network with
 an address range of type 'dhcp' will cause DHCP to be enabled in MaaS
-for that network. 
+for that network.
 
 ### Hardware Profile ###
 
