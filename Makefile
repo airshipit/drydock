@@ -45,12 +45,12 @@ external_dep: requirements-host.txt
 # Run unit and Postgres integration tests in coverage mode
 .PHONY: coverage_test
 coverage_test: build_drydock external_dep
-	tox -re coverage
+	tox -re cover
 
 # Run just unit tests
 .PHONY: unit_tests
 unit_tests: external_dep
-	tox -re unit
+	tox -re py35
 
 # Run the drydock container and exercise simple tests
 .PHONY: run_drydock
