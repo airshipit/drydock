@@ -58,6 +58,12 @@ pushd openstack-helm/$HTK_PATH
 git reset --hard "${HTK_STABLE_COMMIT}"
 
 helm_serve
+# OSH Makefile is bugged, so ensure helm is in the path
+if [[ ${HELM} != "helm" ]]
+then
+  export PATH=${PATH}:$(dirname ${HELM})
+fi
+
 make helm-toolkit
 popd && popd
 for c in $DEP_UP_LIST

@@ -35,12 +35,12 @@ run_images: run_drydock
 
 # Run tests
 .PHONY: tests
-tests: external_dep pep8 security docs unit_tests
+tests: pep8 security docs unit_tests
 
 # Intall external (not managed by tox/pip) dependencies
-.PHONY: external_dep
-external_dep:
+external_dep: requirements-host.txt
 	sudo ./hostdeps.sh
+	touch external_dep
 
 # Run unit and Postgres integration tests in coverage mode
 .PHONY: coverage_test
@@ -49,7 +49,7 @@ coverage_test: build_drydock external_dep
 
 # Run just unit tests
 .PHONY: unit_tests
-unit_tests:
+unit_tests: external_dep
 	tox -re unit
 
 # Run the drydock container and exercise simple tests
@@ -104,11 +104,11 @@ endif
 docs: clean drydock_docs
 
 .PHONY: security
-security:
+security: external_dep
 	tox -e bandit
 
 .PHONY: drydock_docs
-drydock_docs:
+drydock_docs: external_dep
 	tox -e docs
 
 .PHONY: clean
@@ -120,10 +120,10 @@ clean:
 	rm -rf charts/drydock/requirements.lock
 
 .PHONY: pep8
-pep8:
+pep8: external_dep
 	tox -e pep8
 
 .PHONY: helm_lint
-helm_lint: clean
+helm_lint: clean helm-init
 	tools/helm_tk.sh $(HELM)
 	$(HELM) lint charts/drydock

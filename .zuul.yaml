@@ -13,46 +13,73 @@
 - project:
     check:
       jobs:
-        - airship-drydock-linter
-        - airship-drydock-ubuntu:
-            voting: false
-            irrelevant-files:
-              - ^.*\.rst$
-              - ^doc/.*$
-              - ^releasenotes/.*$
+        - airship-drydock-lint-ws
+        - airship-drydock-lint-pep8:
+            files:
+              - ^.*\.py$
+        - airship-drydock-lint-chart:
+            files:
+              - ^charts/.*$
+        - airship-drydock-unit-py35
+        - airship-drydock-security-bandit:
+            files:
+              - ^.*\.py$
     gate:
       jobs:
-        - airship-drydock-linter
-        # NOTE(portdirect): enable when voting enabled.
-        # - airship-drydock-ubuntu:
-        #     irrelevant-files:
-        #       - ^.*\.rst$
-        #       - ^doc/.*$
-        #       - ^releasenotes/.*$
+        - airship-drydock-lint-ws
+        - airship-drydock-lint-pep8:
+            files:
+              - ^.*\.py$
+        - airship-drydock-lint-chart:
+            files:
+              - ^charts/.*$
+        - airship-drydock-unit-py35
+        - airship-drydock-security-bandit:
+            files:
+              - ^.*\.py$
+
+- nodeset:
+    name: airship-drydock-single-node
+    nodes:
+      - name: primary
+        label: ubuntu-xenial
 
 - job:
-    name: airship-drydock-linter
+    name: airship-drydock-lint-ws
+    description: |
+      Lints all files for trailing whitespace
     run: tools/gate/playbooks/zuul-linter.yaml
-    nodeset: openstack-helm-single-node
+    timeout: 300
+    nodeset: airship-drydock-single-node
 
 - job:
-    name: airship-drydock
-    roles:
-      - zuul: openstack/openstack-helm-infra
-    vars:
-      zuul_osh_infra_relative_path: ../openstack-helm-infra/
-    timeout: 7200
-    pre-run:
-      - tools/gate/playbooks/osh-infra-upgrade-host.yaml
-      - tools/gate/playbooks/osh-infra-deploy-docker.yaml
-      - tools/gate/playbooks/osh-infra-build.yaml
-      - tools/gate/playbooks/osh-infra-deploy-k8s.yaml
-    run: tools/gate/playbooks/airship-drydock-check.yaml
-    post-run: tools/gate/playbooks/osh-infra-collect-logs.yaml
-    required-projects:
-      - openstack/openstack-helm-infra
+    name: airship-drydock-lint-pep8
+    description: |
+      Lints Python files against the PEP8 standard
+    run: tools/gate/playbooks/pep8-linter.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
 
 - job:
-    name: airship-drydock-ubuntu
-    parent: airship-drydock
-    nodeset: openstack-helm-single-node
+    name: airship-drydock-lint-chart
+    description: |
+      Lints Helm charts for validity
+    run: tools/gate/playbooks/helm-linter.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
+
+- job:
+    name: airship-drydock-unit-py35
+    description: |
+      Executes unit tests under Python 3.5
+    run: tools/gate/playbooks/unit-py35.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
+
+- job:
+    name: airship-drydock-security-bandit
+    description: |
+      Executes the Bandit security scanner against Python files
+    run: tools/gate/playbooks/security-bandit.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
