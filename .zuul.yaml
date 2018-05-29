@@ -14,6 +14,7 @@
     check:
       jobs:
         - airship-drydock-lint-ws
+        - airship-drydock-doc-build
         - airship-drydock-lint-pep8:
             files:
               - ^.*\.py$
@@ -27,6 +28,7 @@
     gate:
       jobs:
         - airship-drydock-lint-ws
+        - airship-drydock-doc-build
         - airship-drydock-lint-pep8:
             files:
               - ^.*\.py$
@@ -37,6 +39,9 @@
         - airship-drydock-security-bandit:
             files:
               - ^.*\.py$
+    post:
+      jobs:
+        - airship-drydock-doc-publish
 
 - nodeset:
     name: airship-drydock-single-node
@@ -83,3 +88,45 @@
     run: tools/gate/playbooks/security-bandit.yaml
     timeout: 300
     nodeset: airship-drydock-single-node
+
+- job:
+    name: airship-drydock-doc-build
+    description: |
+      Locally build the documentation to check for errors
+    run: tools/gate/playbooks/doc-build.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
+
+- job:
+    name: airship-drydock-doc-publish
+    description: |
+      Publish documentation on airship-drydock.readthedocs.io
+    run: tools/gate/playbooks/doc-publish.yaml
+    timeout: 300
+    nodeset: airship-drydock-single-node
+
+- secret:
+    name: readthedocs
+    data:
+      url: !encrypted/pkcs1-oaep
+        - dcOaNb6+3zCSp8rlmaA8U/v8kxzsB9MPqmbfbFSoyCsXOAMvluYSitmF7XpYdZLOXPOvm
+          +stE6m57dRBDlryymoLHVUxgeAkA/4YR1/78tF8vTLBDbWaLXVLTFBjx6jg17nS9X/UKs
+          W+UtSA1rVmeoaF8jrxO+c0IJjhgRDchFyPa9s7CnrxUn12IN6IDym0YcUQLxUOFzofm3F
+          fCtwFY84lRCJhB80jfXuYPlIdxTO3q245JlDvhRm4y6p/qCNljNm/Kw6o6ngKjh0f/CM6
+          7oFZPsE1XDYWGvR0msq8rjCST6k380vIBeroOqfwRhrjU5YCTgZy2kmw/veY3eGs5bEbb
+          OBZeIb6mk1+D9bmRbFaTmVns7E+a6Fdz/rrttebmak8aBATQD9sgBnvghFAAHibT4LNdn
+          ic+eEy/RXqyHqZuIPukQjAF0FgfK7jDqVzB/scx2tpw7lYwpDZM8bOHFNIAC4zRVg66O2
+          1HPo4egknU8MQRy1FwNm7A91AY2cKZSusfrQlND/vflK27/lxCdHoOYw8JVaGxe02Ac+n
+          XapfJuj7tAkFF+jeaWamB5CMiC+4M3zsrReB2/kqbxGFXC0nQ9q9AbVg48zCZFxNTVMLj
+          J5K79voMoMmFoP14trhneFDs1Ki8FOLU1fqU7KrBYrlixI4FJwJ6ljEM9C/OvU=
+      token: !encrypted/pkcs1-oaep
+        - StrExdiOzIVLYO5xvvqXkIWXCWhdXREnl2VcgmPdfQnKgZ5KgDbtOnATMmowkijOtk3ov
+          zH3O5arOdjawoqwWQ/9mHDfTLQZfphU6S3J2PrUoMOkWs0UoXVyS577ECSxbA9m4t6x+G
+          Vfe2Uq8u12CUAomXGUlDBPgpTcKCFFLuQX9qF7FwEQ6I218QlzncVlwo2mGQ0PEGRzVWK
+          l/KrZxrH8HzNPsB2+SqvYakj/7Ps3q3gedmk8Wq3q6xcdaXvKxmk4zcdvi03bzcmptDhE
+          meRw/FZCHWEfclgWTDM+MbjqFXdhUTXO/JcjsofwrL3hOEV/3xm8+5XJhdfjUeFUbVw2t
+          E/ZrJYscRzrTtSA4FAbS9XKO2YwixwvCsm7jSHkfQVf3P9bhczveOWllmTmWEzSvPxN+P
+          4oXPNnbxVRLgkISuh5kzBIcbXv8aWpcr9/EHTZCPLXqmY2x1sE1RbPOsNxDZqvllgM87k
+          gHzCDPd39o2KnrNpS++f2hB7xv8DonnyAqFLsH3os/BbkIIdkRwF2p5I/1az47aheET8m
+          QuZdGYtIzn0OeHfrKmUoF21D6G+zilwo9Gcy1qZQhWzvnIWgswCgzmnImVVT1DaEW97cW
+          lgKmZ4uApQ6/TitoiFb4l3R/6iQqqHA+yLl3LvFkmGbGwt4fB9su0+r5BpASQ8=
