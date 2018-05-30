@@ -187,7 +187,7 @@ class InvalidAssetLocation(BootactionError):
 class BuildDataError(Exception):
     """
     **Message:** *Error saving build data - data_element type <data_element>
-    could not be cast to string.
+    could not be cast to string*.
 
     **Troubleshoot:**
 

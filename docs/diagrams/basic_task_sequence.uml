@@ -1,0 +1,43 @@
+' PlantUML file describing the basic task execution
+' sequence diagram
+@startuml
+actor User
+
+== Task Creation ==
+
+User -> TasksAPI : POST task body
+TasksAPI -> oslo_policy : Enforce RBAC
+oslo_policy -> TasksAPI : Approved
+TasksAPI -> Statemgr : Insert Task as Queued
+Statemgr -> TasksAPI : Result
+TasksAPI -> User : Serialized Task
+
+== Task Execution ==
+
+Orchestrator -> Statemgr : Poll for Queued Tasks
+Statemgr -> Orchestrator : Task ID of Queued Task
+Orchestrator -> Statemgr : Update Task to Running
+Statemgr -> Orchestrator : Result
+Orchestrator -> Orchestrator : Execute task
+Orchestrator -> Ingester : Ingest Site Design
+Ingester -> Statemgr : Resolve Design Reference
+Statemgr -> Ingester : Raw Site Design
+Ingester -> Orchestrator : Parsed Site Design
+Orchestrator -> Orchestrator : Create Subtask
+Orchestrator ->> Driver : Execute Subtask
+par Threaded Task Execution
+    Driver -> Driver : Execute 1 or More Actions
+    Driver -> Statemgr : Update Subtask to Complete
+    Statemgr -> Driver : Result
+    loop Until Subtask Complete or Timeout
+        Orchestrator -> Statemgr : Poll Subtask Status
+        Statemgr -> Orchestrator : Subtask Status
+    end
+end
+Orchestrator -> Statemgr : Update Task to Complete
+
+== Task Query ==
+
+User -> TasksAPI : GET task
+
+@enduml

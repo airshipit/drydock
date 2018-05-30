@@ -34,8 +34,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-    'oslo_config.sphinxconfiggen',
-    'oslo_policy.sphinxpolicygen'
 ]
 
 # oslo_config.sphinxconfiggen options

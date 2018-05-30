@@ -20,6 +20,6 @@ auto-generated from Drydock when this documentation is built, so
 if you are having issues with an option, please compare your version of
 Drydock with the version of this documentation.
 
-The sample policy file can also be viewed in `file form <_static/drydock.policy.yaml.sample>`_.
+The sample policy file can also be viewed in `file form <_static/policy.yaml.sample>`_.
 
-.. literalinclude:: _static/drydock.policy.yaml.sample
+.. literalinclude:: _static/policy.yaml.sample

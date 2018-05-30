@@ -37,7 +37,6 @@ Drydock Configuration Guide
    policy-enforcement
    exceptions/index
 
-
 API Documentation
 -----------------
 .. toctree::
@@ -47,6 +46,13 @@ API Documentation
    task
    bootaction
    validatedesign
+
+Developer Overview
+------------------
+.. toctree::
+  :maxdepth: 1
+
+  development
 
 Client Documentation
 --------------------

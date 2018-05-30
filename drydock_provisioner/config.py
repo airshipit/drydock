@@ -238,7 +238,6 @@ def _import_modules(module_names):
     for module_name in module_names:
         module = importlib.import_module(module_name)
         if hasattr(module, 'list_opts'):
-            print("Pulling options from module %s" % module.__name__)
             imported_modules.append(module)
     return imported_modules
 
