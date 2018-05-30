@@ -102,11 +102,13 @@
     description: |
       Publish documentation on airship-drydock.readthedocs.io
     run: tools/gate/playbooks/doc-publish.yaml
+    secrets:
+      - airship_drydock_readthedocs
     timeout: 300
     nodeset: airship-drydock-single-node
 
 - secret:
-    name: readthedocs
+    name: airship_drydock_readthedocs
     data:
       url: !encrypted/pkcs1-oaep
         - dcOaNb6+3zCSp8rlmaA8U/v8kxzsB9MPqmbfbFSoyCsXOAMvluYSitmF7XpYdZLOXPOvm
