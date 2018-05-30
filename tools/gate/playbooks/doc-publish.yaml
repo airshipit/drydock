@@ -13,7 +13,6 @@
 - hosts: primary
   tasks:
     - name: Publish current merged documents on readthedocs
-      shell: |
-        curl -X POST -d "token={{ airship_drydock_readthedocs.token }}" "{{ airship_drydock_readthedocs.url }}"
+      shell: 'set -x && curl -X POST -d "token={{ airship_drydock_readthedocs.token }}" "{{ airship_drydock_readthedocs.url }}"'
       register: result
-      failed_when: result.failed
+      debug: result.stderr
