@@ -17,4 +17,3 @@
         curl -X POST -d "token={{ readthedocs.token }}" "{{ readthedocs.url }}"
       register: result
       failed_when: result.failed
-      no_log: true
