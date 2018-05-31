@@ -15,4 +15,3 @@
     - name: Publish current merged documents on readthedocs
       shell: 'set -x && curl -X POST -d "token={{ airship_drydock_readthedocs.token }}" "{{ airship_drydock_readthedocs.url }}"'
       register: result
-      debug: result.stderr
