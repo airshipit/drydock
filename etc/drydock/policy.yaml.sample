@@ -38,6 +38,10 @@
 # POST  /api/v1.0/tasks
 #"physical_provisioner:destroy_nodes": "role:admin"
 
+# Read build data for a node
+# GET  /api/v1.0/nodes/{nodename}/builddata
+#"physical_provisioner:read_build_data": "role:admin"
+
 # Read loaded design data
 # GET  /api/v1.0/designs
 # GET  /api/v1.0/designs/{design_id}
@@ -48,11 +52,11 @@
 # POST  /api/v1.0/designs/{design_id}/parts
 #"physical_provisioner:ingest_data": "role:admin"
 
+# et health status
+# GET  /api/v1.0/health/extended
+#"physical_provisioner:health_data": "role:admin"
+
 # Validate site design
 # POST  /api/v1.0/validatedesign
 #"physical_provisioner:validate_site_design": "role:admin"
-
-# Get health status
-# GET /api/v1.0/health/extended
-#"physical_provisioner:health_data": "role:admin"
 

@@ -15,10 +15,10 @@
 BUILD_DIR                  := $(shell mktemp -d)
 DOCKER_REGISTRY            ?= quay.io
 IMAGE_NAME                 ?= drydock
-IMAGE_PREFIX               ?= attcomdev
-IMAGE_TAG                  ?= latest
+IMAGE_PREFIX               ?= airshipit
+IMAGE_TAG                  ?= dev
 HELM                       := $(BUILD_DIR)/helm
-PROXY                      ?= http://one.proxy.att.com:8080
+PROXY                      ?= http://proxy.foo.com:8000
 USE_PROXY                  ?= false
 PUSH_IMAGE                 ?= false
 LABEL                      ?= commit-id
@@ -108,8 +108,20 @@ security: external_dep
 	tox -e bandit
 
 .PHONY: drydock_docs
-drydock_docs: external_dep
+drydock_docs: external_dep render_diagrams genpolicy genconfig
 	tox -e docs
+
+.PHONY: render_diagrams
+render_diagrams:
+	plantuml -v -tpng -o ../source/images docs/diagrams/*.uml
+
+.PHONY: genpolicy
+genpolicy:
+	tox -e genpolicy
+
+.PHONY: genconfig
+genconfig:
+	tox -e genconfig
 
 .PHONY: clean
 clean:

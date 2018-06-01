@@ -1,0 +1,23 @@
+' PlantUML file to generate the architecture component diagram
+@startuml
+
+frame "Drydock" {
+  [Control] ..> [Statemgr]
+  [Orchestrator] ..> [Statemgr]
+  [Orchestrator] ..> [Ingester]
+  [Orchestrator] ..> [Driver]
+}
+
+database "Postgres" {
+  SQL - [drydock_db]
+}
+
+HTTP - [uWSGI]
+[uWSGI] --> [Keystone Middleware]
+[Keystone Middleware] --> WSGI
+WSGI - [Control]
+[Statemgr] --> [SQL]
+[Driver] --> [MAAS]
+
+
+@enduml
