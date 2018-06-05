@@ -204,9 +204,10 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                                  (bus_type, address))
             for logicalname in reversed(nodes[0].text.split("/")):
                 self.logger.debug(
-                    "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, "
-                    "to logicalname = %s" % (alias_name, bus_type, address,
-                                             logicalname))
+                    "Logicalname build dict: node_name = %s, alias_name = %s, "
+                    "bus_type = %s, address = %s, to logicalname = %s" % (
+                        self.get_name(), alias_name, bus_type, address,
+                        logicalname))
                 return logicalname
         self.logger.debug(
             "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found"
@@ -232,12 +233,18 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
         if xml_data:
             xml_root = fromstring(xml_data)
-            for hardware_profile in site_design.hardware_profiles:
+            try:
+                hardware_profile = site_design.get_hardware_profile(self.hardware_profile)
                 for device in hardware_profile.devices:
                     logicalname = self._apply_logicalname(
                         xml_root, device.alias, device.bus_type,
                         device.address)
                     logicalnames[device.alias] = logicalname
+            except errors.DesignError:
+                self.logger.exception("Failed to load hardware profile while "
+                                      "resolving logical names for node %s",
+                                      self.get_name())
+                raise
         else:
             self.logger.info("No Build Data found for node_name %s" %
                              (self.get_name()))

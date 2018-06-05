@@ -419,6 +419,47 @@ data:
       size: '2M'
       count: 530000
 ---
+schema: 'drydock/HardwareProfile/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  # NOTE(mark-burnett): This duplicate is used as a test to ensure we do not
+  # include erroneous hardware profiles for nodes when computing logical device
+  # names.
+  name: HPGen9v3-duplicate
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  vendor: HP
+  generation: '8'
+  hw_version: '3'
+  bios_version: '2.2.3'
+  boot_mode: bios
+  bootstrap_protocol: pxe
+  pxe_interface: 0
+  device_aliases:
+    prim_nic01:
+      address: '0000:00:04.0'
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    prim_nic02:
+      address: '0000:00:03.0'
+      dev_type: '82540EM Gigabit Ethernet Controller'
+      bus_type: 'pci'
+    primary_boot:
+      address: '2:0.0.0'
+      dev_type: 'VBOX HARDDISK'
+      bus_type: 'scsi'
+  cpu_sets:
+    sriov: '2,4'
+  hugepages:
+    sriov:
+      size: '1G'
+      count: 300
+    dpdk:
+      size: '2M'
+      count: 530000
+---
 schema: 'drydock/BootAction/v1'
 metadata:
   schema: 'metadata/Document/v1'
