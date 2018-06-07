@@ -63,8 +63,8 @@ class TestClass(object):
 
         assert len(node_list) == 1
 
-    def test_no_baremetal_nodes(self, input_files, setup, deckhand_orchestrator,
-                                deckhand_ingester):
+    def test_no_baremetal_nodes(self, input_files, setup,
+                                deckhand_orchestrator, deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite_no_nodes.yaml")
 
         design_state = DrydockState()
@@ -73,6 +73,7 @@ class TestClass(object):
         design_status, design_data = deckhand_ingester.ingest_data(
             design_state=design_state, design_ref=design_ref)
 
-        node_list = deckhand_orchestrator.process_node_filter(None, design_data)
+        node_list = deckhand_orchestrator.process_node_filter(
+            None, design_data)
 
         assert node_list == []

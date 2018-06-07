@@ -86,9 +86,8 @@ class PyghmiDriver(oob_driver.OobDriver):
         if task.action not in self.supported_actions:
             self.logger.error("Driver %s doesn't support task action %s" %
                               (self.driver_desc, task.action))
-            raise errors.DriverError(
-                "Driver %s doesn't support task action %s" % (self.driver_desc,
-                                                              task.action))
+            raise errors.DriverError("Driver %s doesn't support task action %s"
+                                     % (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()

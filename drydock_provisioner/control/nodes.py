@@ -104,7 +104,8 @@ class NodeFilterResource(StatefulResource):
             node_filter = json_data.get('node_filter', None)
             design_ref = json_data.get('design_ref', None)
             if design_ref is None:
-                self.info(req.context, 'Missing required input value: design_ref')
+                self.info(req.context,
+                          'Missing required input value: design_ref')
                 self.return_error(
                     resp,
                     falcon.HTTP_400,
@@ -112,8 +113,8 @@ class NodeFilterResource(StatefulResource):
                     retry=False)
                 return
             _, site_design = self.orchestrator.get_effective_site(design_ref)
-            nodes = self.orchestrator.process_node_filter(node_filter=node_filter,
-                                                          site_design=site_design)
+            nodes = self.orchestrator.process_node_filter(
+                node_filter=node_filter, site_design=site_design)
             resp_list = [n.name for n in nodes if nodes]
 
             resp.body = json.dumps(resp_list)

@@ -44,8 +44,8 @@ class LibvirtValidity(Validators):
                             "Only scheme 'qemu+ssh' is supported.")
                 if not baremetal_node.boot_mac:
                     msg = 'libvirt-based node requries defined boot MAC address.'
-                    self.report_error(msg, [
-                        baremetal_node.doc_ref
-                    ], "Specify the node's PXE MAC address in metadata.boot_mac"
-                                      )
+                    self.report_error(
+                        msg, [baremetal_node.doc_ref],
+                        "Specify the node's PXE MAC address in metadata.boot_mac"
+                    )
         return

@@ -50,10 +50,10 @@ class StorageSizing(Validators):
                         msg = (
                             'Cumulative partition sizes on device %s is greater than 99%%.'
                             % (storage_device.name))
-                        self.report_error(msg, [
-                            baremetal_node.doc_ref
-                        ], "Percentage-based sizes must sum to less than 100%."
-                                          )
+                        self.report_error(
+                            msg, [baremetal_node.doc_ref],
+                            "Percentage-based sizes must sum to less than 100%."
+                        )
 
                 volume_groups = baremetal_node.volume_groups or []
                 volume_sum = 0
@@ -74,9 +74,9 @@ class StorageSizing(Validators):
                         msg = ('Cumulative logical volume size is greater '
                                'than 99% in volume group %s' %
                                (volume_group.name))
-                        self.report_error(msg, [
-                            baremetal_node.doc_ref
-                        ], "Percentage-based sizes must sum to less than 100%."
-                                          )
+                        self.report_error(
+                            msg, [baremetal_node.doc_ref],
+                            "Percentage-based sizes must sum to less than 100%."
+                        )
 
         return

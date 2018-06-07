@@ -34,10 +34,10 @@ class NetworkTrunkingRational(Validators):
                     hd_fields.NetworkLinkTrunkingMode.Disabled):
                 msg = ('If there is more than 1 allowed network,'
                        'trunking mode must be enabled')
-                self.report_error(msg, [
-                    network_link.doc_ref
-                ], "Reduce the allowed network list to 1 or enable trunking on the link."
-                                  )
+                self.report_error(
+                    msg, [network_link.doc_ref],
+                    "Reduce the allowed network list to 1 or enable trunking on the link."
+                )
 
             # trunking mode is disabled, default_network must be defined
             if (network_link.trunk_mode ==
@@ -54,9 +54,9 @@ class NetworkTrunkingRational(Validators):
                 network = site_design.get_network(network_link.native_network)
                 if network and network.vlan_id:
                     msg = "Network link native network has a defined VLAN tag."
-                    self.report_error(msg, [
-                        network.doc_ref, network_link.doc_ref
-                    ], "Tagged network not allowed on non-trunked network links."
-                                      )
+                    self.report_error(
+                        msg, [network.doc_ref, network_link.doc_ref],
+                        "Tagged network not allowed on non-trunked network links."
+                    )
 
         return

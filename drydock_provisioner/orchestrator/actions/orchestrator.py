@@ -357,8 +357,8 @@ class PrepareSite(BaseAction):
             error=False,
             ctx=str(site_network_task.get_id()),
             ctx_type='task')
-        self.logger.info("Node driver task %s complete" %
-                         (site_network_task.get_id()))
+        self.logger.info(
+            "Node driver task %s complete" % (site_network_task.get_id()))
 
     def step_usercredentials(self, driver):
         """Run the ConfigureUserCredentials step of this action.
@@ -381,8 +381,8 @@ class PrepareSite(BaseAction):
             error=False,
             ctx=str(user_creds_task.get_id()),
             ctx_type='task')
-        self.logger.info("Node driver task %s complete" %
-                         (user_creds_task.get_id()))
+        self.logger.info(
+            "Node driver task %s complete" % (user_creds_task.get_id()))
 
 
 class VerifyNodes(BaseAction):
@@ -640,9 +640,8 @@ class PrepareNodes(BaseAction):
                     create_nodefilter_from_nodelist(node_list))
                 self.task.register_subtask(node_identify_task)
 
-            self.logger.info(
-                "Starting node driver task %s to identify nodes." %
-                (node_identify_task.get_id()))
+            self.logger.info("Starting node driver task %s to identify nodes."
+                             % (node_identify_task.get_id()))
 
             node_driver.execute_task(node_identify_task.get_id())
 
@@ -892,8 +891,8 @@ class DeployNodes(BaseAction):
         if (node_storage_task is not None
                 and len(node_storage_task.result.successes) > 0):
             self.logger.info(
-                "Configured storage on %s nodes, configuring platform." %
-                (len(node_storage_task.result.successes)))
+                "Configured storage on %s nodes, configuring platform." % (len(
+                    node_storage_task.result.successes)))
 
             node_platform_task = self.orchestrator.create_task(
                 design_ref=self.task.design_ref,
@@ -919,8 +918,8 @@ class DeployNodes(BaseAction):
         if node_platform_task is not None and len(
                 node_platform_task.result.successes) > 0:
             self.logger.info(
-                "Configured platform on %s nodes, starting deployment." %
-                (len(node_platform_task.result.successes)))
+                "Configured platform on %s nodes, starting deployment." % (len(
+                    node_platform_task.result.successes)))
 
             while True:
                 if node_deploy_task is None:

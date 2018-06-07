@@ -55,10 +55,10 @@ class BootStorageRational(Validators):
                             msg = (
                                 'Root volume has an invalid size format on BaremetalNode'
                                 '%s.' % baremetal_node.name)
-                            self.report_error(msg, [
-                                baremetal_node.doc_ref
-                            ], "Use a valid root volume storage specification."
-                                              )
+                            self.report_error(
+                                msg, [baremetal_node.doc_ref],
+                                "Use a valid root volume storage specification."
+                            )
 
                     # check make sure root has been defined and boot volume > 1GB
                     if root_set and host_partition.name == 'boot':
@@ -78,18 +78,18 @@ class BootStorageRational(Validators):
                             msg = (
                                 'Boot volume has an invalid size format on BaremetalNode '
                                 '%s.' % baremetal_node.name)
-                            self.report_error(msg, [
-                                baremetal_node.doc_ref
-                            ], "Use a valid boot volume storage specification."
-                                              )
+                            self.report_error(
+                                msg, [baremetal_node.doc_ref],
+                                "Use a valid boot volume storage specification."
+                            )
             # This must be set
             if not root_set:
                 msg = (
                     'Root volume has to be set and must be > 20GB on BaremetalNode '
                     '%s' % baremetal_node.name)
-                self.report_error(msg, [
-                    baremetal_node.doc_ref
-                ], "All nodes require a defined root volume at least 20GB in size."
-                                  )
+                self.report_error(
+                    msg, [baremetal_node.doc_ref],
+                    "All nodes require a defined root volume at least 20GB in size."
+                )
 
         return

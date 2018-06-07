@@ -391,8 +391,7 @@ class Orchestrator(object):
                 raise AttributeError()
         except AttributeError:
             self.logger.debug(
-                "Invalid site design, no baremetal nodes in site_design."
-            )
+                "Invalid site design, no baremetal nodes in site_design.")
             return []
 
         if node_filter is None:

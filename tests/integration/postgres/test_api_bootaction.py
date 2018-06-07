@@ -26,8 +26,7 @@ from drydock_provisioner.control.api import start_api
 class TestClass(object):
     def test_bootaction_context(self, falcontest, seed_bootaction):
         """Test that the API will return a boot action context"""
-        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction[
-            'nodename']
+        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction['nodename']
         auth_hdr = {'X-Bootaction-Key': "%s" % seed_bootaction['identity_key']}
 
         result = falcontest.simulate_get(url, headers=auth_hdr)
@@ -48,8 +47,7 @@ class TestClass(object):
 
     def test_bootaction_context_noauth(self, falcontest, seed_bootaction):
         """Test that the API will return a boot action context"""
-        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction[
-            'nodename']
+        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction['nodename']
 
         result = falcontest.simulate_get(url)
 
@@ -57,8 +55,7 @@ class TestClass(object):
 
     def test_bootaction_context_badauth(self, falcontest, seed_bootaction):
         """Test that the API will return a boot action context"""
-        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction[
-            'nodename']
+        url = "/api/v1.0/bootactions/nodes/%s/units" % seed_bootaction['nodename']
         auth_hdr = {'X-Bootaction-Key': 'deadbeef'}
 
         result = falcontest.simulate_get(url, headers=auth_hdr)

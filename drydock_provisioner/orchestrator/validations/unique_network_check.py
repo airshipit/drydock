@@ -72,16 +72,16 @@ class UniqueNetworkCheck(Validators):
                             msg = (
                                 "Interface %s attached to network %s not allowed on interface link"
                                 % (i.get_name(), nw))
-                            self.report_error(msg, [
-                                n.doc_ref
-                            ], "Interfaces can only be attached to networks allowed on the network link "
-                                              "connected to the interface.")
+                            self.report_error(
+                                msg, [n.doc_ref],
+                                "Interfaces can only be attached to networks allowed on the network link "
+                                "connected to the interface.")
                     except KeyError:
                         msg = (
                             "Interface %s connected to undefined network link %s."
                             % (i.get_name(), nic_link))
-                        self.report_error(msg, [
-                            n.doc_ref
-                        ], "Define the network link attached to this interface."
-                                          )
+                        self.report_error(
+                            msg, [n.doc_ref],
+                            "Define the network link attached to this interface."
+                        )
         return

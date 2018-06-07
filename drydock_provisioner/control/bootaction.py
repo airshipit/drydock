@@ -186,9 +186,9 @@ class BootactionAssetsResource(StatefulResource):
 
             tarball = BootactionUtils.tarbuilder(asset_list=assets)
             resp.set_header('Content-Type', 'application/gzip')
-            resp.set_header('Content-Disposition',
-                            "attachment; filename=\"%s-%s.tar.gz\"" %
-                            (hostname, asset_type))
+            resp.set_header(
+                'Content-Disposition', "attachment; filename=\"%s-%s.tar.gz\""
+                % (hostname, asset_type))
             resp.data = tarball
             resp.status = falcon.HTTP_200
             return

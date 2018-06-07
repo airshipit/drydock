@@ -52,18 +52,18 @@ class RationalNetworkBond(Validators):
                 if network_link.bonding_up_delay < mon_rate:
                     msg = ('Up delay %d is less than mon rate %d' %
                            (network_link.bonding_up_delay, mon_rate))
-                    self.report_error(msg, [
-                        network_link.doc_ref
-                    ], "Link up delay must be equal or greater than the mon_rate"
-                                      )
+                    self.report_error(
+                        msg, [network_link.doc_ref],
+                        "Link up delay must be equal or greater than the mon_rate"
+                    )
 
                 if network_link.bonding_down_delay < mon_rate:
                     msg = ('Down delay %d is less than mon rate %d' %
                            (network_link.bonding_down_delay, mon_rate))
-                    self.report_error(msg, [
-                        network_link.doc_ref
-                    ], "Link down delay must be equal or greater than the mon_rate"
-                                      )
+                    self.report_error(
+                        msg, [network_link.doc_ref],
+                        "Link down delay must be equal or greater than the mon_rate"
+                    )
 
             elif bonding_mode in ['active-backup', 'balanced-rr']:
                 # make sure hash and peer_rate are NOT defined

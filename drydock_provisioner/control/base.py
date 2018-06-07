@@ -57,8 +57,8 @@ class BaseResource(object):
                 self.error(
                     req.context,
                     "Invalid JSON in request: \n%s" % raw_body.decode('utf-8'))
-                raise errors.InvalidFormat("%s: Invalid JSON in body: %s" %
-                                           (req.path, jex))
+                raise errors.InvalidFormat(
+                    "%s: Invalid JSON in body: %s" % (req.path, jex))
         else:
             raise errors.InvalidFormat("Requires application/json payload")
 

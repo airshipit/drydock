@@ -59,11 +59,10 @@ def design_show(ctx, design_id):
 
     click.echo(json.dumps(DesignShow(ctx.obj['CLIENT'], design_id).invoke()))
 
+
 @design.command(name='validate')
 @click.option(
-    '--design-href',
-    '-h',
-    help='The design href key to the design ref')
+    '--design-href', '-h', help='The design href key to the design ref')
 @click.pass_context
 def design_validate(ctx, design_href=None):
     """Validate a design."""

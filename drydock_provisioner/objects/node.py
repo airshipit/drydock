@@ -196,8 +196,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         :param address: String value that is used to find the logicalname.
         :return: String value of the logicalname or the alias_name if logicalname is not found.
         """
-        nodes = xml_root.findall(
-            ".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
+        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" +
+                                 address + "'].logicalname")
         if len(nodes) >= 1 and nodes[0].text:
             if (len(nodes) > 1):
                 self.logger.info("Multiple nodes found for businfo=%s@%s" %
@@ -205,9 +205,9 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             for logicalname in reversed(nodes[0].text.split("/")):
                 self.logger.debug(
                     "Logicalname build dict: node_name = %s, alias_name = %s, "
-                    "bus_type = %s, address = %s, to logicalname = %s" % (
-                        self.get_name(), alias_name, bus_type, address,
-                        logicalname))
+                    "bus_type = %s, address = %s, to logicalname = %s" %
+                    (self.get_name(), alias_name, bus_type, address,
+                     logicalname))
                 return logicalname
         self.logger.debug(
             "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found"
@@ -234,20 +234,21 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         if xml_data:
             xml_root = fromstring(xml_data)
             try:
-                hardware_profile = site_design.get_hardware_profile(self.hardware_profile)
+                hardware_profile = site_design.get_hardware_profile(
+                    self.hardware_profile)
                 for device in hardware_profile.devices:
                     logicalname = self._apply_logicalname(
                         xml_root, device.alias, device.bus_type,
                         device.address)
                     logicalnames[device.alias] = logicalname
             except errors.DesignError:
-                self.logger.exception("Failed to load hardware profile while "
-                                      "resolving logical names for node %s",
-                                      self.get_name())
+                self.logger.exception(
+                    "Failed to load hardware profile while "
+                    "resolving logical names for node %s", self.get_name())
                 raise
         else:
-            self.logger.info("No Build Data found for node_name %s" %
-                             (self.get_name()))
+            self.logger.info(
+                "No Build Data found for node_name %s" % (self.get_name()))
 
         self.logicalnames = logicalnames
 

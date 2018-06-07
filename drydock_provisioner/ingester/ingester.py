@@ -50,8 +50,8 @@ class Ingester(object):
             klass = getattr(mod, classname)
             self.registered_plugin = klass()
         except Exception as ex:
-            self.logger.error("Could not enable plugin %s - %s" % (plugin,
-                                                                   str(ex)))
+            self.logger.error(
+                "Could not enable plugin %s - %s" % (plugin, str(ex)))
 
         if self.registered_plugin is None:
             self.logger.error("Could not enable at least one plugin")

@@ -114,9 +114,10 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         # applied values
 
         for f in inheritable_field_list:
-            setattr(self, f,
-                    objects.Utils.apply_field_inheritance(
-                        getattr(self, f, None), getattr(parent, f, None)))
+            setattr(
+                self, f,
+                objects.Utils.apply_field_inheritance(
+                    getattr(self, f, None), getattr(parent, f, None)))
 
         # Now compute inheritance for complex types
         self.oob_parameters = objects.Utils.merge_dicts(
@@ -373,10 +374,10 @@ class HostVolumeGroup(base.DrydockObject):
                         inheritable_field_list = ['vg_uuid']
 
                         for f in inheritable_field_list:
-                            setattr(p, f,
-                                    objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None), getattr(
-                                            i, f, None)))
+                            setattr(
+                                p, f,
+                                objects.Utils.apply_field_inheritance(
+                                    getattr(j, f, None), getattr(i, f, None)))
 
                         p.partitions = HostPartitionList.from_basic_list(
                             HostPartition.merge_lists(
@@ -487,10 +488,10 @@ class HostStorageDevice(base.DrydockObject):
                         inherit_field_list = ['volume_group']
 
                         for f in inherit_field_list:
-                            setattr(p, f,
-                                    objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None), getattr(
-                                            i, f, None)))
+                            setattr(
+                                p, f,
+                                objects.Utils.apply_field_inheritance(
+                                    getattr(j, f, None), getattr(i, f, None)))
 
                         p.labels = objects.Utils.merge_dicts(
                             getattr(j, 'labels', None),
@@ -634,10 +635,10 @@ class HostPartition(base.DrydockObject):
                         p.name = j.get_name()
 
                         for f in inherit_field_list:
-                            setattr(p, f,
-                                    objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None), getattr(
-                                            i, f, None)))
+                            setattr(
+                                p, f,
+                                objects.Utils.apply_field_inheritance(
+                                    getattr(j, f, None), getattr(i, f, None)))
                         add = False
                         p.source = hd_fields.ModelSource.Compiled
                         effective_list.append(p)
@@ -761,10 +762,10 @@ class HostVolume(base.DrydockObject):
                         p.name = j.get_name()
 
                         for f in inherit_field_list:
-                            setattr(p, f,
-                                    objects.Utils.apply_field_inheritance(
-                                        getattr(j, f, None), getattr(
-                                            i, f, None)))
+                            setattr(
+                                p, f,
+                                objects.Utils.apply_field_inheritance(
+                                    getattr(j, f, None), getattr(i, f, None)))
                         add = False
                         p.source = hd_fields.ModelSource.Compiled
                         effective_list.append(p)

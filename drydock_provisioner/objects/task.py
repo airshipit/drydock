@@ -184,8 +184,8 @@ class Task(object):
                                            " marked for termination")
         if self.statemgr.add_subtask(self.task_id, subtask.task_id):
             self.add_status_msg(
-                msg="Started subtask %s for action %s" %
-                (str(subtask.get_id()), subtask.action),
+                msg="Started subtask %s for action %s" % (str(
+                    subtask.get_id()), subtask.action),
                 error=False,
                 ctx=str(self.get_id()),
                 ctx_type='task')

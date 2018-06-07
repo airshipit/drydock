@@ -68,8 +68,8 @@ class Machine(model_base.ResourceBase):
                     api_client, system_id=self.resource_id)
                 self.volume_groups.refresh()
             except Exception:
-                self.logger.warning("Failed load node %s volume groups." %
-                                    (self.resource_id))
+                self.logger.warning(
+                    "Failed load node %s volume groups." % (self.resource_id))
         else:
             self.interfaces = None
             self.block_devices = None
@@ -117,15 +117,15 @@ class Machine(model_base.ResourceBase):
         Removes all the volume groups/logical volumes and all the physical
         device partitions on this machine.
         """
-        self.logger.info("Resetting storage configuration on node %s" %
-                         (self.resource_id))
+        self.logger.info(
+            "Resetting storage configuration on node %s" % (self.resource_id))
         if self.volume_groups is not None and self.volume_groups.len() > 0:
             for vg in self.volume_groups:
                 self.logger.debug("Removing VG %s" % vg.name)
                 vg.delete()
         else:
-            self.logger.debug("No VGs configured on node %s" %
-                              (self.resource_id))
+            self.logger.debug(
+                "No VGs configured on node %s" % (self.resource_id))
 
         if self.block_devices is not None:
             for d in self.block_devices:
@@ -137,8 +137,8 @@ class Machine(model_base.ResourceBase):
                     self.logger.debug(
                         "No partitions found on device %s" % d.name)
         else:
-            self.logger.debug("No block devices found on node %s" %
-                              (self.resource_id))
+            self.logger.debug(
+                "No block devices found on node %s" % (self.resource_id))
 
     def set_storage_layout(self,
                            layout_type='flat',
@@ -197,8 +197,8 @@ class Machine(model_base.ResourceBase):
                 url, op='set_storage_layout', files=data)
 
             if not resp.ok:
-                raise Exception("MAAS Error: %s - %s" % (resp.status_code,
-                                                         resp.text))
+                raise Exception(
+                    "MAAS Error: %s - %s" % (resp.status_code, resp.text))
         except Exception as ex:
             msg = "Error: failed configuring node %s storage layout: %s" % (
                 self.resource_id, str(ex))
@@ -550,6 +550,5 @@ class Machines(model_base.ResourceCollectionBase):
             res.set_resource_id(resp_json.get('system_id'))
             return res
 
-        raise errors.DriverError(
-            "Failed updating MAAS url %s - return code %s" %
-            (url, resp.status_code))
+        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
+                                 % (url, resp.status_code))

@@ -41,8 +41,8 @@ class LibvirtBaseAction(BaseAction):
         virsh_url = node.oob_parameters.get('libvirt_uri', None)
 
         if not virsh_url:
-            raise errors.DriverError("Node %s has no 'libvirt_url' defined" %
-                                     (node.name))
+            raise errors.DriverError(
+                "Node %s has no 'libvirt_url' defined" % (node.name))
 
         url_parts = urlparse(virsh_url)
 
@@ -51,8 +51,8 @@ class LibvirtBaseAction(BaseAction):
                 "Node %s has invalid libvirt URL scheme %s. "
                 "Only 'qemu+ssh' supported." % (node.name, url_parts.scheme))
 
-        self.logger.debug("Starting libvirt session to hypervisor %s " %
-                          (virsh_url))
+        self.logger.debug(
+            "Starting libvirt session to hypervisor %s " % (virsh_url))
         virsh_ses = libvirt.open(virsh_url)
 
         if not virsh_ses:
@@ -213,8 +213,8 @@ class SetNodeBoot(LibvirtBaseAction):
                     ctx=n.name,
                     ctx_type='node')
                 self.task.failure(focus=n.name)
-                self.logger.warning("Unable to set node %s to PXE boot." %
-                                    (n.name))
+                self.logger.warning(
+                    "Unable to set node %s to PXE boot." % (n.name))
             else:
                 self.task.add_status_msg(
                     msg="Set bootdev to PXE.",

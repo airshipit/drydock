@@ -916,8 +916,8 @@ class ConfigureHardware(BaseMaasAction):
         # TODO(sh8121att): Better way of representing the node statuses than static strings
         for n in nodes:
             try:
-                self.logger.debug("Locating node %s for commissioning" %
-                                  (n.name))
+                self.logger.debug(
+                    "Locating node %s for commissioning" % (n.name))
                 machine = machine_list.identify_baremetal_node(
                     n, update_name=False)
                 if machine is not None:
@@ -932,8 +932,8 @@ class ConfigureHardware(BaseMaasAction):
                         # Poll machine status
                         attempts = 0
                         max_attempts = config.config_mgr.conf.timeouts.configure_hardware * (
-                            60 // config.config_mgr.conf.maasdriver.
-                            poll_interval)
+                            60 //
+                            config.config_mgr.conf.maasdriver.poll_interval)
 
                         while (attempts < max_attempts and
                                (machine.status_name != 'Ready' and
@@ -1349,10 +1349,9 @@ class ApplyNodeNetworking(BaseMaasAction):
                                         ctx=n.name,
                                         ctx_type='node')
                     elif machine.status_name == 'Broken':
-                        msg = (
-                            "Located node %s in MaaS, status broken. Run "
-                            "ConfigureHardware before configurating network" %
-                            (n.name))
+                        msg = ("Located node %s in MaaS, status broken. Run "
+                               "ConfigureHardware before configurating network"
+                               % (n.name))
                         self.logger.info(msg)
                         self.task.add_status_msg(
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
@@ -1520,8 +1519,8 @@ class ApplyNodePlatform(BaseMaasAction):
 
             try:
                 if n.tags is not None and len(n.tags) > 0:
-                    self.logger.info("Configuring static tags for node %s" %
-                                     (n.name))
+                    self.logger.info(
+                        "Configuring static tags for node %s" % (n.name))
 
                     for t in n.tags:
                         tag_list.refresh()
@@ -1549,8 +1548,8 @@ class ApplyNodePlatform(BaseMaasAction):
                         self.task.add_status_msg(
                             msg=msg, error=False, ctx=n.name, ctx_type='node')
                         tag.apply_to_node(machine.resource_id)
-                    self.logger.info("Applied static tags to node %s" %
-                                     (n.name))
+                    self.logger.info(
+                        "Applied static tags to node %s" % (n.name))
                     self.task.success(focus=n.get_id())
                 else:
                     msg = "No node tags to apply for %s." % n.name
@@ -1728,9 +1727,9 @@ class ApplyNodeStorage(BaseMaasAction):
                             maas_dev.resource_id)
                         continue
 
-                    self.logger.debug("Partitioning dev %s (%s) on node %s" %
-                                      (d.name, n.get_logicalname(d.name),
-                                       n.name))
+                    self.logger.debug(
+                        "Partitioning dev %s (%s) on node %s" %
+                        (d.name, n.get_logicalname(d.name), n.name))
                     for p in d.partitions:
                         if p.is_sys():
                             self.logger.debug(
@@ -2022,8 +2021,8 @@ class DeployNode(BaseMaasAction):
                 continue
 
             # Saving boot action context for a node
-            self.logger.info("Saving Boot Action context for node %s." %
-                             (n.name))
+            self.logger.info(
+                "Saving Boot Action context for node %s." % (n.name))
             try:
                 ba_key = self.orchestrator.create_bootaction_context(
                     n.name, self.task)

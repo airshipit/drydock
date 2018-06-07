@@ -88,8 +88,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
          NodeBuildDataResource(state_manager=state_manager)),
         # API to list current node names based
         ('/nodefilter',
-         NodeFilterResource(state_manager=state_manager,
-                            orchestrator=orchestrator)),
+         NodeFilterResource(
+             state_manager=state_manager, orchestrator=orchestrator)),
         # API for nodes to discover their boot actions during curtin install
         ('/bootactions/nodes/{hostname}/units',
          BootactionUnitsResource(

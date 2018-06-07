@@ -29,7 +29,8 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNodesApiUnit(object):
-    def test_post_nodes_resp(self, input_files, falcontest, mock_process_node_filter):
+    def test_post_nodes_resp(self, input_files, falcontest,
+                             mock_process_node_filter):
 
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -82,6 +83,7 @@ class TestNodesApiUnit(object):
         }
         return hdr
 
+
 @pytest.fixture()
 def mock_process_node_filter(deckhand_orchestrator):
     def side_effect(**kwargs):
@@ -97,5 +99,6 @@ def mock_process_node_filter(deckhand_orchestrator):
     deckhand_orchestrator.process_node_filter = Mock(side_effect=side_effect)
 
     yield
-    deckhand_orchestrator.process_node_filter = Mock(wraps=None, side_effect=None)
+    deckhand_orchestrator.process_node_filter = Mock(
+        wraps=None, side_effect=None)
     deckhand_orchestrator.process_node_filter = deckhand_orchestrator.real_process_node_filter

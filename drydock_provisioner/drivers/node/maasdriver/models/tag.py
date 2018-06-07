@@ -64,8 +64,8 @@ class Tag(model_base.ResourceBase):
         """
 
         if system_id in self.get_applied_nodes():
-            self.logger.debug("Tag %s already applied to node %s" %
-                              (self.name, system_id))
+            self.logger.debug(
+                "Tag %s already applied to node %s" % (self.name, system_id))
         else:
             url = self.interpolate_url()
 

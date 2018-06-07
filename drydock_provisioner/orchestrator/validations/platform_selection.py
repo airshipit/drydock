@@ -50,9 +50,9 @@ class PlatformSelection(Validators):
                 if n.kernel in valid_kernels[n.image]:
                     continue
                 msg = "Platform Validation: invalid kernel %s" % (n.kernel)
-                self.report_error(msg, [n.doc_ref],
-                                  "Select a valid kernel from: %s" % ",".join(
-                                      valid_kernels[n.image]))
+                self.report_error(
+                    msg, [n.doc_ref], "Select a valid kernel from: %s" %
+                    ",".join(valid_kernels[n.image]))
                 continue
             msg = "Platform Validation: invalid image %s" % (n.image)
             self.report_error(

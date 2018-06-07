@@ -125,6 +125,7 @@ def test_client_task_get():
 
     assert task_resp['status'] == task['status']
 
+
 @responses.activate
 def test_client_get_nodes_for_filter_post():
     node_list = ['node1', 'node2']
@@ -133,34 +134,29 @@ def test_client_get_nodes_for_filter_post():
 
     responses.add(
         responses.POST,
-        "http://%s/api/v1.0/nodefilter" %
-        (host),
+        "http://%s/api/v1.0/nodefilter" % (host),
         json=node_list,
         status=200)
 
     dd_ses = dc_session.DrydockSession(host)
     dd_client = dc_client.DrydockClient(dd_ses)
 
-    design_ref = {
-        'ref': 'hello'
-    }
+    design_ref = {'ref': 'hello'}
     validation_resp = dd_client.get_nodes_for_filter(design_ref)
 
     assert 'node1' in validation_resp
     assert 'node2' in validation_resp
 
+
 @responses.activate
 def test_client_validate_design_post():
-    validation = {
-        'status': 'success'
-    }
+    validation = {'status': 'success'}
 
     host = 'foo.bar.baz'
 
     responses.add(
         responses.POST,
-        "http://%s/api/v1.0/validatedesign" %
-        (host),
+        "http://%s/api/v1.0/validatedesign" % (host),
         json=validation,
         status=200)
 

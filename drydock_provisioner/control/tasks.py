@@ -45,9 +45,9 @@ class TasksResource(StatefulResource):
             resp.body = json.dumps(task_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:
-            self.error(req.context,
-                       "Unknown error: %s\n%s" % (str(ex),
-                                                  traceback.format_exc()))
+            self.error(
+                req.context,
+                "Unknown error: %s\n%s" % (str(ex), traceback.format_exc()))
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
@@ -79,9 +79,9 @@ class TasksResource(StatefulResource):
             else:
                 supported_actions.get(action)(self, req, resp, json_data)
         except Exception as ex:
-            self.error(req.context,
-                       "Unknown error: %s\n%s" % (str(ex),
-                                                  traceback.format_exc()))
+            self.error(
+                req.context,
+                "Unknown error: %s\n%s" % (str(ex), traceback.format_exc()))
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
@@ -318,8 +318,9 @@ class TaskResource(StatefulResource):
             else:
                 # If layers is passed in then it returns a dict of tasks instead of the task dict.
                 if layers:
-                    resp_data, errors = self.handle_layers(req, resp, task_id, builddata, subtask_errors, layers,
-                                                           first_task)
+                    resp_data, errors = self.handle_layers(
+                        req, resp, task_id, builddata, subtask_errors, layers,
+                        first_task)
                     # Includes subtask_errors if the query param 'subtaskerrors' is passed in as true.
                     if (subtask_errors):
                         resp_data['subtask_errors'] = errors
@@ -327,8 +328,9 @@ class TaskResource(StatefulResource):
                     resp_data = first_task
                     # Includes subtask_errors if the query param 'subtaskerrors' is passed in as true.
                     if (subtask_errors):
-                        _, errors = self.handle_layers(req, resp, task_id, False, subtask_errors, 1,
-                                                       first_task)
+                        _, errors = self.handle_layers(req, resp, task_id,
+                                                       False, subtask_errors,
+                                                       1, first_task)
                         resp_data['subtask_errors'] = errors
 
                 resp.body = json.dumps(resp_data)
@@ -357,7 +359,8 @@ class TaskResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
-    def handle_layers(self, req, resp, task_id, builddata, subtask_errors, layers, first_task):
+    def handle_layers(self, req, resp, task_id, builddata, subtask_errors,
+                      layers, first_task):
         resp_data = {}
         errors = {}
         resp_data['init_task_id'] = task_id
@@ -366,7 +369,8 @@ class TaskResource(StatefulResource):
         # first_task is layer 1
         current_layer = 1
         # The while loop handles each layer.
-        while queued_ids and (current_layer < layers or layers == -1 or subtask_errors):
+        while queued_ids and (current_layer < layers or layers == -1
+                              or subtask_errors):
             # Copies the current list (a layer) then clears the queue for the next layer.
             processing_ids = list(queued_ids)
             queued_ids = []
@@ -378,7 +382,8 @@ class TaskResource(StatefulResource):
                     resp_data[id] = task
                 if task:
                     queued_ids.extend(task.get('subtask_id_list', []))
-                    if task.get('result', {}).get('details', {}).get('errorCount', 0) > 0 and subtask_errors:
+                    if task.get('result', {}).get('details', {}).get(
+                            'errorCount', 0) > 0 and subtask_errors:
                         result = task.get('result', {})
                         result['task_id'] = id
                         errors[id] = task.get('result', {})

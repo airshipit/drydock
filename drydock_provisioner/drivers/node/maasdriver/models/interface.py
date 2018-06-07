@@ -85,8 +85,8 @@ class Interface(model_base.ResourceBase):
         fabric_vlan = fabric.vlans.singleton({'vid': 0})
 
         if fabric_vlan is None:
-            self.logger.warning("Cannot locate untagged VLAN on fabric %s" %
-                                (fabric_id))
+            self.logger.warning(
+                "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
             raise errors.DriverError(
                 "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
 
@@ -112,8 +112,8 @@ class Interface(model_base.ResourceBase):
         """Disconnect this interface from subnets and VLANs."""
         url = self.interpolate_url()
 
-        self.logger.debug("Disconnecting interface %s from networks." %
-                          (self.name))
+        self.logger.debug(
+            "Disconnecting interface %s from networks." % (self.name))
         resp = self.api_client.post(url, op='disconnect')
 
         if not resp.ok:
@@ -299,10 +299,10 @@ class Interfaces(model_base.ResourceCollectionBase):
         parent_iface = self.singleton({'name': parent_name})
 
         if parent_iface is None:
-            self.logger.error("Cannot locate parent interface %s" %
-                              (parent_name))
-            raise errors.DriverError("Cannot locate parent interface %s" %
-                                     (parent_name))
+            self.logger.error(
+                "Cannot locate parent interface %s" % (parent_name))
+            raise errors.DriverError(
+                "Cannot locate parent interface %s" % (parent_name))
 
         if parent_iface.vlan is None:
             self.logger.error(

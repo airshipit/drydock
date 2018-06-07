@@ -83,9 +83,10 @@ class IpLocalityCheck(Validators):
                         if ip_address_network_name not in network_dict:
                             msg = '%s is not a valid network.' \
                                   % (ip_address_network_name)
-                            self.report_error(msg, [
-                                node.doc_ref
-                            ], "Define network or correct address definition.")
+                            self.report_error(
+                                msg, [node.doc_ref],
+                                "Define network or correct address definition."
+                            )
                         else:
                             if IPAddress(address) not in IPNetwork(
                                     network_dict[ip_address_network_name]):

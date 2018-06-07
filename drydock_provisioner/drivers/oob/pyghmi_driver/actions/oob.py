@@ -44,8 +44,8 @@ class PyghmiBaseAction(BaseAction):
         ipmi_address = node.get_network_address(ipmi_network)
 
         if ipmi_address is None:
-            raise errors.DriverError("Node %s has no IPMI address" %
-                                     (node.name))
+            raise errors.DriverError(
+                "Node %s has no IPMI address" % (node.name))
 
         ipmi_account = node.oob_parameters['account']
         ipmi_credential = node.oob_parameters['credential']
@@ -176,8 +176,8 @@ class SetNodeBoot(PyghmiBaseAction):
                     ctx=n.name,
                     ctx_type='node')
                 self.task.failure(focus=n.name)
-                self.logger.warning("Unable to set node %s to PXE boot." %
-                                    (n.name))
+                self.logger.warning(
+                    "Unable to set node %s to PXE boot." % (n.name))
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()

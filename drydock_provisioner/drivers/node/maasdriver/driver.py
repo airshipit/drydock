@@ -129,9 +129,8 @@ class MaasNodeDriver(NodeDriver):
             raise errors.DriverError("Invalid task %s" % (task_id))
 
         if task.action not in self.supported_actions:
-            raise errors.DriverError(
-                "Driver %s doesn't support task action %s" % (self.driver_desc,
-                                                              task.action))
+            raise errors.DriverError("Driver %s doesn't support task action %s"
+                                     % (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()
@@ -207,9 +206,8 @@ class MaasNodeDriver(NodeDriver):
                     maas_client=maas_client)
                 action.start()
             except Exception as e:
-                msg = (
-                    "Subtask for action %s raised unexpected exception: %s" %
-                    (task.action, str(e)))
+                msg = ("Subtask for action %s raised unexpected exception: %s"
+                       % (task.action, str(e)))
                 self.logger.error(msg, exc_info=e)
                 task.add_status_msg(
                     msg=msg,

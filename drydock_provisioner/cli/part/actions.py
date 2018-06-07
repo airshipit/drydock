@@ -80,9 +80,9 @@ class PartShow(PartBase):  # pylint: disable=too-few-public-methods
         self.kind = kind
         self.key = key
         self.source = source
-        self.logger.debug('DesignShow action initialized for design_id=%s,'
-                          ' kind=%s, key=%s, source=%s', design_id, kind, key,
-                          source)
+        self.logger.debug(
+            'DesignShow action initialized for design_id=%s,'
+            ' kind=%s, key=%s, source=%s', design_id, kind, key, source)
 
     def invoke(self):
         return self.api_client.get_part(

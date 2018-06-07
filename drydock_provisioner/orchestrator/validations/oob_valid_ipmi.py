@@ -46,6 +46,7 @@ class IpmiValidity(Validators):
                 if not oob_addr:
                     msg = ('OOB address missing for IPMI node %s.' %
                            baremetal_node.name)
-                    self.report_error(msg, [baremetal_node.doc_ref],
-                                      "Provide address to node OOB interface.")
+                    self.report_error(
+                        msg, [baremetal_node.doc_ref],
+                        "Provide address to node OOB interface.")
         return

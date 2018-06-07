@@ -37,9 +37,8 @@ class MtuRational(Validators):
             mtu = network_link.mtu
             if mtu and (mtu < MtuRational.MIN_MTU_SIZE
                         or mtu > MtuRational.MAX_MTU_SIZE):
-                msg = ("MTU must be between %d and %d, value is %d" %
-                       (MtuRational.MIN_MTU_SIZE, MtuRational.MAX_MTU_SIZE,
-                        mtu))
+                msg = ("MTU must be between %d and %d, value is %d" % (
+                    MtuRational.MIN_MTU_SIZE, MtuRational.MAX_MTU_SIZE, mtu))
                 self.report_error(
                     msg, [network_link.doc_ref],
                     "Define a valid MTU. Standard is 1500, Jumbo is 9100.")
@@ -53,9 +52,8 @@ class MtuRational(Validators):
 
             if network_mtu and (network_mtu < MtuRational.MIN_MTU_SIZE
                                 or network_mtu > MtuRational.MAX_MTU_SIZE):
-                msg = ("MTU must be between %d and %d, value is %d" %
-                       (MtuRational.MIN_MTU_SIZE, MtuRational.MAX_MTU_SIZE,
-                        mtu))
+                msg = ("MTU must be between %d and %d, value is %d" % (
+                    MtuRational.MIN_MTU_SIZE, MtuRational.MAX_MTU_SIZE, mtu))
                 self.report_error(
                     msg, [network.doc_ref],
                     "Define a valid MTU. Standard is 1500, Jumbo is 9100.")
@@ -67,9 +65,9 @@ class MtuRational(Validators):
                 if network_mtu > parent_mtu:
                     msg = 'MTU must be <= the parent Network Link; for Network %s' % (
                         network.name)
-                    self.report_error(msg, [
-                        network.doc_ref
-                    ], "Define a MTU less than or equal to that of the carrying network link."
-                                      )
+                    self.report_error(
+                        msg, [network.doc_ref],
+                        "Define a MTU less than or equal to that of the carrying network link."
+                    )
 
         return

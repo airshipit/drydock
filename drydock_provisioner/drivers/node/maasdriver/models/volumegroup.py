@@ -60,9 +60,8 @@ class VolumeGroup(model_base.ResourceBase):
 
             data = {'name': name, 'uuid': uuid_str, 'size': size}
 
-            self.logger.debug(
-                "Creating logical volume %s in VG %s on node %s" %
-                (name, self.name, self.system_id))
+            self.logger.debug("Creating logical volume %s in VG %s on node %s"
+                              % (name, self.name, self.system_id))
 
             url = self.interpolate_url()
 
@@ -70,8 +69,8 @@ class VolumeGroup(model_base.ResourceBase):
                 url, op='create_logical_volume', files=data)
 
             if not resp.ok:
-                raise Exception("MAAS error - %s - %s" % (resp.status_code,
-                                                          resp.txt))
+                raise Exception(
+                    "MAAS error - %s - %s" % (resp.status_code, resp.txt))
 
             res = resp.json()
             if 'id' in res:
@@ -106,8 +105,8 @@ class VolumeGroup(model_base.ResourceBase):
                     url, op='delete_logical_volume', files={'id': target_lv})
 
                 if not resp.ok:
-                    raise Exception("MAAS error - %s - %s" % (resp.status_code,
-                                                              resp.text))
+                    raise Exception(
+                        "MAAS error - %s - %s" % (resp.status_code, resp.text))
             else:
                 raise Exception("VG %s has no logical volumes" % self.name)
         except Exception as ex:

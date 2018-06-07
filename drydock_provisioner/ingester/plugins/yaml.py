@@ -193,9 +193,9 @@ class YamlIngester(IngesterPlugin):
             tag_model.definition = t.get('definition', '')
 
             if tag_model.type not in ['lshw_xpath']:
-                raise errors.IngesterError('Unknown definition_type in '
-                                           'tag_definition instance: %s' %
-                                           (t.definition_type))
+                raise errors.IngesterError(
+                    'Unknown definition_type in '
+                    'tag_definition instance: %s' % (t.definition_type))
             model.tag_definitions.append(tag_model)
 
         auth_keys = data.get('authorized_keys', [])

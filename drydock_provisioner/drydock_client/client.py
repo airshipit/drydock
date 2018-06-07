@@ -47,10 +47,7 @@ class DrydockClient(object):
         :return: A list of node names based on the node_filter and design_ref.
         """
         endpoint = 'v1.0/nodefilter'
-        body = {
-            'node_filter': node_filter,
-            'design_ref': design_ref
-        }
+        body = {'node_filter': node_filter, 'design_ref': design_ref}
         resp = self.session.post(endpoint, data=body)
 
         self._check_response(resp)
@@ -72,7 +69,11 @@ class DrydockClient(object):
 
         return resp.json()
 
-    def get_task(self, task_id, builddata=None, subtaskerrors=None, layers=None):
+    def get_task(self,
+                 task_id,
+                 builddata=None,
+                 subtaskerrors=None,
+                 layers=None):
         """
         Get the current description of a Drydock task
 
@@ -138,9 +139,7 @@ class DrydockClient(object):
         :return: A dict containing the validation.
         """
         endpoint = 'v1.0/validatedesign'
-        body = {
-            'href': href
-        }
+        body = {'href': href}
         resp = self.session.post(endpoint, data=body)
 
         self._check_response(resp)

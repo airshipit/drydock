@@ -177,6 +177,6 @@ class MaasRequestFactory(object):
                 "Received error response - URL: %s %s - RESPONSE: %s" %
                 (prepared_req.method, prepared_req.url, resp.status_code))
             self.logger.debug("Response content: %s" % resp.text)
-            raise errors.DriverError("MAAS Error: %s - %s" % (resp.status_code,
-                                                              resp.text))
+            raise errors.DriverError(
+                "MAAS Error: %s - %s" % (resp.status_code, resp.text))
         return resp

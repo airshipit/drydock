@@ -241,9 +241,8 @@ class DrydockState(object):
             conn.close()
             return True
         except Exception as ex:
-            self.logger.error(
-                "Error inserting result message for task %s: %s" %
-                (str(task_id), str(ex)))
+            self.logger.error("Error inserting result message for task %s: %s"
+                              % (str(task_id), str(ex)))
             return False
 
     def _assemble_tasks(self, task_list=None):
@@ -282,14 +281,14 @@ class DrydockState(object):
         """
         try:
             conn = self.db_engine.connect()
-            query = self.tasks_tbl.insert().values(
-                **(task.to_db(include_id=True)))
+            query = self.tasks_tbl.insert().values(**(
+                task.to_db(include_id=True)))
             conn.execute(query)
             conn.close()
             return True
         except Exception as ex:
-            self.logger.error("Error inserting task %s: %s" %
-                              (str(task.task_id), str(ex)))
+            self.logger.error(
+                "Error inserting task %s: %s" % (str(task.task_id), str(ex)))
             return False
 
     def put_task(self, task):
@@ -300,8 +299,8 @@ class DrydockState(object):
         try:
             conn = self.db_engine.connect()
             query = self.tasks_tbl.update().where(
-                self.tasks_tbl.c.task_id == task.task_id.bytes).values(
-                    **(task.to_db(include_id=False)))
+                self.tasks_tbl.c.task_id == task.task_id.bytes).values(**(
+                    task.to_db(include_id=False)))
             rs = conn.execute(query)
             if rs.rowcount == 1:
                 conn.close()
@@ -310,8 +309,8 @@ class DrydockState(object):
                 conn.close()
                 return False
         except Exception as ex:
-            self.logger.error("Error updating task %s: %s" %
-                              (str(task.task_id), str(ex)))
+            self.logger.error(
+                "Error updating task %s: %s" % (str(task.task_id), str(ex)))
             return False
 
     def add_subtask(self, task_id, subtask_id):
@@ -382,8 +381,8 @@ class DrydockState(object):
             "ON CONFLICT (dummy_key) DO UPDATE SET "
             "identity = :instance_id, last_ping = timezone('UTC', now()) "
             "WHERE active_instance.last_ping < (now() - interval '%d seconds')"
-            % (config.config_mgr.conf.leader_grace_period
-               )).execution_options(autocommit=True)
+            % (config.config_mgr.conf.leader_grace_period)).execution_options(
+                autocommit=True)
 
         try:
             conn = self.db_engine.connect()
