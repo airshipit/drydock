@@ -48,3 +48,6 @@ class TestKernelParameterReferences(object):
         hugepagesz = node.kernel_params.get('hugepagesz', None)
 
         assert hugepagesz == '1G'
+
+        kernel_param_string = node.get_kernel_param_string()
+        assert kernel_param_string.startswith('hugepagesz=1G hugepages=300')

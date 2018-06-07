@@ -154,6 +154,25 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         else:
             return value
 
+    def get_kernel_param_string(self):
+        params = dict(self.kernel_params)
+        if 'hugepagesz' in params:
+            if 'hugepages' not in params:
+                raise errors.InvalidParameterReference(
+                    'must specify both size and count for hugepages')
+            kp_string = 'hugepagesz=%s hugepages=%s' % (
+                params.pop('hugepagesz'), params.pop('hugepages'))
+        else:
+            kp_string = ''
+
+        for k, v in params.items():
+            if v == 'True':
+                kp_string = kp_string + " %s" % (k)
+            else:
+                kp_string = kp_string + " %s=%s" % (k, v)
+
+        return kp_string
+
     def get_applied_interface(self, iface_name):
         for i in getattr(self, 'interfaces', []):
             if i.get_name() == iface_name:

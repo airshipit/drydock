@@ -1468,13 +1468,7 @@ class ApplyNodePlatform(BaseMaasAction):
 
             try:
                 # Render the string of all kernel params for the node
-                kp_string = ""
-
-                for k, v in getattr(n, 'kernel_params', {}).items():
-                    if v == 'True':
-                        kp_string = kp_string + " %s" % (k)
-                    else:
-                        kp_string = kp_string + " %s=%s" % (k, v)
+                kp_string = n.get_kernel_param_string()
 
                 if kp_string:
                     # Check if the node has an existing kernel params tag

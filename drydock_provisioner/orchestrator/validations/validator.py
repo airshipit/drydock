@@ -18,6 +18,7 @@ import drydock_provisioner.objects.fields as hd_fields
 from drydock_provisioner.objects.validation import Validation
 
 from drydock_provisioner.orchestrator.validations.boot_storage_rational import BootStorageRational
+from drydock_provisioner.orchestrator.validations.hugepages_validity import HugepagesValidity
 from drydock_provisioner.orchestrator.validations.ip_locality_check import IpLocalityCheck
 from drydock_provisioner.orchestrator.validations.mtu_rational import MtuRational
 from drydock_provisioner.orchestrator.validations.network_trunking_rational import NetworkTrunkingRational
@@ -82,6 +83,7 @@ class Validator():
 
 rule_set = [
     BootStorageRational(),
+    HugepagesValidity(),
     IpLocalityCheck(),
     MtuRational(),
     NetworkTrunkingRational(),

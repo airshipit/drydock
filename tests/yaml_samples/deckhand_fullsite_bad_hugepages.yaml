@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ####################
+#
+# bootstrap_seed.yaml - Site server design definition for physical layer
+#
+####################
+# version the schema in this file so consumers can rationally parse it
 ---
 schema: 'drydock/Region/v1'
 metadata:
@@ -45,10 +50,9 @@ data:
     mode: disabled
   mtu: 1500
   linkspeed: 100full
-########################################
-# FAILS HERE: no default_network is defined when trunking mode is disabled
   trunking:
     mode: disabled
+    default_network: oob
   allowed_networks:
     - oob
 ---
@@ -62,9 +66,7 @@ metadata:
 data:
   bonding:
     mode: disabled
-########################################
-# FAILS HERE: mtu < 1400
-  mtu: 700
+  mtu: 1500
   linkspeed: auto
   trunking:
     mode: disabled
@@ -84,12 +86,6 @@ data:
     mode: 802.3ad
     hash: layer3+4
     peer_rate: slow
-########################################
-# FAILS HERE: down delay and up delay < mon rate
-    mon_rate: 150
-    down_delay: 50
-    up_delay: 50
-########################################
   mtu: 9000
   linkspeed: auto
   trunking:
@@ -97,6 +93,7 @@ data:
     default_network: mgmt
   allowed_networks:
     - public
+    - private
     - mgmt
 ---
 schema: 'drydock/Rack/v1'
@@ -167,9 +164,7 @@ metadata:
     application: 'drydock'
 data:
   vlan: '100'
-########################################
-# FAILS HERE: mtu of parent is 9000
-  mtu: 15000
+  mtu: 1500
   cidr: 172.16.1.0/24
   ranges:
     - type: static
@@ -177,9 +172,7 @@ data:
       end: 172.16.1.254
   routes:
     - subnet: 0.0.0.0/0
-#######################################
-# FAILS HERE: ip not in cidr
-      gateway: 141.16.1.1
+      gateway: 172.16.1.1
       metric: 10
   dns:
     domain: mgmt.sitename.example.com
@@ -194,9 +187,7 @@ metadata:
     application: 'drydock'
 data:
   vlan: '101'
-########################################
-# FAILS HERE: mtu of > 64000
-  mtu: 74000
+  mtu: 9000
   cidr: 172.16.2.0/24
   ranges:
     - type: static
@@ -248,48 +239,37 @@ data:
         labels:
           role: rootdisk
         partitions:
-###############################################
-# FAILS HERE: root not set
-#############################################
-# FAILS HERE: partitions size > 99%
-          - name: test
-            size: 100%
+          - name: root
+            size: 20g
             bootable: true
             filesystem:
               mountpoint: '/'
               fstype: 'ext4'
               mount_options: 'defaults'
-###############################################
-# FAILS HERE: boot volume < 1GB
           - name: boot
-            size: 500m
+            size: 1g
             bootable: false
             filesystem:
               mountpoint: '/boot'
               fstype: 'ext4'
               mount_options: 'defaults'
       sdb:
-        volume_group: 'failure'
-########################################
-# FAILS HERE: log_vg is unassigned
-##############################################
-# FAILS HERE: size is < 0
+        volume_group: 'log_vg'
     volume_groups:
       log_vg:
         logical_volumes:
           - name: 'log_lv'
-            size: '-77%'
+            size: '500m'
             filesystem:
               mountpoint: '/var/log'
               fstype: 'xfs'
               mount_options: 'defaults'
   platform:
-    image: ubuntu_16.04
-    kernel: generic
+    image: 'xenial'
+    kernel: 'ga-16.04'
     kernel_params:
       quiet: true
       console: ttyS2
-      hugepages: 6
   metadata:
     owner_data:
       foo: bar
@@ -322,6 +302,9 @@ data:
       networks:
         - mgmt
         - private
+      sriov:
+        vf_count: 2
+        trustedmode: false
   metadata:
     tags:
       - 'test'
@@ -342,26 +325,19 @@ data:
   addressing:
     - network: pxe
       address: dhcp
-##################################
-# FAILS HERE: invalid network
-    - network: invalid
-      address: 172.10.1.20
-##################################
-# FAILS HERE: ip address not in network
-      address: 141.16.1.20
-#################################
-# FAILS HERE: address duplicated for oob on both controller01 and computer01
+    - network: mgmt
+      address: 172.16.1.20
+    - network: public
+      address: 172.16.3.20
     - network: oob
-      address: 172.16.100.21
+      address: 172.16.100.20
   metadata:
     rack: rack1
 ---
 schema: 'drydock/BaremetalNode/v1'
 metadata:
   schema: 'metadata/Document/v1'
-#####
-# Invalid hostname contains '__'
-  name: bad__name
+  name: compute01
   storagePolicy: 'cleartext'
   labels:
     application: 'drydock'
@@ -370,18 +346,39 @@ data:
   addressing:
     - network: pxe
       address: dhcp
-#################################
-# FAILS HERE: address duplicated fro both mgmt and private
     - network: mgmt
       address: 172.16.1.21
     - network: private
-      address: 172.16.1.21
-#################################
-# FAILS HERE: address duplicated for oob on both controller01 and computer01
+      address: 172.16.2.21
     - network: oob
       address: 172.16.100.21
+  platform:
+    kernel_params:
+      isolcpus: hardwareprofile:cpuset.sriov
+      hugepagesz: hardwareprofile:hugepages.sriov.size
   metadata:
     rack: rack2
+---
+schema: 'drydock/BaremetalNode/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: compute02
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  host_profile: k8-node
+  addressing:
+    - network: pxe
+      address: dhcp
+    - network: mgmt
+      address: 172.16.1.23
+    - network: private
+      address: 172.16.2.23
+    - network: oob
+      address: 172.16.100.23
+  metadata:
+    rack: rack3
 ---
 schema: 'drydock/HardwareProfile/v1'
 metadata:
@@ -411,6 +408,53 @@ data:
       address: '2:0.0.0'
       dev_type: 'VBOX HARDDISK'
       bus_type: 'scsi'
+  cpu_sets:
+    sriov: '2,4'
+  hugepages:
+    sriov:
+      size: '1G'
+      count: 300
+    dpdk:
+      size: '2M'
+      count: 530000
+---
+schema: 'drydock/BootAction/v1'
+metadata:
+  schema: 'metadata/Document/v1'
+  name: hw_filtered
+  storagePolicy: 'cleartext'
+  labels:
+    application: 'drydock'
+data:
+  signaling: false
+  node_filter:
+    filter_set_type: 'union'
+    filter_set:
+      - filter_type: 'union'
+        node_names:
+          - 'compute01'
+  assets:
+    - path: /var/tmp/hello.sh
+      type: file
+      permissions: '555'
+      data: |-
+        IyEvYmluL2Jhc2gKCmVjaG8gJ0hlbGxvIFdvcmxkISAtZnJvbSB7eyBub2RlLmhvc3RuYW1lIH19
+        Jwo=
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
+    - path: /lib/systemd/system/hello.service
+      type: unit
+      permissions: '600'
+      data: |-
+        W1VuaXRdCkRlc2NyaXB0aW9uPUhlbGxvIFdvcmxkCgpbU2VydmljZV0KVHlwZT1vbmVzaG90CkV4
+        ZWNTdGFydD0vdmFyL3RtcC9oZWxsby5zaAoKW0luc3RhbGxdCldhbnRlZEJ5PW11bHRpLXVzZXIu
+        dGFyZ2V0Cg==
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+...
 ---
 schema: 'drydock/BootAction/v1'
 metadata:
@@ -441,11 +485,19 @@ data:
       data_pipeline:
         - base64_decode
         - utf8_decode
+    - path: /var/tmp/designref.sh
+      type: file
+      permissions: '500'
+      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
 ---
 schema: 'drydock/BootAction/v1'
 metadata:
   schema: 'metadata/Document/v1'
-  name: hw_filtered
+  name: hw_filtered2
   storagePolicy: 'cleartext'
   labels:
     application: 'drydock'
@@ -455,7 +507,7 @@ data:
     filter_set:
       - filter_type: 'union'
         node_names:
-          - 'compute01'
+          - 'compute02'
   assets:
     - path: /var/tmp/hello.sh
       type: file
@@ -477,4 +529,12 @@ data:
       data_pipeline:
         - base64_decode
         - utf8_decode
+    - path: /var/tmp/designref.sh
+      type: file
+      permissions: '500'
+      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
+      data_pipeline:
+        - base64_decode
+        - utf8_decode
+        - template
 ...
