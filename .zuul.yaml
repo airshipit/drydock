@@ -25,6 +25,8 @@
         - airship-drydock-security-bandit:
             files:
               - ^.*\.py$
+        - airship-drydock-docker-build-gate
+
     gate:
       jobs:
         - airship-drydock-lint-ws
@@ -36,12 +38,14 @@
             files:
               - ^charts/.*$
         - airship-drydock-unit-py35
+        - airship-drydock-docker-build-gate
         - airship-drydock-security-bandit:
             files:
               - ^.*\.py$
     post:
       jobs:
         - airship-drydock-doc-publish
+        - airship-drydock-docker-publish
 
 - nodeset:
     name: airship-drydock-single-node
@@ -90,6 +94,39 @@
     nodeset: airship-drydock-single-node
 
 - job:
+    name: airship-drydock-docker-build-gate
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node
+    irrelevant-files:
+      - '^docs/.*'
+      - '^charts/.*'
+    vars:
+      publish: false
+      tags:
+        dynamic:
+          patch_set: true
+
+- job:
+    name: airship-drydock-docker-publish
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node
+    secrets:
+      - airship_drydock_quay_creds
+    irrelevant-files:
+      - '^docs/.*'
+      - '^charts/.*'
+    vars:
+      publish: true
+      tags:
+        dynamic:
+          branch: true
+          commit: true
+        static:
+          - latest
+
+- job:
     name: airship-drydock-doc-build
     description: |
       Locally build the documentation to check for errors
@@ -106,6 +143,32 @@
       - airship_drydock_readthedocs
     timeout: 300
     nodeset: airship-drydock-single-node
+
+- secret:
+    name: airship_drydock_quay_creds
+    data:
+      username: !encrypted/pkcs1-oaep
+        - La6hrlZZdII5Vj994+Z1jULfO2/+fsbYjiF2PU5Cka9lsg7VksIPhuCXxSZVwLBoLphhb
+          ErNe3kvoPB8Sx1VBhkua7OOEjYVZZjJziadxwZfuvTcrOInGAM7XdK7Bks17v4HaL1dyz
+          6ccMuLrXJeE708ts8jaKMmyKaS8wb2A4KiBVLZQP89gS8EFvVSzxK3DWXHdAP7IezQyk4
+          Fi4MsNnOSEJY45Fy+ibZ07bDxYEQHL6hpBhQYht1DUQkeqAiDSnShBMb1+G3HGk3SMjae
+          PDGtL3fz4zixok+jU3BDbvPKoEFEz45AoQHILTL+KoPPQbRQOmrGXOh7nmEtGyFZar6be
+          wy+rYisXdJVaoqCGPMRPkBSkohgl/80Ary1d0U+k9vlDnFjpw62svDJ1cuAoKXKOlUWgF
+          qs6+GaN5ltnmYfakpgo4vrkbuXw2DdKAio3cDW+PA0O4aV9yCvDtbeFY2SfQX6WExxk25
+          CIu0UbL/eB/lRrb3PMElJbF7RmRrX5mf4k11YhnslHATzGMzGkQ1VkZQH/C+Q2xx5XSGP
+          ZFJCLNYvY/hF6IyrCx6lpsCThfRYxQd3jy1Du1qjv23mUnDueTzGvz7somBazB/ceom4z
+          v0T98h7JHDZhfq/HiGyliRwCh4R7J/xxf4xjLScoBwfGDZp1gPcCMAQC8NtAE8=
+      password: !encrypted/pkcs1-oaep
+        - Ae8OFJse6u76Vw6p6LqWwgFOWTdb4ACZktK9mbhUA4GSSdEOUKbDoEyuo5I9qFPLHeLA8
+          fK7RjUoC+gItAiWZjQQxrDoqeuqykHRLnjo2p+yd3hDTVmHXYkEw1jmMb0iP+DNNMl2qh
+          3beL1C6fyzjFcer+sdg7xk3vVetbHP7b8iIh6b6A6Oau1V+wQOOLYsU7gSuzxQBEbyj0/
+          IZFKjaedsahgPEE4XU2Qf9/aGe463u+OgJ+6tBj2I7GcDGqQlvAzDud+Z6Mbs2W1fjR9i
+          026rE4k5UWVZAmz0ySh8zdR4aV46+rEBV4jXKimCD+P0DAfbusG0plQGqODlJGdQ2rikK
+          4Gmu9XlG7j7Qm3GddPLLRkSfetn4oisI/zbKcPy1kz1tWQ3OqRmdxExJH5TiZMbo/7u4B
+          7X6sKjrQvwSPRH8BDdwtS4iECsJvyO1pwWar4WfApBXo73RaaERzNcq3gLR64JFmc8IMF
+          aknseZhtmaqM+ttv2bUL23uzYEkupY3foEUa3ILYs2qx5sofi6CBAOWd2c3t3d34Kn5ya
+          B1qsfXoY9lVL59lCl4jYLqyGA99Oybi5YKTP8O+IH5Xo7XLOje7K0Vfvh7v8Mcja8pZRG
+          sgRbPr/10a2g6+s37XofkFEeba7B8fV5h6v/A3tMy7U01rZ2qLBC/4hxrikXT8=
 
 - secret:
     name: airship_drydock_readthedocs
