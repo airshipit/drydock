@@ -1,7 +1,8 @@
 alembic==0.8.2
 amqp==2.2.2
 Babel==2.5.3
-cachetools==2.0.1
+Beaker==1.9.1
+cachetools==2.1.0
 certifi==2018.4.16
 chardet==3.0.4
 click==6.7
@@ -19,7 +20,7 @@ Jinja2==2.9.6
 jsonschema==2.6.0
 keystoneauth1==3.3.0
 keystonemiddleware==4.9.1
-kombu==4.1.0
+kombu==4.2.0
 libvirt-python==3.10.0
 Mako==1.0.7
 MarkupSafe==1.0
@@ -27,7 +28,7 @@ monotonic==1.5
 msgpack==0.5.6
 netaddr==0.7.19
 netifaces==0.10.7
-oauthlib==2.0.7
+oauthlib==2.1.0
 oslo.concurrency==3.27.0
 oslo.config==5.2.0
 oslo.context==2.20.0
@@ -37,12 +38,12 @@ oslo.messaging==6.2.0
 oslo.middleware==3.35.0
 oslo.policy==1.22.1
 oslo.serialization==2.25.0
-oslo.service==1.31.1
-oslo.utils==3.36.1
+oslo.service==1.31.2
+oslo.utils==3.36.2
 oslo.versionedobjects==1.23.0
 Paste==2.0.3
 PasteDeploy==1.5.2
-pbr==4.0.2
+pbr==4.0.3
 pip==10.0.1
 positional==1.2.1
 prettytable==0.7.2
@@ -63,7 +64,7 @@ repoze.lru==0.7
 requests==2.18.4
 rfc3986==1.1.0
 Routes==2.4.1
-setuptools==39.1.0
+setuptools==39.2.0
 six==1.11.0
 SQLAlchemy==1.1.14
 statsd==3.2.2
@@ -74,5 +75,5 @@ urllib3==1.22
 uWSGI==2.0.15
 vine==1.1.4
 WebOb==1.8.1
-wheel==0.31.0
+wheel==0.31.1
 wrapt==1.10.11

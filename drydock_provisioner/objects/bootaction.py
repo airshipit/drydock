@@ -106,7 +106,7 @@ class BootActionAsset(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'type': ovo_fields.StringField(nullable=True),
+        'type': hd_fields.BootactionAssetTypeField(nullable=True),
         'path': ovo_fields.StringField(nullable=True),
         'location': ovo_fields.StringField(nullable=True),
         'data': ovo_fields.StringField(nullable=True),
@@ -127,7 +127,7 @@ class BootActionAsset(base.DrydockObject):
         ba_type = kwargs.get('type', None)
 
         package_list = None
-        if ba_type == 'pkg_list':
+        if ba_type == hd_fields.BootactionAssetType.PackageList:
             if isinstance(kwargs.get('data'), dict):
                 package_list = self._extract_package_list(kwargs.pop('data'))
             # If the data section doesn't parse as a dictionary
@@ -158,12 +158,12 @@ class BootActionAsset(base.DrydockObject):
             rendered_location = self.execute_pipeline(
                 self.location, self.location_pipeline, tpl_ctx=tpl_ctx)
             data_block = self.resolve_asset_location(rendered_location)
-            if self.type == 'pkg_list':
+            if self.type == hd_fields.BootactionAssetType.PackageList:
                 self._parse_package_list(data_block)
-        elif self.type != 'pkg_list':
+        elif self.type != hd_fields.BootactionAssetType.PackageList:
             data_block = self.data.encode('utf-8')
 
-        if self.type != 'pkg_list':
+        if self.type != hd_fields.BootactionAssetType.PackageList:
             value = self.execute_pipeline(
                 data_block, self.data_pipeline, tpl_ctx=tpl_ctx)
 
