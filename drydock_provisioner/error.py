@@ -141,7 +141,7 @@ class MaxRetriesReached(OrchestratorError):
     pass
 
 
-class CollectSubaskTimeout(OrchestratorError):
+class CollectSubtaskTimeout(OrchestratorError):
     pass
 
 
