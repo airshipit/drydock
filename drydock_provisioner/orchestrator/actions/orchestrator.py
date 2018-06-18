@@ -532,6 +532,7 @@ class PrepareNodes(BaseAction):
                     error=False,
                     ctx=n,
                     ctx_type='node')
+                self.task.success(target=n)
 
             self.step_oob_set_netboot(target_nodes)
 
