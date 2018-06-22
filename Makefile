@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUILD_DIR                  := $(shell mktemp -d)
-DOCKER_REGISTRY            ?= quay.io
-IMAGE_NAME                 ?= drydock
-IMAGE_PREFIX               ?= airshipit
-IMAGE_TAG                  ?= dev
-HELM                       := $(BUILD_DIR)/helm
-PROXY                      ?= http://proxy.foo.com:8000
-USE_PROXY                  ?= false
-PUSH_IMAGE                 ?= false
-LABEL                      ?= commit-id
-IMAGE                      ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
+BUILD_DIR       := $(shell mktemp -d)
+DOCKER_REGISTRY ?= quay.io
+IMAGE_NAME      ?= drydock
+IMAGE_PREFIX    ?= airshipit
+IMAGE_TAG       ?= dev
+HELM            := $(BUILD_DIR)/helm
+PROXY           ?= http://proxy.foo.com:8000
+NO_PROXY        ?= localhost,127.0.0.1,.svc.cluster.local
+USE_PROXY       ?= false
+PUSH_IMAGE      ?= false
+LABEL           ?= commit-id
+IMAGE           ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
 export
 
 # Build all docker images for this project
@@ -97,7 +98,13 @@ helm-install:
 .PHONY: build_drydock
 build_drydock:
 ifeq ($(USE_PROXY), true)
-	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile . --build-arg http_proxy=$(PROXY) --build-arg https_proxy=$(PROXY)
+	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile \
+		--build-arg http_proxy=$(PROXY) \
+		--build-arg https_proxy=$(PROXY) \
+		--build-arg HTTP_PROXY=$(PROXY) \
+		--build-arg HTTPS_PROXY=$(PROXY) \
+		--build-arg no_proxy=$(NO_PROXY) \
+		--build-arg NO_PROXY=$(NO_PROXY) .
 else
 	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile .
 endif
