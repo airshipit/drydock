@@ -522,6 +522,8 @@ class PrepareNodes(BaseAction):
                 node_check_task.node_filter_from_failures(), site_design)
 
             # And log the nodes that were found so they can be addressed
+            known_nodes = self.orchestrator.process_node_filter(
+                node_check_task.node_filter_from_successes(), site_design)
 
             for n in node_check_task.result.successes:
                 self.logger.debug(
@@ -532,7 +534,6 @@ class PrepareNodes(BaseAction):
                     error=False,
                     ctx=n,
                     ctx_type='node')
-                self.task.success(focus=n)
 
             self.step_oob_set_netboot(target_nodes)
 
@@ -565,6 +566,7 @@ class PrepareNodes(BaseAction):
             target_nodes = self.orchestrator.process_node_filter(
                 self.task.node_filter_from_successes(), site_design)
 
+            target_nodes.extend(known_nodes)
             self.step_node_configure_hw(node_driver, target_nodes)
 
         self.task.bubble_results()
