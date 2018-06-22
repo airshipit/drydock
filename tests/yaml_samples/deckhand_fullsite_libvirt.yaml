@@ -88,10 +88,10 @@ data:
   tor_switches:
     switch01name:
       mgmt_ip: 1.1.1.1
-      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch01name
+      sdn_api_uri: polo+https://api.sdn.example.com/switchmgmt?switch=switch01name
     switch02name:
       mgmt_ip: 1.1.1.2
-      sdn_api_uri: polo+https://polo-api.web.att.com/switchmgmt?switch=switch02name
+      sdn_api_uri: polo+https://api.sdn.example.com/switchmgmt?switch=switch02name
   location:
     clli: HSTNTXMOCG0
     grid: EG12
