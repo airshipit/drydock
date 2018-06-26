@@ -91,6 +91,10 @@ class DrydockConfig(object):
         cfg.StrOpt(
             'database_connect_string',
             help='The URI database connect string.'),
+        cfg.IntOpt(
+            'pool_size',
+            default=15,
+            help='The SQLalchemy database connection pool size.'),
     ]
 
     # Options for the boot action framework
