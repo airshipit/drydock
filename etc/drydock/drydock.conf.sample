@@ -43,11 +43,11 @@
 #domain_name = <None>
 
 # Project ID to scope to (string value)
-# Deprecated group/name - [keystone_authtoken]/tenant-id
+# Deprecated group/name - [keystone_authtoken]/tenant_id
 #project_id = <None>
 
 # Project name to scope to (string value)
-# Deprecated group/name - [keystone_authtoken]/tenant-name
+# Deprecated group/name - [keystone_authtoken]/tenant_name
 #project_name = <None>
 
 # Domain ID containing project (string value)
@@ -73,7 +73,7 @@
 #user_id = <None>
 
 # Username (string value)
-# Deprecated group/name - [keystone_authtoken]/user-name
+# Deprecated group/name - [keystone_authtoken]/user_name
 #username = <None>
 
 # User's domain id (string value)
@@ -159,7 +159,10 @@
 # in the cache. If ENCRYPT, token data is encrypted and authenticated in the
 # cache. If the value is not one of these options or empty, auth_token will
 # raise an exception on initialization. (string value)
-# Allowed values: None, MAC, ENCRYPT
+# Possible values:
+# None - <No description provided>
+# MAC - <No description provided>
+# ENCRYPT - <No description provided>
 #memcache_security_strategy = None
 
 # (Optional, mandatory if memcache_security_strategy is defined) This string is
@@ -274,6 +277,25 @@
 #poll_interval = 10
 
 
+[network]
+
+#
+# From drydock_provisioner
+#
+
+# Timeout for initial read of outgoing HTTP calls from Drydock in seconds.
+# (integer value)
+#http_client_connect_timeout = 16
+
+# Timeout for initial read of outgoing HTTP calls from Drydock in seconds.
+# (integer value)
+#http_client_read_timeout = 300
+
+# Number of retries for transient errors of outgoing HTTP calls from Drydock.
+# (integer value)
+#http_client_retries = 3
+
+
 [oslo_policy]
 
 #
@@ -281,11 +303,9 @@
 #
 
 # The file that defines policies. (string value)
-# Deprecated group/name - [DEFAULT]/policy_file
 #policy_file = policy.json
 
 # Default rule. Enforced when a requested rule is not found. (string value)
-# Deprecated group/name - [DEFAULT]/policy_default_rule
 #policy_default_rule = default
 
 # Directories where policy configuration files are stored. They can be relative
@@ -293,7 +313,6 @@
 # absolute paths. The file defined by policy_file must exist for these
 # directories to be searched.  Missing or empty directories are ignored. (multi
 # valued)
-# Deprecated group/name - [DEFAULT]/policy_dirs
 #policy_dirs = policy.d
 
 

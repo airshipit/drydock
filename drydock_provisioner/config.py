@@ -103,6 +103,23 @@ class DrydockConfig(object):
             'report_url',
             default='http://localhost:9000/api/v1.0/bootactions/')
     ]
+
+    # Options for network traffic
+    network_options = [
+        cfg.IntOpt(
+            'http_client_connect_timeout',
+            default=16,
+            help='Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'),
+        cfg.IntOpt(
+            'http_client_read_timeout',
+            default=300,
+            help='Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'),
+        cfg.IntOpt(
+            'http_client_retries',
+            default=3,
+            help='Number of retries for transient errors of outgoing HTTP calls from Drydock.'),
+    ]
+
     # Enabled plugins
     plugin_options = [
         cfg.StrOpt(
@@ -184,6 +201,7 @@ class DrydockConfig(object):
             DrydockConfig.bootactions_options, group='bootactions')
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
+        self.conf.register_opts(DrydockConfig.network_options, group='network')
         self.conf.register_opts(
             DrydockConfig.database_options, group='database')
         self.conf.register_opts(
@@ -204,6 +222,7 @@ def list_opts():
         'plugins': DrydockConfig.plugin_options,
         'timeouts': DrydockConfig.timeout_options,
         'database': DrydockConfig.database_options,
+        'network': DrydockConfig.network_options,
     }
 
     package_path = os.path.dirname(os.path.abspath(__file__))

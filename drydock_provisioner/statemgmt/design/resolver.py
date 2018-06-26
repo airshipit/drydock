@@ -15,6 +15,7 @@
 
 import urllib.parse
 import re
+import time
 import logging
 
 import requests
@@ -23,6 +24,7 @@ from beaker.util import parse_cache_config_options
 
 from drydock_provisioner import error as errors
 from drydock_provisioner.util import KeystoneUtils
+from drydock_provisioner.config import config_mgr
 
 cache_opts = {
     'cache.type': 'memory',
@@ -30,6 +32,7 @@ cache_opts = {
 }
 
 cache = CacheManager(**parse_cache_config_options(cache_opts))
+LOG = logging.getLogger(__name__)
 
 class ReferenceResolver(object):
     """Class for handling different data references to resolve them data."""
@@ -54,8 +57,16 @@ class ReferenceResolver(object):
                     "Invalid reference scheme %s: no handler." %
                     design_uri.scheme)
             else:
-                # Have to do a little magic to call the classmethod as a pointer
-                return handler.__get__(None, cls)(design_uri)
+                tries = 0
+                while tries < config_mgr.conf.network.http_client_retries:
+                    try:
+                        # Have to do a little magic to call the classmethod as a pointer
+                        return handler.__get__(None, cls)(design_uri)
+                    except Exception as ex:
+                        tries = tries + 1
+                        if tries < config_mgr.conf.network.http_client_retries:
+                            LOG.debug("Retrying reference after failure: %s" % str(ex))
+                            time.sleep(5 ** tries)
         except ValueError:
             raise errors.InvalidDesignReference(
                 "Cannot resolve design reference %s: unable to parse as valid URI."
@@ -74,9 +85,9 @@ class ReferenceResolver(object):
             response = requests.get(
                 design_uri.geturl(),
                 auth=(design_uri.username, design_uri.password),
-                timeout=30)
+                timeout=get_client_timeouts())
         else:
-            response = requests.get(design_uri.geturl(), timeout=30)
+            response = requests.get(design_uri.geturl(), timeout=get_client_timeouts())
 
         return response.content
 
@@ -107,9 +118,8 @@ class ReferenceResolver(object):
         url = urllib.parse.urlunparse(
             (new_scheme, design_uri.netloc, design_uri.path, design_uri.params,
              design_uri.query, design_uri.fragment))
-        logger = logging.getLogger(__name__)
-        logger.debug("Calling Keystone session for url %s" % str(url))
-        resp = ks_sess.get(url)
+        LOG.debug("Calling Keystone session for url %s" % str(url))
+        resp = ks_sess.get(url, timeout=get_client_timeouts())
         if resp.status_code >= 400:
             raise errors.InvalidDesignReference(
                 "Received error code for reference %s: %s - %s" %
@@ -123,3 +133,8 @@ class ReferenceResolver(object):
         'deckhand+http': resolve_reference_ucp,
         'promenade+http': resolve_reference_ucp,
     }
+
+def get_client_timeouts():
+    """Return a tuple of timeouts for the request library."""
+    return (config_mgr.conf.network.http_client_connect_timeout,
+            config_mgr.conf.network.http_client_read_timeout)
