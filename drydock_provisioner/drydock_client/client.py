@@ -67,7 +67,7 @@ class DrydockClient(object):
     def get_nodes_for_filter(self, design_ref, node_filter=None):
         """Get list of nodes that satisfy ``node_filter``.
 
-        :param SiteDesign design_ref: A SiteDesign object.
+        :param str design_ref: str of a URL
         :param NodeFilter node_filter (optional): A NodeFilter object.
         :return: A list of node names based on the node_filter and design_ref.
         """
