@@ -241,7 +241,7 @@ class Orchestrator(object):
 
         return new_task
 
-    def compute_model_inheritance(self, site_design):
+    def compute_model_inheritance(self, site_design, resolve_aliases=False):
         """Compute inheritance of the design model.
 
         Given a fully populated Site model, compute the effective
@@ -254,7 +254,9 @@ class Orchestrator(object):
             for n in nodes or []:
                 try:
                     n.compile_applied_model(
-                        site_design, state_manager=self.state_manager)
+                        site_design,
+                        state_manager=self.state_manager,
+                        resolve_aliases=resolve_aliases)
                 except Exception as ex:
                     node_failed.append(n)
                     self.logger.error(
@@ -283,7 +285,7 @@ class Orchestrator(object):
 
         return status, site_design
 
-    def get_effective_site(self, design_ref):
+    def get_effective_site(self, design_ref, resolve_aliases=False):
         """Ingest design data and compile the effective model of the design.
 
         Return a tuple of the processing status and the populated instance
@@ -297,7 +299,7 @@ class Orchestrator(object):
         try:
             status, site_design = self.get_described_site(design_ref)
             if status.status == hd_fields.ValidationResult.Success:
-                self.compute_model_inheritance(site_design)
+                self.compute_model_inheritance(site_design, resolve_aliases=resolve_aliases)
                 self.compute_bootaction_targets(site_design)
                 self.render_route_domains(site_design)
                 status = val.validate_design(site_design, result_status=status)

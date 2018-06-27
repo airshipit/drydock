@@ -131,15 +131,18 @@ class BaseAction(object):
         self.task.align_result()
         return
 
-    def _load_site_design(self):
+    def _load_site_design(self, resolve_aliases=False):
         """Load the site design from this action's task.
 
         The design_ref in the task can be resolved to a set of design documents
         that reflect the site design to be operated on. Load this design for use
         by this action.
+
+        :param resolve_aliases: boolean on whether to resolve device aliases, defaults
+                                to False
         """
         design_status, site_design = self.orchestrator.get_effective_site(
-            self.task.design_ref)
+            self.task.design_ref, resolve_aliases=resolve_aliases)
 
         if design_status is None or design_status.status == hd_fields.ActionResult.Failure:
             raise errors.OrchestratorError("Site design failed load.")

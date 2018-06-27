@@ -49,7 +49,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
     # Compile the applied version of this model sourcing referenced
     # data from the passed site design
-    def compile_applied_model(self, site_design, state_manager):
+    def compile_applied_model(self, site_design, state_manager, resolve_aliases=False):
         self.logger.debug("Applying host profile to node %s" % self.name)
         self.apply_host_profile(site_design)
         self.logger.debug("Applying hardware profile to node %s" % self.name)
@@ -57,8 +57,9 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         self.source = hd_fields.ModelSource.Compiled
         self.logger.debug("Resolving kernel parameters on node %s" % self.name)
         self.resolve_kernel_params(site_design)
-        self.logger.debug("Resolving device aliases on node %s" % self.name)
-        self.apply_logicalnames(site_design, state_manager)
+        if resolve_aliases:
+            self.logger.debug("Resolving device aliases on node %s" % self.name)
+            self.apply_logicalnames(site_design, state_manager)
         return
 
     def apply_host_profile(self, site_design):

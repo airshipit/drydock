@@ -140,10 +140,9 @@ class TestClass(object):
         drydock_state.get_build_data = Mock(side_effect=side_effect)
 
         design_status, design_data = deckhand_orchestrator.get_effective_site(
-            design_ref)
+            design_ref, resolve_aliases=True)
 
         nodes = design_data.baremetal_nodes
-        nodes[0].apply_logicalnames(design_data, state_manager=drydock_state)
 
         expected = {
             'primary_boot': 'sda',
