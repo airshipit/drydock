@@ -65,7 +65,7 @@ class DrydockClient(object):
         return resp.json()
 
     def get_nodes_for_filter(self, design_ref, node_filter=None):
-        """Get list of nodes in MaaS and their status.
+        """Get list of nodes that satisfy ``node_filter``.
 
         :param SiteDesign design_ref: A SiteDesign object.
         :param NodeFilter node_filter (optional): A NodeFilter object.

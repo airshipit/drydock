@@ -126,7 +126,7 @@ class PyghmiDriver(oob_driver.OobDriver):
             for t, f in subtask_futures.items():
                 if not f.done():
                     task.add_status_msg(
-                        "Subtask %s timed out before completing.",
+                        msg="Subtask %s timed out before completing.",
                         error=True,
                         ctx=str(uuid.UUID(bytes=t)),
                         ctx_type='task')
