@@ -16,7 +16,7 @@ oslo.policy==1.22.1
 iso8601==0.1.11
 keystoneauth1==3.3.0
 alembic==0.8.2
-sqlalchemy==1.1.14
+sqlalchemy==1.2.8
 psycopg2==2.7.3.1
 jsonschema==2.6.0
 jinja2==2.9.6

@@ -43,7 +43,11 @@ class DrydockState(object):
         """Connect the state manager to the persistent DB."""
         self.db_engine = create_engine(
             config.config_mgr.conf.database.database_connect_string,
-            pool_size=config.config_mgr.conf.database.pool_size)
+            pool_size=config.config_mgr.conf.database.pool_size,
+            pool_pre_ping=config.config_mgr.conf.database.pool_pre_ping,
+            max_overflow=config.config_mgr.conf.database.pool_overflow,
+            pool_timeout=config.config_mgr.conf.database.pool_timeout,
+            pool_recycle=config.config_mgr.conf.database.connection_recycle)
         self.db_metadata = MetaData(bind=self.db_engine)
 
         self.tasks_tbl = tables.Tasks(self.db_metadata)
