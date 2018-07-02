@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Definitions for Drydock database tables."""
+import copy
 
 from sqlalchemy.schema import Table, Column
 from sqlalchemy.types import Boolean, DateTime, String, Integer, Text
@@ -30,7 +31,7 @@ class Tasks(ExtendTable):
 
     __tablename__ = 'tasks'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('task_id', pg.BYTEA(16), primary_key=True),
         Column('parent_task_id', pg.BYTEA(16)),
         Column('subtask_id_list', pg.ARRAY(pg.BYTEA(16))),
@@ -54,13 +55,19 @@ class Tasks(ExtendTable):
         Column('terminate', Boolean, default=False)
     ]
 
+    __add_result_links__ = [
+        Column('result_links', pg.JSON),
+    ]
+
+    __schema__ = copy.copy(__baseschema__)
+    __schema__.extend(__add_result_links__)
 
 class ResultMessage(ExtendTable):
     """Table for tracking result/status messages."""
 
     __tablename__ = 'result_message'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('sequence', Integer, primary_key=True),
         Column('task_id', pg.BYTEA(16)),
         Column('message', String(1024)),
@@ -71,17 +78,21 @@ class ResultMessage(ExtendTable):
         Column('extra', pg.JSON)
     ]
 
+    __schema__ = copy.copy(__baseschema__)
+
 
 class ActiveInstance(ExtendTable):
     """Table to organize multiple orchestrator instances."""
 
     __tablename__ = 'active_instance'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('dummy_key', Integer, primary_key=True),
         Column('identity', pg.BYTEA(16)),
         Column('last_ping', DateTime),
     ]
+
+    __schema__ = copy.copy(__baseschema__)
 
 
 class BootAction(ExtendTable):
@@ -89,11 +100,13 @@ class BootAction(ExtendTable):
 
     __tablename__ = 'boot_action'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('node_name', String(280), primary_key=True),
         Column('task_id', pg.BYTEA(16)),
         Column('identity_key', pg.BYTEA(32)),
     ]
+
+    __schema__ = copy.copy(__baseschema__)
 
 
 class BootActionStatus(ExtendTable):
@@ -101,7 +114,7 @@ class BootActionStatus(ExtendTable):
 
     __tablename__ = 'boot_action_status'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('node_name', String(280), index=True),
         Column('action_id', pg.BYTEA(16), primary_key=True),
         Column('action_name', String(64)),
@@ -110,13 +123,15 @@ class BootActionStatus(ExtendTable):
         Column('action_status', String(32)),
     ]
 
+    __schema__ = copy.copy(__baseschema__)
+
 
 class BuildData(ExtendTable):
     """Table for persisting node build data."""
 
     __tablename__ = 'build_data'
 
-    __schema__ = [
+    __baseschema__ = [
         Column('node_name', String(32), index=True),
         Column('task_id', pg.BYTEA(16), index=True),
         Column('collected_date', DateTime),
@@ -124,3 +139,5 @@ class BuildData(ExtendTable):
         Column('data_format', String(32)),
         Column('data_element', Text),
     ]
+
+    __schema__ = copy.copy(__baseschema__)

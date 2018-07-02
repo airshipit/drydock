@@ -19,7 +19,7 @@ from drydock_provisioner.statemgmt.db import tables
 
 def upgrade():
     op.create_table(tables.BuildData.__tablename__,
-                    *tables.BuildData.__schema__)
+                    *tables.BuildData.__baseschema__)
 
 
 def downgrade():

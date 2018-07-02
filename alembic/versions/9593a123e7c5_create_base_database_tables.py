@@ -18,15 +18,15 @@ from drydock_provisioner.statemgmt.db import tables
 
 
 def upgrade():
-    op.create_table(tables.Tasks.__tablename__, *tables.Tasks.__schema__)
+    op.create_table(tables.Tasks.__tablename__, *tables.Tasks.__baseschema__)
     op.create_table(tables.ResultMessage.__tablename__,
-                    *tables.ResultMessage.__schema__)
+                    *tables.ResultMessage.__baseschema__)
     op.create_table(tables.ActiveInstance.__tablename__,
-                    *tables.ActiveInstance.__schema__)
+                    *tables.ActiveInstance.__baseschema__)
     op.create_table(tables.BootAction.__tablename__,
-                    *tables.BootAction.__schema__)
+                    *tables.BootAction.__baseschema__)
     op.create_table(tables.BootActionStatus.__tablename__,
-                    *tables.BootActionStatus.__schema__)
+                    *tables.BootActionStatus.__baseschema__)
 
 
 def downgrade():

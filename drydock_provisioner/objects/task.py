@@ -371,6 +371,8 @@ class Task(object):
             self.result.successes,
             'result_failures':
             self.result.failures,
+            'result_links':
+            self.result.links,
             'status':
             self.status,
             'created':
@@ -486,6 +488,7 @@ class Task(object):
         i.result.status = d.get('result_status')
         i.result.successes = d.get('result_successes', [])
         i.result.failures = d.get('result_failures', [])
+        i.result.links = d.get('result_links', [])
 
         # Deserialize the request context for this task
         if i.request_context is not None:
@@ -506,6 +509,8 @@ class TaskStatus(object):
         self.reason = None
         self.status = hd_fields.ActionResult.Incomplete
 
+        self.links = dict()
+
         # For tasks operating on multiple contexts (nodes, networks, etc...)
         # track which contexts ended successfully and which failed
         self.successes = []
@@ -514,6 +519,31 @@ class TaskStatus(object):
     @classmethod
     def obj_name(cls):
         return cls.__name__
+
+    def add_link(self, relation, uri):
+        """Add a external reference link to this status.
+
+        :param str relation: The relation of the link
+        :param str uri: A valid URI that references the external content
+        """
+        self.links.setdefault(relation, [])
+        self.links[relation].append(uri)
+
+    def get_links(self, relation=None):
+        """Get one or more links of this status.
+
+        If ``relation`` is None, then return all links.
+
+        :param str relation: Return only links that exhibit this relation
+        :returns: a list of str URIs or empty list
+        """
+        if relation:
+            return self.links.get(relation, [])
+        else:
+            all_links = list()
+            for v in self.links.values():
+                all_links.extend(v)
+            return all_links
 
     def set_message(self, msg):
         self.message = msg
@@ -560,6 +590,11 @@ class TaskStatus(object):
         return new_msg
 
     def to_dict(self):
+        links = list()
+        if self.links:
+            for k, v in self.links.items():
+                for r in v:
+                    links.append(dict(rel=k, href=r))
         return {
             'kind': 'Status',
             'apiVersion': 'v1.0',
@@ -569,6 +604,7 @@ class TaskStatus(object):
             'status': self.status,
             'successes': self.successes,
             'failures': self.failures,
+            'links': links,
             'details': {
                 'errorCount': self.error_count,
                 'messageList': [x.to_dict() for x in self.message_list],

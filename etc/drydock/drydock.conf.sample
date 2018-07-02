@@ -26,6 +26,9 @@
 # The URI database connect string. (string value)
 #database_connect_string = <None>
 
+# The SQLalchemy database connection pool size. (integer value)
+#pool_size = 15
+
 
 [keystone_authtoken]
 
