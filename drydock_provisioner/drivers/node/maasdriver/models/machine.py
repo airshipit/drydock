@@ -20,6 +20,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_interface
 import drydock_provisioner.drivers.node.maasdriver.models.blockdev as maas_blockdev
 import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
+import drydock_provisioner.drivers.node.maasdriver.models.node_results as maas_nr
 
 from bson import BSON
 
@@ -295,6 +296,17 @@ class Machine(model_base.ResourceBase):
         if resp.status_code == 200:
             detail_config = BSON.decode(resp.content)
             return detail_config
+
+    def get_task_results(self, result_type='all'):
+        """Get the result from tasks run during node deployment.
+
+        :param str result_type: the type of results to return. One of
+                         ``all``, ``commissioning``, ``testing``, ``deploy``
+        """
+        node_results = maas_nr.NodeResults(system_id_list=[self.resource_id], result_type=result_type)
+        node_results.refresh()
+
+        return node_results
 
     def set_owner_data(self, key, value):
         """Add/update/remove node owner data.

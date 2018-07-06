@@ -303,9 +303,9 @@ class ResourceCollectionBase(object):
         """Iterate over the resources in the collection."""
         return iter(self.resources.values())
 
-    """
-    Resource count
-    """
-
     def len(self):
+        return len(self)
+
+    def __len__(self):
+        """Resource count."""
         return len(self.resources)
