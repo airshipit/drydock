@@ -51,7 +51,12 @@ coverage_test: build_drydock external_dep
 # Run just unit tests
 .PHONY: unit_tests
 unit_tests: external_dep
-	tox -re py35
+	tox -re py35 $(TESTS)
+
+# Run just DB integration tests
+.PHONY: db_integration_tests
+db_integration_tests: external_dep
+	tox -re integration $(TESTS)
 
 # Freeze full set of Python requirements
 .PHONY: req_freeze

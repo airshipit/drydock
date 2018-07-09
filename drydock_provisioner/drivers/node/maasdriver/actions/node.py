@@ -27,6 +27,7 @@ import drydock_provisioner.objects.fields as hd_fields
 import drydock_provisioner.objects.hostprofile as hostprofile
 import drydock_provisioner.objects as objects
 
+from drydock_provisioner.control.util import get_internal_api_href
 from drydock_provisioner.orchestrator.actions.orchestrator import BaseAction
 
 import drydock_provisioner.drivers.node.maasdriver.models.fabric as maas_fabric
@@ -50,6 +51,22 @@ class BaseMaasAction(BaseAction):
 
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.nodedriver_logger_name)
+
+    def _add_detail_logs(self, node, machine, data_gen, result_type='all'):
+        result_details = machine.get_task_results(result_type=result_type)
+        for r in result_details:
+            bd = objects.BuildData(
+                node_name=node.name,
+                task_id=self.task.task_id,
+                collected_date=r.updated,
+                generator=data_gen,
+                data_format='text/plain',
+                data_element=r.get_decoded_data())
+            self.state_manager.post_build_data(bd)
+        log_href = "%s/tasks/%s/builddata" % (
+            get_internal_api_href("v1.0"), str(self.task.task_id))
+        self.task.result.add_link('detail_logs', log_href)
+        self.task.save()
 
 
 class ValidateNodeServices(BaseMaasAction):
@@ -983,6 +1000,25 @@ class ConfigureHardware(BaseMaasAction):
                                 ctx_type='node')
                             self.task.success(focus=n.get_id())
                             self.collect_build_data(machine)
+                        else:
+                            msg = "Node %s failed commissioning." % (n.name)
+                            self.logger.info(msg)
+                            self.task.add_status_msg(
+                                msg=msg,
+                                error=True,
+                                ctx=n.name,
+                                ctx_type='node')
+                            self.task.failure(focus=n.get_id())
+                        self._add_detail_logs(
+                            n,
+                            machine,
+                            'maas_commission_log',
+                            result_type='commissioning')
+                        self._add_detail_logs(
+                            n,
+                            machine,
+                            'maas_testing_log',
+                            result_type='testing')
                     elif machine.status_name in ['Commissioning', 'Testing']:
                         msg = "Located node %s in MaaS, node already being commissioned. Skipping..." % (
                             n.name)
@@ -2123,12 +2159,21 @@ class DeployNode(BaseMaasAction):
                 self.task.add_status_msg(
                     msg=msg, error=False, ctx=n.name, ctx_type='node')
                 self.task.success(focus=n.get_id())
+            elif machine.status_name.startswith('Failed'):
+                msg = "Node %s deployment failed" % (n.name)
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.failure(focus=n.get_id())
             else:
                 msg = "Node %s deployment timed out" % (n.name)
                 self.logger.warning(msg)
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
+
+            self._add_detail_logs(
+                n, machine, 'maas_deploy_log', result_type='deploy')
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()

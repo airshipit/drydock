@@ -390,3 +390,20 @@ class TaskResource(StatefulResource):
             # Finished this layer, incrementing for the next while loop.
             current_layer = current_layer + 1
         return resp_data, errors
+
+
+class TaskBuilddataResource(StatefulResource):
+    """Handler resource for /tasks/<id>/builddata singleton endpoint."""
+
+    @policy.ApiEnforcer('physical_provisioner:read_build_data')
+    def on_get(self, req, resp, task_id):
+        try:
+            bd_list = self.state_manager.get_build_data(task_id=task_id)
+            if not bd_list:
+                resp.status = falcon.HTTP_404
+                return
+            resp.body = json.dumps(bd_list)
+        except Exception as e:
+            resp.body = "Unexpected error."
+            resp.status = falcon.HTTP_500
+        resp.status = falcon.HTTP_200

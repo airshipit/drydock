@@ -304,7 +304,9 @@ class Machine(model_base.ResourceBase):
                          ``all``, ``commissioning``, ``testing``, ``deploy``
         """
         node_results = maas_nr.NodeResults(
-            system_id_list=[self.resource_id], result_type=result_type)
+            self.api_client,
+            system_id_list=[self.resource_id],
+            result_type=result_type)
         node_results.refresh()
 
         return node_results

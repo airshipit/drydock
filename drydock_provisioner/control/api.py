@@ -20,6 +20,7 @@ from .designs import DesignsPartsKindsResource
 from .designs import DesignsPartResource
 from .tasks import TasksResource
 from .tasks import TaskResource
+from .tasks import TaskBuilddataResource
 from .nodes import NodesResource
 from .nodes import NodeBuildDataResource
 from .nodes import NodeFilterResource
@@ -67,6 +68,8 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
          TasksResource(state_manager=state_manager,
                        orchestrator=orchestrator)),
         ('/tasks/{task_id}', TaskResource(state_manager=state_manager)),
+        ('/tasks/{task_id}/builddata',
+         TaskBuilddataResource(state_manager=state_manager)),
 
         # API for managing site design data
         ('/designs', DesignsResource(state_manager=state_manager)),

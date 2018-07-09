@@ -18,6 +18,7 @@ from drydock_provisioner.drivers.node.maasdriver.models.node_results import Node
 class TestMaasNodeResults():
     def test_get_noderesults(self, mocker):
         '''Test noderesults refresh call to load a list of NodeResults.'''
+
         # A object to return that looks like a requests response
         # object wrapping a MAAS API response
         class MockedResponse():
@@ -26,17 +27,25 @@ class TestMaasNodeResults():
 
             def json(self):
                 resp_content = [{
-                    "id": 3,
-                    "data": "SGVsbG8gV29ybGQh",
-                    "result_type": 0,
-                    "script_result": 0,
-                    "resource_uri": "/MAAS/api/2.0/commissioning-scripts/",
-                    "updated": "2018-07-06T14:32:20.129",
+                    "id":
+                    3,
+                    "data":
+                    "SGVsbG8gV29ybGQh",
+                    "result_type":
+                    0,
+                    "script_result":
+                    0,
+                    "resource_uri":
+                    "/MAAS/api/2.0/commissioning-scripts/",
+                    "updated":
+                    "2018-07-06T14:32:20.129",
                     "node": {
                         "system_id": "r7mqnw"
                     },
-                    "created": "2018-07-06T14:37:12.632",
-                    "name": "hello_world"
+                    "created":
+                    "2018-07-06T14:37:12.632",
+                    "name":
+                    "hello_world"
                 }]
 
                 return resp_content

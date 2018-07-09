@@ -16,11 +16,13 @@ from drydock_provisioner.error import ApiError
 from drydock_provisioner.drydock_client.session import KeystoneClient
 from drydock_provisioner.util import KeystoneUtils
 
+
 def get_internal_api_href(ver):
     """Get the internal API href for Drydock API version ``ver``."""
 
     # TODO(sh8121att) Support versioned service registration
     supported_versions = ['v1.0']
+
     if ver in supported_versions:
         ks_sess = KeystoneUtils.get_session()
         url = KeystoneClient.get_endpoint(
