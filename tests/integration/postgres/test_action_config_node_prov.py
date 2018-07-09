@@ -17,7 +17,7 @@ from drydock_provisioner.drivers.node.maasdriver.actions.node import ConfigureNo
 
 
 class TestActionConfigureNodeProvisioner(object):
-    def test_create_maas_repo(selfi, mocker):
+    def test_create_maas_repo(self, mocker):
         distribution_list = ['xenial', 'xenial-updates']
 
         repo_obj = objects.Repository(

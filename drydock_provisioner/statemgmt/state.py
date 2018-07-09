@@ -272,8 +272,8 @@ class DrydockState(object):
         """
         try:
             with self.db_engine.connect() as conn:
-                query = self.tasks_tbl.insert().values(**(
-                    task.to_db(include_id=True)))
+                query = self.tasks_tbl.insert().values(
+                    **(task.to_db(include_id=True)))
                 conn.execute(query)
             return True
         except Exception as ex:
@@ -289,8 +289,8 @@ class DrydockState(object):
         try:
             with self.db_engine.connect() as conn:
                 query = self.tasks_tbl.update().where(
-                    self.tasks_tbl.c.task_id == task.task_id.bytes).values(**(
-                        task.to_db(include_id=False)))
+                    self.tasks_tbl.c.task_id == task.task_id.bytes).values(
+                        **(task.to_db(include_id=False)))
                 rs = conn.execute(query)
                 if rs.rowcount == 1:
                     return True
@@ -336,8 +336,8 @@ class DrydockState(object):
         try:
             with self.db_engine.connect() as conn:
                 query = self.active_instance_tbl.update().where(
-                    self.active_instance_tbl.c.identity == leader_id.bytes).values(
-                        last_ping=datetime.utcnow())
+                    self.active_instance_tbl.c.identity ==
+                    leader_id.bytes).values(last_ping=datetime.utcnow())
                 rs = conn.execute(query)
                 rc = rs.rowcount
 

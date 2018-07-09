@@ -941,7 +941,9 @@ class ConfigureHardware(BaseMaasAction):
                     n, update_name=False)
                 if machine is not None:
                     if machine.status_name in [
-                            'New', 'Broken', 'Failed commissioning', 'Failed testing']:
+                            'New', 'Broken', 'Failed commissioning',
+                            'Failed testing'
+                    ]:
                         self.logger.debug(
                             "Located node %s in MaaS, starting commissioning" %
                             (n.name))
@@ -988,7 +990,9 @@ class ConfigureHardware(BaseMaasAction):
                         self.task.add_status_msg(
                             msg=msg, error=False, ctx=n.name, ctx_type='node')
                         self.task.success(focus=n.get_id())
-                    elif machine.status_name in ['Ready', 'Deploying', 'Allocated', 'Deployed']:
+                    elif machine.status_name in [
+                            'Ready', 'Deploying', 'Allocated', 'Deployed'
+                    ]:
                         msg = "Located node %s in MaaS, node commissioned. Skipping..." % (
                             n.name)
                         self.logger.info(msg)

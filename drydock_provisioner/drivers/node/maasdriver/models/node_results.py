@@ -21,7 +21,10 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 class NodeResult(model_base.ResourceBase):
 
     resource_url = 'commissioning-results/'
-    fields = ['resource_id', 'name', 'result_type', 'updated', 'data', 'script_result']
+    fields = [
+        'resource_id', 'name', 'result_type', 'updated', 'data',
+        'script_result'
+    ]
     json_fields = []
 
     type_map = {
@@ -57,6 +60,7 @@ class NodeResult(model_base.ResourceBase):
     def get_type_desc(self):
         return NodeResult.type_rev_map.get(self.result_type)
 
+
 class NodeResults(model_base.ResourceCollectionBase):
 
     collection_url = 'commissioning-results/'
@@ -90,4 +94,5 @@ class NodeResults(model_base.ResourceCollectionBase):
                 if isinstance(o, dict):
                     i = self.collection_resource.from_dict(self.api_client, o)
                     self.resources[i.resource_id] = i
+
         return

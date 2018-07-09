@@ -214,5 +214,6 @@ class BootactionAssetType(BaseDrydockEnum):
 
     ALL = (PackageList, Unit, File)
 
+
 class BootactionAssetTypeField(fields.BaseEnumField):
     AUTO_TYPE = BootactionAssetType()

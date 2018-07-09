@@ -34,6 +34,7 @@ cache_opts = {
 cache = CacheManager(**parse_cache_config_options(cache_opts))
 LOG = logging.getLogger(__name__)
 
+
 class ReferenceResolver(object):
     """Class for handling different data references to resolve them data."""
 
@@ -65,8 +66,9 @@ class ReferenceResolver(object):
                     except Exception as ex:
                         tries = tries + 1
                         if tries < config_mgr.conf.network.http_client_retries:
-                            LOG.debug("Retrying reference after failure: %s" % str(ex))
-                            time.sleep(5 ** tries)
+                            LOG.debug("Retrying reference after failure: %s" %
+                                      str(ex))
+                            time.sleep(5**tries)
         except ValueError:
             raise errors.InvalidDesignReference(
                 "Cannot resolve design reference %s: unable to parse as valid URI."
@@ -87,7 +89,8 @@ class ReferenceResolver(object):
                 auth=(design_uri.username, design_uri.password),
                 timeout=get_client_timeouts())
         else:
-            response = requests.get(design_uri.geturl(), timeout=get_client_timeouts())
+            response = requests.get(
+                design_uri.geturl(), timeout=get_client_timeouts())
 
         return response.content
 
@@ -133,6 +136,7 @@ class ReferenceResolver(object):
         'deckhand+http': resolve_reference_ucp,
         'promenade+http': resolve_reference_ucp,
     }
+
 
 def get_client_timeouts():
     """Return a tuple of timeouts for the request library."""

@@ -33,10 +33,10 @@ class BootactionDefined(Validators):
 
         for n in nodes_wo_ba:
             msg = "Node %s is not in scope for any bootactions." % n.name
-            self.report_warn(msg, [
-                n.doc_ref
-            ], "It is expected all nodes have at least one post-deploy action."
-                             )
+            self.report_warn(
+                msg, [n.doc_ref],
+                "It is expected all nodes have at least one post-deploy action."
+            )
         return
 
 
@@ -57,20 +57,20 @@ class BootactionPackageListValid(Validators):
                 if a.type == 'pkg_list':
                     if not a.location and not a.package_list:
                         msg = "Bootaction has asset of type 'pkg_list' but no valid package data"
-                        self.report_error(msg, [
-                            ba.doc_ref
-                        ], "pkg_list bootaction assets must specify a list of packages."
-                                          )
+                        self.report_error(
+                            msg, [ba.doc_ref],
+                            "pkg_list bootaction assets must specify a list of packages."
+                        )
                     elif a.package_list:
                         for p, v in a.package_list.items():
                             try:
                                 self.validate_package_version(v)
                             except errors.InvalidPackageListFormat as ex:
                                 msg = str(ex)
-                                self.report_error(msg, [
-                                    ba.doc_ref
-                                ], "pkg_list version specifications must be in a valid format."
-                                                  )
+                                self.report_error(
+                                    msg, [ba.doc_ref],
+                                    "pkg_list version specifications must be in a valid format."
+                                )
         return
 
     def validate_package_version(self, v):

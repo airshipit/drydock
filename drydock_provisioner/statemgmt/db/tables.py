@@ -62,6 +62,7 @@ class Tasks(ExtendTable):
     __schema__ = copy.copy(__baseschema__)
     __schema__.extend(__add_result_links__)
 
+
 class ResultMessage(ExtendTable):
     """Table for tracking result/status messages."""
 

@@ -303,7 +303,8 @@ class Machine(model_base.ResourceBase):
         :param str result_type: the type of results to return. One of
                          ``all``, ``commissioning``, ``testing``, ``deploy``
         """
-        node_results = maas_nr.NodeResults(system_id_list=[self.resource_id], result_type=result_type)
+        node_results = maas_nr.NodeResults(
+            system_id_list=[self.resource_id], result_type=result_type)
         node_results.refresh()
 
         return node_results

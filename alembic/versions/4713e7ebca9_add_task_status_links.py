@@ -26,4 +26,3 @@ def upgrade():
 def downgrade():
     for c in tables.Tasks.__add_result_links__:
         op.drop_column(tables.Tasks.__tablename__, c.name)
-

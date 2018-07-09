@@ -109,15 +109,21 @@ class DrydockConfig(object):
         cfg.IntOpt(
             'http_client_connect_timeout',
             default=16,
-            help='Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'),
+            help=
+            'Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'
+        ),
         cfg.IntOpt(
             'http_client_read_timeout',
             default=300,
-            help='Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'),
+            help=
+            'Timeout for initial read of outgoing HTTP calls from Drydock in seconds.'
+        ),
         cfg.IntOpt(
             'http_client_retries',
             default=3,
-            help='Number of retries for transient errors of outgoing HTTP calls from Drydock.'),
+            help=
+            'Number of retries for transient errors of outgoing HTTP calls from Drydock.'
+        ),
     ]
 
     # Enabled plugins
