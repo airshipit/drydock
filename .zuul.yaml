@@ -13,35 +13,14 @@
 - project:
     check:
       jobs:
-        - airship-drydock-lint-ws
-        - airship-drydock-doc-build
-        - airship-drydock-lint-pep8:
-            files:
-              - ^.*\.py$
-        - airship-drydock-lint-chart:
-            files:
-              - ^charts/.*$
-        - airship-drydock-unit-py35
-        - airship-drydock-security-bandit:
-            files:
-              - ^.*\.py$
+        - airship-drydock-omni-test
         - airship-drydock-docker-build-gate
 
     gate:
       jobs:
-        - airship-drydock-lint-ws
-        - airship-drydock-doc-build
-        - airship-drydock-lint-pep8:
-            files:
-              - ^.*\.py$
-        - airship-drydock-lint-chart:
-            files:
-              - ^charts/.*$
-        - airship-drydock-unit-py35
+        - airship-drydock-omni-test
         - airship-drydock-docker-build-gate
-        - airship-drydock-security-bandit:
-            files:
-              - ^.*\.py$
+
     post:
       jobs:
         - airship-drydock-doc-publish
@@ -54,43 +33,12 @@
         label: ubuntu-xenial
 
 - job:
-    name: airship-drydock-lint-ws
+    name: airship-drydock-omni-test
     description: |
-      Lints all files for trailing whitespace
-    run: tools/gate/playbooks/zuul-linter.yaml
-    timeout: 300
-    nodeset: airship-drydock-single-node
-
-- job:
-    name: airship-drydock-lint-pep8
-    description: |
-      Lints Python files against the PEP8 standard
-    run: tools/gate/playbooks/pep8-linter.yaml
-    timeout: 300
-    nodeset: airship-drydock-single-node
-
-- job:
-    name: airship-drydock-lint-chart
-    description: |
-      Lints Helm charts for validity
-    run: tools/gate/playbooks/helm-linter.yaml
-    timeout: 300
-    nodeset: airship-drydock-single-node
-
-- job:
-    name: airship-drydock-unit-py35
-    description: |
-      Executes unit tests under Python 3.5
-    run: tools/gate/playbooks/unit-py35.yaml
-    timeout: 300
-    nodeset: airship-drydock-single-node
-
-- job:
-    name: airship-drydock-security-bandit
-    description: |
-      Executes the Bandit security scanner against Python files
-    run: tools/gate/playbooks/security-bandit.yaml
-    timeout: 300
+      Run a set of lightweight lints and tests
+      (pep8, Helm chart lint, Sphinx build, Python unit tests, Bandit scan)
+    run: tools/gate/playbooks/omni_test.yaml
+    timeout: 900
     nodeset: airship-drydock-single-node
 
 - job:
@@ -125,14 +73,6 @@
           commit: true
         static:
           - latest
-
-- job:
-    name: airship-drydock-doc-build
-    description: |
-      Locally build the documentation to check for errors
-    run: tools/gate/playbooks/doc-build.yaml
-    timeout: 300
-    nodeset: airship-drydock-single-node
 
 - job:
     name: airship-drydock-doc-publish

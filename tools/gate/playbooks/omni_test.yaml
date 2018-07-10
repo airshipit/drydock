@@ -1,4 +1,3 @@
-
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,11 +10,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Combine several test tasks into a single playbook
+# to minimize Zuul node consumption
+
 - hosts: primary
   tasks:
+    - name: Execute the make target for PEP8 linting
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: pep8
+      register: result
     - name: Execute the make target for Helm chart linting
       make:
         chdir: "{{ zuul.project.src_dir }}"
         target: helm_lint
       register: result
-      failed_when: result.failed
+    - name: Build documents locally
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: docs
+      register: result
+    - name: Execute the make target for security scanning
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: security
+      register: result
+    - name: Execute the make target for unit testing
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: unit_tests
+      register: result
+
