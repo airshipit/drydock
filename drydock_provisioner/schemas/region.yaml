@@ -46,6 +46,10 @@ data:
             type: 'array'
             items:
               type: 'string'
+          subrepos:
+            type: 'array'
+            items:
+              type: 'string'
           components:
             type: 'array'
             items:

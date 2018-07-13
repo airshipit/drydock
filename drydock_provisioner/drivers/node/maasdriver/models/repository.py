@@ -21,11 +21,11 @@ class Repository(model_base.ResourceBase):
     resource_url = 'package-repositories/{resource_id}/'
     fields = [
         'resource_id', 'name', 'url', 'distributions', 'components', 'arches',
-        'key', 'enabled'
+        'key', 'enabled', 'disabled_components', 'disabled_pockets'
     ]
     json_fields = [
         'name', 'url', 'distributions', 'components', 'arches', 'key',
-        'enabled'
+        'enabled', 'disabled_components', 'disabled_pockets'
     ]
 
     def __init__(self, api_client, **kwargs):

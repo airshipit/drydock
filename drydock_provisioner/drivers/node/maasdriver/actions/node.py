@@ -622,6 +622,9 @@ class CreateNetworkTemplate(BaseMaasAction):
 
 class ConfigureNodeProvisioner(BaseMaasAction):
     """Action for configuring site-wide node provisioner options."""
+    # These repo names cannot be deleted out of MAAS
+    # and maintain functionality
+    DEFAULT_REPOS = ['main_archive', 'ports_archive']
 
     def start(self):
         self.task.set_status(hd_fields.TaskStatus.Running)
@@ -689,6 +692,16 @@ class ConfigureNodeProvisioner(BaseMaasAction):
                     self.task.add_status_msg(
                         msg=msg, error=True, ctx='NA', ctx_type='NA')
                     self.task.failure()
+            if repo_list.remove_unlisted:
+                defined_repos = [x.get_id() for x in repo_list]
+                to_delete = [r
+                             for r
+                             in current_repos
+                             if r.name not in defined_repos]
+                for r in to_delete:
+                    if r.name not in self.DEFAULT_REPOS:
+                        r.delete()
+                current_repos.refresh()
         else:
             msg = ("No repositories to add, no work to do.")
             self.logger.debug(msg)
@@ -714,7 +727,12 @@ class ConfigureNodeProvisioner(BaseMaasAction):
         if repo_obj.distributions:
             model_fields['distributions'] = ','.join(repo_obj.distributions)
         if repo_obj.components:
-            model_fields['components'] = ','.join(repo_obj.components)
+            if repo_obj.get_id() in ConfigureNodeProvisioner.DEFAULT_REPOS:
+                model_fields['disabled_components'] = ','.join(repo_obj.get_disabled_components())
+            else:
+                model_fields['components'] = ','.join(repo_obj.components)
+        if repo_obj.get_disabled_subrepos():
+            model_fields['disabled_pockets'] = ','.join(repo_obj.get_disabled_subrepos())
         if repo_obj.arches:
             model_fields['arches'] = ','.join(repo_obj.arches)
 

@@ -101,9 +101,18 @@ class Repository(base.DrydockObject):
         'repo_type': ovo_fields.StringField(),
         'gpgkey': ovo_fields.StringField(nullable=True),
         'distributions': ovo_fields.ListOfStringsField(nullable=True),
+        'subrepos': ovo_fields.ListOfStringsField(nullable=True),
         'components': ovo_fields.ListOfStringsField(nullable=True),
         'arches': ovo_fields.ListOfStringsField(default=['amd64']),
         'options': ovo_fields.DictOfStringsField(nullable=True)
+    }
+
+    STANDARD_COMPONENTS = {
+        'apt': {'main', 'restricted', 'universe', 'multiverse'},
+    }
+
+    STANDARD_SUBREPOS = {
+        'apt': {'security', 'updates', 'backports'},
     }
 
     def __init__(self, **kwargs):
@@ -113,6 +122,15 @@ class Repository(base.DrydockObject):
     def get_id(self):
         return self.name
 
+    def get_disabled_components(self):
+        enabled = set(self.components or [])
+        std = self.STANDARD_COMPONENTS.get(self.repo_type, ())
+        return std - enabled
+
+    def get_disabled_subrepos(self):
+        enabled = set(self.subrepos or [])
+        std = self.STANDARD_SUBREPOS.get(self.repo_type, ())
+        return std - enabled
 
 @base.DrydockObjectRegistry.register
 class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
