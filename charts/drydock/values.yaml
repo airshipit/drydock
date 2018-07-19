@@ -325,6 +325,7 @@ conf:
       ingester:
         - 'drydock_provisioner.ingester.plugins.yaml.YamlIngester'
       oob_driver:
+        - 'drydock_provisioner.drivers.oob.redfish_driver.driver.RedfishDriver'
         - 'drydock_provisioner.drivers.oob.pyghmi_driver.driver.PyghmiDriver'
         - 'drydock_provisioner.drivers.oob.manual_driver.driver.ManualDriver'
         - 'drydock_provisioner.drivers.oob.libvirt_driver.driver.LibvirtDriver'
