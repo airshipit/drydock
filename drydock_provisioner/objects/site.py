@@ -132,6 +132,7 @@ class Repository(base.DrydockObject):
         std = self.STANDARD_SUBREPOS.get(self.repo_type, ())
         return std - enabled
 
+
 @base.DrydockObjectRegistry.register
 class RepositoryList(base.DrydockObjectListBase, base.DrydockObject):
 

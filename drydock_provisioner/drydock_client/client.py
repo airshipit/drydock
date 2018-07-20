@@ -29,6 +29,31 @@ class DrydockClient(object):
         self.session = session
         self.logger = logging.getLogger(__name__)
 
+    def get_task_build_data(self, task_id):
+        """Get the build data associated with ``task_id``.
+
+        :param str task_id: A UUID-formatted task ID
+        :return: A list of dictionaries resembling objects.builddata.BuildData
+        """
+        endpoint = 'v1.0/tasks/{}/builddata'.format(task_id)
+
+        resp = self.session.get(endpoint)
+        self._check_response(resp)
+        return resp.json()
+
+    def get_node_build_data(self, nodename, latest=True):
+        """Get the build data associated with ``nodename``.
+
+        :param str nodename: Name of the node
+        :param bool latest: Whether to request only the latest version of each data item
+        :return: A list of dictionaries resembling objects.builddata.BuildData
+        """
+        endpoint = 'v1.0/nodes/{}/builddata?latest={}'.format(nodename, latest)
+
+        resp = self.session.get(endpoint)
+        self._check_response(resp)
+        return resp.json()
+
     def get_nodes(self):
         """Get list of nodes in MaaS and their status."""
         endpoint = 'v1.0/nodes'

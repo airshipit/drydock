@@ -14,10 +14,12 @@
 """Contains commands related to tasks against designs."""
 import click
 import json
+import yaml
 
 from drydock_provisioner.cli.task.actions import TaskList
 from drydock_provisioner.cli.task.actions import TaskShow
 from drydock_provisioner.cli.task.actions import TaskCreate
+from drydock_provisioner.cli.task.actions import TaskBuildData
 
 
 @click.group()
@@ -105,3 +107,26 @@ def task_show(ctx, task_id=None, block=False):
 
     click.echo(
         json.dumps(TaskShow(ctx.obj['CLIENT'], task_id=task_id).invoke()))
+
+
+@task.command(name='builddata')
+@click.option('--task-id', '-t', help='The required task id')
+@click.option(
+    '--output', '-o', help='The output format (yaml|json)', default='yaml')
+@click.pass_context
+def task_builddata(ctx, task_id=None, output='yaml'):
+    """Show builddata assoicated with ``task_id``."""
+    if not task_id:
+        ctx.fail('The task id must be specified by --task-id')
+
+    task_bd = TaskBuildData(ctx.obj['CLIENT'], task_id=task_id).invoke()
+
+    if output == 'json':
+        click.echo(json.dumps(task_bd))
+    else:
+        if output != 'yaml':
+            click.echo(
+                'Invalid output format {}, defaulting to YAML.'.format(output))
+        click.echo(
+            yaml.safe_dump(
+                task_bd, allow_unicode=True, default_flow_style=False))

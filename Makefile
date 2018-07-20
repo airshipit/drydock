@@ -45,7 +45,7 @@ external_dep: requirements-host.txt
 
 # Run unit and Postgres integration tests in coverage mode
 .PHONY: coverage_test
-coverage_test: build_drydock external_dep
+coverage_test: build_drydock
 	tox -re cover
 
 # Run just unit tests
@@ -101,7 +101,7 @@ helm-install:
 # Make targets intended for use by the primary targets above.
 
 .PHONY: build_drydock
-build_drydock:
+build_drydock: external_dep
 ifeq ($(USE_PROXY), true)
 	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile \
 		--build-arg http_proxy=$(PROXY) \

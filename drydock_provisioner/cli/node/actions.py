@@ -30,3 +30,22 @@ class NodeList(CliAction):  # pylint: disable=too-few-public-methods
 
     def invoke(self):
         return self.api_client.get_nodes()
+
+
+class NodeBuildData(CliAction):
+    """ Action to print node build data."""
+
+    def __init__(self, api_client, nodename, latest):
+        """
+        :param DrydockClient api_client: the api client used for invocation.
+        :param str nodename: The name of the node to retrieve data for.
+        :param bool latest: If only the latest build data should be retrieved.
+        """
+        super().__init__(api_client)
+        self.nodename = nodename
+        self.latest = latest
+        self.logger.debug('NodeBuildData action initialized')
+
+    def invoke(self):
+        return self.api_client.get_node_build_data(
+            self.nodename, latest=self.latest)

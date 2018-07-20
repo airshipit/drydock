@@ -16,10 +16,12 @@
 """
 import click
 import json
+import yaml
 
 from prettytable import PrettyTable
 
 from drydock_provisioner.cli.node.actions import NodeList
+from drydock_provisioner.cli.node.actions import NodeBuildData
 
 
 @click.group()
@@ -54,3 +56,27 @@ def node_list(ctx, output='table'):
         click.echo(pt)
     elif output == 'json':
         click.echo(json.dumps(nodelist))
+
+
+@node.command(name='builddata')
+@click.option(
+    '--latest/--no-latest',
+    help='Retrieve only the latest data items.',
+    default=True)
+@click.option(
+    '--output', '-o', help='Output format: yaml|json', default='yaml')
+@click.argument('nodename')
+@click.pass_context
+def node_builddata(ctx, nodename, latest=True, output='yaml'):
+    """List build data for ``nodename``."""
+    node_bd = NodeBuildData(ctx.obj['CLIENT'], nodename, latest).invoke()
+
+    if output == 'json':
+        click.echo(json.dumps(node_bd))
+    else:
+        if output != 'yaml':
+            click.echo(
+                "Invalid output format {}, default to YAML.".format(output))
+        click.echo(
+            yaml.safe_dump(
+                node_bd, allow_unicode=True, default_flow_style=False))

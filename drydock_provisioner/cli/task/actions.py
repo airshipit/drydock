@@ -141,3 +141,18 @@ class TaskShow(CliAction):  # pylint: disable=too-few-public-methods
             task = self.api_client.get_task(task_id=task_id)
             if task.status in [TaskStatus.Complete, TaskStatus.Terminated]:
                 return task
+
+
+class TaskBuildData(CliAction):
+    """Action to retrieve task build data."""
+
+    def __init__(self, api_client, task_id):
+        """
+        :param DrydockClient api_client: the api client instance used for invocation.
+        :param str task_id: A UUID-like task_id
+        """
+        super().__init__(api_client)
+        self.task_id = task_id
+
+    def invoke(self):
+        return self.api_client.get_task_build_data(self.task_id)
