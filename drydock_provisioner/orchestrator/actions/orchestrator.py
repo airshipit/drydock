@@ -202,10 +202,66 @@ class DestroyNodes(BaseAction):
 
     def start(self):
         """Start executing this action."""
-        self.task.set_status(hd_fields.TaskStatus.Complete)
-        self.task.failure()
+        self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
+        node_driver = self._get_driver('node')
+
+        if node_driver is None:
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.add_status_msg(
+                msg="No node driver enabled, ending task.",
+                error=True,
+                ctx=str(self.task.get_id()),
+                ctx_type='task')
+            self.task.result.set_message("No NodeDriver enabled.")
+            self.task.result.set_reason("Bad Configuration.")
+            self.task.failure()
+            self.task.save()
+            return
+
+        target_nodes = self.orchestrator.get_target_nodes(self.task)
+
+        if not target_nodes:
+            self.task.add_status_msg(
+                msg="No nodes in scope, no work to to do.",
+                error=False,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.success()
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.save()
+            return
+
+        node_release_task = None
+        while True:
+            if node_release_task is None:
+                node_release_task = self.orchestrator.create_task(
+                    design_ref=self.task.design_ref,
+                    action=hd_fields.OrchestratorAction.DestroyNode,
+                    node_filter=self.task.node_filter)
+                self.task.register_subtask(node_release_task)
+
+            self.logger.info(
+                "Starting node driver task %s to Release nodes." %
+                (node_release_task.get_id()))
+            node_driver.execute_task(node_release_task.get_id())
+
+            node_release_task = self.state_manager.get_task(
+                node_release_task.get_id())
+
+            try:
+                if not node_release_task.retry_task(max_attempts=3):
+                    break
+            except errors.MaxRetriesReached:
+                self.task.failure()
+                break
+
+        self.task.set_status(hd_fields.TaskStatus.Complete)
+        self.task.bubble_results(
+            action_filter=hd_fields.OrchestratorAction.DestroyNode)
+        self.task.align_result()
+        self.task.save()
         return
 
 
