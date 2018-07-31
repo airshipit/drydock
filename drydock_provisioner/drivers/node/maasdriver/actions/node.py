@@ -52,17 +52,18 @@ class BaseMaasAction(BaseAction):
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.nodedriver_logger_name)
 
-    def _add_detail_logs(self, node, machine, data_gen, result_type='all'):
+    def _add_detail_logs(self, node, machine, stage, result_type='all'):
         result_details = machine.get_task_results(result_type=result_type)
         for r in result_details:
-            bd = objects.BuildData(
-                node_name=node.name,
-                task_id=self.task.task_id,
-                collected_date=r.updated,
-                generator=data_gen,
-                data_format='text/plain',
-                data_element=r.get_decoded_data())
-            self.state_manager.post_build_data(bd)
+            if r.get_decoded_data():
+                bd = objects.BuildData(
+                    node_name=node.name,
+                    task_id=self.task.task_id,
+                    collected_date=r.updated,
+                    generator="{}:{}".format(stage, r.name),
+                    data_format='text/plain',
+                    data_element=r.get_decoded_data())
+                self.state_manager.post_build_data(bd)
         log_href = "%s/tasks/%s/builddata" % (
             get_internal_api_href("v1.0"), str(self.task.task_id))
         self.task.result.add_link('detail_logs', log_href)
@@ -1013,12 +1014,12 @@ class ConfigureHardware(BaseMaasAction):
                         self._add_detail_logs(
                             n,
                             machine,
-                            'maas_commission_log',
+                            'commission',
                             result_type='commissioning')
                         self._add_detail_logs(
                             n,
                             machine,
-                            'maas_testing_log',
+                            'testing',
                             result_type='testing')
                     elif machine.status_name in ['Commissioning', 'Testing']:
                         msg = "Located node %s in MaaS, node already being commissioned. Skipping..." % (
@@ -1052,6 +1053,7 @@ class ConfigureHardware(BaseMaasAction):
             except Exception as ex:
                 msg = "Error commissioning node %s: %s" % (n.name, str(ex))
                 self.logger.warning(msg)
+                self.logger.debug("Unhandled exception attempting to commission node.", exc_info=ex)
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
@@ -2172,10 +2174,8 @@ class DeployNode(BaseMaasAction):
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
-
             self._add_detail_logs(
-                n, machine, 'maas_deploy_log', result_type='deploy')
-
+                n, machine, 'deploy', result_type='deploy')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
 

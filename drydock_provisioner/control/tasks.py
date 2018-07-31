@@ -398,12 +398,14 @@ class TaskBuilddataResource(StatefulResource):
     @policy.ApiEnforcer('physical_provisioner:read_build_data')
     def on_get(self, req, resp, task_id):
         try:
-            bd_list = self.state_manager.get_build_data(task_id=task_id)
+            bd_list = self.state_manager.get_build_data(task_id=uuid.UUID(task_id))
             if not bd_list:
                 resp.status = falcon.HTTP_404
                 return
-            resp.body = json.dumps(bd_list)
+            resp.body = json.dumps([bd.to_dict() for bd in bd_list])
         except Exception as e:
+            self.error(req.context, "Unknown error: %s" % (str(e)))
             resp.body = "Unexpected error."
             resp.status = falcon.HTTP_500
+            return
         resp.status = falcon.HTTP_200
