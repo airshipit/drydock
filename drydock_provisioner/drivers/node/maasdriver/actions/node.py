@@ -1042,7 +1042,8 @@ class IdentifyNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(n)
+                machine = machine_list.identify_baremetal_node(n,
+                                                               domain=n.get_domain(site_design))
                 if machine is not None:
                     self.task.success(focus=n.get_id())
                     self.task.add_status_msg(

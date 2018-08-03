@@ -47,8 +47,9 @@ class Machine(model_base.ResourceBase):
         'owner_data',
         'block_devices',
         'volume_groups',
+        'domain'
     ]
-    json_fields = ['hostname', 'power_type']
+    json_fields = ['hostname', 'power_type', 'domain']
 
     def __init__(self, api_client, **kwargs):
         super(Machine, self).__init__(api_client, **kwargs)
@@ -533,7 +534,7 @@ class Machines(model_base.ResourceCollectionBase):
 
         return node
 
-    def identify_baremetal_node(self, node_model, update_name=True):
+    def identify_baremetal_node(self, node_model, update_name=True, domain="local"):
         """Find MaaS node resource matching Drydock BaremetalNode.
 
         Search all the defined MaaS Machines and attempt to match
@@ -583,6 +584,7 @@ class Machines(model_base.ResourceCollectionBase):
         if maas_node.hostname != node_model.name and update_name:
             try:
                 maas_node.hostname = node_model.name
+                maas_node.domain = domain
                 maas_node.update()
                 if node_model.oob_type == 'libvirt':
                     self.logger.debug(

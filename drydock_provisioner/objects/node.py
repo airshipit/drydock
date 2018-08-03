@@ -94,6 +94,41 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
         return
 
+    def get_domain(self, site_design):
+        """Return the domain for this node.
+
+        The domain for this is the DNS domain of the primary network or local.
+
+        :param SiteDesign site_design: A instance containing definitions for the networks
+                                       this node is attached to.
+        """
+        try:
+            pn = site_design.get_network(self.primary_network)
+            domain = pn.dns_domain or "local"
+        except errors.DesignError as dex:
+            self.logger.debug("Primary network not found, use domain 'local'.")
+            domain = "local"
+        except AttributeError as aex:
+            self.logger.debug("Primary network does not define a domain, use domain 'local'.")
+            domain = "local"
+
+        return domain
+
+    def get_fqdn(self, site_design):
+        """Returns the FQDN for this node.
+
+        The FQDN for this node is composed of the node hostname ``self.name`` appended
+        with the domain name of the primary network if defined. If the primary network
+        does not define a domain name, the domain is ``local``.
+
+        :param site_design: A SiteDesign instance containing definitions for the networks
+                            the node is attached to.
+        """
+        hostname = self.name
+        domain = self.get_domain(site_design)
+
+        return "{}.{}".format(hostname, domain)
+
     def resolve_kernel_params(self, site_design):
         """Check if any kernel parameter values are supported references."""
         if not self.hardware_profile:
