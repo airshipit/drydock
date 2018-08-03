@@ -203,9 +203,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.networks.append(new_network)
 
     def get_network(self, network_key):
-        for n in self.networks:
-            if n.get_id() == network_key:
-                return n
+        if self.networks:
+            for n in self.networks:
+                if n.get_id() == network_key:
+                    return n
 
         raise errors.DesignError(
             "Network %s not found in design state" % network_key)
@@ -220,9 +221,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.network_links.append(new_network_link)
 
     def get_network_link(self, link_key):
-        for l in self.network_links:
-            if l.get_id() == link_key:
-                return l
+        if self.network_links:
+            for l in self.network_links:
+                if l.get_id() == link_key:
+                    return l
 
         raise errors.DesignError(
             "NetworkLink %s not found in design state" % link_key)
@@ -237,9 +239,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.racks.append(new_rack)
 
     def get_rack(self, rack_key):
-        for r in self.racks:
-            if r.get_id() == rack_key:
-                return r
+        if self.racks:
+            for r in self.racks:
+                if r.get_id() == rack_key:
+                    return r
         raise errors.DesignError(
             "Rack %s not found in design state" % rack_key)
 
@@ -258,9 +261,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
         :param ba_key: Value should match the ``get_id()`` value of the BootAction returned
         """
-        for ba in self.bootactions:
-            if ba.get_id() == ba_key:
-                return ba
+        if self.bootactions:
+            for ba in self.bootactions:
+                if ba.get_id() == ba_key:
+                    return ba
         raise errors.DesignError(
             "BootAction %s not found in design state" % ba_key)
 
@@ -274,9 +278,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.host_profiles.append(new_host_profile)
 
     def get_host_profile(self, profile_key):
-        for p in self.host_profiles:
-            if p.get_id() == profile_key:
-                return p
+        if self.host_profiles:
+            for p in self.host_profiles:
+                if p.get_id() == profile_key:
+                    return p
 
         raise errors.DesignError(
             "HostProfile %s not found in design state" % profile_key)
@@ -291,9 +296,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.hardware_profiles.append(new_hardware_profile)
 
     def get_hardware_profile(self, profile_key):
-        for p in self.hardware_profiles:
-            if p.get_id() == profile_key:
-                return p
+        if self.hardware_profiles:
+            for p in self.hardware_profiles:
+                if p.get_id() == profile_key:
+                    return p
 
         raise errors.DesignError(
             "HardwareProfile %s not found in design state" % profile_key)
@@ -308,9 +314,10 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
         self.baremetal_nodes.append(new_baremetal_node)
 
     def get_baremetal_node(self, node_key):
-        for n in self.baremetal_nodes:
-            if n.get_id() == node_key:
-                return n
+        if self.baremetal_nodes:
+            for n in self.baremetal_nodes:
+                if n.get_id() == node_key:
+                    return n
 
         raise errors.DesignError(
             "BaremetalNode %s not found in design state" % node_key)

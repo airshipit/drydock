@@ -54,11 +54,13 @@ class TestHostnameValidity(object):
         validator = HostnameValidity()
         message_list = validator.execute(site_design, orchestrator=orch)
 
+        long_label = "sitenameisverylongsoitshouldbeinvalidperrfcifikeepaddingoctetsafewmore"
         for msg in message_list:
             msg = msg.to_dict()
             LOG.debug(msg)
             assert msg.get('error')
             assert len(msg.get('documents')) > 0
-            assert "bad__name" in msg.get('message')
+            assert "bad__name" in msg.get('message') or long_label in msg.get(
+                'message')
 
-        assert len(message_list) == 1
+        assert len(message_list) > 1

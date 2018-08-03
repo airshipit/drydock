@@ -182,7 +182,7 @@ data:
       gateway: 141.16.1.1
       metric: 10
   dns:
-    domain: mgmt.sitename.example.com
+    domain: mgmt.sitenameisverylongsoitshouldbeinvalidperrfcifikeepaddingoctetsafewmore.example.com
     servers: 172.16.1.9,172.16.1.10
 ---
 schema: 'drydock/Network/v1'
