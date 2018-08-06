@@ -103,15 +103,21 @@ class DrydockConfig(object):
         cfg.IntOpt(
             'pool_timeout',
             default=30,
-            help='How long a request for a connection should wait before one becomes available.'),
+            help=
+            'How long a request for a connection should wait before one becomes available.'
+        ),
         cfg.IntOpt(
             'pool_overflow',
             default=10,
-            help='How many connections above pool_size are allowed to be open during high usage.'),
+            help=
+            'How many connections above pool_size are allowed to be open during high usage.'
+        ),
         cfg.IntOpt(
             'connection_recycle',
             default=-1,
-            help='Time, in seconds, when a connection should be closed and re-established. -1 for no recycling.'),
+            help=
+            'Time, in seconds, when a connection should be closed and re-established. -1 for no recycling.'
+        ),
     ]
 
     # Options for the boot action framework

@@ -49,7 +49,10 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
     # Compile the applied version of this model sourcing referenced
     # data from the passed site design
-    def compile_applied_model(self, site_design, state_manager, resolve_aliases=False):
+    def compile_applied_model(self,
+                              site_design,
+                              state_manager,
+                              resolve_aliases=False):
         self.logger.debug("Applying host profile to node %s" % self.name)
         self.apply_host_profile(site_design)
         self.logger.debug("Applying hardware profile to node %s" % self.name)
@@ -58,7 +61,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         self.logger.debug("Resolving kernel parameters on node %s" % self.name)
         self.resolve_kernel_params(site_design)
         if resolve_aliases:
-            self.logger.debug("Resolving device aliases on node %s" % self.name)
+            self.logger.debug(
+                "Resolving device aliases on node %s" % self.name)
             self.apply_logicalnames(site_design, state_manager)
         return
 
@@ -109,7 +113,9 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             self.logger.debug("Primary network not found, use domain 'local'.")
             domain = "local"
         except AttributeError as aex:
-            self.logger.debug("Primary network does not define a domain, use domain 'local'.")
+            self.logger.debug(
+                "Primary network does not define a domain, use domain 'local'."
+            )
             domain = "local"
 
         return domain

@@ -180,7 +180,10 @@ class DrydockSession(object):
 
 class KeystoneClient(object):
     @staticmethod
-    def get_endpoint(endpoint, ks_sess=None, auth_info=None, interface='internal'):
+    def get_endpoint(endpoint,
+                     ks_sess=None,
+                     auth_info=None,
+                     interface='internal'):
         """
         Wraps calls to keystone for lookup of an endpoint by service type
         :param endpoint: The endpoint to look up
@@ -193,8 +196,7 @@ class KeystoneClient(object):
         if ks_sess is None:
             ks_sess = KeystoneClient.get_ks_session(**auth_info)
 
-        return ks_sess.get_endpoint(
-            interface=interface, service_type=endpoint)
+        return ks_sess.get_endpoint(interface=interface, service_type=endpoint)
 
     @staticmethod
     def get_token(ks_sess=None, auth_info=None):

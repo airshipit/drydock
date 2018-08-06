@@ -31,23 +31,10 @@ class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
     fields = [
-        'resource_id',
-        'hostname',
-        'power_type',
-        'power_state',
-        'power_parameters',
-        'interfaces',
-        'boot_interface',
-        'memory',
-        'cpu_count',
-        'tag_names',
-        'status_name',
-        'boot_mac',
-        'boot_ip',
-        'owner_data',
-        'block_devices',
-        'volume_groups',
-        'domain'
+        'resource_id', 'hostname', 'power_type', 'power_state',
+        'power_parameters', 'interfaces', 'boot_interface', 'memory',
+        'cpu_count', 'tag_names', 'status_name', 'boot_mac', 'boot_ip',
+        'owner_data', 'block_devices', 'volume_groups', 'domain'
     ]
     json_fields = ['hostname', 'power_type', 'domain']
 
@@ -534,7 +521,10 @@ class Machines(model_base.ResourceCollectionBase):
 
         return node
 
-    def identify_baremetal_node(self, node_model, update_name=True, domain="local"):
+    def identify_baremetal_node(self,
+                                node_model,
+                                update_name=True,
+                                domain="local"):
         """Find MaaS node resource matching Drydock BaremetalNode.
 
         Search all the defined MaaS Machines and attempt to match
