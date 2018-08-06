@@ -240,6 +240,7 @@ class BootActionAsset(base.DrydockObject):
         node = site_design.get_baremetal_node(nodename)
         return dict(
             hostname=nodename,
+            domain=node.get_domain(site_design),
             tags=[t for t in node.tags],
             labels={k: v
                     for (k, v) in node.owner_data.items()},

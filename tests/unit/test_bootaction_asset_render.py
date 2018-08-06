@@ -90,3 +90,20 @@ class TestBootactionRenderAction(object):
         assert 'bond0' in iface_ctx
         assert iface_ctx['bond0'].get('sriov')
         assert iface_ctx['bond0'].get('vf_count') == 2
+
+    def test_bootaction_node_domain(self, input_files, deckhand_orchestrator,
+                                    setup):
+        """Test that a boot action creates proper node domain."""
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_ref = "file://%s" % str(input_file)
+
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
+            design_ref)
+
+        node_domain = "mgmt.sitename.example.com"
+
+        ba = design_data.get_bootaction('helloworld')
+        node_ctx = ba.asset_list[0]._get_node_context('compute01', design_data)
+
+        assert node_ctx['domain'] == node_domain

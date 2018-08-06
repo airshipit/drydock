@@ -398,7 +398,8 @@ class TaskBuilddataResource(StatefulResource):
     @policy.ApiEnforcer('physical_provisioner:read_build_data')
     def on_get(self, req, resp, task_id):
         try:
-            bd_list = self.state_manager.get_build_data(task_id=uuid.UUID(task_id))
+            bd_list = self.state_manager.get_build_data(
+                task_id=uuid.UUID(task_id))
             if not bd_list:
                 resp.status = falcon.HTTP_404
                 return

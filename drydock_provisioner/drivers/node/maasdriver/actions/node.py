@@ -41,6 +41,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.rack_controller as maa
 import drydock_provisioner.drivers.node.maasdriver.models.partition as maas_partition
 import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
 import drydock_provisioner.drivers.node.maasdriver.models.repository as maas_repo
+import drydock_provisioner.drivers.node.maasdriver.models.domain as maas_domain
 
 
 class BaseMaasAction(BaseAction):
@@ -64,8 +65,8 @@ class BaseMaasAction(BaseAction):
                     data_format='text/plain',
                     data_element=r.get_decoded_data())
                 self.state_manager.post_build_data(bd)
-        log_href = "%s/tasks/%s/builddata" % (
-            get_internal_api_href("v1.0"), str(self.task.task_id))
+        log_href = "%s/tasks/%s/builddata" % (get_internal_api_href("v1.0"),
+                                              str(self.task.task_id))
         self.task.result.add_link('detail_logs', log_href)
         self.task.save()
 
@@ -425,6 +426,9 @@ class CreateNetworkTemplate(BaseMaasAction):
         subnets = maas_subnet.Subnets(self.maas_client)
         subnets.refresh()
 
+        domains = maas_domain.Domains(self.maas_client)
+        domains.refresh()
+
         for l in design_links:
             if l.metalabels is not None:
                 # TODO(sh8121att): move metalabels into config
@@ -508,6 +512,18 @@ class CreateNetworkTemplate(BaseMaasAction):
                     continue
 
                 try:
+                    domain = domains.singleton({'name': n.dns_domain})
+
+                    if not domain:
+                        self.logger.info(
+                            'Network domain not found, adding: %s',
+                            n.dns_domain)
+                        domain = maas_domain.Domain(
+                            self.maas_client,
+                            name=n.dns_domain,
+                            authoritative=False)
+                        domain = domains.add(domain)
+
                     subnet = subnets.singleton({'cidr': n.cidr})
 
                     if subnet is None:
@@ -1042,8 +1058,8 @@ class IdentifyNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(n,
-                                                               domain=n.get_domain(site_design))
+                machine = machine_list.identify_baremetal_node(
+                    n, domain=n.get_domain(site_design))
                 if machine is not None:
                     self.task.success(focus=n.get_id())
                     self.task.add_status_msg(
@@ -1176,10 +1192,7 @@ class ConfigureHardware(BaseMaasAction):
                             'commission',
                             result_type='commissioning')
                         self._add_detail_logs(
-                            n,
-                            machine,
-                            'testing',
-                            result_type='testing')
+                            n, machine, 'testing', result_type='testing')
                     elif machine.status_name in ['Commissioning', 'Testing']:
                         msg = "Located node %s in MaaS, node already being commissioned. Skipping..." % (
                             n.name)
@@ -2333,8 +2346,7 @@ class DeployNode(BaseMaasAction):
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
-            self._add_detail_logs(
-                n, machine, 'deploy', result_type='deploy')
+            self._add_detail_logs(n, machine, 'deploy', result_type='deploy')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
 
