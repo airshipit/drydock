@@ -11,21 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM python:3.5
+FROM ubuntu:16.04
 
+ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
+ARG TRUSTED_UBUNTU_REPO=no
+ARG ALLOW_UNAUTHENTICATED=false
+ARG PIP_TRUSTED_HOST=foo.com
+ARG PIP_INDEX_URL=https://pypi.org/simple
 ENV container docker
 ENV PORT 9000
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
 # Copy direct dependency requirements only to build a dependency layer
-RUN DEBIAN_FRONTEND=noninteractive apt update && \
-    apt install -y libvirt-dev --no-install-recommends
+RUN echo  "deb  ${UBUNTU_REPO} xenial main restricted universe multiverse" > /etc/apt/sources.list; \
+    echo "deb  ${UBUNTU_REPO} xenial-security main restricted universe multiverse" >> /etc/apt/sources.list; \
+    echo "deb  ${UBUNTU_REPO} xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
+    cat /etc/apt/sources.list; \
+    echo "APT::Get::AllowUnauthenticated ${ALLOW_UNAUTHENTICATED};" >> /etc/apt/apt.conf.d/00-local-mirrors;
+
+
+COPY ./requirements-host.txt /tmp/drydock/
+COPY ./hostdeps.sh /tmp/drydock
+WORKDIR /tmp/drydock
+RUN ./hostdeps.sh; \
+    rm -r /var/lib/apt/lists/*
 
 COPY ./requirements-lock.txt /tmp/drydock/
 RUN pip3 install \
     --no-cache-dir \
     -r /tmp/drydock/requirements-lock.txt
+
 
 COPY . /tmp/drydock
 

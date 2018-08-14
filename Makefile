@@ -38,8 +38,8 @@ run_images: run_drydock
 .PHONY: tests
 tests: pep8 security docs unit_tests
 
-# Intall external (not managed by tox/pip) dependencies
-external_dep: requirements-host.txt
+# Install external (not managed by tox/pip) dependencies
+external_dep: requirements-host.txt requirements-host-test.txt
 	sudo ./hostdeps.sh
 	touch external_dep
 
@@ -102,17 +102,7 @@ helm-install:
 
 .PHONY: build_drydock
 build_drydock: external_dep
-ifeq ($(USE_PROXY), true)
-	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile \
-		--build-arg http_proxy=$(PROXY) \
-		--build-arg https_proxy=$(PROXY) \
-		--build-arg HTTP_PROXY=$(PROXY) \
-		--build-arg HTTPS_PROXY=$(PROXY) \
-		--build-arg no_proxy=$(NO_PROXY) \
-		--build-arg NO_PROXY=$(NO_PROXY) .
-else
-	docker build --network host -t $(IMAGE) --label $(LABEL) -f images/drydock/Dockerfile .
-endif
+	export; tools/drydock_image_build.sh
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
 endif
