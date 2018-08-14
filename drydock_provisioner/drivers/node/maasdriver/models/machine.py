@@ -207,19 +207,64 @@ class Machine(model_base.ResourceBase):
             self.logger.error(msg)
             raise errors.DriverError(msg)
 
-    def release(self, erase_disk=False):
+    def release(self, erase_disk=False, secure_erase=False, quick_erase=False):
         """Release a node so it can be redeployed.
+           Release is opposite of acquire/allocate. After a successful release, the node
+           will be in Ready state.
 
-        :param erase_disk: If true, the local disks on the machine will be quick wiped
+        :param erase_disk: If true, the local disks on the machine will be erased.
+        :param secure_erase: If erase_disk and secure_erase are set to True, and
+                             quick_erase is not specified (default to False), MaaS
+                             will try secure_erase first. If the drive does not
+                             support secure erase, MaaS will overwirte th entire
+                             drive with null butes.
+        :param quick_erase:  If erase_disk and quick_erase are true, 1MB at the
+                             start and at the end of the drive will be erased to make
+                             data recovery inconvenient.
+                             If all three parameters are True and the drive supports
+                             secure erase, secure_erase will have precedence.
+                             If the all three parameters are true, but the disk drive
+                             does not support secure erase, MaaS will do quick erase.
+                             But, if the disk drive supports neither secure nor
+                             quick erase, the disk will be re-written with null bytes.
+                             If erase_disk is true, but both secure_erase and quick_erase
+                             are Fasle (default), MAAS will overwrite the whole disk
+                             with null bytes.
+                             If erase_disk is false, MaaS will not erase the drive, before
+                             releasing the node.
         """
         url = self.interpolate_url()
 
-        options = {'erase': erase_disk}
+        options = {
+            'erase': erase_disk,
+            'secure_erase': secure_erase,
+            'quick_erase': quick_erase,
+        }
 
         resp = self.api_client.post(url, op='release', files=options)
 
         if not resp.ok:
             brief_msg = ("Error releasing node, received HTTP %s from MaaS" %
+                         resp.status_code)
+            self.logger.error(brief_msg)
+            self.logger.debug("MaaS response: %s" % resp.text)
+            raise errors.DriverError(brief_msg)
+
+    def delete(self):
+        """ Reset the node storage, and delete it.
+           After node deletion, the node resource is purged from MaaS resources.
+           MaaS API machine delete call, only removes the machine from MaaS resource list.
+           AFter delete, he namchine needs to be manually pwowered on to be re-enlisted
+           in MaaS as a New node.
+
+        :param erase_disk: If true, the node storage is reset, before node resource
+         is deleted from maas.
+        """
+        url = self.interpolate_url()
+        resp = self.api_client.delete(url)
+
+        if not resp.ok:
+            brief_msg = ("Error deleting node, received HTTP %s from MaaS" %
                          resp.status_code)
             self.logger.error(brief_msg)
             self.logger.debug("MaaS response: %s" % resp.text)
@@ -369,6 +414,29 @@ class Machine(model_base.ResourceBase):
             raise errors.DriverError(
                 "Failed updating power parameters MAAS url %s - return code %s\n%s"
                 % (url, resp.status_code.resp.text))
+
+    def reset_power_parameters(self):
+        """Reset power type and parameters for this node to manual.
+        This is done to address the MaaS api issue detecting multiple BMC NIC
+        after a node delete.
+
+        Only available after the node has been added to MAAS.
+        """
+
+        url = self.interpolate_url()
+
+        self.logger.debug("Resetting node power type for machine {}".format(
+            self.resource_id))
+        self.power_type = 'manual'
+        power_params = {'power_type': 'manual'}
+        resp = self.api_client.put(url, files=power_params)
+
+        if resp.status_code == 200:
+            return True
+
+        raise errors.DriverError(
+            "Failed updating power parameters MAAS url {} - return code {}\n{}".format(
+                url, resp.status_code.resp.text))
 
     def to_dict(self):
         """Serialize this resource instance into a dict.

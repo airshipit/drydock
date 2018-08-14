@@ -217,9 +217,168 @@ class InterrogateNode(BaseMaasAction):
 class DestroyNode(BaseMaasAction):
     """Action to remove node from MaaS in preparation for redeploy."""
 
+    # define the list of node statuses, from which maas server allows releasing a node
+
+    # A machine can be released from following states, based on MaaS API reference.
+    # The disk of the released machine is erased, and the machine will end up in
+    # "Ready" state in MaaS after release.
+    actionable_node_statuses = (
+        "Allocated",
+        "Deployed",
+        "Deploying",
+        "Failed deployment",
+        "Releasing failed",
+        "Failed disk erasing",
+    )
+
     def start(self):
+        """
+        Destroy Node erases the storage, releases the BM node in MaaS, and
+        finally deletes the BM node as a resource from the MaaS database.
+        After successful completion of this action, the destroyed nodes are removed
+        from MaaS list of resources and will be Unkown to MaaS. These nodes have
+        to go through the enlistment process and be detected by MaaS as new nodes.
+        Destroy Node can be performed from any BM node state.
+
+        :return: None
+        """
+        try:
+            machine_list = maas_machine.Machines(self.maas_client)
+            machine_list.refresh()
+        except Exception as ex:
+            self.logger.warning("Error accessing the MaaS API.", exc_info=ex)
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.failure()
+            self.task.add_status_msg(
+                msg='Error accessing MaaS Machines API: {}'.format(str(ex)),
+                error=True,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.save()
+            return
+
+        self.task.set_status(hd_fields.TaskStatus.Running)
+        self.task.save()
+
+        try:
+            site_design = self._load_site_design()
+        except errors.OrchestratorError:
+            self.task.add_status_msg(
+                msg="Error loading site design.",
+                error=True,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.failure()
+            self.task.save()
+            return
+
+        nodes = self.orchestrator.process_node_filter(self.task.node_filter,
+                                                      site_design)
+        for n in nodes:
+            try:
+                machine = machine_list.identify_baremetal_node(n, update_name=False)
+
+                if machine is None:
+                    msg = "Could not locate machine for node {}".format(n.name)
+                    self.logger.info(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.get_id())
+                    continue
+
+                # First release the node and erase its disks, if MaaS API allows
+                if machine.status_name in self.actionable_node_statuses:
+                    msg = "Releasing node {}, and erasing storage.".format(
+                        n.name)
+                    self.logger.info(msg)
+
+                    try:
+                        machine.release(erase_disk=True, quick_erase=True)
+                    except errors.DriverError:
+                        msg = "Error Releasing node {}, skipping".format(n.name)
+                        self.logger.warning(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.failure(focus=n.get_id())
+                        continue
+
+                    # node release with erase disk will take sometime monitor it
+                    attempts = 0
+                    max_attempts = (config.config_mgr.conf.timeouts.destroy_node
+                                    * 60) // config.config_mgr.conf.maasdriver.poll_interval
+
+                    while (attempts < max_attempts
+                           and (not machine.status_name.startswith('Ready')
+                                and not machine.status_name.startswith(
+                                        'Failed'))):
+                        attempts = attempts + 1
+                        time.sleep(
+                            config.config_mgr.conf.maasdriver.poll_interval)
+                        try:
+                            machine.refresh()
+                            self.logger.debug(
+                                "Polling node {} status attempt {:d} of {:d}: {}".format(
+                                    n.name, attempts, max_attempts,
+                                    machine.status_name))
+                        except Exception:
+                            self.logger.warning(
+                                "Error updating node {} status during release node, will re-attempt.".format(n.name))
+                    if machine.status_name.startswith('Ready'):
+                        msg = "Node {} released and disk erased.".format(
+                            n.name)
+                        self.logger.info(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.success(focus=n.get_id())
+                    else:
+                        msg = "Node {} release timed out".format(n.name)
+                        self.logger.warning(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.failure(focus=n.get_id())
+                else:
+                    # Node is in a state that cannot be released from MaaS API.
+                    # Reset the storage instead
+                    msg = "Destroy node {} in status: {}, resetting storage.".format(
+                        n.name, machine.status_name)
+                    self.logger.info(msg)
+                    machine.reset_storage_config()
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+
+                # for both cases above delete the node to force re-commissioning
+                # But, before deleting the node reset it power type in maas if
+                # the node power type should be virsh.
+                try:
+                    if n.oob_type == 'libvirt':
+                        self.logger.info(
+                            'Resetting MaaS virsh power parameters for node {}.'.format(
+                                n.name))
+                        # setting power type attibutes to empty string
+                        # will remove them from maas BMC table
+                        machine.reset_power_parameters()
+                except AttributeError as attr_er:
+                    pass
+
+                machine.delete()
+                msg = "Deleted Node: {} in status: {}.".format(n.name,
+                                                               machine.status_name)
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.success(focus=n.get_id())
+
+            except errors.DriverError as dex:
+                msg = "Driver error, while destroying node {}, skipping".format(
+                    n.name)
+                self.logger.warning(msg, exc_info=dex)
+                self.task.add_status_msg(
+                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.failure(focus=n.get_id())
+                continue
+
         self.task.set_status(hd_fields.TaskStatus.Complete)
-        self.task.failure()
         self.task.save()
         return
 
@@ -970,9 +1129,8 @@ class ConfigureHardware(BaseMaasAction):
 
                         # Poll machine status
                         attempts = 0
-                        max_attempts = config.config_mgr.conf.timeouts.configure_hardware * (
-                            60 //
-                            config.config_mgr.conf.maasdriver.poll_interval)
+                        max_attempts = (config.config_mgr.conf.timeouts.configure_hardware
+                                        * 60) // config.config_mgr.conf.maasdriver.poll_interval
 
                         while (attempts < max_attempts and
                                (machine.status_name != 'Ready' and
@@ -2139,8 +2297,8 @@ class DeployNode(BaseMaasAction):
                 continue
 
             attempts = 0
-            max_attempts = config.config_mgr.conf.timeouts.deploy_node * (
-                60 // config.config_mgr.conf.maasdriver.poll_interval)
+            max_attempts = (config.config_mgr.conf.timeouts.deploy_node
+                            * 60) // config.config_mgr.conf.maasdriver.poll_interval
 
             while (attempts < max_attempts
                    and (not machine.status_name.startswith('Deployed')

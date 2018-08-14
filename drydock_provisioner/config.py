@@ -46,6 +46,7 @@ class DrydockConfig(object):
     options = [
         cfg.IntOpt(
             'poll_interval',
+            min=1,
             default=10,
             help=
             'Polling interval in seconds for checking subtask or downstream status'
@@ -195,6 +196,11 @@ class DrydockConfig(object):
             default=15,
             help=
             'Timeout in minutes between deployment completion and the all boot actions reporting status'
+        ),
+        cfg.IntOpt(
+            'destroy_node',
+            default=30,
+            help='Timeout in minutes for releasing a node',
         ),
     ]
 
