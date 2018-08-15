@@ -19,7 +19,7 @@ Sample Configuration File
 The following is a sample Drydock configuration for adaptation and use. It is
 auto-generated from Drydock when this documentation is built, so
 if you are having issues with an option, please compare your version of
-Patrole with the version of this documentation.
+Drydock with the version of this documentation.
 
 The sample configuration can also be viewed in `file form <_static/drydock.conf.sample>`_.
 
