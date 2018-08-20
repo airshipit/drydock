@@ -31,6 +31,7 @@ class OrchestratorAction(BaseDrydockEnum):
     DeployNodes = 'deploy_nodes'
     DestroyNodes = 'destroy_nodes'
     BootactionReport = 'bootaction_report'
+    RelabelNodes = 'relabel_nodes'
 
     # OOB driver actions
     ValidateOobServices = 'validate_oob_services'
@@ -64,14 +65,17 @@ class OrchestratorAction(BaseDrydockEnum):
     ConfigurePortProvisioning = 'config_port_provisioning'
     ConfigurePortProduction = 'config_port_production'
 
+    # Kubernetes driver actions
+    RelabelNode = 'relabel_node'
+
     ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNodes,
            PrepareNodes, DeployNodes, BootactionReport, DestroyNodes,
-           ConfigNodePxe, SetNodeBoot, PowerOffNode, PowerOnNode,
-           PowerCycleNode, InterrogateOob, CreateNetworkTemplate,
-           CreateStorageTemplate, CreateBootMedia, PrepareHardwareConfig,
-           ConfigureHardware, InterrogateNode, ApplyNodeNetworking,
-           ApplyNodeStorage, ApplyNodePlatform, DeployNode, DestroyNode,
-           ConfigureNodeProvisioner)
+           RelabelNodes, ConfigNodePxe, SetNodeBoot, PowerOffNode,
+           PowerOnNode, PowerCycleNode, InterrogateOob, RelabelNode,
+           CreateNetworkTemplate, CreateStorageTemplate, CreateBootMedia,
+           PrepareHardwareConfig, ConfigureHardware, InterrogateNode,
+           ApplyNodeNetworking, ApplyNodeStorage, ApplyNodePlatform,
+           DeployNode, DestroyNode, ConfigureNodeProvisioner)
 
 
 class OrchestratorActionField(fields.BaseEnumField):

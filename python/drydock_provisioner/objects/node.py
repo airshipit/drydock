@@ -326,6 +326,17 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                 alias)
             return alias
 
+    def get_node_labels(self):
+        """Get node labels.
+        """
+
+        labels_dict = {}
+        for k, v in self.owner_data.items():
+            labels_dict[k] = v
+        self.logger.debug("node labels data : %s." % str(labels_dict))
+        # TODO: Generate node labels
+
+        return labels_dict
 
 @base.DrydockObjectRegistry.register
 class BaremetalNodeList(base.DrydockObjectListBase, base.DrydockObject):

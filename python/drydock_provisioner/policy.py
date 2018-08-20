@@ -95,6 +95,12 @@ class DrydockPolicy(object):
                                          'path': '/api/v1.0/tasks',
                                          'method': 'POST'
                                      }]),
+        policy.DocumentedRuleDefault('physical_provisioner:relabel_nodes',
+                                     'role:admin', 'Create relabel_nodes task',
+                                     [{
+                                         'path': '/api/v1.0/tasks',
+                                         'method': 'POST'
+                                     }]),
         policy.DocumentedRuleDefault(
             'physical_provisioner:read_build_data', 'role:admin',
             'Read build data for a node',

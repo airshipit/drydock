@@ -33,6 +33,7 @@ from .actions.orchestrator import PrepareSite
 from .actions.orchestrator import VerifyNodes
 from .actions.orchestrator import PrepareNodes
 from .actions.orchestrator import DeployNodes
+from .actions.orchestrator import RelabelNodes
 from .actions.orchestrator import DestroyNodes
 from .validations.validator import Validator
 
@@ -102,6 +103,15 @@ class Orchestrator(object):
                     self.enabled_drivers['network'] = network_driver_class(
                         state_manager=state_manager, orchestrator=self)
 
+            kubernetes_driver_name = enabled_drivers.kubernetes_driver
+            if kubernetes_driver_name is not None:
+                m, c = kubernetes_driver_name.rsplit('.', 1)
+                kubernetes_driver_class = getattr(
+                    importlib.import_module(m), c, None)
+                if kubernetes_driver_class is not None:
+                    self.enabled_drivers['kubernetes'] = kubernetes_driver_class(
+                        state_manager=state_manager, orchestrator=self)
+
     def watch_for_tasks(self):
         """Start polling the database watching for Queued tasks to execute."""
         orch_task_actions = {
@@ -112,6 +122,7 @@ class Orchestrator(object):
             hd_fields.OrchestratorAction.VerifyNodes: VerifyNodes,
             hd_fields.OrchestratorAction.PrepareNodes: PrepareNodes,
             hd_fields.OrchestratorAction.DeployNodes: DeployNodes,
+            hd_fields.OrchestratorAction.RelabelNodes: RelabelNodes,
             hd_fields.OrchestratorAction.DestroyNodes: DestroyNodes,
         }
 

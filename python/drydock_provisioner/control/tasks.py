@@ -63,6 +63,7 @@ class TasksResource(StatefulResource):
             'prepare_nodes': TasksResource.task_prepare_nodes,
             'deploy_nodes': TasksResource.task_deploy_nodes,
             'destroy_nodes': TasksResource.task_destroy_nodes,
+            'relabel_nodes': TasksResource.task_relabel_nodes,
         }
 
         try:
@@ -238,6 +239,30 @@ class TasksResource(StatefulResource):
             self.error(
                 req.context,
                 "Task body ended up in wrong handler: action %s in task_destroy_nodes"
+                % action)
+            self.return_error(
+                resp, falcon.HTTP_500, message="Error", retry=False)
+
+        try:
+            task = self.create_task(json_data, req.context)
+            resp.body = json.dumps(task.to_dict())
+            resp.append_header('Location',
+                               "/api/v1.0/tasks/%s" % str(task.task_id))
+            resp.status = falcon.HTTP_201
+        except errors.InvalidFormat as ex:
+            self.error(req.context, ex.msg)
+            self.return_error(
+                resp, falcon.HTTP_400, message=ex.msg, retry=False)
+
+    @policy.ApiEnforcer('physical_provisioner:relabel_nodes')
+    def task_relabel_nodes(self, req, resp, json_data):
+        """Create async task for relabel nodes."""
+        action = json_data.get('action', None)
+
+        if action != 'relabel_nodes':
+            self.error(
+                req.context,
+                "Task body ended up in wrong handler: action %s in task_relabel_nodes"
                 % action)
             self.return_error(
                 resp, falcon.HTTP_500, message="Error", retry=False)

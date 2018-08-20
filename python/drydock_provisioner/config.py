@@ -82,6 +82,10 @@ class DrydockConfig(object):
             default='${global_logger_name}.nodedriver',
             help='Logger name for Node driver logging'),
         cfg.StrOpt(
+            'kubernetesdriver_logger_name',
+            default='${global_logger_name}.kubernetesdriver',
+            help='Logger name for Kubernetes driver logging'),
+        cfg.StrOpt(
             'control_logger_name',
             default='${global_logger_name}.control',
             help='Logger name for API server logging'),
@@ -166,6 +170,11 @@ class DrydockConfig(object):
             default=
             'drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver',
             help='Module path string of the Node driver to enable'),
+        cfg.StrOpt(
+            'kubernetes_driver',
+            default=
+            'drydock_provisioner.drivers.kubernetes.promenade_driver.driver.PromenadeDriver',
+            help='Module path string of the Kubernetes driver to enable'),
         # TODO(sh8121att) Network driver not yet implemented
         cfg.StrOpt(
             'network_driver',
@@ -224,6 +233,10 @@ class DrydockConfig(object):
             default=30,
             help='Timeout in minutes for releasing a node',
         ),
+        cfg.IntOpt(
+            'relabel_node',
+            default=5,
+            help='Timeout in minutes for relabeling a node'),
     ]
 
     def __init__(self):

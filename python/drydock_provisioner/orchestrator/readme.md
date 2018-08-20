@@ -111,6 +111,11 @@ success
 
 Destroy current node configuration and rebootstrap from scratch
 
+### RelabelNode ###
+
+Relabel current Kubernetes cluster node through Kubernetes
+provisioner.
+
 ## Integration with Drivers ##
 
 Based on the requested task and the current known state of a node

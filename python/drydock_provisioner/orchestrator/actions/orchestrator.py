@@ -1035,6 +1035,66 @@ class DeployNodes(BaseAction):
         return
 
 
+class RelabelNodes(BaseAction):
+    """Action to relabel a node"""
+
+    def start(self):
+        """Start executing this action."""
+        self.task.set_status(hd_fields.TaskStatus.Running)
+        self.task.save()
+
+        kubernetes_driver = self.orchestrator.enabled_drivers['kubernetes']
+
+        if kubernetes_driver is None:
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.add_status_msg(
+                msg="No kubernetes driver is enabled, ending task.",
+                error=True,
+                ctx=str(self.task.get_id()),
+                ctx_type='task')
+            self.task.result.set_message("No KubernetesDriver enabled.")
+            self.task.result.set_reason("Bad Configuration.")
+            self.task.failure()
+            self.task.save()
+            return
+
+        target_nodes = self.orchestrator.get_target_nodes(self.task)
+
+        if not target_nodes:
+            self.task.add_status_msg(
+                msg="No nodes in scope, nothing to relabel.",
+                error=False,
+                ctx='NA',
+                ctx_type='NA')
+            self.task.success()
+            self.task.set_status(hd_fields.TaskStatus.Complete)
+            self.task.save()
+            return
+
+        nf = self.orchestrator.create_nodefilter_from_nodelist(target_nodes)
+
+        relabel_node_task = self.orchestrator.create_task(
+            design_ref=self.task.design_ref,
+            action=hd_fields.OrchestratorAction.RelabelNode,
+            node_filter=nf)
+        self.task.register_subtask(relabel_node_task)
+
+        self.logger.info(
+            "Starting kubernetes driver task %s to relabel nodes." %
+            (relabel_node_task.get_id()))
+        kubernetes_driver.execute_task(relabel_node_task.get_id())
+
+        relabel_node_task = self.state_manager.get_task(
+            relabel_node_task.get_id())
+
+        self.task.bubble_results(
+            action_filter=hd_fields.OrchestratorAction.RelabelNode)
+        self.task.align_result()
+
+        self.task.set_status(hd_fields.TaskStatus.Complete)
+        self.task.save()
+
+
 class BootactionReport(BaseAction):
     """Wait for nodes to report status of boot action."""
 

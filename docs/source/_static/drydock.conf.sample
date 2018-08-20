@@ -276,6 +276,9 @@
 # Logger name for Node driver logging (string value)
 #nodedriver_logger_name = ${global_logger_name}.nodedriver
 
+# Logger name for Kubernetes driver logging (string value)
+#kubernetesdriver_logger_name = ${global_logger_name}.kubernetesdriver
+
 # Logger name for API server logging (string value)
 #control_logger_name = ${global_logger_name}.control
 
@@ -350,6 +353,9 @@
 # Module path string of the Node driver to enable (string value)
 #node_driver = drydock_provisioner.drivers.node.maasdriver.driver.MaasNodeDriver
 
+# Module path string of the Kubernetes driver to enable (string value)
+#kubernetes_driver = drydock_provisioner.drivers.kubernetes.promenade_driver.driver.PromenadeDriver
+
 # Module path string of the Network driver enable (string value)
 #network_driver = <None>
 
@@ -397,6 +403,9 @@
 
 # Timeout in minutes for deploying a node (integer value)
 #deploy_node = 45
+
+# Timeout in minutes for relabeling a node (integer value)
+#relabel_node = 5
 
 # Timeout in minutes between deployment completion and the all boot actions
 # reporting status (integer value)

@@ -14,7 +14,7 @@ Task Document Schema
 This document can be posted to the Drydock :ref:`tasks-api` to create a new task.::
 
     {
-      "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node",
+      "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node|relabel_nodes",
       "design_ref": "http_uri|deckhand_uri|file_uri",
       "node_filter": {
         "filter_set_type": "intersection|union",
@@ -90,7 +90,7 @@ When querying the state of an existing task, the below document will be returned
       "Kind": "Task",
       "apiVersion": "v1.0",
       "task_id": "uuid",
-      "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node",
+      "action": "validate_design|verify_site|prepare_site|verify_node|prepare_node|deploy_node|destroy_node|relabel_nodes",
       "design_ref": "http_uri|deckhand_uri|file_uri",
       "parent_task_id": "uuid",
       "subtask_id_list": ["uuid","uuid",...],
