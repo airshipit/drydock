@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUILD_DIR       := $(shell mktemp -d)
+BUILD_DIR       := $(shell mkdir -p build && mktemp -d -p build)
 DOCKER_REGISTRY ?= quay.io
 IMAGE_NAME      ?= drydock
 IMAGE_PREFIX    ?= airshipit
 IMAGE_TAG       ?= dev
-HELM            := $(BUILD_DIR)/helm
+HELM            := $(shell realpath $(BUILD_DIR))/helm
 PROXY           ?= http://proxy.foo.com:8000
 NO_PROXY        ?= localhost,127.0.0.1,.svc.cluster.local
 USE_PROXY       ?= false
 PUSH_IMAGE      ?= false
 LABEL           ?= commit-id
 IMAGE           ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
+GO_BUILDER      ?= docker.io/golang:1.10-alpine
+
 export
 
 # Build all docker images for this project
@@ -101,11 +103,16 @@ helm-install:
 # Make targets intended for use by the primary targets above.
 
 .PHONY: build_drydock
-build_drydock: external_dep
+build_drydock: external_dep build_baclient
 	export; tools/drydock_image_build.sh
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
 endif
+
+# Make target for building bootaction signal client
+.PHONY: build_baclient
+build_baclient: external_dep
+	docker run -tv $(shell realpath go):/work -v $(shell realpath $(BUILD_DIR)):/build -e GOPATH=/work $(GO_BUILDER) go build -o /build/baclient baclient
 
 .PHONY: docs
 docs: clean drydock_docs
@@ -132,7 +139,6 @@ genconfig:
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)/*
 	rm -rf build
 	rm -rf docs/build
 	rm -rf charts/drydock/charts
@@ -143,6 +149,5 @@ pep8: external_dep
 	tox -e pep8
 
 .PHONY: helm_lint
-helm_lint: clean helm-init
-	tools/helm_tk.sh $(HELM)
+helm_lint: helm-init
 	$(HELM) lint charts/drydock

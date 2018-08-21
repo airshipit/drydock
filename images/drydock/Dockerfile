@@ -18,6 +18,7 @@ ARG TRUSTED_UBUNTU_REPO=no
 ARG ALLOW_UNAUTHENTICATED=false
 ARG PIP_TRUSTED_HOST=foo.com
 ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG BUILD_DIR
 ENV container docker
 ENV PORT 9000
 ENV LC_ALL C.UTF-8
@@ -37,15 +38,15 @@ WORKDIR /tmp/drydock
 RUN ./hostdeps.sh; \
     rm -r /var/lib/apt/lists/*
 
-COPY ./requirements-lock.txt /tmp/drydock/
+COPY ./python/requirements-lock.txt /tmp/drydock/
 RUN pip3 install \
     --no-cache-dir \
     -r /tmp/drydock/requirements-lock.txt
 
+COPY ./python /tmp/drydock/python
+COPY ${BUILD_DIR}/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
 
-COPY . /tmp/drydock
-
-WORKDIR /tmp/drydock
+WORKDIR /tmp/drydock/python
 RUN python3 setup.py install
 
 EXPOSE $PORT

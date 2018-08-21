@@ -20,6 +20,7 @@ HTK_REPO=${HTK_REPO:-"https://github.com/openstack/openstack-helm"}
 HTK_PATH=${HTK_PATH:-""}
 HTK_STABLE_COMMIT=${HTK_COMMIT:-"f902cd14fac7de4c4c9f7d019191268a6b4e9601"}
 DEP_UP_LIST=${DEP_UP_LIST:-"drydock"}
+BUILD_DIR=${BUILD_DIR:-$(mktemp -d)}
 
 if [[ ! -z $(echo $http_proxy) ]]
 then
@@ -28,15 +29,18 @@ fi
 
 set -x
 
+# Use ./helm as we expect this to be run in a already
+# configured build directory
+
 function helm_serve {
   if [[ -d "$HOME/.helm" ]]; then
      echo ".helm directory found"
   else
-     ${HELM} init --client-only
+     "${HELM}" init --client-only
   fi
-  if [[ -z $(curl -s 127.0.0.1:8879 | grep 'Helm Repository') ]]; then
-     ${HELM} serve & > /dev/null
-     while [[ -z $(curl -s 127.0.0.1:8879 | grep 'Helm Repository') ]]; do
+  if [[ -z $(curl --noproxy '*' -s 127.0.0.1:8879 | grep 'Helm Repository') ]]; then
+     "${HELM}" serve & > /dev/null
+     while [[ -z $(curl --noproxy '*' -s 127.0.0.1:8879 | grep 'Helm Repository') ]]; do
         sleep 1
         echo "Waiting for Helm Repository"
      done
@@ -44,15 +48,15 @@ function helm_serve {
      echo "Helm serve already running"
   fi
 
-  if ${HELM} repo list | grep -q "^stable" ; then
-     ${HELM} repo remove stable
+  if "${HELM}" repo list | grep -q "^stable" ; then
+     "${HELM}" repo remove stable
   fi
 
   ${HELM} repo add local http://localhost:8879/charts
 }
 
-mkdir -p build
-pushd build
+mkdir -p "$BUILD_DIR"
+pushd "$BUILD_DIR"
 git clone $HTK_REPO || true
 pushd openstack-helm/$HTK_PATH
 git reset --hard "${HTK_STABLE_COMMIT}"

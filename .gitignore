@@ -104,3 +104,7 @@ ENV/
 
 # VIM
 .*.swp
+
+# Chart artifacts
+charts/drydock/charts
+charts/drydock/requirements.lock

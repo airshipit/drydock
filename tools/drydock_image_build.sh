@@ -24,6 +24,7 @@ fi
 
 docker build --network host -t ${IMAGE} --label ${LABEL} -f images/drydock/Dockerfile \
   ${ADDL_BUILD_ARGS} \
+  --build-arg BUILD_DIR=${BUILD_DIR} \
   --build-arg http_proxy=${http_proxy} \
   --build-arg https_proxy=${https_proxy} \
   --build-arg HTTP_PROXY=${HTTP_PROXY} \

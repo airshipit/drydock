@@ -27,7 +27,7 @@ setup(
     license='Apache 2.0',
     packages=find_packages(),
     package_data={
-        '': ['schemas/*.yaml'],
+        '': ['schemas/*.yaml', 'assets/baclient'],
     },
     entry_points={
         'oslo.config.opts':
