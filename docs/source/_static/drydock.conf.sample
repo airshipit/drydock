@@ -6,6 +6,7 @@
 
 # Polling interval in seconds for checking subtask or downstream status (integer
 # value)
+# Minimum value: 1
 #poll_interval = 10
 
 # How long a leader has to check-in before leadership can be usurped, in seconds
@@ -400,3 +401,6 @@
 # Timeout in minutes between deployment completion and the all boot actions
 # reporting status (integer value)
 #bootaction_final_status = 15
+
+# Timeout in minutes for releasing a node (integer value)
+#destroy_node = 30
