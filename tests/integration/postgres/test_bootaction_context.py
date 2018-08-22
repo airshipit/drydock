@@ -65,7 +65,7 @@ class TestBootActionContext(object):
     @pytest.fixture()
     def falcontest(self, drydock_state, deckhand_ingester,
                    deckhand_orchestrator, mock_get_build_data):
-        """Create a test harness for the the Falcon API framework."""
+        """Create a test harness for the Falcon API framework."""
         return testing.TestClient(
             start_api(
                 state_manager=drydock_state,
