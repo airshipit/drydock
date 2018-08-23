@@ -18,19 +18,29 @@ replicas:
   drydock: 2
 
 labels:
-  node_selector_key: ucp-control-plane
-  node_selector_value: enabled
+  api:
+    node_selector_key: ucp-control-plane
+    node_selector_value: enabled
+  job:
+    node_selector_key: ucp-control-plane
+    node_selector_value: enabled
 
 images:
   tags:
-    drydock: quay.io/attcomdev/drydock:1.0.1
+    drydock: quay.io/airshipit/drydock:master
     dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.3.1
     ks_user: docker.io/openstackhelm/heat:newton
     ks_service: docker.io/openstackhelm/heat:newton
     ks_endpoints: docker.io/openstackhelm/heat:newton
     drydock_db_init: docker.io/postgres:9.5
-    drydock_db_sync: quay.io/attcomdev/drydock:1.0.1
+    drydock_db_sync: quay.io/airshipit/drydock:master
   pull_policy: "IfNotPresent"
+  #TODO(mattmceuen): This chart does not yet support local image caching
+  local_registry:
+    active: false
+    exclude:
+      - dep_check
+      - image_repo_sync
 
 network:
   api:
@@ -113,7 +123,7 @@ manifests:
   job_drydock_db_sync: true
   secret_keystone: true
   secret_database: true
-  secret_ssh_key: false
+  secret_ssh_key: true
   configmap_etc: true
   configmap_bin: true
   service_drydock: true
@@ -122,56 +132,57 @@ manifests:
   test_drydock_auth: true
 
 dependencies:
-  db_init:
-    services:
-      - service: postgresql
-        endpoint: internal
-  db_sync:
-    services:
-      - service: postgresql
-        endpoint: internal
-    jobs:
-      - drydock-db-init
-  ks_user:
-    services:
-      - service: identity
-        endpoint: internal
-  ks_service:
-    services:
-      - service: identity
-        endpoint: internal
-  ks_endpoints:
-    jobs:
-      - drydock-ks-service
-    services:
-      - service: identity
-        endpoint: internal
-  api:
-    jobs:
-      - drydock-ks-endpoints
-      - drydock-ks-user
-      - drydock-ks-endpoints
-      - drydock-db-init
-      - drydock-db-sync
-    services:
-      - service: identity
-        endpoint: internal
-      - service: postgresql
-        endpoint: internal
+  dynamic:
+    common:
+      local_image_registry:
+        jobs:
+          - drydock-image-repo-sync
+        services:
+          - endpoint: node
+            service: local_image_registry
+  static:
+    db_init:
+      services:
+        - service: postgresql
+          endpoint: internal
+    db_sync:
+      services:
+        - service: postgresql
+          endpoint: internal
+      jobs:
+        - drydock-db-init
+    ks_user:
+      services:
+        - service: identity
+          endpoint: internal
+    ks_service:
+      services:
+        - service: identity
+          endpoint: internal
+    ks_endpoints:
+      jobs:
+        - drydock-ks-service
+      services:
+        - service: identity
+          endpoint: internal
+    api:
+      jobs:
+        - drydock-ks-endpoints
+        - drydock-ks-user
+        - drydock-ks-service
+        - drydock-db-init
+        - drydock-db-sync
+      services:
+        - service: identity
+          endpoint: internal
+        - service: postgresql
+          endpoint: internal
 
 endpoints:
   cluster_domain_suffix: cluster.local
   identity:
     name: keystone
     auth:
-      user:
-        region_name: RegionOne
-        role: admin
-        project_name: service
-        project_domain_name: default
-        user_domain_name: default
-        username: drydock
-        password: password
       admin:
         region_name: RegionOne
         project_name: admin
@@ -179,6 +190,14 @@ endpoints:
         username: admin
         user_domain_name: default
         project_domain_name: default
+      drydock:
+        region_name: RegionOne
+        role: admin
+        project_name: service
+        project_domain_name: default
+        user_domain_name: default
+        username: drydock
+        password: password
     hosts:
       default: keystone
       internal: keystone-api
@@ -229,7 +248,7 @@ endpoints:
 secrets:
   identity:
     admin: drydock-keystone-admin
-    user: drydock-keystone-user
+    drydock: drydock-keystone-user
   postgresql:
     admin: drydock-postgresql-admin
     user: drydock-postgresql-user

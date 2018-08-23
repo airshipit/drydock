@@ -16,9 +16,8 @@ limitations under the License.
 
 {{- if .Values.manifests.job_drydock_db_sync }}
 {{- $envAll := . }}
-{{- $dependencies := .Values.dependencies.db_sync }}
 {{- $serviceAccountName := "drydock-db-sync" }}
-{{ tuple $envAll $dependencies $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
+{{ tuple $envAll "db_sync" $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -33,9 +32,9 @@ spec:
       serviceAccountName: {{ $serviceAccountName }}
       restartPolicy: OnFailure
       nodeSelector:
-        {{ .Values.labels.node_selector_key }}: {{ .Values.labels.node_selector_value }}
+        {{ .Values.labels.job.node_selector_key }}: {{ .Values.labels.job.node_selector_value }}
       initContainers:
-{{ tuple $envAll $dependencies list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
+{{ tuple $envAll "db_sync" list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
         - name: drydock-db-sync
           image: {{ .Values.images.tags.drydock_db_sync | quote }}
@@ -54,6 +53,7 @@ spec:
               mountPath: /tmp/db-sync.sh
               subPath: db-sync.sh
               readOnly: true
+          workingDir: /tmp/drydock
       volumes:
         - name: drydock-bin
           configMap:

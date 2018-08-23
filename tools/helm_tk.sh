@@ -16,9 +16,9 @@
 # Script to setup helm-toolkit and helm dep up the shipyard chart
 #
 HELM=$1
-HTK_REPO=${HTK_REPO:-"https://github.com/openstack/openstack-helm"}
+HTK_REPO=${HTK_REPO:-"https://github.com/openstack/openstack-helm-infra"}
 HTK_PATH=${HTK_PATH:-""}
-HTK_STABLE_COMMIT=${HTK_COMMIT:-"f902cd14fac7de4c4c9f7d019191268a6b4e9601"}
+HTK_STABLE_COMMIT=${HTK_COMMIT:-"274b230dcc8960af4fe44a871addcb5aacef3dba"}
 DEP_UP_LIST=${DEP_UP_LIST:-"drydock"}
 BUILD_DIR=${BUILD_DIR:-$(mktemp -d)}
 
@@ -36,7 +36,7 @@ function helm_serve {
   if [[ -d "$HOME/.helm" ]]; then
      echo ".helm directory found"
   else
-     "${HELM}" init --client-only
+     ${HELM} init --client-only --skip-refresh
   fi
   if [[ -z $(curl --noproxy '*' -s 127.0.0.1:8879 | grep 'Helm Repository') ]]; then
      "${HELM}" serve & > /dev/null
@@ -58,7 +58,7 @@ function helm_serve {
 mkdir -p "$BUILD_DIR"
 pushd "$BUILD_DIR"
 git clone $HTK_REPO || true
-pushd openstack-helm/$HTK_PATH
+pushd openstack-helm-infra/$HTK_PATH
 git reset --hard "${HTK_STABLE_COMMIT}"
 
 helm_serve
