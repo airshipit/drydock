@@ -24,7 +24,7 @@ USE_PROXY       ?= false
 PUSH_IMAGE      ?= false
 LABEL           ?= commit-id
 IMAGE           ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
-GO_BUILDER      ?= docker.io/golang:1.10-alpine
+GO_BUILDER      ?= docker.io/golang:1.10-stretch
 
 export
 
@@ -38,7 +38,7 @@ run_images: run_drydock
 
 # Run tests
 .PHONY: tests
-tests: pep8 security docs unit_tests
+tests: pep8 security docs unit_tests test_baclient
 
 # Install external (not managed by tox/pip) dependencies
 external_dep: requirements-host.txt requirements-host-test.txt
@@ -112,7 +112,12 @@ endif
 # Make target for building bootaction signal client
 .PHONY: build_baclient
 build_baclient: external_dep
-	docker run -tv $(shell realpath go):/work -v $(shell realpath $(BUILD_DIR)):/build -e GOPATH=/work $(GO_BUILDER) go build -o /build/baclient baclient
+	docker run -tv $(shell realpath go):/work -v $(shell realpath $(BUILD_DIR)):/build -e GOPATH=/work $(GO_BUILDER)  go build -o /build/baclient baclient
+
+# Make target for testing bootaction signal client
+.PHONY: test_baclient
+test_baclient: external_dep
+	docker run -tv $(shell realpath go):/work -e GOPATH=/work $(GO_BUILDER)  go test -v baclient
 
 .PHONY: docs
 docs: clean drydock_docs
