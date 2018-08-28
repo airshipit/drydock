@@ -523,6 +523,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                             name=n.dns_domain,
                             authoritative=False)
                         domain = domains.add(domain)
+                        domains.refresh()
 
                     subnet = subnets.singleton({'cidr': n.cidr})
 
