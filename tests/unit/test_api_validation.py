@@ -114,7 +114,7 @@ class TestValidationApi(object):
     @pytest.fixture()
     def falcontest(self, drydock_state, deckhand_ingester,
                    deckhand_orchestrator, mock_get_build_data):
-        """Create a test harness for the the Falcon API framework."""
+        """Create a test harness for the Falcon API framework."""
         policy.policy_engine = policy.DrydockPolicy()
         policy.policy_engine.register_policy()
 

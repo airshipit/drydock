@@ -115,7 +115,7 @@ class TestClass(object):
 
     @pytest.fixture()
     def falcontest(self, drydock_state, yaml_ingester, yaml_orchestrator):
-        """Create a test harness for the the Falcon API framework."""
+        """Create a test harness for the Falcon API framework."""
         return testing.TestClient(
             start_api(
                 state_manager=drydock_state,
