@@ -541,9 +541,11 @@ data:
     - path: /var/tmp/designref.sh
       type: file
       permissions: '500'
-      data: e3sgYWN0aW9uLmRlc2lnbl9yZWYgfX0K
+      data: |
+        {{ action.design_ref }}
+        {{ action.action_id }}
+        {{ action.action_key }}
       data_pipeline:
-        - base64_decode
         - utf8_decode
         - template
 ---

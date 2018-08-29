@@ -111,9 +111,11 @@ template
     - node.network.[network_name].cidr - CIDR of [network_name]
     - node.network.[network_name].dns_suffix - DNS suffix of [network_name]
     - node.hostname - Hostname of the node
+    - node.domain - DNS Domain of the primary network on the node
     - node.tags - Sequence of tags assigned to this node
     - node.labels - Key, value pairs of both explicit and dynamic labels for this node
-    - action.key - A key that uniquely identifies this boot action on this node. Can be used for signaling boot action result.
+    - action.action_id - A ULID that uniquely identifies this boot action on this node. Can be used for signaling boot action result.
+    - action.action_key - A random key in hex that authenticates API calls for signaling boot action result.
     - action.report_url - The URL that can be POSTed to for reporting boot action result.
     - action.design_ref - The design reference for the deployment that initiated the bootaction
 

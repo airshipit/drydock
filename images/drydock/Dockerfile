@@ -43,6 +43,8 @@ RUN pip3 install \
     --no-cache-dir \
     -r /tmp/drydock/requirements-lock.txt
 
+COPY ./alembic /tmp/drydock/alembic
+COPY ./alembic.ini /tmp/drydock/alembic.ini
 COPY ./python /tmp/drydock/python
 COPY ${BUILD_DIR}/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
 

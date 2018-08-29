@@ -22,4 +22,4 @@ docker run --rm --net host postgres:9.5 psql -h localhost -c "create database dr
 
 export DRYDOCK_DB_URL="postgresql+psycopg2://drydock:drydock@localhost:5432/drydock"
 
-sudo docker run --rm -t --net=host -e DRYDOCK_DB_URL="$DRYDOCK_DB_URL" --entrypoint /usr/local/bin/alembic $IMAGE upgrade head
+sudo docker run --rm -t --net=host -e DRYDOCK_DB_URL="$DRYDOCK_DB_URL" -w /tmp/drydock --entrypoint /usr/local/bin/alembic $IMAGE  upgrade head

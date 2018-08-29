@@ -64,6 +64,7 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
                       nodename,
                       site_design,
                       action_id,
+                      action_key,
                       design_ref,
                       type_filter=None):
         """Render all of the assets in this bootaction.
@@ -77,6 +78,8 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
         :param site_design: a objects.SiteDesign instance holding the design sets
         :param action_id: a 128-bit ULID action_id of the boot action
                           the assets are part of
+        :param action_key: a 256-bit random key to authenticate API calls
+                           for updating the status of this bootaction
         :param design_ref: the design ref this boot action was initiated under
         :param type_filter: optional filter of the types of assets to render
         """
@@ -84,7 +87,7 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
         for a in self.asset_list:
             if type_filter is None or (type_filter is not None
                                        and a.type == type_filter):
-                a.render(nodename, site_design, action_id, design_ref)
+                a.render(nodename, site_design, action_id, action_key, design_ref)
                 assets.append(a)
 
         return assets
@@ -140,7 +143,7 @@ class BootActionAsset(base.DrydockObject):
         super().__init__(package_list=package_list, permissions=mode, **kwargs)
         self.rendered_bytes = None
 
-    def render(self, nodename, site_design, action_id, design_ref):
+    def render(self, nodename, site_design, action_id, action_key, design_ref):
         """Render this asset into a base64 encoded string.
 
         The ``nodename`` and ``action_id`` will be used to construct
@@ -149,10 +152,11 @@ class BootActionAsset(base.DrydockObject):
         :param nodename: the name of the node where the asset will be deployed
         :param site_design: instance of objects.SiteDesign
         :param action_id: a 128-bit ULID boot action id
+        :param action_key: a 256-bit random key for API auth
         :param design_ref: The design ref this bootaction was initiated under
         """
         tpl_ctx = self._get_template_context(nodename, site_design, action_id,
-                                             design_ref)
+                                             action_key, design_ref)
 
         if self.location is not None:
             rendered_location = self.execute_pipeline(
@@ -207,27 +211,30 @@ class BootActionAsset(base.DrydockObject):
         return package_list
 
     def _get_template_context(self, nodename, site_design, action_id,
-                              design_ref):
+                              action_key, design_ref):
         """Create a context to be used for template rendering.
 
         :param nodename: The name of the node for the bootaction
         :param site_design: The full site design
         :param action_id: the ULID assigned to the boot action using this context
+        :param action_key: a 256 bit random key for API auth
         :param design_ref: The design reference representing ``site_design``
         """
 
         return dict(
             node=self._get_node_context(nodename, site_design),
-            action=self._get_action_context(action_id, design_ref))
+            action=self._get_action_context(action_id, action_key, design_ref))
 
-    def _get_action_context(self, action_id, design_ref):
+    def _get_action_context(self, action_id, action_key, design_ref):
         """Create the action-specific context items for template rendering.
 
         :param action_id: ULID of this boot action
+        :param action_key: random key of this boot action
         :param design_ref: Design reference representing the site design
         """
         return dict(
-            key=ulid2.ulid_to_base32(action_id),
+            action_id=ulid2.ulid_to_base32(action_id),
+            action_key=action_key.hex(),
             report_url=config.config_mgr.conf.bootactions.report_url,
             design_ref=design_ref)
 

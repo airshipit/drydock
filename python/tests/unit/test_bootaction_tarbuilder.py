@@ -16,6 +16,7 @@
 import ulid2
 import tarfile
 import io
+import os
 
 import drydock_provisioner.objects as objects
 from drydock_provisioner.statemgmt.state import DrydockState
@@ -39,8 +40,9 @@ class TestClass(object):
 
         ba = design_data.get_bootaction('helloworld')
         action_id = ulid2.generate_binary_ulid()
+        action_key = os.urandom(32)
         assets = ba.render_assets(target_host, design_data, action_id,
-                                  design_ref)
+                                  action_key, design_ref)
 
         assert len(assets) > 0
 

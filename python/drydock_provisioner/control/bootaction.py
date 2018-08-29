@@ -176,11 +176,13 @@ class BootactionAssetsResource(StatefulResource):
                 if hostname in ba.target_nodes:
                     ba_status = ba_status_list.get(ba.name, None)
                     action_id = ba_status.get('action_id')
+                    action_key = ba_status.get('identity_key')
                     assets.extend(
                         ba.render_assets(
                             hostname,
                             site_design,
                             action_id,
+                            action_key,
                             task.design_ref,
                             type_filter=asset_type_filter))
 
