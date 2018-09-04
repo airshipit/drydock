@@ -154,7 +154,6 @@ class Task(object):
         if focus:
             self.logger.debug("Adding %s to successes list." % focus)
             self.result.add_success(focus)
-        return
 
     def failure(self, focus=None):
         """Encounter a result that causes at least partial failure.
@@ -267,23 +266,25 @@ class Task(object):
         self.result.successes = []
         self.result.failures = []
         for st in self.statemgr.get_complete_subtasks(self.task_id):
+            # Only filters successes.
             if action_filter is None or (action_filter is not None
                                          and st.action == action_filter):
                 for se in st.result.successes:
                     self.logger.debug(
                         "Bubbling subtask success for entity %s." % se)
                     self.result.add_success(se)
-                if self.retry == 0 or (self.retry == st.retry):
-                    for fe in st.result.failures:
-                        self.logger.debug(
-                            "Bubbling subtask failure for entity %s." % fe)
-                        self.result.add_failure(fe)
-                else:
-                    self.logger.debug(
-                        "Skipping failures as they mismatch task retry sequence."
-                    )
             else:
-                self.logger.debug("Skipping subtask due to action filter.")
+                self.logger.debug("Skipping subtask success due to action filter.")
+            # All failures are bubbled up.
+            if self.retry == 0 or (self.retry == st.retry):
+                for fe in st.result.failures:
+                    self.logger.debug(
+                        "Bubbling subtask failure for entity %s." % fe)
+                    self.result.add_failure(fe)
+            else:
+                self.logger.debug(
+                    "Skipping failures as they mismatch task retry sequence."
+                )
 
     def align_result(self, action_filter=None, reset_status=True):
         """Align the result of this task with the combined results of all the subtasks.
@@ -317,7 +318,8 @@ class Task(object):
                 ] and (self.retry == 0 or (self.retry == st.retry))):
                     self.failure()
             else:
-                self.logger.debug("Skipping subtask due to action filter.")
+                self.logger.debug("Skipping subtask %s due to action filter." %
+                                  str(st.task_id))
 
     def add_status_msg(self, **kwargs):
         """Add a status message to this task's result status."""
