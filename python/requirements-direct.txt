@@ -1,5 +1,5 @@
 PyYAML==3.12
-pyghmi==1.0.18
+pyghmi==1.2.14
 netaddr
 falcon
 oslo.versionedobjects==1.23.0
