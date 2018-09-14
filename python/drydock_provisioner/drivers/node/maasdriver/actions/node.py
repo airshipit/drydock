@@ -2087,7 +2087,7 @@ class ApplyNodeStorage(BaseMaasAction):
             except Exception as ex:
                 self.task.failure(focus=n.get_id())
                 self.task.add_status_msg(
-                    msg="Error configuring storage.",
+                    msg="Error configuring storage.  %s" % str(ex),
                     error=True,
                     ctx=n.name,
                     ctx_type='node')
