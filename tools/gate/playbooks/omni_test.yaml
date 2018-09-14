@@ -40,4 +40,15 @@
         chdir: "{{ zuul.project.src_dir }}"
         target: unit_tests
       register: result
-
+    - name: Execute Go tests for baclient
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: test_baclient
+      become: true
+      register: result
+    - name: Execute the make target for building and running the Drydock Docker image
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: run_drydock
+      register: result
+      become: true

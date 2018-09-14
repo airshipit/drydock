@@ -43,16 +43,20 @@ RUN pip3 install \
     --no-cache-dir \
     -r /tmp/drydock/requirements-lock.txt
 
-COPY ./alembic /tmp/drydock/alembic
-COPY ./alembic.ini /tmp/drydock/alembic.ini
 COPY ./python /tmp/drydock/python
-COPY ${BUILD_DIR}/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
-
 WORKDIR /tmp/drydock/python
 RUN python3 setup.py install
 
+COPY ./alembic /tmp/drydock/alembic
+COPY ./alembic.ini /tmp/drydock/alembic.ini
+COPY ./entrypoint.sh /tmp/drydock/entrypoint.sh
+
+COPY ${BUILD_DIR}/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
+
+
 EXPOSE $PORT
 
-ENTRYPOINT ["./entrypoint.sh"]
+WORKDIR /tmp/drydock
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["server"]
