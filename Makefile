@@ -87,7 +87,7 @@ lint: pep8 helm_lint
 
 # Dry run templating of chart
 .PHONY: dry-run
-dry-run: clean helm-init
+dry-run: helm-init
 	$(HELM) template --set manifests.secret_ssh_key=true --set conf.ssh.private_key=foo charts/drydock
 
 # Initialize local helm config

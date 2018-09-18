@@ -33,6 +33,8 @@ spec:
         configmap-bin-hash: {{ tuple "configmap-bin.yaml" . | include "helm-toolkit.utils.hash" }}
         configmap-etc-hash: {{ tuple "configmap-etc.yaml" . | include "helm-toolkit.utils.hash" }}
     spec:
+      nodeSelector:
+        {{ .Values.labels.api.node_selector_key }}: {{ .Values.labels.api.node_selector_value | quote }}
       serviceAccountName: {{ $serviceAccountName }}
       restartPolicy: Always
       affinity:
@@ -41,6 +43,9 @@ spec:
 {{ tuple $envAll "api" list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
       containers:
         - name: drydock-api
+          image: {{ .Values.images.tags.drydock }}
+          imagePullPolicy: {{ .Values.images.pull_policy }}
+{{ tuple $envAll $envAll.Values.pod.resources.api | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:
             - name: 'MAAS_API_KEY'
               valueFrom:
@@ -51,9 +56,6 @@ spec:
               value: {{ .Values.conf.uwsgi.workers | default 1 | quote }}
             - name: 'DRYDOCK_API_THREADS'
               value: {{ .Values.conf.uwsgi.threads | default 1 | quote }}
-          image: {{ .Values.images.tags.drydock }}
-          imagePullPolicy: {{ .Values.images.pull_policy }}
-{{ tuple $envAll $envAll.Values.pod.resources.api | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           ports:
             - name: drydock-api
               containerPort: {{ tuple "physicalprovisioner" "default" "api" . | include "helm-toolkit.endpoints.endpoint_port_lookup" }}
