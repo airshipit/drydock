@@ -18,24 +18,17 @@
 Bootaction Errors
 -----------------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.InvalidAssetLocation
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - InvalidAssetLocation
-    - .. autoexception:: drydock_provisioner.error.InvalidAssetLocation
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - PipelineFailure
-    - .. autoexception:: drydock_provisioner.error.PipelineFailure
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - UnknownPipelineSegment
-    - .. autoexception:: drydock_provisioner.error.UnknownPipelineSegment
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.PipelineFailure
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: drydock_provisioner.error.UnknownPipelineSegment
+   :members:
+   :show-inheritance:
+   :undoc-members:

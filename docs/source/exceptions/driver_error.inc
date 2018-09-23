@@ -17,34 +17,27 @@
 Driver Errors
 -------------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.DriverError
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - DriverError
-    - .. autoexception:: drydock_provisioner.error.DriverError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - InvalidSizeFormat
-    - .. autoexception:: drydock_provisioner.error.InvalidSizeFormat
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - NotEnoughStorage
-    - .. autoexception:: drydock_provisioner.error.NotEnoughStorage
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - PersistentDriverError
-    - .. autoexception:: drydock_provisioner.error.PersistentDriverError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - TransientDriverError
-    - .. autoexception:: drydock_provisioner.error.TransientDriverError
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.InvalidSizeFormat
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: drydock_provisioner.error.NotEnoughStorage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: drydock_provisioner.error.PersistentDriverError
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: drydock_provisioner.error.TransientDriverError
+   :members:
+   :show-inheritance:
+   :undoc-members:
