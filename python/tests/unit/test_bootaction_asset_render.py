@@ -17,6 +17,8 @@ import ulid2
 import os
 
 from drydock_provisioner.statemgmt.state import DrydockState
+from drydock_provisioner.objects import Task
+from drydock_provisioner.objects import fields as hd_fields
 
 
 class TestBootactionRenderAction(object):
@@ -78,7 +80,8 @@ class TestBootactionRenderAction(object):
                                   action_key, design_ref)
 
         assert action_key.hex() in assets[2].rendered_bytes.decode('utf-8')
-        assert ulid2.ulid_to_base32(action_id) in assets[2].rendered_bytes.decode('utf-8')
+        assert ulid2.ulid_to_base32(
+            action_id) in assets[2].rendered_bytes.decode('utf-8')
 
     def test_bootaction_network_context(self, input_files,
                                         deckhand_orchestrator, setup):
@@ -131,3 +134,18 @@ class TestBootactionRenderAction(object):
         node_ctx = ba.asset_list[0]._get_node_context('compute01', design_data)
 
         assert node_ctx['domain'] == node_domain
+
+    def test_bootaction_pkg_list(self, input_files, deckhand_orchestrator,
+                                 setup):
+        """Test that a list of packages to be installed on a ndoe can be compiled from boot actions."""
+        input_file = input_files.join("deckhand_fullsite.yaml")
+
+        design_ref = "file://%s" % str(input_file)
+
+        test_task = Task(
+            action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
+
+        pkg_list = deckhand_orchestrator.find_node_package_lists(
+            'compute01', test_task)
+
+        assert len(pkg_list) == 2

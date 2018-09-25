@@ -23,8 +23,8 @@ import ulid2
 import falcon
 
 from drydock_provisioner.objects.fields import ActionResult
+from drydock_provisioner.objects.fields import BootactionAssetType
 import drydock_provisioner.objects as objects
-
 from .base import StatefulResource
 
 logger = logging.getLogger('drydock')
@@ -261,7 +261,9 @@ class BootactionUtils(object):
         tarbytes = io.BytesIO()
         tarball = tarfile.open(
             mode='w:gz', fileobj=tarbytes, format=tarfile.GNU_FORMAT)
-        asset_list = asset_list or []
+        asset_list = [
+            a for a in asset_list if a.type != BootactionAssetType.PackageList
+        ]
         for a in asset_list:
             fileobj = io.BytesIO(a.rendered_bytes)
             tarasset = tarfile.TarInfo(name=a.path)

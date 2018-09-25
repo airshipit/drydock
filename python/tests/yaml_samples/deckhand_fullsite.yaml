@@ -548,6 +548,10 @@ data:
       data_pipeline:
         - utf8_decode
         - template
+    - type: pkg_list
+      data:
+        2ping: '3.2.1-1'
+        '0xffff': null
 ---
 schema: 'drydock/BootAction/v1'
 metadata:

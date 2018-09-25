@@ -627,9 +627,13 @@ class Orchestrator(object):
 
         for ba in site_design.bootactions:
             if nodename in ba.target_nodes:
+                # NOTE(sh8121att) the ulid generation below
+                # is throw away data as these assets are only used to
+                # get a full list of packages to deploy
                 assets = ba.render_assets(
                     nodename,
                     site_design,
+                    ulid2.generate_binary_ulid(),
                     ulid2.generate_binary_ulid(),
                     task.design_ref,
                     type_filter=hd_fields.BootactionAssetType.PackageList)
