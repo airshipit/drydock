@@ -38,15 +38,15 @@ class DrydockPolicy(object):
 
     # Orchestrator Policy
     task_rules = [
-        policy.DocumentedRuleDefault('physical_provisioner:read_task',
-                                     'role:admin', 'Get task status',
-                                     [{
-                                         'path': '/api/v1.0/tasks',
-                                         'method': 'GET'
-                                     }, {
-                                         'path': '/api/v1.0/tasks/{task_id}',
-                                         'method': 'GET'
-                                     }]),
+        policy.DocumentedRuleDefault(
+            'physical_provisioner:read_task', 'role:admin', 'Get task status',
+            [{
+                'path': '/api/v1.0/tasks',
+                'method': 'GET'
+            }, {
+                'path': '/api/v1.0/tasks/{task_id}',
+                'method': 'GET'
+            }]),
         policy.DocumentedRuleDefault('physical_provisioner:create_task',
                                      'role:admin', 'Create a task',
                                      [{
@@ -103,10 +103,11 @@ class DrydockPolicy(object):
                                      }]),
         policy.DocumentedRuleDefault(
             'physical_provisioner:read_build_data', 'role:admin',
-            'Read build data for a node',
-            [{
-                'path': '/api/v1.0/nodes/{nodename}/builddata',
-                'method': 'GET',
+            'Read build data for a node', [{
+                'path':
+                '/api/v1.0/nodes/{nodename}/builddata',
+                'method':
+                'GET',
             }]),
     ]
 

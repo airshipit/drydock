@@ -90,9 +90,8 @@ class TestBuildData(object):
         }
 
         build_data_old = copy.deepcopy(build_data_latest)
-        build_data_old[
-            'collected_date'] = build_data_latest['collected_date'] - timedelta(
-                days=1)
+        build_data_old['collected_date'] = build_data_latest[
+            'collected_date'] - timedelta(days=1)
         build_data_old['task_id'] = uuid.uuid4()
 
         build_data1 = objects.BuildData(**build_data_latest)

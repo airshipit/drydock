@@ -35,8 +35,7 @@ class PromenadeDriver(KubernetesDriver):
     driver_desc = 'Promenade Kubernetes Driver'
 
     action_class_map = {
-        hd_fields.OrchestratorAction.RelabelNode:
-        RelabelNode,
+        hd_fields.OrchestratorAction.RelabelNode: RelabelNode,
     }
 
     def __init__(self, **kwargs):
@@ -103,8 +102,7 @@ class PromenadeDriver(KubernetesDriver):
                         action.start)
 
                 timeout = action_timeouts.get(
-                    task.action,
-                    config.config_mgr.conf.timeouts.relabel_node)
+                    task.action, config.config_mgr.conf.timeouts.relabel_node)
                 finished, running = concurrent.futures.wait(
                     subtask_futures.values(), timeout=(timeout * 60))
 
@@ -118,8 +116,8 @@ class PromenadeDriver(KubernetesDriver):
                     task.failure()
                 else:
                     if f.exception():
-                        msg = ("Subtask %s raised unexpected exception: %s"
-                               % (str(uuid.UUID(bytes=t)), str(f.exception())))
+                        msg = ("Subtask %s raised unexpected exception: %s" %
+                               (str(uuid.UUID(bytes=t)), str(f.exception())))
                         self.logger.error(msg, exc_info=f.exception())
                         task.add_status_msg(
                             msg=msg,

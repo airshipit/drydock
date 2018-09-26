@@ -79,8 +79,8 @@ def task_create(ctx,
                 if node_names else [],
                 rack_names=[x.strip() for x in rack_names.split(',')]
                 if rack_names else [],
-                node_tags=[x.strip() for x in node_tags.split(',')]
-                if node_tags else [],
+                node_tags=[x.strip()
+                           for x in node_tags.split(',')] if node_tags else [],
                 block=block,
                 poll_interval=poll_interval).invoke()))
 

@@ -64,8 +64,8 @@ def part_list(ctx):
     """List parts of a design."""
     click.echo(
         json.dumps(
-            PartList(ctx.obj['CLIENT'], design_id=ctx.obj['DESIGN_ID'])
-            .invoke()))
+            PartList(ctx.obj['CLIENT'],
+                     design_id=ctx.obj['DESIGN_ID']).invoke()))
 
 
 @part.command(name='show')

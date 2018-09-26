@@ -274,7 +274,8 @@ class Task(object):
                         "Bubbling subtask success for entity %s." % se)
                     self.result.add_success(se)
             else:
-                self.logger.debug("Skipping subtask success due to action filter.")
+                self.logger.debug(
+                    "Skipping subtask success due to action filter.")
             # All failures are bubbled up.
             if self.retry == 0 or (self.retry == st.retry):
                 for fe in st.result.failures:
@@ -283,8 +284,7 @@ class Task(object):
                     self.result.add_failure(fe)
             else:
                 self.logger.debug(
-                    "Skipping failures as they mismatch task retry sequence."
-                )
+                    "Skipping failures as they mismatch task retry sequence.")
 
     def align_result(self, action_filter=None, reset_status=True):
         """Align the result of this task with the combined results of all the subtasks.

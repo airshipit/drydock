@@ -109,8 +109,9 @@ class Orchestrator(object):
                 kubernetes_driver_class = getattr(
                     importlib.import_module(m), c, None)
                 if kubernetes_driver_class is not None:
-                    self.enabled_drivers['kubernetes'] = kubernetes_driver_class(
-                        state_manager=state_manager, orchestrator=self)
+                    self.enabled_drivers[
+                        'kubernetes'] = kubernetes_driver_class(
+                            state_manager=state_manager, orchestrator=self)
 
     def watch_for_tasks(self):
         """Start polling the database watching for Queued tasks to execute."""

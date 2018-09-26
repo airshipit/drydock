@@ -58,7 +58,8 @@ class RelabelNode(PromenadeAction):
         for n in nodes:
             # Relabel node through Promenade
             try:
-                self.logger.info("Relabeling node %s with node label data." % n.name)
+                self.logger.info(
+                    "Relabeling node %s with node label data." % n.name)
 
                 labels_dict = n.get_node_labels()
                 msg = "Set labels %s for node %s" % (str(labels_dict), n.name)

@@ -245,9 +245,8 @@ class DestroyNodes(BaseAction):
                     node_filter=self.task.node_filter)
                 self.task.register_subtask(node_release_task)
 
-            self.logger.info(
-                "Starting node driver task %s to Release nodes." %
-                (node_release_task.get_id()))
+            self.logger.info("Starting node driver task %s to Release nodes." %
+                             (node_release_task.get_id()))
             node_driver.execute_task(node_release_task.get_id())
 
             node_release_task = self.state_manager.get_task(
@@ -1079,9 +1078,8 @@ class RelabelNodes(BaseAction):
             node_filter=nf)
         self.task.register_subtask(relabel_node_task)
 
-        self.logger.info(
-            "Starting kubernetes driver task %s to relabel nodes." %
-            (relabel_node_task.get_id()))
+        self.logger.info("Starting kubernetes driver task %s to relabel nodes."
+                         % (relabel_node_task.get_id()))
         kubernetes_driver.execute_task(relabel_node_task.get_id())
 
         relabel_node_task = self.state_manager.get_task(

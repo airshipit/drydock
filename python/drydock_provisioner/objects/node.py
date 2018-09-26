@@ -338,6 +338,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
 
         return labels_dict
 
+
 @base.DrydockObjectRegistry.register
 class BaremetalNodeList(base.DrydockObjectListBase, base.DrydockObject):
 

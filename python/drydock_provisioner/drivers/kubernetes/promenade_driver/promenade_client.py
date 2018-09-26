@@ -22,6 +22,7 @@ from keystoneauth1 import exceptions as exc
 import drydock_provisioner.error as errors
 from drydock_provisioner.util import KeystoneUtils
 
+
 # TODO: Remove this local implementation of Promenade Session and client once
 # Promenade api client is available as part of Promenade project.
 class PromenadeSession(object):
@@ -35,10 +36,7 @@ class PromenadeSession(object):
         read timeout to use
     """
 
-    def __init__(self,
-                 scheme='http',
-                 marker=None,
-                 timeout=None):
+    def __init__(self, scheme='http', marker=None, timeout=None):
         self.logger = logging.getLogger(__name__)
         self.__session = requests.Session()
 
@@ -63,8 +61,8 @@ class PromenadeSession(object):
 
     def set_auth(self):
 
-            auth_header = self._auth_gen()
-            self.__session.headers.update(auth_header)
+        auth_header = self._auth_gen()
+        self.__session.headers.update(auth_header)
 
     def get(self, route, query=None, timeout=None):
         """
@@ -220,11 +218,10 @@ class PromenadeSession(object):
         try:
             ks_session = KeystoneUtils.get_session()
         except exc.AuthorizationFailure as aferr:
-            self.logger.error(
-                'Could not authorize against Keystone: %s',
-                str(aferr))
-            raise errors.DriverError('Could not authorize against Keystone: %s',
-                                     str(aferr))
+            self.logger.error('Could not authorize against Keystone: %s',
+                              str(aferr))
+            raise errors.DriverError(
+                'Could not authorize against Keystone: %s', str(aferr))
 
         return ks_session
 
@@ -235,8 +232,7 @@ class PromenadeSession(object):
 
         try:
             prom_endpoint = ks_session.get_endpoint(
-                interface='internal',
-                service_type='kubernetesprovisioner')
+                interface='internal', service_type='kubernetesprovisioner')
         except exc.EndpointNotFound:
             self.logger.error("Could not find an internal interface"
                               " defined in Keystone for Promenade")
