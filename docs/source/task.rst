@@ -116,7 +116,7 @@ When querying the state of an existing task, the below document will be returned
       "result": Status object
     }
 
-The Status object is based on the UCP standardized response format::
+The Status object is based on the Airship standardized response format::
 
     {
       "Kind": "Status",

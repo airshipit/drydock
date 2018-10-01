@@ -3,7 +3,7 @@
 A python REST orchestrator to translate a YAML host topology to a provisioned
 set of hosts and provide a set of post-provisioning instructions.
 
-See full documentation at [http://att-comdev-drydock.readthedocs.io/](http://att-comdev-drydock.readthedocs.io/).
+See full documentation at [https://airship-drydock.readthedocs.io/](https://airship-drydock.readthedocs.io/).
 
 ## Required
 
@@ -15,7 +15,7 @@ See full documentation at [http://att-comdev-drydock.readthedocs.io/](http://att
 ## Recommended
 
 * A running Kubernetes cluster with Helm initialized
-* Familiarity with the AT&T Community Undercloud Platform (UCP) suite of services
+* Familiarity with the Airship platform suite of services
 
 ## Building
 
@@ -44,14 +44,14 @@ and policy file templates to be customized
 
 The preferred deployment pattern of Drydock is via a Helm chart
 to deploy Drydock into a Kubernetes cluster. Additionally use of
-the rest of the UCP services provides additional functionality
+the rest of the Airship services provides additional functionality
 for deploying (Armada) and using (Promenade, Deckhand) Drydock.
 
-You can see an example of a full UCP deployment in the [UCP Integration](https://github.com/att-comdev/ucp-integration) repository.
+You can see an example of a full Airship deployment in the [Airship in a Bottle](https://github.com/openstack/airship-in-a-bottle) repository.
 
 ### Stand up Kubernetes
 
-Use the UCP [Promenade](https://github.com/att-comdev/promenade)
+Use the Airship [Promenade](https://github.com/openstack/airship-promenade)
 tool for starting a self-hosted Kubernetes cluster with Kubernetes
 Helm deployed.
 
@@ -62,11 +62,11 @@ Use them for preparing your Kuberentes cluster to host Drydock.
 
 * [Postgres](https://github.com/openstack/openstack-helm/tree/master/postgresql)
 * [Keystone](https://github.com/openstack/openstack-helm/tree/master/keystone)
-* [MAAS](https://github.com/att-comdev/maas)
+* [MAAS](https://github.com/openstack/airship-maas)
 
 ### Deploy Drydock
 
-Ideally you will use the UCP [Armada](https://readthedocs.org/projects/armada-helm/)
+Ideally you will use the Airship [Armada](https://airship-armada.readthedocs.io)
 tool for deploying the Drydock chart with proper overrides, but if not you can
 use the `helm` CLI tool. The below are overrides needed during deployment
 

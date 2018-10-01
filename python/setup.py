@@ -21,9 +21,11 @@ from setuptools import setup, find_packages
 setup(
     name='drydock_provisioner',
     version='0.1a1',
-    description='Bootstrapper for Kubernetes infrastructure',
-    url='http://github.com/att-comdev/drydock',
-    author='AT&T - AIC UCP Developers',
+    description=('A python REST orchestrator to translate a YAML host '
+                 'topology to a provisioned set of hosts and provide a set of '
+                 'post-provisioning instructions.'),
+    url='https://github.com/openstack/airship-drydock',
+    author='The Airship Authors',
     license='Apache 2.0',
     packages=find_packages(),
     package_data={

@@ -48,7 +48,7 @@ Control
 The ``control`` module is simply the RESTful API. It is based on the
 `Falcon Framework <https://falconframework.org/>`_ and utilizes oslo_policy
 for RBAC enforcement of the API endpoints. The normal deployment of Drydock
-uses `uWSGI <http://uwsgi-docs.readthedocs.io/en/latest/>`_ and PasteDeploy
+uses `uWSGI <http://uwsgi-docs.readthedocs.io/>`_ and PasteDeploy
 to build a pipeline that includes Keystone Middleware for authentication
 and role decoration of the request.
 
@@ -96,7 +96,7 @@ for testing and publishing. It also requires Drydock to produce multiple artifac
 but separate: the Python package, the Docker image and the Helm chart. The code is published via the
 Docker image artifact.
 
-Drydock strives to conform to the `Airship coding conventions <http://airshipit.readthedocs.io/en/latest/conventions.html>`_.
+Drydock strives to conform to the `Airship coding conventions <https://airshipit.readthedocs.io/en/latest/conventions.html>`_.
 
 Python
 ------

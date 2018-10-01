@@ -23,7 +23,7 @@ Bootstrap Kubernetes
 
 You can bootstrap your Helm-enabled Kubernetes cluster via the Openstack-Helm
 `AIO <https://docs.openstack.org/openstack-helm/latest/install/developer/index.html>`_
-or the `Promenade <https://airshipit.readthedocs.io/projects/promenade/en/latest/>`_ tools.
+or the `Promenade <https://airship-promenade.readthedocs.io/>`_ tools.
 
 Deploy Drydock and Dependencies
 -------------------------------
@@ -35,9 +35,9 @@ the deployments of the `MaaS <https://git.openstack.org/cgit/openstack/airship-m
 chart and the `Keystone <https://git.openstack.org/cgit/openstack/openstack-helm/>`_ chart.
 
 A integrated deployment of these charts can be accomplished using the
-`Armada <https://airshipit.readthedocs.io/projects/armada/en/latest/>`_ tool. An example integration
+`Armada <https://airship-armada.readthedocs.io/>`_ tool. An example integration
 chart can be found in the
-`Airship in a Bottle <http://git.openstack.org/cgit/openstack/airship-in-a-bottle/>`_ repo in the
+`Airship in a Bottle <https://git.openstack.org/cgit/openstack/airship-in-a-bottle/>`_ repo in the
 ``./manifests/dev_single_node`` directory.
 
 Load Site
@@ -49,7 +49,7 @@ YAML. An example of this is in ``./test/yaml_samples/deckhand_fullsite.yaml``.
 Documentation on building your topology document is at :ref:`topology_label`.
 
 Drydock requires that the YAML topology be hosted somewhere, either the preferred
-method of using `Deckhand <https://airshipit.readthedocs.io/projects/deckhand/en/latests/>`_
+method of using `Deckhand <https://airship-deckhand.readthedocs.io/>`_
 or through a simple HTTP server like Nginx or Apache.
 
 Use the CLI to create tasks to deploy your site
