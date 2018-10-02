@@ -40,17 +40,15 @@ class NetworkTrunkingRational(Validators):
                 )
 
             # trunking mode is disabled, default_network must be defined
-            if (network_link.trunk_mode ==
-                    hd_fields.NetworkLinkTrunkingMode.Disabled
-                    and network_link.native_network is None):
+            if (network_link.trunk_mode == hd_fields.NetworkLinkTrunkingMode.
+                    Disabled and network_link.native_network is None):
 
                 msg = 'Trunking mode is disabled, a trunking default_network must be defined'
                 self.report_error(
                     msg, [network_link.doc_ref],
                     "Non-trunked links must have a native network defined.")
-            elif (network_link.trunk_mode ==
-                  hd_fields.NetworkLinkTrunkingMode.Disabled
-                  and network_link.native_network is not None):
+            elif (network_link.trunk_mode == hd_fields.NetworkLinkTrunkingMode.
+                  Disabled and network_link.native_network is not None):
                 network = site_design.get_network(network_link.native_network)
                 if network and network.vlan_id:
                     msg = "Network link native network has a defined VLAN tag."

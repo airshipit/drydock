@@ -278,7 +278,8 @@ class DestroyNode(BaseMaasAction):
                                                       site_design)
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(n, update_name=False)
+                machine = machine_list.identify_baremetal_node(
+                    n, update_name=False)
 
                 if machine is None:
                     msg = "Could not locate machine for node {}".format(n.name)
@@ -297,7 +298,8 @@ class DestroyNode(BaseMaasAction):
                     try:
                         machine.release(erase_disk=True, quick_erase=True)
                     except errors.DriverError:
-                        msg = "Error Releasing node {}, skipping".format(n.name)
+                        msg = "Error Releasing node {}, skipping".format(
+                            n.name)
                         self.logger.warning(msg)
                         self.task.add_status_msg(
                             msg=msg, error=True, ctx=n.name, ctx_type='node')
@@ -306,25 +308,26 @@ class DestroyNode(BaseMaasAction):
 
                     # node release with erase disk will take sometime monitor it
                     attempts = 0
-                    max_attempts = (config.config_mgr.conf.timeouts.destroy_node
-                                    * 60) // config.config_mgr.conf.maasdriver.poll_interval
+                    max_attempts = (
+                        config.config_mgr.conf.timeouts.destroy_node *
+                        60) // config.config_mgr.conf.maasdriver.poll_interval
 
-                    while (attempts < max_attempts
-                           and (not machine.status_name.startswith('Ready')
-                                and not machine.status_name.startswith(
-                                        'Failed'))):
+                    while (attempts < max_attempts and
+                           (not machine.status_name.startswith('Ready')
+                            and not machine.status_name.startswith('Failed'))):
                         attempts = attempts + 1
                         time.sleep(
                             config.config_mgr.conf.maasdriver.poll_interval)
                         try:
                             machine.refresh()
                             self.logger.debug(
-                                "Polling node {} status attempt {:d} of {:d}: {}".format(
-                                    n.name, attempts, max_attempts,
-                                    machine.status_name))
+                                "Polling node {} status attempt {:d} of {:d}: {}"
+                                .format(n.name, attempts, max_attempts,
+                                        machine.status_name))
                         except Exception:
                             self.logger.warning(
-                                "Error updating node {} status during release node, will re-attempt.".format(n.name))
+                                "Error updating node {} status during release node, will re-attempt."
+                                .format(n.name))
                     if machine.status_name.startswith('Ready'):
                         msg = "Node {} released and disk erased.".format(
                             n.name)
@@ -354,8 +357,8 @@ class DestroyNode(BaseMaasAction):
                 try:
                     if n.oob_type == 'libvirt':
                         self.logger.info(
-                            'Resetting MaaS virsh power parameters for node {}.'.format(
-                                n.name))
+                            'Resetting MaaS virsh power parameters for node {}.'
+                            .format(n.name))
                         # setting power type attibutes to empty string
                         # will remove them from maas BMC table
                         machine.reset_power_parameters()
@@ -363,8 +366,8 @@ class DestroyNode(BaseMaasAction):
                     pass
 
                 machine.delete()
-                msg = "Deleted Node: {} in status: {}.".format(n.name,
-                                                               machine.status_name)
+                msg = "Deleted Node: {} in status: {}.".format(
+                    n.name, machine.status_name)
                 self.logger.info(msg)
                 self.task.add_status_msg(
                     msg=msg, error=False, ctx=n.name, ctx_type='node')
@@ -1147,16 +1150,17 @@ class ConfigureHardware(BaseMaasAction):
 
                         # Poll machine status
                         attempts = 0
-                        max_attempts = (config.config_mgr.conf.timeouts.configure_hardware
-                                        * 60) // config.config_mgr.conf.maasdriver.poll_interval
+                        max_attempts = (
+                            config.config_mgr.conf.timeouts.configure_hardware
+                            * 60
+                        ) // config.config_mgr.conf.maasdriver.poll_interval
 
                         while (attempts < max_attempts and
                                (machine.status_name != 'Ready' and
                                 not machine.status_name.startswith('Failed'))):
                             attempts = attempts + 1
-                            time.sleep(
-                                config.config_mgr.conf.maasdriver.poll_interval
-                            )
+                            time.sleep(config.config_mgr.conf.maasdriver.
+                                       poll_interval)
                             try:
                                 machine.refresh()
                                 self.logger.debug(
@@ -1226,7 +1230,9 @@ class ConfigureHardware(BaseMaasAction):
             except Exception as ex:
                 msg = "Error commissioning node %s: %s" % (n.name, str(ex))
                 self.logger.warning(msg)
-                self.logger.debug("Unhandled exception attempting to commission node.", exc_info=ex)
+                self.logger.debug(
+                    "Unhandled exception attempting to commission node.",
+                    exc_info=ex)
                 self.task.add_status_msg(
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 self.task.failure(focus=n.get_id())
@@ -2312,8 +2318,9 @@ class DeployNode(BaseMaasAction):
                 continue
 
             attempts = 0
-            max_attempts = (config.config_mgr.conf.timeouts.deploy_node
-                            * 60) // config.config_mgr.conf.maasdriver.poll_interval
+            max_attempts = (
+                config.config_mgr.conf.timeouts.deploy_node *
+                60) // config.config_mgr.conf.maasdriver.poll_interval
 
             while (attempts < max_attempts
                    and (not machine.status_name.startswith('Deployed')

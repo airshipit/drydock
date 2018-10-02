@@ -70,12 +70,12 @@ class OrchestratorAction(BaseDrydockEnum):
 
     ALL = (Noop, ValidateDesign, VerifySite, PrepareSite, VerifyNodes,
            PrepareNodes, DeployNodes, BootactionReport, DestroyNodes,
-           RelabelNodes, ConfigNodePxe, SetNodeBoot, PowerOffNode,
-           PowerOnNode, PowerCycleNode, InterrogateOob, RelabelNode,
-           CreateNetworkTemplate, CreateStorageTemplate, CreateBootMedia,
-           PrepareHardwareConfig, ConfigureHardware, InterrogateNode,
-           ApplyNodeNetworking, ApplyNodeStorage, ApplyNodePlatform,
-           DeployNode, DestroyNode, ConfigureNodeProvisioner)
+           RelabelNodes, ConfigNodePxe, SetNodeBoot, PowerOffNode, PowerOnNode,
+           PowerCycleNode, InterrogateOob, RelabelNode, CreateNetworkTemplate,
+           CreateStorageTemplate, CreateBootMedia, PrepareHardwareConfig,
+           ConfigureHardware, InterrogateNode, ApplyNodeNetworking,
+           ApplyNodeStorage, ApplyNodePlatform, DeployNode, DestroyNode,
+           ConfigureNodeProvisioner)
 
 
 class OrchestratorActionField(fields.BaseEnumField):

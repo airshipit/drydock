@@ -169,9 +169,8 @@ class DrydockState(object):
             with self.db_engine.connect() as conn:
                 if allowed_actions is None:
                     query = self.tasks_tbl.select().where(
-                        self.tasks_tbl.c.status ==
-                        hd_fields.TaskStatus.Queued).order_by(
-                            self.tasks_tbl.c.created.asc())
+                        self.tasks_tbl.c.status == hd_fields.TaskStatus.
+                        Queued).order_by(self.tasks_tbl.c.created.asc())
                     rs = conn.execute(query)
                 else:
                     query = sql.text("SELECT * FROM tasks WHERE "
@@ -340,8 +339,8 @@ class DrydockState(object):
         try:
             with self.db_engine.connect() as conn:
                 query = self.active_instance_tbl.update().where(
-                    self.active_instance_tbl.c.identity ==
-                    leader_id.bytes).values(last_ping=datetime.utcnow())
+                    self.active_instance_tbl.c.identity == leader_id.
+                    bytes).values(last_ping=datetime.utcnow())
                 rs = conn.execute(query)
                 rc = rs.rowcount
 

@@ -87,7 +87,8 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
         for a in self.asset_list:
             if type_filter is None or (type_filter is not None
                                        and a.type == type_filter):
-                a.render(nodename, site_design, action_id, action_key, design_ref)
+                a.render(nodename, site_design, action_id, action_key,
+                         design_ref)
                 assets.append(a)
 
         return assets

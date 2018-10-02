@@ -423,8 +423,8 @@ class Machine(model_base.ResourceBase):
             return True
 
         raise errors.DriverError(
-            "Failed updating power parameters MAAS url {} - return code {}\n{}".format(
-                url, resp.status_code.resp.text))
+            "Failed updating power parameters MAAS url {} - return code {}\n{}"
+            .format(url, resp.status_code.resp.text))
 
     def to_dict(self):
         """Serialize this resource instance into a dict.

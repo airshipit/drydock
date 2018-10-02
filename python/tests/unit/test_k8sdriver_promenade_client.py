@@ -25,16 +25,14 @@ PROM_URL = urlparse('http://promhost:80/api/v1.0')
 PROM_HOST = 'promhost'
 
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_put(patch1, patch2):
     """
@@ -47,51 +45,43 @@ def test_put(patch1, patch2):
         status=200)
 
     prom_session = PromenadeSession()
-    result = prom_session.put('v1.0/node-label/n1',
-                              body='{"key1":"label1"}',
-                              timeout=(60, 60))
+    result = prom_session.put(
+        'v1.0/node-label/n1', body='{"key1":"label1"}', timeout=(60, 60))
 
     assert PROM_HOST == prom_session.host
     assert result.status_code == 200
 
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_get(patch1, patch2):
     """
     Test get functionality
     """
     responses.add(
-        responses.GET,
-        'http://promhost:80/api/v1.0/node-label/n1',
-        status=200)
+        responses.GET, 'http://promhost:80/api/v1.0/node-label/n1', status=200)
 
     prom_session = PromenadeSession()
-    result = prom_session.get('v1.0/node-label/n1',
-                              timeout=(60, 60))
+    result = prom_session.get('v1.0/node-label/n1', timeout=(60, 60))
 
     assert result.status_code == 200
 
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_post(patch1, patch2):
     """
@@ -104,24 +94,21 @@ def test_post(patch1, patch2):
         status=200)
 
     prom_session = PromenadeSession()
-    result = prom_session.post('v1.0/node-label/n1',
-                               body='{"key1":"label1"}',
-                               timeout=(60, 60))
+    result = prom_session.post(
+        'v1.0/node-label/n1', body='{"key1":"label1"}', timeout=(60, 60))
 
     assert PROM_HOST == prom_session.host
     assert result.status_code == 200
 
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_relabel_node(patch1, patch2):
     """
@@ -141,16 +128,14 @@ def test_relabel_node(patch1, patch2):
     assert result == {"key1": "label1"}
 
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_relabel_node_403_status(patch1, patch2):
     """
@@ -167,16 +152,15 @@ def test_relabel_node_403_status(patch1, patch2):
     with pytest.raises(errors.ClientForbiddenError):
         prom_client.relabel_node('n1', {"key1": "label1"})
 
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession._get_prom_url',
-    return_value=PROM_URL)
-@mock.patch(
-    'drydock_provisioner.drivers.kubernetes'
-    '.promenade_driver.promenade_client'
-    '.PromenadeSession.set_auth',
-    return_value=None)
+
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession._get_prom_url',
+            return_value=PROM_URL)
+@mock.patch('drydock_provisioner.drivers.kubernetes'
+            '.promenade_driver.promenade_client'
+            '.PromenadeSession.set_auth',
+            return_value=None)
 @responses.activate
 def test_relabel_node_401_status(patch1, patch2):
     """
