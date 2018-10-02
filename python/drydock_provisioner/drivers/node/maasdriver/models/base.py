@@ -37,6 +37,8 @@ class ResourceBase(object):
         for f in self.fields:
             if f in kwargs.keys():
                 setattr(self, f, kwargs.get(f))
+            else:
+                setattr(self, f, None)
 
     """
     Update resource attributes from MaaS

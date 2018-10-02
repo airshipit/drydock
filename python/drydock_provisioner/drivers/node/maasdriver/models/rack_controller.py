@@ -13,7 +13,7 @@
 # limitations under the License.
 """Model for MaaS rack-controller API resource."""
 
-import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
+import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.machine as maas_machine
 
 
@@ -64,8 +64,25 @@ class RackController(maas_machine.Machine):
 
         return svc_status
 
+    def update_identity(self, n, domain="local"):
+        """Cannot update rack controller identity."""
+        self.logger.debug("Cannot update rack controller identity for %s, no-op." %
+                          self.hostname)
+        return
 
-class RackControllers(model_base.ResourceCollectionBase):
+    def is_healthy(self):
+        """Check if this rack controller appears healthy based on service status."""
+        rack_svc = self.get_services()
+        healthy = True
+        for s in rack_svc:
+            if s in RackController.REQUIRED_SERVICES:
+                # TODO(sh8121att) for dhcpd, ensure it is running if this rack controller
+                # is a primary or secondary for a VLAN
+                if rack_svc[s] not in ("running", "off"):
+                    healthy = False
+        return healthy
+
+class RackControllers(maas_machine.Machines):
     """Model for a collection of rack controllers."""
 
     collection_url = 'rackcontrollers/'
@@ -73,3 +90,7 @@ class RackControllers(model_base.ResourceCollectionBase):
 
     def __init__(self, api_client, **kwargs):
         super().__init__(api_client)
+
+    def acquire_node(self, node_name):
+        """Acquire not valid for nodes that are Rack Controllers."""
+        raise errors.DriverError("Rack controllers cannot be acquired.")
