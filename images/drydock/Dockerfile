@@ -13,6 +13,13 @@
 # limitations under the License.
 FROM ubuntu:16.04
 
+LABEL org.opencontainers.image.authors='airship-discuss@lists.airshipit.org, irc://#airshipit@freenode'
+LABEL org.opencontainers.image.url='https://airshipit.org'
+LABEL org.opencontainers.image.documentation='https://airship-drydock.readthedocs.org'
+LABEL org.opencontainers.image.source='https://git.openstack.org/openstack/airship-drydock'
+LABEL org.opencontainers.image.vendor='The Airship Authors'
+LABEL org.opencontainers.image.licenses='Apache-2.0'
+
 ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
 ARG TRUSTED_UBUNTU_REPO=no
 ARG ALLOW_UNAUTHENTICATED=false
