@@ -33,6 +33,7 @@ from drydock_provisioner.orchestrator.validations.oob_valid_ipmi import IpmiVali
 from drydock_provisioner.orchestrator.validations.oob_valid_libvirt import LibvirtValidity
 from drydock_provisioner.orchestrator.validations.bootaction_validity import BootactionDefined
 from drydock_provisioner.orchestrator.validations.bootaction_validity import BootactionPackageListValid
+from drydock_provisioner.orchestrator.validations.storage_mountpoints import StorageMountpoints
 
 
 class Validator():
@@ -92,6 +93,7 @@ rule_set = [
     RationalNetworkBond(),
     StoragePartitioning(),
     StorageSizing(),
+    StorageMountpoints(),
     UniqueNetworkCheck(),
     HostnameValidity(),
     IpmiValidity(),
