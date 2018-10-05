@@ -1814,11 +1814,7 @@ class ApplyNodeStorage(BaseMaasAction):
     # for the partition table and once the table is written, there is not
     # enough space for the 'full size' partition. So reserve the below
     # when calculating 'rest of device' sizing w/ the '>' operator
-    #
-    # This size is based on documentation that for backwards compatability
-    # the first partition should start on LBA 63 and we'll assume 4096 byte
-    # blocks, thus 63 (add one for safety) x 4096 = 258048
-    PART_TABLE_RESERVATION = 258048
+    PART_TABLE_RESERVATION = 1024 * 1024 * 4  # 4MB reservation for partition size
 
     def start(self):
         try:
@@ -1945,9 +1941,12 @@ class ApplyNodeStorage(BaseMaasAction):
                         n.get_logicalname(d.name)
                     })
                     if maas_dev is None:
-                        self.logger.warning(
-                            "Dev %s (%s) not found on node %s" %
-                            (d.name, n.get_logicalname(d.name), n.name))
+                        msg = "Dev %s (%s) not found on node %s" % (
+                                d.name, n.get_logicalname(d.name), n.name)
+                        self.logger.warning(msg)
+                        self.task.add_status_msg(
+                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.failure(focus=n.get_id())
                         continue
 
                     if d.volume_group is not None:
