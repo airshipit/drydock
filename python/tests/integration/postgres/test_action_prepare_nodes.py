@@ -39,6 +39,7 @@ class TestActionPrepareNodes(object):
         class DummyConf(object):
             oob_driver = ['drydock_provisioner.drivers.oob.driver.OobDriver']
             node_driver = 'drydock_provisioner.drivers.node.driver.NodeDriver'
+            kubernetes_driver = 'drydock_provisioner.drivers.kubernetes.driver.KubernetesDriver'
             network_driver = None
 
         orchestrator = orch.Orchestrator(
