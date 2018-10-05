@@ -17,19 +17,12 @@
 API Errors
 ----------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.ClientError
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - ClientError
-    - .. autoexception:: drydock_provisioner.error.ClientError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - InvalidFormat
-    - .. autoexception:: drydock_provisioner.error.InvalidFormat
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.InvalidFormat
+   :members:
+   :show-inheritance:
+   :undoc-members:

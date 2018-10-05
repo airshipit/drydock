@@ -18,19 +18,12 @@
 Orchestrator Errors
 -------------------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.MaxRetriesReached
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - MaxRetriesReached
-    - .. autoexception:: drydock_provisioner.error.MaxRetriesReached
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - OrchestratorError
-    - .. autoexception:: drydock_provisioner.error.OrchestratorError
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.OrchestratorError
+   :members:
+   :show-inheritance:
+   :undoc-members:

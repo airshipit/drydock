@@ -17,14 +17,8 @@
 
 BuildData Errors
 ----------------
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
 
-  * - Exception Name
-    - Description
-  * - BuildDataError
-    - .. autoexception:: drydock_provisioner.error.BuildDataError
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.BuildDataError
+   :members:
+   :show-inheritance:
+   :undoc-members:

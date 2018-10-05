@@ -17,19 +17,12 @@
 Client Errors
 -------------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.ClientForbiddenError
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - ClientForbiddenError
-    - .. autoexception:: drydock_provisioner.error.ClientForbiddenError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - ClientUnauthorizedError
-    - .. autoexception:: drydock_provisioner.error.ClientUnauthorizedError
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.ClientUnauthorizedError
+   :members:
+   :show-inheritance:
+   :undoc-members:

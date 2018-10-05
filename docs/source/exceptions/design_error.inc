@@ -17,24 +17,17 @@
 Design Errors
 -------------
 
-.. list-table::
-  :widths: 5 50
-  :header-rows: 1
+.. autoexception:: drydock_provisioner.error.DesignError
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-  * - Exception Name
-    - Description
-  * - DesignError
-    - .. autoexception:: drydock_provisioner.error.DesignError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - IngesterError
-    - .. autoexception:: drydock_provisioner.error.IngesterError
-         :members:
-         :show-inheritance:
-         :undoc-members:
-  * - InvalidDesignReference
-    - .. autoexception:: drydock_provisioner.error.InvalidDesignReference
-         :members:
-         :show-inheritance:
-         :undoc-members:
+.. autoexception:: drydock_provisioner.error.IngesterError
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: drydock_provisioner.error.InvalidDesignReference
+   :members:
+   :show-inheritance:
+   :undoc-members:
