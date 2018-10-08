@@ -22,7 +22,7 @@ from drydock_provisioner.orchestrator.validations.storage_partititioning import 
 LOG = logging.getLogger(__name__)
 
 
-class TestRationalNetworkTrunking(object):
+class TestStoragePartitioning(object):
     def test_storage_partitioning(self, deckhand_ingester, drydock_state,
                                   input_files):
         input_file = input_files.join("validation.yaml")
