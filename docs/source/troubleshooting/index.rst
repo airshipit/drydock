@@ -15,7 +15,7 @@
       under the License.
 
 =============================
-Dryodck Troubleshooting Guide
+Drydock Troubleshooting Guide
 =============================
 
 This is a guide for troubleshooting issues that can arise when either
