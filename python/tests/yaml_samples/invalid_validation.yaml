@@ -252,12 +252,11 @@ data:
 # FAILS HERE: root not set
 #############################################
 # FAILS HERE: partitions size > 99%
-# FAILS HERE: duplicate mount point
           - name: test
             size: 100%
             bootable: true
             filesystem:
-              mountpoint: '/boot'
+              mountpoint: '/'
               fstype: 'ext4'
               mount_options: 'defaults'
 ###############################################
