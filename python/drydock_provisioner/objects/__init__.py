@@ -102,11 +102,12 @@ class Utils(object):
         try:
             # Probably should handle non-string values
             effective_list.extend(
-                filter(lambda x: not x.startswith("!"), child_list))
+                [x for x in child_list if not x.startswith("!")])
 
             effective_list.extend(
-                filter(lambda x: ("!" + x) not in child_list,
-                       filter(lambda x: x not in effective_list, parent_list)))
+                [x for x in parent_list
+                 if ("!" + x) not in child_list
+                 and x not in effective_list])
         except TypeError:
             raise TypeError("Error iterating list argument")
 

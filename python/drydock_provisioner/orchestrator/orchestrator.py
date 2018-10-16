@@ -472,25 +472,25 @@ class Orchestrator(object):
 
             target_nodes = dict()
 
-            if node_names and len(node_names) > 0:
+            if node_names:
                 self.logger.debug("Filtering nodes based on node names.")
                 target_nodes['node_names'] = [
                     x for x in node_set if x.get_name() in node_names
                 ]
 
-            if node_tags and len(node_tags) > 0:
+            if node_tags:
                 self.logger.debug("Filtering nodes based on node tags.")
                 target_nodes['node_tags'] = [
                     x for x in node_set for t in node_tags if x.has_tag(t)
                 ]
 
-            if rack_names and len(rack_names) > 0:
+            if rack_names:
                 self.logger.debug("Filtering nodes based on rack names.")
                 target_nodes['rack_names'] = [
                     x for x in node_set if x.get_rack() in rack_names
                 ]
 
-            if node_labels and len(node_labels) > 0:
+            if node_labels:
                 self.logger.debug("Filtering nodes based on node labels.")
                 target_nodes['node_labels'] = []
                 for k, v in node_labels.items():
@@ -499,7 +499,7 @@ class Orchestrator(object):
                         if getattr(x, 'owner_data', {}).get(k, None) == v
                     ])
 
-            if rack_labels and len(rack_labels) > 0:
+            if rack_labels:
                 self.logger.info(
                     "Rack label filtering not yet implemented, returning all nodes."
                 )
@@ -531,21 +531,17 @@ class Orchestrator(object):
         """
         if len(rest) > 1:
             result = self.list_intersection(rest[0], *rest[1:])
-            if a is None:
-                return result
-            elif result is None:
-                return a
-            else:
-                return list(set(a).intersection(set(result)))
-        elif len(rest) == 1:
-            if a is None and rest[0] is None:
-                return None
-            elif rest is None or rest[0]:
-                return a
-            else:
-                return list(set(a).intersection(set(rest[0])))
+        elif rest:
+            result = rest[0]
         else:
+            result = None
+
+        if a is None:
+            return result
+        elif result is None:
             return a
+        else:
+            return list(set(a).intersection(set(result)))
 
     def list_union(self, *lists):
         """Return a unique-ified union of all the lists.
