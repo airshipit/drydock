@@ -77,6 +77,18 @@ class Machine(model_base.ResourceBase):
                 return i
         return None
 
+    def interface_for_mac(self, mac_address):
+        """Find the machine interface that owns the specified ``mac_address``.
+
+        :param str mac_address: The MAC address
+
+        :return: the interface that responds to this MAC or None
+        """
+        for i in self.interfaces:
+            if i.responds_to_mac(mac_address):
+                return i
+        return None
+
     def get_power_params(self):
         """Load power parameters for this node from MaaS."""
         url = self.interpolate_url()
@@ -426,6 +438,30 @@ class Machine(model_base.ResourceBase):
             "Failed updating power parameters MAAS url {} - return code {}\n{}"
             .format(url, resp.status_code.resp.text))
 
+    def update_identity(self, n, domain="local"):
+        """Update this node's identity based on the Node object ``n``
+
+        :param objects.Node n: The Node object to use as reference
+        :param str domain: The DNS domain to register this node under
+        """
+        try:
+            self.hostname = n.name
+            self.domain = domain
+            self.update()
+            if n.oob_type == 'libvirt':
+                self.logger.debug(
+                    "Updating node %s MaaS power parameters for libvirt." %
+                    (n.name))
+                oob_params = n.oob_parameters
+                self.set_power_parameters(
+                    'virsh',
+                    power_address=oob_params.get('libvirt_uri'),
+                    power_id=n.name)
+            self.logger.debug("Updated MaaS resource %s hostname to %s" %
+                              (self.resource_id, n.name))
+        except Exception as ex:
+            self.logger.debug("Error updating MAAS node: %s" % str(ex))
+
     def to_dict(self):
         """Serialize this resource instance into a dict.
 
@@ -522,9 +558,7 @@ class Machines(model_base.ResourceCollectionBase):
         return node
 
     def identify_baremetal_node(self,
-                                node_model,
-                                update_name=True,
-                                domain="local"):
+                                node_model):
         """Find MaaS node resource matching Drydock BaremetalNode.
 
         Search all the defined MaaS Machines and attempt to match
@@ -532,7 +566,6 @@ class Machines(model_base.ResourceCollectionBase):
         the MaaS instance with the correct hostname
 
         :param node_model: Instance of objects.node.BaremetalNode to search MaaS for matching resource
-        :param update_name: Whether Drydock should update the MaaS resource name to match the Drydock design
         """
         maas_node = None
 
@@ -552,45 +585,36 @@ class Machines(model_base.ResourceCollectionBase):
                     node_oob_ip
                 })
             except ValueError:
-                self.logger.warn(
+                self.logger.info(
                     "Error locating matching MaaS resource for OOB IP %s" %
                     (node_oob_ip))
                 return None
         else:
             # Use boot_mac for node's not using IPMI
-            node_boot_mac = node_model.boot_mac
+            nodes = self.find_nodes_with_mac(node_model.boot_mac)
 
-            if node_boot_mac is not None:
-                maas_node = self.singleton({'boot_mac': node_model.boot_mac})
+            if len(nodes) == 1:
+                maas_node = nodes[0]
+            else:
+                self.logger.debug("Error: Found %d nodes with MAC %s", len(nodes), node_model.boot_mac)
+                maas_node = None
 
         if maas_node is None:
             self.logger.info(
                 "Could not locate node %s in MaaS" % node_model.name)
-            return None
-
-        self.logger.debug("Found MaaS resource %s matching Node %s" %
-                          (maas_node.resource_id, node_model.get_id()))
-
-        if maas_node.hostname != node_model.name and update_name:
-            try:
-                maas_node.hostname = node_model.name
-                maas_node.domain = domain
-                maas_node.update()
-                if node_model.oob_type == 'libvirt':
-                    self.logger.debug(
-                        "Updating node %s MaaS power parameters for libvirt." %
-                        (node_model.name))
-                    oob_params = node_model.oob_parameters
-                    maas_node.set_power_parameters(
-                        'virsh',
-                        power_address=oob_params.get('libvirt_uri'),
-                        power_id=node_model.name)
-                self.logger.debug("Updated MaaS resource %s hostname to %s" %
-                                  (maas_node.resource_id, node_model.name))
-            except Exception as ex:
-                self.logger.debug("Error updating MAAS node: %s" % str(ex))
+        else:
+            self.logger.debug("Found MaaS resource %s matching Node %s" %
+                              (maas_node.resource_id, node_model.get_id()))
 
         return maas_node
+
+    def find_nodes_with_mac(self, mac_address):
+        """Find a list of nodes that own a NIC with ``mac_address``"""
+        node_list = []
+        for n in self.resources.values():
+            if n.interface_for_mac(mac_address):
+                node_list.append(n)
+        return node_list
 
     def query(self, query):
         """Custom query method to deal with complex fields."""

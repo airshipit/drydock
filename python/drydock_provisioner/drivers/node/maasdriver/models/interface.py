@@ -235,6 +235,18 @@ class Interface(model_base.ResourceBase):
 
         return False
 
+    def responds_to_mac(self, mac_address):
+        """Check if this interface will respond to a MAC address.
+
+        :param str mac_address: the MAC address to check
+
+        :return: true if this interface will respond to this MAC
+        """
+        if mac_address.replace(':', '').upper() == self.mac_address.replace(':', '').upper():
+            return True
+
+        return False
+
     def set_mtu(self, new_mtu):
         """Set interface MTU.
 

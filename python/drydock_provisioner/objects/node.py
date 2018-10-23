@@ -53,12 +53,10 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                               site_design,
                               state_manager,
                               resolve_aliases=False):
-        self.logger.debug("Applying host profile to node %s" % self.name)
+        self.logger.debug("Compiling effective node model for %s" % self.name)
         self.apply_host_profile(site_design)
-        self.logger.debug("Applying hardware profile to node %s" % self.name)
         self.apply_hardware_profile(site_design)
         self.source = hd_fields.ModelSource.Compiled
-        self.logger.debug("Resolving kernel parameters on node %s" % self.name)
         self.resolve_kernel_params(site_design)
         if resolve_aliases:
             self.logger.debug(

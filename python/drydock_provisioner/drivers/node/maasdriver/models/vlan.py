@@ -14,6 +14,7 @@
 """Models representing MaaS VLAN resources."""
 
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
+from drydock_provisioner.drivers.node.maasdriver.errors import RackControllerConflict
 
 
 class Vlan(model_base.ResourceBase):
@@ -64,6 +65,41 @@ class Vlan(model_base.ResourceBase):
             self.vid = 0
         else:
             self.vid = int(new_vid)
+
+    def add_rack_controller(self, rack_id):
+        """Add a rack controller that manages DHCP on this VLAN.
+
+        Whichever of primary_rack or secondary_rack, in that order,
+        is not set - set to ``rack_id``. If both are already set
+        raise RackControllerConflict exception.
+        """
+        if not self.primary_rack or self.primary_rack == rack_id:
+            self.logger.debug("Setting primary DHCP controller %s on VLAN %s", rack_id, self.resource_id)
+            self.primary_rack = rack_id
+        elif not self.secondary_rack or self.secondary_rack == rack_id:
+            self.logger.debug("Setting secondary DHCP controller %s on VLAN %s.", rack_id, self.resource_id)
+            self.secondary_rack = rack_id
+        else:
+            raise RackControllerConflict(
+                "Both primary and secondary rack controllers already set.")
+
+    def reset_dhcp_mgmt(self, commit=False):
+        """Reset the DHCP control for this VLAN.
+
+        Reset the settings in the model impacting DHCP control on this
+        VLAN. Only commit these changes to the MAAS API if ``commit`` is
+        True.
+
+        :param bool commit: Whether to commit reset to MAAS API
+        """
+        self.logger.debug("Resetting DHCP control on VLAN %s.", self.resource_id)
+        self.relay_vlan = None
+        self.dhcp_on = False
+        self.primary_rack = None
+        self.secondary_rack = None
+
+        if commit:
+            self.update()
 
     def set_dhcp_relay(self, relay_vlan_id):
         self.relay_vlan = relay_vlan_id

@@ -29,6 +29,8 @@ import drydock_provisioner.objects as objects
 
 from drydock_provisioner.control.util import get_internal_api_href
 from drydock_provisioner.orchestrator.actions.orchestrator import BaseAction
+from drydock_provisioner.drivers.node.maasdriver.errors import RackControllerConflict
+from drydock_provisioner.drivers.node.maasdriver.errors import ApiNotAvailable
 
 import drydock_provisioner.drivers.node.maasdriver.models.fabric as maas_fabric
 import drydock_provisioner.drivers.node.maasdriver.models.vlan as maas_vlan
@@ -138,25 +140,28 @@ class ValidateNodeServices(BaseMaasAction):
                             ctx_type='NA')
                         self.task.failure()
                     else:
+                        healthy_rackd = []
                         for r in rack_ctlrs:
-                            rack_svc = r.get_services()
-                            rack_name = r.hostname
+                            if r.is_healthy():
+                                healthy_rackd.append(r.hostname)
+                            else:
+                                msg = "Rack controller %s not healthy." % r.hostname
+                                self.logger.info(msg)
+                                self.task.add_status_msg(
+                                    msg=msg,
+                                    error=True,
+                                    ctx=r.hostname,
+                                    ctx_type='rack_ctlr')
+                        if not healthy_rackd:
+                            msg = "No healthy rack controllers found."
+                            self.logger.info(msg)
+                            self.task.add_status_msg(
+                                msg=msg,
+                                error=True,
+                                ctx='maas',
+                                ctx_type='cluster')
+                            self.task.failure()
 
-                            for s in rack_svc:
-                                if s in maas_rack.RackController.REQUIRED_SERVICES:
-                                    is_error = False
-                                    if rack_svc[s] not in ("running", "off"):
-                                        self.task.failure()
-                                        is_error = True
-                                    self.logger.info(
-                                        "Service %s on rackd %s is %s" %
-                                        (s, rack_name, rack_svc[s]))
-                                    self.task.add_status_msg(
-                                        msg="Service %s on rackd %s is %s" %
-                                        (s, rack_name, rack_svc[s]),
-                                        error=is_error,
-                                        ctx=rack_name,
-                                        ctx_type='rack_ctlr')
         except errors.TransientDriverError as ex:
             self.task.add_status_msg(
                 msg=str(ex), error=True, ctx='NA', ctx_type='NA', retry=True)
@@ -278,8 +283,7 @@ class DestroyNode(BaseMaasAction):
                                                       site_design)
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
+                machine = find_node_in_maas(self.maas_client, n)
 
                 if machine is None:
                     msg = "Could not locate machine for node {}".format(n.name)
@@ -287,6 +291,13 @@ class DestroyNode(BaseMaasAction):
                     self.task.add_status_msg(
                         msg=msg, error=False, ctx=n.name, ctx_type='node')
                     self.task.success(focus=n.get_id())
+                    continue
+                elif type(machine) == maas_rack.RackController:
+                    msg = "Cannot delete rack controller {}.".format(n.name)
+                    self.logger.info(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.failure(focus=n.get_id())
                     continue
 
                 # First release the node and erase its disks, if MaaS API allows
@@ -687,7 +698,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                     vlan_list.refresh()
                     vlan = vlan_list.select(subnet.vlan)
 
-                    if dhcp_on and not vlan.dhcp_on:
+                    if dhcp_on:
                         # check if design requires a dhcp relay and if the MaaS vlan already uses a dhcp_relay
                         msg = "DHCP enabled for subnet %s, activating in MaaS" % (
                             subnet.name)
@@ -702,12 +713,25 @@ class CreateNetworkTemplate(BaseMaasAction):
                             self.maas_client)
                         rack_ctlrs.refresh()
 
+                        # Reset DHCP stuff to avoid offline rack controllers
+
+                        vlan.reset_dhcp_mgmt()
                         dhcp_config_set = False
 
                         for r in rack_ctlrs:
                             if n.dhcp_relay_upstream_target is not None:
                                 if r.interface_for_ip(
                                         n.dhcp_relay_upstream_target):
+                                    if not r.is_healthy():
+                                        msg = ("Rack controller %s with DHCP relay is not healthy." %
+                                               r.hostname)
+                                        self.logger.info(msg)
+                                        self.task.add_status_msg(
+                                            msg=msg,
+                                            error=True,
+                                            ctx=n.name,
+                                            ctx_type='network')
+                                        break
                                     iface = r.interface_for_ip(
                                         n.dhcp_relay_upstream_target)
                                     vlan.relay_vlan = iface.vlan
@@ -730,21 +754,42 @@ class CreateNetworkTemplate(BaseMaasAction):
                                         self.logger.debug(msg)
                                         rackctl_id = r.resource_id
 
-                                        vlan.dhcp_on = True
-                                        vlan.primary_rack = rackctl_id
-                                        msg = "Enabling DHCP on VLAN %s managed by rack ctlr %s" % (
-                                            vlan.resource_id, rackctl_id)
-                                        self.logger.debug(msg)
-                                        self.task.add_status_msg(
-                                            msg=msg,
-                                            error=False,
-                                            ctx=n.name,
-                                            ctx_type='network')
-                                        vlan.update()
-                                        dhcp_config_set = True
+                                        if not r.is_healthy():
+                                            msg = ("Rack controller %s not healthy, skipping DHCP config." %
+                                                   r.resource_id)
+                                            self.logger.info(msg)
+                                            self.task.add_status_msg(
+                                                msg=msg,
+                                                error=True,
+                                                ctx=n.name,
+                                                ctx_type='network')
+                                            break
+                                        try:
+                                            vlan.dhcp_on = True
+                                            vlan.add_rack_controller(
+                                                rackctl_id)
+                                            msg = "Enabling DHCP on VLAN %s managed by rack ctlr %s" % (
+                                                vlan.resource_id, rackctl_id)
+                                            self.logger.debug(msg)
+                                            self.task.add_status_msg(
+                                                msg=msg,
+                                                error=False,
+                                                ctx=n.name,
+                                                ctx_type='network')
+                                            vlan.update()
+                                            dhcp_config_set = True
+                                        except RackControllerConflict as rack_ex:
+                                            msg = (
+                                                "More than two rack controllers on vlan %s, "
+                                                "skipping enabling %s." %
+                                                (vlan.resource_id, rackctl_id))
+                                            self.logger.debug(msg)
+                                            self.task.add_status_msg(
+                                                msg=msg,
+                                                error=False,
+                                                ctx=n.name,
+                                                ctx_type='network')
                                         break
-                            if dhcp_config_set:
-                                break
 
                         if not dhcp_config_set:
                             msg = "Network %s requires DHCP, but could not locate a rack controller to serve it." % (
@@ -757,9 +802,6 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 ctx_type='network')
                             self.task.failure(focus=n.name)
 
-                    elif dhcp_on and vlan.dhcp_on:
-                        self.logger.info("DHCP already enabled for subnet %s" %
-                                         (subnet.resource_id))
                 except ValueError:
                     raise errors.DriverError("Inconsistent data from MaaS")
 
@@ -1026,21 +1068,6 @@ class IdentifyNode(BaseMaasAction):
     """Action to identify a node resource in MaaS matching a node design."""
 
     def start(self):
-        try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
-        except Exception as ex:
-            self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
-            self.task.set_status(hd_fields.TaskStatus.Complete)
-            self.task.failure()
-            self.task.add_status_msg(
-                msg='Error accessing MaaS Machines API: %s' % str(ex),
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
-            self.task.save()
-            return
-
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
@@ -1062,36 +1089,55 @@ class IdentifyNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(
-                    n, domain=n.get_domain(site_design))
-                if machine is not None:
-                    self.task.success(focus=n.get_id())
-                    self.task.add_status_msg(
-                        msg="Node %s identified in MaaS" % n.name,
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
-                else:
+                machine = find_node_in_maas(self.maas_client, n)
+                if machine is None:
                     self.task.failure(focus=n.get_id())
                     self.task.add_status_msg(
                         msg="Node %s not found in MaaS" % n.name,
                         error=True,
                         ctx=n.name,
                         ctx_type='node')
+                elif type(machine) == maas_machine.Machine:
+                    machine.update_identity(n, domain=n.get_domain(site_design))
+                    msg = "Node %s identified in MaaS" % n.name
+                    self.logger.debug(msg)
+                    self.task.add_status_msg(
+                        msg=msg,
+                        error=False,
+                        ctx=n.name,
+                        ctx_type='node')
+                    self.task.success(focus=n.get_id())
+                elif type(machine) == maas_rack.RackController:
+                    msg = "Rack controller %s identified in MaaS" % n.name
+                    self.logger.debug(msg)
+                    self.task.add_status_msg(
+                        msg=msg,
+                        error=False,
+                        ctx=n.name,
+                        ctx_type='node')
+                    self.task.success(focus=n.get_id())
+            except ApiNotAvailable as api_ex:
+                self.logger.debug("Error accessing the MaaS API.", exc_info=api_ex)
+                self.task.failure()
+                self.task.add_status_msg(
+                    msg='Error accessing MaaS API: %s' % str(api_ex),
+                    error=True,
+                    ctx='NA',
+                    ctx_type='NA')
+                self.task.save()
             except Exception as ex:
+                self.logger.debug(
+                    "Exception caught in identify node.", exc_info=ex)
                 self.task.failure(focus=n.get_id())
                 self.task.add_status_msg(
-                    msg="Node %s not found in MaaS" % n.name,
+                    msg="Error trying to location %s in MAAS" % n.name,
                     error=True,
                     ctx=n.name,
                     ctx_type='node')
-                self.logger.debug(
-                    "Exception caught in identify node.", exc_info=ex)
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
-
 
 class ConfigureHardware(BaseMaasAction):
     """Action to start commissioning a server."""
@@ -1136,9 +1182,15 @@ class ConfigureHardware(BaseMaasAction):
             try:
                 self.logger.debug(
                     "Locating node %s for commissioning" % (n.name))
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
-                if machine is not None:
+                machine = find_node_in_maas(self.maas_client, n)
+                if type(machine) == maas_rack.RackController:
+                    msg = "Located node %s in MaaS as rack controller. Skipping." % (
+                        n.name)
+                    self.logger.info(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.get_id())
+                elif machine is not None:
                     if machine.status_name in [
                             'New', 'Broken', 'Failed commissioning',
                             'Failed testing'
@@ -1215,7 +1267,7 @@ class ConfigureHardware(BaseMaasAction):
                             msg=msg, error=False, ctx=n.name, ctx_type='node')
                         self.task.success(focus=n.get_id())
                     else:
-                        msg = "Located node %s in MaaS, unknown status %s. Skipping..." % (
+                        msg = "Located node %s in MaaS, unknown status %s. Skipping." % (
                             n, machine.status_name)
                         self.logger.warning(msg)
                         self.task.add_status_msg(
@@ -1323,10 +1375,20 @@ class ApplyNodeNetworking(BaseMaasAction):
                 self.logger.debug(
                     "Locating node %s for network configuration" % (n.name))
 
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
+                machine = find_node_in_maas(self.maas_client, n)
 
-                if machine is not None:
+                if type(machine) is maas_rack.RackController:
+                    msg = ("Node %s is a rack controller, skipping deploy action." %
+                           n.name)
+                    self.logger.debug(msg)
+                    self.task.add_status_msg(
+                        msg=msg,
+                        error=False,
+                        ctx=n.name,
+                        ctx_type='node')
+                    self.task.success(focus=n.name)
+                    continue
+                elif machine is not None:
                     if machine.status_name.startswith('Failed Dep'):
                         msg = (
                             "Node %s has failed deployment, releasing to try again."
@@ -1677,8 +1739,7 @@ class ApplyNodePlatform(BaseMaasAction):
                 self.logger.debug(
                     "Locating node %s for platform configuration" % (n.name))
 
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
+                machine = find_node_in_maas(self.maas_client, n)
 
                 if machine is None:
                     msg = "Could not locate machine for node %s" % n.name
@@ -1695,7 +1756,14 @@ class ApplyNodePlatform(BaseMaasAction):
                     msg=msg, error=True, ctx=n.name, ctx_type='node')
                 continue
 
-            if machine.status_name == 'Deployed':
+            if type(machine) is maas_rack.RackController:
+                msg = ("Skipping changes to rack controller %s." % n.name)
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.success(focus=n.name)
+                continue
+            elif machine.status_name == 'Deployed':
                 msg = (
                     "Located node %s in MaaS, status deployed. Skipping "
                     "and considering success. Destroy node first if redeploy needed."
@@ -1856,8 +1924,7 @@ class ApplyNodeStorage(BaseMaasAction):
                 self.logger.debug(
                     "Locating node %s for storage configuration" % (n.name))
 
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
+                machine = find_node_in_maas(self.maas_client, n)
 
                 if machine is None:
                     msg = "Could not locate machine for node %s" % n.name
@@ -1874,7 +1941,15 @@ class ApplyNodeStorage(BaseMaasAction):
                 self.task.failure(focus=n.get_id())
                 continue
 
-            if machine.status_name == 'Deployed':
+            if type(machine) is maas_rack.RackController:
+                msg = ("Skipping configuration updates to rack controller %s." %
+                       n.name)
+                self.logger.info(msg)
+                self.task.add_status_msg(
+                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.success(focus=n.name)
+                continue
+            elif machine.status_name == 'Deployed':
                 msg = (
                     "Located node %s in MaaS, status deployed. Skipping "
                     "and considering success. Destroy node first if redeploy needed."
@@ -2202,9 +2277,16 @@ class DeployNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = machine_list.identify_baremetal_node(
-                    n, update_name=False)
-                if machine.status_name.startswith(
+                machine = find_node_in_maas(self.maas_client, n)
+
+                if type(machine) is maas_rack.RackController:
+                    msg = "Skipping configuration of rack controller %s." % n.name
+                    self.logger.info(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.success(focus=n.name)
+                    continue
+                elif machine.status_name.startswith(
                         'Deployed') or machine.status_name.startswith(
                             'Deploying'):
                     msg = "Node %s already deployed or deploying, skipping." % (
@@ -2358,3 +2440,26 @@ class DeployNode(BaseMaasAction):
         self.task.save()
 
         return
+
+def find_node_in_maas(maas_client, node_model):
+    """Find a node in MAAS matching the node_model.
+
+    Note that the returned Machine may be a simple Machine or
+    a RackController.
+
+    :param maas_client: instance of an active session to MAAS
+    :param node_model: instance of objects.Node to match
+    :returns: instance of maasdriver.models.Machine
+    """
+
+    machine_list = maas_machine.Machines(maas_client)
+    machine_list.refresh()
+    machine = machine_list.identify_baremetal_node(node_model)
+
+    if not machine:
+        # If node isn't found a normal node, check rack controllers
+        rackd_list = maas_rack.RackControllers(maas_client)
+        rackd_list.refresh()
+        machine = rackd_list.identify_baremetal_node(node_model)
+
+    return machine

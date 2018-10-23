@@ -128,8 +128,9 @@ class MaasRequestFactory(object):
 
             for (k, v) in files.items():
                 if v is None:
-                    continue
-                elif isinstance(v, list):
+                    v = ""
+
+                if isinstance(v, list):
                     for i in v:
                         value = base64.b64encode(
                             str(i).encode('utf-8')).decode('utf-8')
