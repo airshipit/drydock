@@ -22,7 +22,7 @@ then
   ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS}| --build-arg PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}"
 fi
 
-docker build --network host -t ${IMAGE} \
+docker build --network host -t ${IMAGE} --label ${LABEL} \
   --label org.opencontainers.image.revision=${COMMIT} \
   --label org.opencontainers.image.created="$(date --rfc-3339=seconds --utc)" \
   --label org.opencontainers.image.title=${IMAGE_NAME} \
