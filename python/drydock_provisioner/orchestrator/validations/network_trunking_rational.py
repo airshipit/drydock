@@ -30,8 +30,8 @@ class NetworkTrunkingRational(Validators):
         for network_link in network_link_list:
             allowed_networks = network_link.allowed_networks
             # if allowed networks > 1 trunking must be enabled
-            if (len(allowed_networks) > 1 and network_link.trunk_mode ==
-                    hd_fields.NetworkLinkTrunkingMode.Disabled):
+            if (len(allowed_networks) > 1 and network_link.
+                    trunk_mode == hd_fields.NetworkLinkTrunkingMode.Disabled):
                 msg = ('If there is more than 1 allowed network,'
                        'trunking mode must be enabled')
                 self.report_error(

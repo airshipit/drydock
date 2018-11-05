@@ -48,7 +48,7 @@ class BuildData(object):
                 data_element = data_element.decode('utf-8')
             elif not isinstance(data_element, str):
                 data_element = str(data_element)
-        except Exception as ex:
+        except Exception:
             raise errors.BuildDataError(
                 "Error saving build data - data_element type %s could"
                 "not be cast to string." % str(type(data_element)))

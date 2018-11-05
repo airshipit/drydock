@@ -320,12 +320,13 @@ class DestroyNode(BaseMaasAction):
                     # node release with erase disk will take sometime monitor it
                     attempts = 0
                     max_attempts = (
-                        config.config_mgr.conf.timeouts.destroy_node *
-                        60) // config.config_mgr.conf.maasdriver.poll_interval
+                        config.config_mgr.conf.timeouts.destroy_node
+                        * 60) // config.config_mgr.conf.maasdriver.poll_interval
 
-                    while (attempts < max_attempts and
-                           (not machine.status_name.startswith('Ready')
-                            and not machine.status_name.startswith('Failed'))):
+                    while (attempts < max_attempts
+                            and (not machine.status_name.startswith('Ready')
+                                 and not
+                                 machine.status_name.startswith('Failed'))):
                         attempts = attempts + 1
                         time.sleep(
                             config.config_mgr.conf.maasdriver.poll_interval)
@@ -373,7 +374,7 @@ class DestroyNode(BaseMaasAction):
                         # setting power type attibutes to empty string
                         # will remove them from maas BMC table
                         machine.reset_power_parameters()
-                except AttributeError as attr_er:
+                except AttributeError:
                     pass
 
                 machine.delete()
@@ -778,7 +779,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                                                 ctx_type='network')
                                             vlan.update()
                                             dhcp_config_set = True
-                                        except RackControllerConflict as rack_ex:
+                                        except RackControllerConflict:
                                             msg = (
                                                 "More than two rack controllers on vlan %s, "
                                                 "skipping enabling %s." %
@@ -1207,9 +1208,10 @@ class ConfigureHardware(BaseMaasAction):
                             * 60
                         ) // config.config_mgr.conf.maasdriver.poll_interval
 
-                        while (attempts < max_attempts and
-                               (machine.status_name != 'Ready' and
-                                not machine.status_name.startswith('Failed'))):
+                        while (attempts < max_attempts
+                               and (machine.status_name != 'Ready'
+                                    and not
+                                    machine.status_name.startswith('Failed'))):
                             attempts = attempts + 1
                             time.sleep(config.config_mgr.conf.maasdriver.
                                        poll_interval)
@@ -1397,7 +1399,7 @@ class ApplyNodeNetworking(BaseMaasAction):
                         try:
                             machine.release()
                             machine.refresh()
-                        except errors.DriverError as ex:
+                        except errors.DriverError:
                             msg = (
                                 "Node %s could not be released, skipping deployment."
                                 % n.name)
@@ -2203,7 +2205,7 @@ class ApplyNodeStorage(BaseMaasAction):
                         size_str is interpreted in the context of this device
         :return size: The calculated size in bytes
         """
-        pattern = '(>?)(\d+)([mMbBgGtT%]{1,2})'
+        pattern = r'(>?)(\d+)([mMbBgGtT%]{1,2})'
         regex = re.compile(pattern)
         match = regex.match(size_str)
 
@@ -2400,8 +2402,8 @@ class DeployNode(BaseMaasAction):
 
             attempts = 0
             max_attempts = (
-                config.config_mgr.conf.timeouts.deploy_node *
-                60) // config.config_mgr.conf.maasdriver.poll_interval
+                config.config_mgr.conf.timeouts.deploy_node
+                * 60) // config.config_mgr.conf.maasdriver.poll_interval
 
             while (attempts < max_attempts
                    and (not machine.status_name.startswith('Deployed')

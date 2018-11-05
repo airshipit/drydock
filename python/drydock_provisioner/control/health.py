@@ -96,7 +96,7 @@ class HealthCheckCombined(object):
             now = self.state_manager.get_now()
             if now is None:
                 raise Exception('None received from database for now()')
-        except Exception as ex:
+        except Exception:
             hcm = HealthCheckMessage(
                 msg='Unable to connect to database', error=True)
             health_check.add_detail_msg(msg=hcm)
@@ -110,7 +110,7 @@ class HealthCheckCombined(object):
             maas_validation.start()
             if maas_validation.task.get_status() == ActionResult.Failure:
                 raise Exception('MaaS task failure')
-        except Exception as ex:
+        except Exception:
             hcm = HealthCheckMessage(
                 msg='Unable to connect to MaaS', error=True)
             health_check.add_detail_msg(msg=hcm)

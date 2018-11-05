@@ -54,7 +54,7 @@ class NodeResult(model_base.ResourceBase):
         """Decode the result data from base64."""
         try:
             return base64.b64decode(self.data)
-        except binascii.Error as e:
+        except binascii.Error:
             return None
 
     def get_type_desc(self):

@@ -269,7 +269,7 @@ class Orchestrator(object):
                         site_design,
                         state_manager=self.state_manager,
                         resolve_aliases=resolve_aliases)
-                except Exception as ex:
+                except Exception:
                     node_failed.append(n)
                     self.logger.error(
                         "Failed to build applied model for node %s." % n.name)

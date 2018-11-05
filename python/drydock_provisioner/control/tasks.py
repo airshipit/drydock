@@ -328,7 +328,7 @@ class TaskResource(StatefulResource):
             subtask_errors = req.get_param_as_bool('subtaskerrors')
             try:
                 layers = int(req.params.get('layers', '0'))
-            except Exception as ex:
+            except Exception:
                 layers = 0
 
             first_task = self.get_task(req, resp, task_id, builddata)

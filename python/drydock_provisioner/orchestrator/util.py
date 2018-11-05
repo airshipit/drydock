@@ -29,7 +29,7 @@ class SimpleBytes():
         :param size_str: A string representing the desired size
         :return size: The calculated size in bytes
         """
-        pattern = '(\d+)([mMbBgGtT]{1,2})'
+        pattern = r'(\d+)([mMbBgGtT]{1,2})'
         regex = re.compile(pattern)
         match = regex.match(size_str)
 

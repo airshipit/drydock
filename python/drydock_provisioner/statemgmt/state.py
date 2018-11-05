@@ -110,9 +110,9 @@ class DrydockState(object):
         """
         query_text = sql.text(
             "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
-            "parent_task_id = :parent_task_id AND "
-            "status IN ('" + hd_fields.TaskStatus.Terminated + "','" +
-            hd_fields.TaskStatus.Complete + "')")
+            "parent_task_id = :parent_task_id AND status "
+            "IN ('" + hd_fields.TaskStatus.Terminated + "','"
+            + hd_fields.TaskStatus.Complete + "')")
         return self._query_subtasks(task_id, query_text,
                                     "Error querying complete subtask: %s")
 
@@ -126,9 +126,9 @@ class DrydockState(object):
         """
         query_text = sql.text(
             "SELECT * FROM tasks WHERE "  # nosec no strings are user-sourced
-            "parent_task_id = :parent_task_id AND "
-            "status NOT IN ['" + hd_fields.TaskStatus.Terminated + "','" +
-            hd_fields.TaskStatus.Complete + "']")
+            "parent_task_id = :parent_task_id AND status "
+            "NOT IN ['" + hd_fields.TaskStatus.Terminated + "','"
+            + hd_fields.TaskStatus.Complete + "']")
         return self._query_subtasks(task_id, query_text,
                                     "Error querying active subtask: %s")
 

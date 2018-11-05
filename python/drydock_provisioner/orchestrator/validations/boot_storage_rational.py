@@ -51,7 +51,7 @@ class BootStorageRational(Validators):
                                 self.report_error(
                                     msg, [baremetal_node.doc_ref],
                                     "Configure a larger root volume")
-                        except errors.InvalidSizeFormat as e:
+                        except errors.InvalidSizeFormat:
                             msg = (
                                 'Root volume has an invalid size format on BaremetalNode'
                                 '%s.' % baremetal_node.name)
@@ -74,7 +74,7 @@ class BootStorageRational(Validators):
                                 self.report_error(
                                     msg, [baremetal_node.doc_ref],
                                     "Configure a larger boot volume.")
-                        except errors.InvalidSizeFormat as e:
+                        except errors.InvalidSizeFormat:
                             msg = (
                                 'Boot volume has an invalid size format on BaremetalNode '
                                 '%s.' % baremetal_node.name)

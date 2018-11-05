@@ -107,10 +107,10 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         try:
             pn = site_design.get_network(self.primary_network)
             domain = pn.dns_domain or "local"
-        except errors.DesignError as dex:
+        except errors.DesignError:
             self.logger.debug("Primary network not found, use domain 'local'.")
             domain = "local"
-        except AttributeError as aex:
+        except AttributeError:
             self.logger.debug(
                 "Primary network does not define a domain, use domain 'local'."
             )
@@ -255,8 +255,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         :param address: String value that is used to find the logicalname.
         :return: String value of the logicalname or the alias_name if logicalname is not found.
         """
-        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" +
-                                 address + "'].logicalname")
+        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@"
+                                 + address + "'].logicalname")
         if len(nodes) >= 1 and nodes[0].text:
             if (len(nodes) > 1):
                 self.logger.info("Multiple nodes found for businfo=%s@%s" %

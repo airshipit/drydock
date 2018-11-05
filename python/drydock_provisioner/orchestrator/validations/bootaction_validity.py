@@ -45,7 +45,7 @@ class BootactionPackageListValid(Validators):
 
     def __init__(self):
         super().__init__('Bootaction pkg_list Validation', 'DD4002')
-        version_fields = '(\d+:)?([a-zA-Z0-9.+~-]+)(-[a-zA-Z0-9.+~]+)'
+        version_fields = r'(\d+:)?([a-zA-Z0-9.+~-]+)(-[a-zA-Z0-9.+~]+)'
         self.version_fields = re.compile(version_fields)
 
     def run_validation(self, site_design, orchestrator=None):

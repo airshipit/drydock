@@ -55,8 +55,8 @@ class TestRationalNetworkLinkBond(object):
         validator = RationalNetworkBond()
         message_list = validator.execute(site_design, orchestrator=orch)
 
-        regex = re.compile('Down delay \S+ is less than mon rate \S+')
-        regex_1 = re.compile('Up delay \S+ is less than mon rate \S+')
+        regex = re.compile(r'Down delay \S+ is less than mon rate \S+')
+        regex_1 = re.compile(r'Up delay \S+ is less than mon rate \S+')
 
         for msg in message_list:
             msg = msg.to_dict()

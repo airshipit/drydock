@@ -54,7 +54,7 @@ class TestMtu(object):
         validator = MtuRational()
         message_list = validator.execute(site_design, orchestrator=orch)
 
-        regex = re.compile('MTU must be between \d+ and \d+')
+        regex = re.compile(r'MTU must be between \d+ and \d+')
         regex_1 = re.compile('MTU must be <= the parent Network Link')
 
         for msg in message_list:

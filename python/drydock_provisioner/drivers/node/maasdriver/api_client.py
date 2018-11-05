@@ -93,7 +93,7 @@ class MaasRequestFactory(object):
     def test_authentication(self):
         try:
             resp = self.get('account/', op='list_authorisation_tokens')
-        except requests.Timeout as ex:
+        except requests.Timeout:
             raise errors.TransientDriverError("Timeout connection to MaaS")
         except Exception as ex:
             raise errors.PersistentDriverError(

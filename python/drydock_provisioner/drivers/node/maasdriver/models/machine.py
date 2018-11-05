@@ -624,8 +624,8 @@ class Machines(model_base.ResourceCollectionBase):
                 field = k[13:]
                 result = [
                     i for i in result if str(
-                        getattr(i, 'power_parameters', {}).get(field, None)) ==
-                    str(v)
+                        getattr(i, 'power_parameters', {}).
+                        get(field, None)) == str(v)
                 ]
             else:
                 result = [

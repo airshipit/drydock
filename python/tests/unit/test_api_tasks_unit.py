@@ -43,13 +43,13 @@ class TestTasksApiUnit(object):
         try:
             response_json['build_data']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error
         try:
             response_json['subtask_errors']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error
 
@@ -95,7 +95,7 @@ class TestTasksApiUnit(object):
         try:
             response_json['subtask_errors']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error
 
@@ -132,7 +132,7 @@ class TestTasksApiUnit(object):
         try:
             response_json['11111111-1111-1111-1111-111111111116']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error
 
@@ -156,13 +156,13 @@ class TestTasksApiUnit(object):
         try:
             response_json['11111111-1111-1111-1111-111111111116']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error is False
         try:
             response_json['subtask_errors']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error
 
@@ -186,7 +186,7 @@ class TestTasksApiUnit(object):
         try:
             response_json['11111111-1111-1111-1111-111111111116']
             key_error = False
-        except KeyError as ex:
+        except KeyError:
             key_error = True
         assert key_error is False
         assert response_json['subtask_errors'][

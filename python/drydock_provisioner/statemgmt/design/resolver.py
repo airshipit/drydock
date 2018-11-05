@@ -117,7 +117,7 @@ class ReferenceResolver(object):
         :param design_uri: Tuple as returned by urllib.parse for the design reference
         """
         ks_sess = KeystoneUtils.get_session()
-        (new_scheme, foo) = re.subn('^[^+]+\+', '', design_uri.scheme)
+        (new_scheme, foo) = re.subn(r'^[^+]+\+', '', design_uri.scheme)
         url = urllib.parse.urlunparse(
             (new_scheme, design_uri.netloc, design_uri.path, design_uri.params,
              design_uri.query, design_uri.fragment))

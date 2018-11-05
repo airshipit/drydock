@@ -66,7 +66,7 @@ class ResourceBase(object):
     """
 
     def interpolate_url(self):
-        pattern = '\{([a-z_]+)\}'
+        pattern = r'\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0
         new_url = self.resource_url
@@ -184,7 +184,7 @@ class ResourceCollectionBase(object):
 
     def interpolate_url(self):
         """Parse URL for placeholders and replace them with current instance values."""
-        pattern = '\{([a-z_]+)\}'
+        pattern = r'\{([a-z_]+)\}'
         regex = re.compile(pattern)
         start = 0
         new_url = self.collection_url

@@ -56,10 +56,10 @@ class TestUniqueNetwork(object):
         message_list = validator.execute(site_design, orchestrator=orch)
 
         regex = re.compile(
-            'Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+'
+            r'Allowed network .+ duplicated on NetworkLink .+ and NetworkLink .+'
         )
         regex_1 = re.compile(
-            'Interface \S+ attached to network \S+ not allowed on interface link'
+            r'Interface \S+ attached to network \S+ not allowed on interface link'
         )
 
         assert len(message_list) >= 2
