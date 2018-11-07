@@ -391,6 +391,8 @@ data:
       address: 172.16.100.23
   metadata:
     rack: rack3
+    owner_data:
+      foo: baz
 ---
 schema: 'drydock/HardwareProfile/v1'
 metadata:
