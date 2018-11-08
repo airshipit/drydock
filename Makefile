@@ -77,7 +77,7 @@ drydock: charts
 
 # Create tgz of the chart
 .PHONY: charts
-charts: clean helm-init
+charts: helm-init
 	$(HELM) dep up charts/drydock
 	$(HELM) package charts/drydock
 
