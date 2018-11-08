@@ -54,7 +54,8 @@ class MaasOauth(req_auth.AuthBase):
 
 class MaasRequestFactory(object):
     def __init__(self, base_url, apikey):
-        self.base_url = base_url
+        # The URL in the config should end in /MAAS/, but the api is behind /MAAS/api/2.0/
+        self.base_url = base_url + "/api/2.0/"
         self.apikey = apikey
 
         self.signer = MaasOauth(apikey)

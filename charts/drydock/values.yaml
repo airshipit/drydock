@@ -131,6 +131,7 @@ manifests:
   secret_keystone: true
   secret_database: true
   secret_ssh_key: true
+  secret_tls: true
   configmap_etc: true
   configmap_bin: true
   service_drydock: true
@@ -234,7 +235,12 @@ endpoints:
       default: http
     host_fqdn_override:
       default: null
-      public: drydock.test.local
+      public:
+        host: drydock.test.local
+#        tls:
+#          crt: replace
+#          ca: replace
+#          key: replace
   postgresql:
     name: postgresql
     auth:
@@ -254,7 +260,29 @@ endpoints:
         default: 5432
     host_fqdn_override:
       default: null
-
+  maas_region:
+    name: maas-region
+    auth:
+      admin:
+        username: admin
+        password: admin
+        email: none@none
+    hosts:
+      default: maas-region
+      public: maas
+    path:
+      default: /MAAS
+    scheme:
+      default: http
+    port:
+      region_api:
+        default: 80
+        public: 80
+        nodeport: 31900
+      region_proxy:
+        default: 8000
+    host_fqdn_override:
+      default: null
 secrets:
   identity:
     admin: drydock-keystone-admin
@@ -263,6 +291,10 @@ secrets:
     admin: drydock-postgresql-admin
     user: drydock-postgresql-user
   ssh_key: ssh-private-key
+  tls:
+    physicalprovisioner:
+      api:
+        public: drydock-tls-public
 
 # Settings for drydock.conf
 conf:
@@ -288,7 +320,7 @@ conf:
       control_logger_name: '${global_logger_name}.control'
     maasdriver:
       maas_api_key: 'override_this'
-      maas_api_url: 'override_this'
+      maas_api_url: null
     plugins:
       ingester:
         - 'drydock_provisioner.ingester.plugins.yaml.YamlIngester'

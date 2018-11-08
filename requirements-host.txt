@@ -1,6 +1,7 @@
 # These are host packages needed for Drydock
 # that don't come on a minimal Ubuntu install
 libvirt-dev
+libyaml-dev
 pkg-config
 python3-dev
 gcc
