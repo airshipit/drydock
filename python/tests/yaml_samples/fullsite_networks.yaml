@@ -53,7 +53,7 @@ spec:
   linkspeed: auto
   # Is this link supporting multiple layer 2 networks?
   # none is a port-based VLAN identified by default_network
-  # tagged is is using 802.1q VLAN tagging. Untagged packets will default to default_netwokr
+  # tagged is using 802.1q VLAN tagging. Untagged packets will default to default_netwokr
   trunking:
     mode: disabled
     # use name, will translate to VLAN ID
