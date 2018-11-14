@@ -227,7 +227,7 @@ class DestroyNodes(BaseAction):
 
         if not target_nodes:
             self.task.add_status_msg(
-                msg="No nodes in scope, no work to to do.",
+                msg="No nodes in scope, no work to do.",
                 error=False,
                 ctx='NA',
                 ctx_type='NA')
@@ -513,7 +513,7 @@ class VerifyNodes(BaseAction):
         else:
             # no target nodes
             self.task.add_status_msg(
-                msg="No nodes in scope, no work to to do.",
+                msg="No nodes in scope, no work to do.",
                 error=False,
                 ctx='NA',
                 ctx_type='NA')
@@ -555,7 +555,7 @@ class PrepareNodes(BaseAction):
 
         if not target_nodes:
             self.task.add_status_msg(
-                msg="No nodes in scope, no work to to do.",
+                msg="No nodes in scope, no work to do.",
                 error=False,
                 ctx='NA',
                 ctx_type='NA')
@@ -898,7 +898,7 @@ class DeployNodes(BaseAction):
 
         if not target_nodes:
             self.task.add_status_msg(
-                msg="No nodes in scope, no work to to do.",
+                msg="No nodes in scope, no work to do.",
                 error=False,
                 ctx='NA',
                 ctx_type='NA')
