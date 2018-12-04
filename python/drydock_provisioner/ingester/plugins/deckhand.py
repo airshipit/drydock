@@ -19,13 +19,23 @@ import jsonschema
 import os
 import pkg_resources
 import copy
+import hashlib
 
 import drydock_provisioner.objects.fields as hd_fields
+
+from beaker.cache import CacheManager
+from beaker.util import parse_cache_config_options
 
 from drydock_provisioner import error as errors
 from drydock_provisioner import objects
 from drydock_provisioner.ingester.plugins import IngesterPlugin
 
+cache_opts = {
+    'cache.type': 'memory',
+    'expire': 1800,
+}
+
+cache = CacheManager(**parse_cache_config_options(cache_opts))
 
 class DeckhandIngester(IngesterPlugin):
     def __init__(self):
@@ -44,8 +54,20 @@ class DeckhandIngester(IngesterPlugin):
 
         :returns: a tuple of a status response and a list of parsed objects from drydock_provisioner.objects
         """
+        def local_parse():
+            return self.parse_docs(kwargs.get('content'))
+
         if 'content' in kwargs:
-            parse_status, models = self.parse_docs(kwargs.get('content'))
+            try:
+                # Hash the input to use as the cache key. This is not a security
+                # related hash, so use cheap and fast MD5
+                hv = hashlib.md5(kwargs.get('content', b'')).hexdigest()
+                local_cache = cache.get_cache('parsed_docs')
+                results = local_cache.get(key=hv, createfunc=local_parse)
+                parse_status, models = results
+            except Exception as ex:
+                self.logger.debug("Error parsing design - hash %s", hv, exc_info=ex)
+                raise ex
         else:
             raise ValueError('Missing parameter "content"')
 

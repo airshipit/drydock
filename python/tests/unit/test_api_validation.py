@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestValidationApi(object):
-    def test_post_validation_resp(self, input_files, falcontest, drydock_state,
+    def test_post_validation_resp(self, setup_logging, input_files, falcontest, drydock_state,
                                   mock_get_build_data):
 
         input_file = input_files.join("deckhand_fullsite.yaml")
@@ -52,7 +52,7 @@ class TestValidationApi(object):
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
 
-    def test_href_error(self, input_files, falcontest):
+    def test_href_error(self, setup_logging, input_files, falcontest):
         url = '/api/v1.0/validatedesign'
         hdr = {
             'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ class TestValidationApi(object):
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
 
-    def test_json_data_error(self, input_files, falcontest):
+    def test_json_data_error(self, setup_logging, input_files, falcontest):
         url = '/api/v1.0/validatedesign'
         hdr = {
             'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ class TestValidationApi(object):
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
 
-    def test_invalid_post_resp(self, input_files, falcontest, drydock_state,
+    def test_invalid_post_resp(self, setup_logging, input_files, falcontest, drydock_state,
                                mock_get_build_data):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)

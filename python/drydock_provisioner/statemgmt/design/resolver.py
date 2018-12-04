@@ -28,7 +28,7 @@ from drydock_provisioner.config import config_mgr
 
 cache_opts = {
     'cache.type': 'memory',
-    'expire': 300,
+    'expire': 180,
 }
 
 cache = CacheManager(**parse_cache_config_options(cache_opts))

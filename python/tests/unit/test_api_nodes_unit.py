@@ -13,7 +13,6 @@
 # limitations under the License.
 """Test Nodes API"""
 from falcon import testing
-from unittest.mock import Mock
 
 import pytest
 import json
@@ -85,20 +84,15 @@ class TestNodesApiUnit(object):
 
 
 @pytest.fixture()
-def mock_process_node_filter(deckhand_orchestrator):
-    def side_effect(**kwargs):
-        n1 = objects.BaremetalNode()
-        n1.name = 'n1'
-        n1.site = 'test1'
-        n2 = objects.BaremetalNode()
-        n2.name = 'n2'
-        n2.site = 'test2'
-        return [n1, n2]
+def mock_process_node_filter(mocker, deckhand_orchestrator):
+    n1 = objects.BaremetalNode()
+    n1.name = 'n1'
+    n1.site = 'test1'
+    n2 = objects.BaremetalNode()
+    n2.name = 'n2'
+    n2.site = 'test2'
+    mock_results = [n1, n2]
 
-    deckhand_orchestrator.real_process_node_filter = deckhand_orchestrator.process_node_filter
-    deckhand_orchestrator.process_node_filter = Mock(side_effect=side_effect)
-
-    yield
-    deckhand_orchestrator.process_node_filter = Mock(
-        wraps=None, side_effect=None)
-    deckhand_orchestrator.process_node_filter = deckhand_orchestrator.real_process_node_filter
+    with mocker.patch('drydock_provisioner.orchestrator.orchestrator.Orchestrator.process_node_filter',
+                      mocker.MagicMock(return_value=mock_results)):
+        yield
