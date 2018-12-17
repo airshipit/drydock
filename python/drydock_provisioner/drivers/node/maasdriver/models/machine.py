@@ -15,6 +15,8 @@
 import logging
 import base64
 
+from threading import Lock, Condition
+
 import drydock_provisioner.error as errors
 import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 import drydock_provisioner.drivers.node.maasdriver.models.interface as maas_interface
@@ -26,6 +28,8 @@ from bson import BSON
 
 LOG = logging.getLogger(__name__)
 
+power_lock = Lock()
+power_cv = Condition(lock=power_lock)
 
 class Machine(model_base.ResourceBase):
 
@@ -388,32 +392,33 @@ class Machine(model_base.ResourceBase):
         :param kwargs: Each kwargs key will be prepended with 'power_parameters_' and
                        added to the list of updates for the node.
         """
-        if not power_type:
-            raise errors.DriverError(
-                "Cannot set power parameters. Must specify a power type.")
+        with power_cv:
+            if not power_type:
+                raise errors.DriverError(
+                    "Cannot set power parameters. Must specify a power type.")
 
-        url = self.interpolate_url()
+            url = self.interpolate_url()
 
-        if kwargs:
-            power_params = dict()
+            if kwargs:
+                power_params = dict()
 
-            self.logger.debug("Setting node power type to %s." % power_type)
-            self.power_type = power_type
-            power_params['power_type'] = power_type
+                self.logger.debug("Setting node power type to %s." % power_type)
+                self.power_type = power_type
+                power_params['power_type'] = power_type
 
-            for k, v in kwargs.items():
-                power_params['power_parameters_' + k] = v
+                for k, v in kwargs.items():
+                    power_params['power_parameters_' + k] = v
 
-            self.logger.debug("Updating node %s power parameters: %s" %
-                              (self.hostname, str(power_params)))
-            resp = self.api_client.put(url, files=power_params)
+                self.logger.debug("Updating node %s power parameters: %s" %
+                                  (self.hostname, str(power_params)))
+                resp = self.api_client.put(url, files=power_params)
 
-            if resp.status_code == 200:
-                return True
+                if resp.status_code == 200:
+                    return True
 
-            raise errors.DriverError(
-                "Failed updating power parameters MAAS url %s - return code %s\n%s"
-                % (url, resp.status_code.resp.text))
+                raise errors.DriverError(
+                    "Failed updating power parameters MAAS url %s - return code %s\n%s"
+                    % (url, resp.status_code.resp.text))
 
     def reset_power_parameters(self):
         """Reset power type and parameters for this node to manual.
@@ -422,21 +427,21 @@ class Machine(model_base.ResourceBase):
 
         Only available after the node has been added to MAAS.
         """
+        with power_cv:
+            url = self.interpolate_url()
 
-        url = self.interpolate_url()
+            self.logger.debug("Resetting node power type for machine {}".format(
+                self.resource_id))
+            self.power_type = 'manual'
+            power_params = {'power_type': 'manual'}
+            resp = self.api_client.put(url, files=power_params)
 
-        self.logger.debug("Resetting node power type for machine {}".format(
-            self.resource_id))
-        self.power_type = 'manual'
-        power_params = {'power_type': 'manual'}
-        resp = self.api_client.put(url, files=power_params)
+            if resp.status_code == 200:
+                return True
 
-        if resp.status_code == 200:
-            return True
-
-        raise errors.DriverError(
-            "Failed updating power parameters MAAS url {} - return code {}\n{}"
-            .format(url, resp.status_code.resp.text))
+            raise errors.DriverError(
+                "Failed updating power parameters MAAS url {} - return code {}\n{}"
+                .format(url, resp.status_code.resp.text))
 
     def update_identity(self, n, domain="local"):
         """Update this node's identity based on the Node object ``n``
