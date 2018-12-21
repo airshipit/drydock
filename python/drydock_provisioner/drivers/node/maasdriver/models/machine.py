@@ -574,7 +574,7 @@ class Machines(model_base.ResourceCollectionBase):
         """
         maas_node = None
 
-        if node_model.oob_type == 'ipmi':
+        if node_model.oob_type == 'ipmi' or node_model.oob_type == 'redfish':
             node_oob_network = node_model.oob_parameters['network']
             node_oob_ip = node_model.get_network_address(node_oob_network)
 

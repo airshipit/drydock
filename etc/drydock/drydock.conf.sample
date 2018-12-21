@@ -370,6 +370,25 @@
 #poll_interval = 10
 
 
+[redfish_driver]
+
+#
+# From drydock_provisioner
+#
+
+# Maximum number of connection retries to Redfish server
+#max_retries = 5
+
+# Maximum reties to wait for power state change
+#power_state_change_max_retries = 18
+
+# Polling interval in seconds between retries for power state change
+#power_state_change_retry_interval = 10
+
+# Use SSL to communicate with Redfish API server (boolean value)
+#use_ssl = true
+
+
 [timeouts]
 
 #

@@ -24,3 +24,4 @@ ulid2==0.1.1
 defusedxml===0.5.0
 libvirt-python==3.10.0
 beaker==1.9.1
+redfish==2.0.1

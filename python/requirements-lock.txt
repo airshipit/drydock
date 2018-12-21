@@ -61,6 +61,7 @@ python-keystoneclient==3.17.0
 python-mimeparse==1.6.0
 pytz==2018.5
 PyYAML==3.12
+redfish==2.0.1
 repoze.lru==0.7
 requests==2.19.1
 rfc3986==1.1.0
