@@ -44,7 +44,7 @@ is compatible with the physical state of the site.
         * If percentages sum to 100%, no other partitions or LVs are defined
 * Node
     * Root filesystem is defined on a partition or LV
-    * Networks assigned to each node's interface are within the set of of the attached link's allowed\_networks
+    * Networks assigned to each node's interface are within the set of the attached link's allowed\_networks
     * Inter
 ### VerifySite ###
 
