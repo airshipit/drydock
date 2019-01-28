@@ -14,11 +14,13 @@
     check:
       jobs:
         - airship-drydock-omni-test
+        - airship-drydock-chart-build-gate
         - airship-drydock-docker-build-gate
 
     gate:
       jobs:
         - airship-drydock-omni-test
+        - airship-drydock-chart-build-gate
         - airship-drydock-docker-build-gate
 
     post:
@@ -40,6 +42,14 @@
     run: tools/gate/playbooks/omni_test.yaml
     timeout: 900
     nodeset: airship-drydock-single-node
+
+- job:
+    name: airship-drydock-chart-build-gate
+    timeout: 900
+    run: tools/gate/playbooks/build-charts.yaml
+    nodeset: airship-drydock-single-node
+    files:
+      - ^charts/.*$
 
 - job:
     name: airship-drydock-docker-build-gate
