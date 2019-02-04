@@ -43,22 +43,22 @@ spec:
           imagePullPolicy: {{ .Values.images.pull_policy | quote }}
 {{ tuple $envAll $envAll.Values.pod.resources.jobs.drydock_db_init | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
           env:
-            - name: DB_NAME
+            - name: USER_DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.postgresql.user }}
                   key: DATABASE_NAME
-            - name: DB_SERVICE_USER
+            - name: USER_DB_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.postgresql.user }}
                   key: DATABASE_USERNAME
-            - name: DB_SERVICE_PASSWORD
+            - name: USER_DB_PASS
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.postgresql.user }}
                   key: DATABASE_PASSWORD
-            - name: DB_FQDN
+            - name: DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.postgresql.user }}

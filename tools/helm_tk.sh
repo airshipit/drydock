@@ -18,7 +18,7 @@
 HELM=$1
 HTK_REPO=${HTK_REPO:-"https://github.com/openstack/openstack-helm-infra"}
 HTK_PATH=${HTK_PATH:-""}
-HTK_STABLE_COMMIT=${HTK_COMMIT:-"42249d4243d892b7d04ce6aed9b0c8d7edcbfc7a"}
+HTK_STABLE_COMMIT=${HTK_COMMIT:-"7f21b85128ea4e6e64998b916f065c3100f5c4f7"}
 DEP_UP_LIST=${DEP_UP_LIST:-"drydock"}
 BUILD_DIR=${BUILD_DIR:-$(mktemp -d)}
 
