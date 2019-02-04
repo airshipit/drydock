@@ -720,6 +720,8 @@ class CreateNetworkTemplate(BaseMaasAction):
                         dhcp_config_set = False
 
                         for r in rack_ctlrs:
+                            if not r.is_healthy():
+                                continue
                             if n.dhcp_relay_upstream_target is not None:
                                 if r.interface_for_ip(
                                         n.dhcp_relay_upstream_target):
