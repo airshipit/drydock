@@ -79,7 +79,7 @@ class Ingester(object):
             raise ValueError("Invalid design_state handler")
 
         # If no design_id is specified, instantiate a new one
-        if 'design_ref' is None:
+        if design_ref is None:
             self.logger.error(
                 "Ingester:ingest_data required kwarg 'design_ref' missing")
             raise ValueError(

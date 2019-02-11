@@ -79,7 +79,7 @@ class IpLocalityCheck(Validators):
                     address = ip_address.address
                     ip_type = ip_address.type
 
-                    if ip_type is not 'dhcp':
+                    if ip_type != 'dhcp':
                         if ip_address_network_name not in network_dict:
                             msg = '%s is not a valid network.' \
                                   % (ip_address_network_name)
