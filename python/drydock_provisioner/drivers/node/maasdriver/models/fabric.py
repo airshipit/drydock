@@ -26,7 +26,7 @@ class Fabric(model_base.ResourceBase):
     def __init__(self, api_client, **kwargs):
         super(Fabric, self).__init__(api_client, **kwargs)
 
-        if hasattr(self, 'resource_id'):
+        if getattr(self, 'resource_id', None):
             self.refresh_vlans()
 
     def refresh(self):
