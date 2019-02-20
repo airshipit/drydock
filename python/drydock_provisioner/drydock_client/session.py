@@ -39,6 +39,7 @@ class DrydockSession(object):
                  scheme='http',
                  auth_gen=None,
                  marker=None,
+                 end_user=None,
                  timeout=None):
         self.logger = logging.getLogger(__name__)
         self.__session = requests.Session()
@@ -47,7 +48,11 @@ class DrydockSession(object):
         self.set_auth()
 
         self.marker = marker
+        self.end_user = end_user
         self.__session.headers.update({'X-Context-Marker': marker})
+
+        if end_user:
+            self.__session.headers.update({'X-End-User': end_user})
 
         self.host = host
         self.scheme = scheme

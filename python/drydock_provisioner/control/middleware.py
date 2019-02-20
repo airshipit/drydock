@@ -87,9 +87,17 @@ class ContextMiddleware(object):
         ctx = req.context
 
         ext_marker = req.get_header('X-Context-Marker')
+        end_user = req.get_header('X-End-User')
 
         if ext_marker is not None and self.marker_re.fullmatch(ext_marker):
             ctx.set_external_marker(ext_marker)
+
+        # Set end user from req header in context obj if available
+        # else set the user as end user.
+        if end_user is not None:
+            ctx.set_end_user(end_user)
+        else:
+            ctx.set_end_user(ctx.user)
 
 
 class LoggingMiddleware(object):
@@ -101,6 +109,7 @@ class LoggingMiddleware(object):
             'user': req.context.user,
             'req_id': req.context.request_id,
             'external_ctx': req.context.external_marker,
+            'end_user': req.context.end_user,
         }
         self.logger.info(
             "Request: %s %s %s" % (req.method, req.uri, req.query_string),
@@ -112,6 +121,7 @@ class LoggingMiddleware(object):
             'user': ctx.user,
             'req_id': ctx.request_id,
             'external_ctx': ctx.external_marker,
+            'end_user': ctx.end_user,
         }
         resp.append_header('X-Drydock-Req', ctx.request_id)
         self.logger.info(

@@ -63,7 +63,8 @@ def start_drydock(enable_keystone=True):
         config.config_mgr.conf.logging.control_logger_name)
     logger.propagate = False
     formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(user)s - %(req_id)s - %(external_ctx)s - %(message)s'
+        "%(asctime)s - %(levelname)s - %(user)s - %(req_id)s"
+        " - %(external_ctx)s - %(end_user)s - %(message)s"
     )
 
     ch = logging.StreamHandler()

@@ -123,7 +123,8 @@ def setup_logging():
     logger = logging.getLogger('drydock.control')
     logger.propagate = False
     formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(user)s - %(req_id)s - %(external_ctx)s - %(message)s'
+        "%(asctime)s - %(levelname)s - %(user)s - %(req_id)s"
+        " - %(external_ctx)s - %(end_user)s - %(message)s"
     )
 
     ch = logging.StreamHandler()

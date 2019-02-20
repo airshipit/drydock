@@ -71,13 +71,15 @@ class BaseResource(object):
         resp.status = status_code
 
     def log_error(self, ctx, level, msg):
-        extra = {'user': 'N/A', 'req_id': 'N/A', 'external_ctx': 'N/A'}
+        extra = {'user': 'N/A', 'req_id': 'N/A', 'external_ctx': 'N/A',
+                 'end_user': 'N/A'}
 
         if ctx is not None:
             extra = {
                 'user': ctx.user,
                 'req_id': ctx.request_id,
                 'external_ctx': ctx.external_marker,
+                'end_user': ctx.end_user,
             }
 
         self.logger.log(level, msg, extra=extra)
@@ -130,6 +132,7 @@ class DrydockRequestContext(object):
         self.request_id = str(uuid.uuid4())
         self.external_marker = ''
         self.policy_engine = None
+        self.end_user = None  # Initial User
 
     @classmethod
     def from_dict(cls, d):
@@ -160,6 +163,7 @@ class DrydockRequestContext(object):
             'authenticated': self.authenticated,
             'request_id': self.request_id,
             'external_marker': self.external_marker,
+            'end_user': self.end_user,
         }
 
     def set_log_level(self, level):
@@ -186,6 +190,9 @@ class DrydockRequestContext(object):
 
     def set_policy_engine(self, engine):
         self.policy_engine = engine
+
+    def set_end_user(self, end_user):
+        self.end_user = end_user
 
     def to_policy_view(self):
         policy_dict = {}
