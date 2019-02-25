@@ -55,6 +55,14 @@ network:
         nginx.ingress.kubernetes.io/rewrite-target: /
 
 pod:
+  security_context:
+    drydock:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_api:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
   lifecycle:
     upgrades:
       deployments:
