@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM ubuntu:16.04
+
+ARG FROM=ubuntu:16.04
+FROM ${FROM}
 
 LABEL org.opencontainers.image.authors='airship-discuss@lists.airshipit.org, irc://#airshipit@freenode'
 LABEL org.opencontainers.image.url='https://airshipit.org'

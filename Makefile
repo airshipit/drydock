@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUILD_DIR       := $(shell mkdir -p build && mktemp -d -p build)
-DOCKER_REGISTRY ?= quay.io
-IMAGE_NAME      ?= drydock
-IMAGE_PREFIX    ?= airshipit
-IMAGE_TAG       ?= dev
-HELM            := $(shell realpath $(BUILD_DIR))/helm
-PROXY           ?= http://proxy.foo.com:8000
-NO_PROXY        ?= localhost,127.0.0.1,.svc.cluster.local
-USE_PROXY       ?= false
-PUSH_IMAGE      ?= false
+BUILD_DIR       	:= $(shell mkdir -p build && mktemp -d -p build)
+DOCKER_REGISTRY 	?= quay.io
+IMAGE_NAME      	?= drydock
+IMAGE_PREFIX    	?= airshipit
+IMAGE_TAG       	?= dev
+HELM            	:= $(shell realpath $(BUILD_DIR))/helm
+UBUNTU_BASE_IMAGE	?=
+PROXY           	?= http://proxy.foo.com:8000
+NO_PROXY        	?= localhost,127.0.0.1,.svc.cluster.local
+USE_PROXY       	?= false
+PUSH_IMAGE      	?= false
 # use this variable for image labels added in internal build process
-LABEL           ?= org.airshipit.build=community
-COMMIT          ?= $(shell git rev-parse HEAD)
-IMAGE           ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
-GO_BUILDER      ?= docker.io/golang:1.10-stretch
+LABEL           	?= org.airshipit.build=community
+COMMIT          	?= $(shell git rev-parse HEAD)
+IMAGE           	?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
+GO_BUILDER      	?= docker.io/golang:1.10-stretch
 
 export
 
