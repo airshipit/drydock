@@ -24,7 +24,7 @@ kind: Pod
 metadata:
   name: "{{ .Release.Name }}-auth-test"
   annotations:
-    helm.sh/hook: "test-failure"
+    helm.sh/hook: "test-success"
     {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
   labels:
 {{ tuple $envAll "drydock" "auth-test" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 4 }}
@@ -38,6 +38,6 @@ spec:
       image: {{ .Values.images.tags.drydock }}
       imagePullPolicy: {{ .Values.images.pull_policy }}
 {{ tuple . .Values.pod.resources.test | include "helm-toolkit.snippets.kubernetes_resources" | indent 6 }}
-      command: ["/bin/bash", "-c", "curl -v -X GET --fail ${DRYDOCK_URL}/api/v1.0/tasks; exit $?"]
+      command: ["/bin/bash", "-c", 'curl -v -X GET --fail ${DRYDOCK_URL}/api/v1.0/tasks; exit_code=$?; if [ "$exit_code" = "22" ]; then exit 0; fi; exit 1']
 ...
 {{- end }}
