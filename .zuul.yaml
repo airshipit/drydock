@@ -15,6 +15,7 @@
       jobs:
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
+        - airship-drydock-chart-build-latest-htk
         - airship-drydock-docker-build-gate
 
     gate:
@@ -45,11 +46,22 @@
 
 - job:
     name: airship-drydock-chart-build-gate
+    description: |
+      Builds charts using pinned Helm toolkit.
     timeout: 900
     run: tools/gate/playbooks/build-charts.yaml
     nodeset: airship-drydock-single-node
-    files:
-      - ^charts/.*$
+
+- job:
+    name: airship-drydock-chart-build-latest-htk
+    description: |
+      Builds charts using latest Helm toolkit.
+    timeout: 900
+    voting: false
+    run: tools/gate/playbooks/build-charts.yaml
+    nodeset: airship-drydock-single-node
+    vars:
+      HTK_COMMIT: master
 
 - job:
     name: airship-drydock-docker-build-gate
