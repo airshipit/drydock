@@ -24,8 +24,8 @@ fi
 
 if [[ ! -z "${PIP_INDEX_URL}" ]]
 then
-  ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS}| --build-arg PIP_INDEX_URL=${PIP_INDEX_URL}"
-  ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS}| --build-arg PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}"
+  ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS} --build-arg PIP_INDEX_URL=${PIP_INDEX_URL}"
+  ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS} --build-arg PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}"
 fi
 
 docker build --network host -t ${IMAGE} --label ${LABEL} \
