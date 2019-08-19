@@ -58,8 +58,8 @@ The Nodes API will provide a list of node names based on design_ref.  This API
 requires design_ref in the POST body with an optional node_filter to return the node
 names.
 
-bootdata
---------
+bootdata API
+------------
 
 The boot data API is used by deploying nodes to load the appropriate boot actions to be
 instantiated on the node. It uses alternative authentication and is not accessible with
