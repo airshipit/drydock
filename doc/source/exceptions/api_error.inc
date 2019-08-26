@@ -14,21 +14,17 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+API Errors
+----------
 
-Bootaction Errors
------------------
+.. currentmodule:: drydock_provisioner.error
 
-.. autoexception:: drydock_provisioner.error.InvalidAssetLocation
+.. autoexception:: ClientError
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoexception:: drydock_provisioner.error.PipelineFailure
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-.. autoexception:: drydock_provisioner.error.UnknownPipelineSegment
+.. autoexception:: InvalidFormat
    :members:
    :show-inheritance:
    :undoc-members:

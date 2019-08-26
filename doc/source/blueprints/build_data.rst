@@ -38,8 +38,8 @@ described by the following fields.
   * Task - The Drydock Task ID that initiated the collection.
   * Node - The node on which the data is collected.
   * Generator - A description of what generated the data. If it was a command line tool,
-                the full command line. If it was something else, then a solid description
-                such as an API endpoint.
+    the full command line. If it was something else, then a solid description
+    such as an API endpoint.
   * Format - The format that the collected data is being persisted as.
 
 Post-collection, the build data will be accessible in two ways

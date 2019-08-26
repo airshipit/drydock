@@ -14,15 +14,32 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-API Errors
-----------
+Driver Errors
+-------------
 
-.. autoexception:: drydock_provisioner.error.ClientError
+.. currentmodule:: drydock_provisioner.error
+
+.. autoexception:: DriverError
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoexception:: drydock_provisioner.error.InvalidFormat
+.. autoexception:: InvalidSizeFormat
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: NotEnoughStorage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: PersistentDriverError
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: TransientDriverError
    :members:
    :show-inheritance:
    :undoc-members:

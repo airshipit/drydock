@@ -27,5 +27,7 @@ Validation Checks
 
 These checks are meant to check the business logic of documents sent to the validatedesign API.
 
-.. autoclass:: drydock_provisioner.orchestrator.validations.validator.Validator
+.. currentmodule:: drydock_provisioner.orchestrator.validations.validator
+
+.. autoclass:: Validator
   :members:

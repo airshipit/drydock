@@ -1,5 +1,5 @@
 ..
-      Copyright 2018 AT&T Intellectual Property.
+      Copyright 2017 AT&T Intellectual Property.
       All Rights Reserved.
 
       Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,26 +14,17 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-=============================
-Dryodck Topology Validation
-=============================
+Client Errors
+-------------
 
-DD1XXX - Storage Validations
-=============================
+.. currentmodule:: drydock_provisioner.error
 
-To be continued
+.. autoexception:: ClientForbiddenError
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-DD2XXX - Network Validations
-=============================
-
-To be continued
-
-DD3XXX - Platform Validations
-=============================
-
-To be continued
-
-DD4XXX - Bootaction Validations
-=============================
-
-To be continued
+.. autoexception:: ClientUnauthorizedError
+   :members:
+   :show-inheritance:
+   :undoc-members:

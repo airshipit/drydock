@@ -1,5 +1,5 @@
 ..
-      Copyright 2017 AT&T Intellectual Property.
+      Copyright 2018 AT&T Intellectual Property.
       All Rights Reserved.
 
       Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,11 +14,26 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+===========================
+Drydock Topology Validation
+===========================
 
-BuildData Errors
-----------------
+DD1XXX - Storage Validations
+============================
 
-.. autoexception:: drydock_provisioner.error.BuildDataError
-   :members:
-   :show-inheritance:
-   :undoc-members:
+To be continued
+
+DD2XXX - Network Validations
+============================
+
+To be continued
+
+DD3XXX - Platform Validations
+=============================
+
+To be continued
+
+DD4XXX - Bootaction Validations
+===============================
+
+To be continued

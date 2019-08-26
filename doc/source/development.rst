@@ -141,8 +141,8 @@ a proxy or for geneting the Docker image with custom tags.
   * ``IMAGE_PREFIX`` - Defaults to ``airshipit``, the registry organization to push images into
   * ``IMAGE_TAG`` - Defaults to ``dev``, a tag to apply to the image
   * ``PUSH_IMAGE`` - Defaults to ``false``, set to ``true`` if you want the build process to also
-                     push the image. Likely will require you have previously run ``docker login``.
+    push the image. Likely will require you have previously run ``docker login``.
   * ``PROXY`` - A HTTP/HTTPS proxy server to add to the image build environment. Required if you
-                are building the image behind a proxy.
+    are building the image behind a proxy.
   * ``USE_PROXY`` - Defaults to ``false``, set to ``true`` to include the ``PROXY`` configuration
-                    above in the build.
+    above in the build.

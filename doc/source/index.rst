@@ -70,3 +70,11 @@ Topology Documentation
 
    topology
    troubleshooting/index
+
+Blueprints
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   blueprints/index

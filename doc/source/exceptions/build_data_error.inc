@@ -14,20 +14,13 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Design Errors
--------------
 
-.. autoexception:: drydock_provisioner.error.DesignError
-   :members:
-   :show-inheritance:
-   :undoc-members:
+BuildData Errors
+----------------
 
-.. autoexception:: drydock_provisioner.error.IngesterError
-   :members:
-   :show-inheritance:
-   :undoc-members:
+.. currentmodule:: drydock_provisioner.error
 
-.. autoexception:: drydock_provisioner.error.InvalidDesignReference
+.. autoexception:: BuildDataError
    :members:
    :show-inheritance:
    :undoc-members:

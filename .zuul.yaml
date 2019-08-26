@@ -11,6 +11,11 @@
 # limitations under the License.
 
 - project:
+    templates:
+      - docs-on-readthedocs
+    vars:
+      rtd_webhook_id: '38809'
+      rtd_project_name: 'airship-drydock'
     check:
       jobs:
         - airship-drydock-omni-test
@@ -26,7 +31,6 @@
 
     post:
       jobs:
-        - airship-drydock-doc-publish
         - airship-drydock-docker-publish
         - drydock-upload-git-mirror
 
@@ -70,7 +74,7 @@
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node
     irrelevant-files:
-      - '^docs/.*'
+      - '^doc/.*'
       - '^charts/.*'
     vars:
       publish: false
@@ -86,7 +90,7 @@
     secrets:
       - airship_drydock_quay_creds
     irrelevant-files:
-      - '^docs/.*'
+      - '^doc/.*'
       - '^charts/.*'
     vars:
       publish: true
@@ -96,16 +100,6 @@
           commit: true
         static:
           - latest
-
-- job:
-    name: airship-drydock-doc-publish
-    description: |
-      Publish documentation on airship-drydock.readthedocs.io
-    run: tools/gate/playbooks/doc-publish.yaml
-    secrets:
-      - airship_drydock_readthedocs
-    timeout: 300
-    nodeset: airship-drydock-single-node
 
 - secret:
     name: airship_drydock_quay_creds
@@ -132,32 +126,6 @@
           aknseZhtmaqM+ttv2bUL23uzYEkupY3foEUa3ILYs2qx5sofi6CBAOWd2c3t3d34Kn5ya
           B1qsfXoY9lVL59lCl4jYLqyGA99Oybi5YKTP8O+IH5Xo7XLOje7K0Vfvh7v8Mcja8pZRG
           sgRbPr/10a2g6+s37XofkFEeba7B8fV5h6v/A3tMy7U01rZ2qLBC/4hxrikXT8=
-
-- secret:
-    name: airship_drydock_readthedocs
-    data:
-      url: !encrypted/pkcs1-oaep
-        - dcOaNb6+3zCSp8rlmaA8U/v8kxzsB9MPqmbfbFSoyCsXOAMvluYSitmF7XpYdZLOXPOvm
-          +stE6m57dRBDlryymoLHVUxgeAkA/4YR1/78tF8vTLBDbWaLXVLTFBjx6jg17nS9X/UKs
-          W+UtSA1rVmeoaF8jrxO+c0IJjhgRDchFyPa9s7CnrxUn12IN6IDym0YcUQLxUOFzofm3F
-          fCtwFY84lRCJhB80jfXuYPlIdxTO3q245JlDvhRm4y6p/qCNljNm/Kw6o6ngKjh0f/CM6
-          7oFZPsE1XDYWGvR0msq8rjCST6k380vIBeroOqfwRhrjU5YCTgZy2kmw/veY3eGs5bEbb
-          OBZeIb6mk1+D9bmRbFaTmVns7E+a6Fdz/rrttebmak8aBATQD9sgBnvghFAAHibT4LNdn
-          ic+eEy/RXqyHqZuIPukQjAF0FgfK7jDqVzB/scx2tpw7lYwpDZM8bOHFNIAC4zRVg66O2
-          1HPo4egknU8MQRy1FwNm7A91AY2cKZSusfrQlND/vflK27/lxCdHoOYw8JVaGxe02Ac+n
-          XapfJuj7tAkFF+jeaWamB5CMiC+4M3zsrReB2/kqbxGFXC0nQ9q9AbVg48zCZFxNTVMLj
-          J5K79voMoMmFoP14trhneFDs1Ki8FOLU1fqU7KrBYrlixI4FJwJ6ljEM9C/OvU=
-      token: !encrypted/pkcs1-oaep
-        - i6Js243rxTsL0V1l5UWsJalCiRh3kYs54nBz0M9KKrE5YYdAYkD59jKSPncUeG7V+VTkr
-          LuwGpI837r/oaYqD7g4ZZhsE/X+xSE1PSdtsSY3t5GZZAPdKG4oSLxl0buTd23JsS6cU4
-          7IAh4Q28wtaIXg8fZ69KVkGm2f2nXPNKbUH/yPTjFW51yEXI55AClNKzv+mVKLd1PNdCN
-          USQkmF4fvgFreQym+NkZrUh78YMQI1uNT1e7rhD/jxYCjhZGAEr0Clxiu8UmLIRvxHgc2
-          2SM99xT8s0/dRudePkSz3zXSagwWvdat8bHqpGHJrakjZvePtGeZrdk20v7JQHt8T3XBp
-          InfWRB8ad/gDvgpstXiag4EHsJ7tnFuwsFDh+KSYySBjtkbYqY8Rx8lQ5qW/Qgk96LagJ
-          yzpin6EquBcnnPNTGTYLRF9jtowzbI8G9ItRRWdvkIQSlMQDxROI4bVEnfLHgRMbAKVjF
-          1oSaiEzMwMHj356qYBS06pBBF3Dr/OCIZNiBy3UU8J6OJt2XchMgy9TVhsGkj+HE092d+
-          mADSwkA5TpfWJCo8rqTDO8cCXIeiG8kBoxjph5m7YNWUcbuRDQdbga1FjV4lMe9bMyOo5
-          AJ6O8hl3q7CJElLw6Z7p9vW2wHUf/xr242pZnk70DiMkyXxzJFLLqvRsWctTDc=
 
 - job:
     name: drydock-upload-git-mirror

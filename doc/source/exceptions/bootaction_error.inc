@@ -14,15 +14,23 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Client Errors
--------------
 
-.. autoexception:: drydock_provisioner.error.ClientForbiddenError
+Bootaction Errors
+-----------------
+
+.. currentmodule:: drydock_provisioner.error
+
+.. autoexception:: InvalidAssetLocation
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoexception:: drydock_provisioner.error.ClientUnauthorizedError
+.. autoexception:: PipelineFailure
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+.. autoexception:: UnknownPipelineSegment
    :members:
    :show-inheritance:
    :undoc-members:

@@ -25,11 +25,6 @@
         chdir: "{{ zuul.project.src_dir }}"
         target: helm_lint
       register: result
-    - name: Build documents locally
-      make:
-        chdir: "{{ zuul.project.src_dir }}"
-        target: docs
-      register: result
     - name: Execute the make target for security scanning
       make:
         chdir: "{{ zuul.project.src_dir }}"

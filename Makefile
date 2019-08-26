@@ -32,15 +32,12 @@ GO_BUILDER      	?= docker.io/golang:1.10-stretch
 export
 
 # Build all docker images for this project
-.PHONY: images
 images: build_drydock
 
 # Run an image locally and exercise simple tests
-.PHONY: run_images
 run_images: run_drydock
 
 # Run tests
-.PHONY: tests
 tests: pep8 security docs unit_tests test_baclient
 
 # Install external (not managed by tox/pip) dependencies
@@ -49,63 +46,51 @@ external_dep: requirements-host.txt requirements-host-test.txt
 	touch external_dep
 
 # Run unit and Postgres integration tests in coverage mode
-.PHONY: coverage_test
 coverage_test: build_drydock
 	tox -re cover
 
 # Run just unit tests
-.PHONY: unit_tests
 unit_tests: external_dep
 	tox -re py35 $(TESTS)
 
 # Run just DB integration tests
-.PHONY: db_integration_tests
 db_integration_tests: external_dep
 	tox -re integration $(TESTS)
 
 # Freeze full set of Python requirements
-.PHONY: req_freeze
 req_freeze:
 	tox -re freeze
 
 # Run the drydock container and exercise simple tests
-.PHONY: run_drydock
 run_drydock: build_drydock
 	tools/drydock_image_run.sh
 
 # It seems CICD expects the target 'drydock' to
 # build the chart
-.PHONY: drydock
 drydock: charts
 
 # Create tgz of the chart
-.PHONY: charts
 charts: helm-init
 	$(HELM) dep up charts/drydock
 	$(HELM) package charts/drydock
 
 # Perform Linting
-.PHONY: lint
 lint: pep8 helm_lint
 
 # Dry run templating of chart
-.PHONY: dry-run
 dry-run: helm-init
 	$(HELM) template --set manifests.secret_ssh_key=true --set conf.ssh.private_key=foo charts/drydock
 
 # Initialize local helm config
-.PHONY: helm-init
 helm-init: helm-install
 	tools/helm_tk.sh $(HELM)
 
 # Install helm binary
-.PHONY: helm-install
 helm-install:
 	tools/helm_install.sh $(HELM)
 
 # Make targets intended for use by the primary targets above.
 
-.PHONY: build_drydock
 build_drydock: external_dep build_baclient
 	export; tools/drydock_image_build.sh
 ifeq ($(PUSH_IMAGE), true)
@@ -113,49 +98,44 @@ ifeq ($(PUSH_IMAGE), true)
 endif
 
 # Make target for building bootaction signal client
-.PHONY: build_baclient
 build_baclient: external_dep
 	docker run -tv $(shell realpath go):/work -v $(shell realpath $(BUILD_DIR)):/build -e GOPATH=/work $(GO_BUILDER)  go build -o /build/baclient baclient
 
 # Make target for testing bootaction signal client
-.PHONY: test_baclient
 test_baclient: external_dep
 	docker run -tv $(shell realpath go):/work -e GOPATH=/work $(GO_BUILDER)  go test -v baclient
 
-.PHONY: docs
 docs: clean drydock_docs
 
-.PHONY: security
 security: external_dep
 	tox -e bandit
 
-.PHONY: drydock_docs
 drydock_docs: external_dep render_diagrams genpolicy genconfig
 	tox -e docs
 
-.PHONY: render_diagrams
 render_diagrams:
-	plantuml -v -tpng -o ../source/images docs/diagrams/*.uml
+	plantuml -v -tpng -o ../source/images doc/diagrams/*.uml
 
-.PHONY: genpolicy
 genpolicy:
 	tox -e genpolicy
 
-.PHONY: genconfig
 genconfig:
 	tox -e genconfig
 
-.PHONY: clean
 clean:
 	rm -rf build
-	rm -rf docs/build
+	rm -rf doc/build
 	rm -rf charts/drydock/charts
 	rm -rf charts/drydock/requirements.lock
 
-.PHONY: pep8
 pep8: external_dep
 	tox -e pep8
 
-.PHONY: helm_lint
 helm_lint: helm-init
 	$(HELM) lint charts/drydock
+
+.PHONY: build_baclient build_drydock charts clean coverage_test \
+  db_integration_tests docs drydock drydock_docs dry-run genconfig \
+  genpolicy helm-init helm-install helm_lint images lint pep8 \
+  render_diagrams req_freeze run_drydock run_images security \
+  test_baclient tests unit_tests

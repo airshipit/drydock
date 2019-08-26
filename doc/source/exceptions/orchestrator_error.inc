@@ -18,12 +18,14 @@
 Orchestrator Errors
 -------------------
 
-.. autoexception:: drydock_provisioner.error.MaxRetriesReached
+.. currentmodule:: drydock_provisioner.error
+
+.. autoexception:: MaxRetriesReached
    :members:
    :show-inheritance:
    :undoc-members:
 
-.. autoexception:: drydock_provisioner.error.OrchestratorError
+.. autoexception:: OrchestratorError
    :members:
    :show-inheritance:
    :undoc-members:

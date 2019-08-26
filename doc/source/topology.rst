@@ -181,7 +181,7 @@ defined.
 * ``gateway``: The gateway IP on this Network to use for accessing the destination
 * ``metric``: The metric or weight for this route
 * ``routedomain``: Use this route's gateway and metric for accessing networks in the
-                   defined routedomain.
+  defined routedomain.
 
 ``dns`` is used for specifying the list of DNS servers to use if this network
 is the primary network for the node.
@@ -191,7 +191,7 @@ is the primary network for the node.
   addresses assigned from this Network
 
 DHCP Relay
-~~~~~~~~~~
+^^^^^^^^^^
 
 DHCP relaying is used when a DHCP server is not attached to the same layer 2
 broadcast domain as nodes that are being PXE booted. The DHCP requests from the
@@ -283,7 +283,7 @@ An example HardwareProfile document:
           count: 530000
 
 Device Aliases
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 Device aliases are a way of mapping a particular device bus address
 to an alias. In the example above we map the PCI address ``0000:00:03.0``
@@ -294,7 +294,7 @@ at PCI address ``0000.00.03.0``. Currently device aliases are supported
 for network interface slave devices and storage physical devices.
 
 Kernel Parameter References
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some kernel parameters specified in a host profile rely on particular hardware
 builds, such as ``isolcpus``. To support the greatest flexibility in building
@@ -358,7 +358,7 @@ adopted from *defaults*) and can then again override or append any
 configuration that is specific to that node.
 
 Defining Node Out-Of-Band Management
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Drydock supports plugin-based OOB management. At a minimum a
 OOB driver supports configuring a node to PXE boot during the next
@@ -370,7 +370,7 @@ parameters are required for that type and what capabilities are available
 via OOB driver tasks.
 
 IPMI
-****
+""""
 
 The ``ipmi`` OOB type requires additional configuration to allow OOB
 management:
@@ -386,7 +386,7 @@ Currently the IPMI driver supports only basic management by setting nodes to PXE
 power-cycling the node.
 
 Libvirt
-*******
+"""""""
 
 The ``libvirt`` OOB type requires additional configuration within the site definition
 as well as particular configuration in the deployment of Drydock (and likely the node
@@ -407,7 +407,7 @@ Currently the Libvirt driver supports only basic management by setting nodes to 
 power-cycling the node.
 
 Defining Node Interfaces and Network Addressing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Node network attachment can be described in a ``HostProfile`` or a
 ``BaremetalNode`` document. Node addressing is allowed only in a
@@ -420,7 +420,7 @@ Once the interface attachments to networks is defined, ``HostProfile`` and
 which network the node should use as the primary route.
 
 Interfaces
-**********
+""""""""""
 
 Interfaces for a node can be described in either a ``HostProfile`` or
 ``BaremetalNode`` definition. This will attach a defined NetworkLink to a host
@@ -467,7 +467,7 @@ that interface for an inherited configuration.
   have trunking enabled or the design validation will fail.
 
 Addressing
-**********
+""""""""""
 
 Addressing for a node can only be defined in a ``BaremetalNode`` definition. The
 ``addressing`` stanza simply defines a static IP address or ``dhcp`` for each
@@ -492,7 +492,7 @@ Example ``addressing`` YAML schema:
 
 
 Defining Node Storage
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Storage can be defined in the ``storage`` stanza of either a HostProfile or
 BaremetalNode document. The storage configuration can describe the creation of
@@ -539,13 +539,13 @@ Example YAML schema of the ``storage`` stanza:
                 mount_options: 'defaults'
 
 Schema
-******
+""""""
 
 The ``storage`` stanza can contain two top-level keys: ``physical_devices`` and
 ``volume_groups``. The latter is optional.
 
 Physical Devices and Partitions
-*******************************
+"""""""""""""""""""""""""""""""
 
 A physical device can either be carved up in partitions (including a single
 partition consuming the entire device) or added to a volume group as a physical
@@ -563,7 +563,7 @@ mapping with the following keys
   volume. Incompatible with the ``partitions`` specification.
 
 Partition
-^^^^^^^^^
+"""""""""
 
 A partition mapping describes a GPT partition on a physical disk. It can be left
 as a raw block device or formatted and mounted as a filesystem.
@@ -585,7 +585,7 @@ as a raw block device or formatted and mounted as a filesystem.
     * ``fs_label``: A filesystem label to assign to the filesystem. Optional.
 
 Size Format
-^^^^^^^^^^^
+"""""""""""
 
 The size specification for a partition or logical volume is formed from three
 parts:
@@ -602,7 +602,7 @@ parts:
     * %: The percentage of total device or volume group space
 
 Volume Groups and Logical Volumes
-*********************************
+"""""""""""""""""""""""""""""""""
 
 Logical volumes can be used to create RAID-0 volumes spanning multiple physical
 disks or partitions. Each key in the ``volume_groups`` mapping is a name
@@ -616,7 +616,7 @@ invalid. Each mapping value is another mapping describing the volume group.
   created in the volume group
 
 Logical Volume
-^^^^^^^^^^^^^^
+""""""""""""""
 
 A logical volume is a RAID-0 volume. Using logical volumes for ``/`` and
 ``/boot`` is supported
@@ -637,7 +637,7 @@ and ``kernel`` to use as well as customize the kernel configuration with
 ``kernel_params``.
 
 Image and Kernel Selection
-**************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The valid ``image`` and ``kernel`` values are dependent on what is supported
 by your node provisioner. In the example of Canonical MaaS using the 16.04 LTS
@@ -645,7 +645,7 @@ image, the values would be ``image: 'xenial'`` and ``kernel: 'ga-16.04'`` for th
 LTS kernel or ``kernel: hwe-16.04`` for the hardware-enablement kernel.
 
 Kernel Parameters
-*****************
+^^^^^^^^^^^^^^^^^
 
 The ``kernel_params`` configuration is a mapping. Each key should either be a string
 or boolean value. For boolean ``true`` values, the key will be added to the kernel
@@ -653,7 +653,7 @@ parameter list as a flag. For string values, the key:value pair will be added to
 kernel parameter list as ``key=value``.
 
 Parameter References
-^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""
 
 One special case is supported for values that match a hardware profile reference.
 When the parameter is rendered for a particular node, the value included in the
