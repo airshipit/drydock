@@ -2306,6 +2306,11 @@ class DeployNode(BaseMaasAction):
                     machine = machine_list.acquire_node(n.name)
                     self.task.add_status_msg(
                         msg=msg, error=False, ctx=n.name, ctx_type='node')
+                elif machine.status_name.startswith('Allocated'):
+                    msg = "Node %s already acquired." % (n.name)
+                    self.logger.info(msg)
+                    self.task.add_status_msg(
+                        msg=msg, error=False, ctx=n.name, ctx_type='node')
                 else:
                     msg = "Unexpected status %s for node %s, skipping deployment." % (
                         machine.status_name, n.name)
