@@ -259,8 +259,6 @@ class Orchestrator(object):
         Given a fully populated Site model, compute the effective
         design by applying inheritance and references
         """
-        node_failed = []
-
         try:
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
@@ -270,13 +268,9 @@ class Orchestrator(object):
                         state_manager=self.state_manager,
                         resolve_aliases=resolve_aliases)
                 except Exception as ex:
-                    node_failed.append(n)
                     self.logger.debug(
                         "Failed to build applied model for node %s.", n.name, exc_info=ex)
-            if node_failed:
-                raise errors.DesignError(
-                    "Failed to build applied model for %s" % ",".join(
-                        [x.name for x in node_failed]))
+                    raise ex
         except AttributeError:
             self.logger.debug(
                 "Model inheritance skipped, no node definitions in site design."
@@ -653,8 +647,8 @@ class Orchestrator(object):
             for n in site_design.networks:
                 if n.routedomain is not None:
                     if n.routedomain not in routedomains:
-                        self.logger.info("Adding routedomain %s to render map."
-                                         % n.routedomain)
+                        self.logger.debug("Adding routedomain %s to render map."
+                                          % n.routedomain)
                         routedomains[n.routedomain] = list()
                     routedomains[n.routedomain].append(n)
             for rd, nl in routedomains.items():
