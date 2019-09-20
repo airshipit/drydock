@@ -133,6 +133,13 @@ pod:
           memory: "128Mi"
           cpu: "100m"
 
+network_policy:
+  drydock:
+    ingress:
+      - {}
+    egress:
+      - {}
+
 manifests:
   job_ks_service: true
   job_ks_user: true
@@ -150,6 +157,7 @@ manifests:
   deployment_drydock: true
   test_drydock_api: true
   test_drydock_auth: true
+  network_policy: false
 
 dependencies:
   dynamic:
