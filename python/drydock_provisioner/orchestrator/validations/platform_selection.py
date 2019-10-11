@@ -36,12 +36,30 @@ class PlatformSelection(Validators):
             )
             return
 
-        valid_images = node_driver.get_available_images()
+        try:
+            valid_images = node_driver.get_available_images()
+        except Exception:
+            msg = ("Platform validation: Could not load images from driver, skipping"
+                   "image and kernel selection validation.")
+            self.report_warn(
+                msg, [],
+                "Cannot validate platform selection without accessing the node provisioner."
+            )
+            return
 
         valid_kernels = dict()
 
         for i in valid_images:
-            valid_kernels[i] = node_driver.get_available_kernels(i)
+            try:
+                valid_kernels[i] = node_driver.get_available_kernels(i)
+            except Exception:
+                msg = ("Platform validation: Could not load kernels from driver, skipping"
+                       "image and kernel selection validation.")
+                self.report_warn(
+                    msg, [],
+                    "Cannot validate platform selection without accessing the node provisioner."
+                )
+                return
 
         node_list = site_design.baremetal_nodes or []
 

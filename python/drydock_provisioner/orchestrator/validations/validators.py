@@ -13,15 +13,24 @@
 # limitations under the License.
 """Business Logic Validation"""
 
+import logging
+
 from drydock_provisioner import objects
 from drydock_provisioner.objects import fields as hd_fields
 
+import drydock_provisioner.config as config
 
 class Validators:
     def __init__(self, long_name, name):
         self.name = name
         self.long_name = long_name
         self.reset_message_list()
+        try:
+            logger_name = config.config_mgr.conf.logging.global_logger_name
+        except Exception:
+            logger_name = "drydock"
+
+        self.logger = logging.getLogger(logger_name)
 
     def report_msg(self, msg, docs, diagnostic, error, level):
         """Add a validation message to the result list.
@@ -43,14 +52,17 @@ class Validators:
         self.messages.append(msg_obj)
 
     def report_error(self, msg, docs, diagnostic):
+        self.logger.info("Design Validation Error: %s", msg)
         self.report_msg(msg, docs, diagnostic, True,
                         hd_fields.MessageLevels.ERROR)
 
     def report_warn(self, msg, docs, diagnostic):
+        self.logger.info("Design Validation Error: %s", msg)
         self.report_msg(msg, docs, diagnostic, False,
                         hd_fields.MessageLevels.WARN)
 
     def report_info(self, msg, docs, diagnostic):
+        self.logger.debug("Design Validation Info: %s", msg)
         self.report_msg(msg, docs, diagnostic, False,
                         hd_fields.MessageLevels.INFO)
 
