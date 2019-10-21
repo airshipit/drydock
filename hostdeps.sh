@@ -33,7 +33,10 @@ then
   done
   if [[ ${#added_pkgs[@]} -gt 0 ]]
   then
-    apt install -y --no-install-recommends "${added_pkgs[@]}"
+    DEBIAN_FRONTEND=noninteractive apt \
+      -o Dpkg::Options::="--force-confdef" \
+      -o Dpkg::Options::="--force-confold" \
+      install -y --no-install-recommends "${added_pkgs[@]}"
   fi
 else
   echo "Only support testing on Ubuntu hosts at this time."
