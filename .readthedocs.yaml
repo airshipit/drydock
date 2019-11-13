@@ -22,4 +22,5 @@ python:
   version: 3.7
   install:
     - requirements: doc/requirements-doc.txt
-    - requirements: requirements-host.txt
+    - requirements: python/requirements-lock.txt
+    - requirements: python/requirements-test.txt
