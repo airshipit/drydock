@@ -28,16 +28,21 @@ then
   ADDL_BUILD_ARGS="${ADDL_BUILD_ARGS} --build-arg PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}"
 fi
 
+PROXY_ARGS=""
+if [[ "${USE_PROXY}" == true ]]; then
+  PROXY_ARGS="--build-arg http_proxy=${PROXY} \
+    --build-arg https_proxy=${PROXY} \
+    --build-arg HTTP_PROXY=${PROXY} \
+    --build-arg HTTPS_PROXY=${PROXY} \
+    --build-arg no_proxy=${NO_PROXY} \
+    --build-arg NO_PROXY=${NO_PROXY}"
+fi
+
 docker build --network host -t ${IMAGE} --label ${LABEL} \
   --label org.opencontainers.image.revision=${COMMIT} \
   --label org.opencontainers.image.created="$(date --rfc-3339=seconds --utc)" \
   --label org.opencontainers.image.title=${IMAGE_NAME} \
   -f images/drydock/Dockerfile \
-  ${ADDL_BUILD_ARGS} \
   --build-arg BUILD_DIR=${BUILD_DIR} \
-  --build-arg http_proxy=${http_proxy} \
-  --build-arg https_proxy=${https_proxy} \
-  --build-arg HTTP_PROXY=${HTTP_PROXY} \
-  --build-arg HTTPS_PROXY=${HTTPS_PROXY} \
-  --build-arg no_proxy=${no_proxy} \
-  --build-arg NO_PROXY=${NO_PROXY} .
+  ${PROXY_ARGS} \
+  ${ADDL_BUILD_ARGS} .

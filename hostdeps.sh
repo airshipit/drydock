@@ -6,8 +6,8 @@ set -x
 
 if [[ ! -z $(uname -a | grep Ubuntu) ]]
 then
-  apt update
-  installed_pkgs=$(apt list --installed | cut -d'/' -f1)
+  apt-get update
+  installed_pkgs=$(dpkg --get-selections | awk '!/deinstall/ { gsub(/:.*/,"",$1); print $1 }')
   set -a added_pkgs
   for reqfile in $(ls requirements-host*.txt)
   do
@@ -33,7 +33,7 @@ then
   done
   if [[ ${#added_pkgs[@]} -gt 0 ]]
   then
-    DEBIAN_FRONTEND=noninteractive apt \
+    DEBIAN_FRONTEND=noninteractive apt-get \
       -o Dpkg::Options::="--force-confdef" \
       -o Dpkg::Options::="--force-confold" \
       install -y --no-install-recommends "${added_pkgs[@]}"

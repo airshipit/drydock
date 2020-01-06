@@ -13,6 +13,31 @@
 # limitations under the License.
 
 ARG FROM=ubuntu:16.04
+FROM ${FROM} AS baclient_builder
+
+ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
+ARG TRUSTED_UBUNTU_REPO=no
+ARG ALLOW_UNAUTHENTICATED=false
+ARG BUILD_DIR
+ENV container docker
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
+# Copy direct dependency requirements only to build a dependency layer
+RUN echo "deb  ${UBUNTU_REPO} xenial main restricted universe multiverse" > /etc/apt/sources.list; \
+    echo "deb  ${UBUNTU_REPO} xenial-security main restricted universe multiverse" >> /etc/apt/sources.list; \
+    echo "deb  ${UBUNTU_REPO} xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
+    cat /etc/apt/sources.list; \
+    echo "APT::Get::AllowUnauthenticated ${ALLOW_UNAUTHENTICATED};" >> /etc/apt/apt.conf.d/00-local-mirrors;
+
+
+COPY ./tools/baclient_build.sh /tmp/drydock/
+COPY ./go /tmp/drydock/go
+WORKDIR /tmp/drydock
+RUN ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient; \
+    rm -r /var/lib/apt/lists/*
+
+
 FROM ${FROM}
 
 LABEL org.opencontainers.image.authors='airship-discuss@lists.airshipit.org, irc://#airshipit@freenode' \
@@ -60,7 +85,7 @@ COPY ./alembic /tmp/drydock/alembic
 COPY ./alembic.ini /tmp/drydock/alembic.ini
 COPY ./entrypoint.sh /tmp/drydock/entrypoint.sh
 
-COPY ${BUILD_DIR}/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
+COPY --from=baclient_builder /tmp/drydock/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
 
 
 EXPOSE $PORT

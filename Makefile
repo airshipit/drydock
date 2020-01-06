@@ -27,7 +27,6 @@ PUSH_IMAGE      	?= false
 LABEL           	?= org.airshipit.build=community
 COMMIT          	?= $(shell git rev-parse HEAD)
 IMAGE           	?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
-GO_BUILDER      	?= docker.io/golang:1.10-stretch
 
 export
 
@@ -91,7 +90,7 @@ helm-install:
 
 # Make targets intended for use by the primary targets above.
 
-build_drydock: external_dep build_baclient
+build_drydock: external_dep
 	export; tools/drydock_image_build.sh
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
@@ -99,11 +98,12 @@ endif
 
 # Make target for building bootaction signal client
 build_baclient: external_dep
-	docker run -tv $(shell realpath go):/work -v $(shell realpath $(BUILD_DIR)):/build -e GOPATH=/work $(GO_BUILDER)  go build -o /build/baclient baclient
+	sudo ./tools/baclient_build.sh $(shell realpath go) $(shell realpath ${BUILD_DIR})
+	touch ./baclient_built
 
 # Make target for testing bootaction signal client
-test_baclient: external_dep
-	docker run -tv $(shell realpath go):/work -e GOPATH=/work $(GO_BUILDER)  go test -v baclient
+test_baclient: external_dep build_baclient
+	GOPATH=$(shell realpath go) go test -v baclient
 
 docs: clean drydock_docs
 
