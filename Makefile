@@ -19,6 +19,7 @@ IMAGE_PREFIX    	?= airshipit
 IMAGE_TAG       	?= dev
 HELM            	:= $(shell realpath $(BUILD_DIR))/helm
 UBUNTU_BASE_IMAGE	?=
+DISTRO			?= ubuntu_bionic
 PROXY           	?= http://proxy.foo.com:8000
 NO_PROXY        	?= localhost,127.0.0.1,.svc.cluster.local
 USE_PROXY       	?= false
@@ -26,7 +27,7 @@ PUSH_IMAGE      	?= false
 # use this variable for image labels added in internal build process
 LABEL           	?= org.airshipit.build=community
 COMMIT          	?= $(shell git rev-parse HEAD)
-IMAGE           	?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
+IMAGE           	?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO}
 
 export
 

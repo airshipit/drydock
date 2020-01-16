@@ -3,6 +3,7 @@ set -x
 
 UBUNTU_BASE_IMAGE=${UBUNTU_BASE_IMAGE:-""}
 UBUNTU_REPO=${UBUNTU_REPO:-""}
+DISTRO=${DISTRO:-"ubuntu_bionic"}
 TRUSTED_UBUNTU_REPO=${TRUSTED_UBUNTU_REPO:-"no"}
 ALLOW_UNATHENTICATED=${ALLOW_UNAUTHENTICATED:-"false"}
 PIP_INDEX_URL=${PIP_INDEX_URL:-""}
@@ -42,7 +43,7 @@ docker build --network host -t ${IMAGE} --label ${LABEL} \
   --label org.opencontainers.image.revision=${COMMIT} \
   --label org.opencontainers.image.created="$(date --rfc-3339=seconds --utc)" \
   --label org.opencontainers.image.title=${IMAGE_NAME} \
-  -f images/drydock/Dockerfile \
+  -f "images/drydock/Dockerfile.${DISTRO}" \
   --build-arg BUILD_DIR=${BUILD_DIR} \
   ${PROXY_ARGS} \
   ${ADDL_BUILD_ARGS} .

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-IMAGE=${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}
+IMAGE=${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO}
 
 function start_db {
     if [[ ! -z $(docker ps | grep 'psql_integration') ]]

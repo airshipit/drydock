@@ -21,17 +21,20 @@
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
-        - airship-drydock-docker-build-gate
+        - airship-drydock-docker-build-gate-ubuntu_xenial
+        - airship-drydock-docker-build-gate-ubuntu_bionic
 
     gate:
       jobs:
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
-        - airship-drydock-docker-build-gate
+        - airship-drydock-docker-build-gate-ubuntu_xenial
+        - airship-drydock-docker-build-gate-ubuntu_bionic
 
     post:
       jobs:
-        - airship-drydock-docker-publish
+        - airship-drydock-docker-publish-ubuntu_xenial
+        - airship-drydock-docker-publish-ubuntu_bionic
         - drydock-upload-git-mirror
 
 - nodeset:
@@ -69,7 +72,7 @@
       HTK_COMMIT: master
 
 - job:
-    name: airship-drydock-docker-build-gate
+    name: airship-drydock-docker-build-gate-ubuntu_xenial
     timeout: 1800
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node
@@ -78,12 +81,29 @@
       - '^charts/.*'
     vars:
       publish: false
+      distro: ubuntu_xenial
       tags:
         dynamic:
           patch_set: true
 
 - job:
-    name: airship-drydock-docker-publish
+    name: airship-drydock-docker-build-gate-ubuntu_bionic
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node
+    irrelevant-files:
+      - '^doc/.*'
+      - '^charts/.*'
+    vars:
+      publish: false
+      distro: ubuntu_bionic
+      tags:
+        dynamic:
+          patch_set: true
+
+
+- job:
+    name: airship-drydock-docker-publish-ubuntu_xenial
     timeout: 1800
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node
@@ -94,6 +114,27 @@
       - '^charts/.*'
     vars:
       publish: true
+      distro: ubuntu_xenial
+      tags:
+        dynamic:
+          branch: true
+          commit: true
+        static:
+          - latest
+
+- job:
+    name: airship-drydock-docker-publish-ubuntu_bionic
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node
+    secrets:
+      - airship_drydock_quay_creds
+    irrelevant-files:
+      - '^doc/.*'
+      - '^charts/.*'
+    vars:
+      publish: true
+      distro: ubuntu_bionic
       tags:
         dynamic:
           branch: true
