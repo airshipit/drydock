@@ -58,6 +58,10 @@ network:
         nginx.ingress.kubernetes.io/rewrite-target: /
 
 pod:
+  mandatory_access_control:
+    type: apparmor
+    drydock-api:
+      drydock-api: runtime/default
   security_context:
     drydock:
       pod:

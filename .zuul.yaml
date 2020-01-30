@@ -23,14 +23,12 @@
         - airship-drydock-chart-build-latest-htk
         - airship-drydock-docker-build-gate-ubuntu_xenial
         - airship-drydock-docker-build-gate-ubuntu_bionic
-
     gate:
       jobs:
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
         - airship-drydock-docker-build-gate-ubuntu_xenial
         - airship-drydock-docker-build-gate-ubuntu_bionic
-
     post:
       jobs:
         - airship-drydock-docker-publish-ubuntu_xenial
@@ -41,7 +39,7 @@
     name: airship-drydock-single-node
     nodes:
       - name: primary
-        label: ubuntu-xenial
+        label: ubuntu-bionic
 
 - job:
     name: airship-drydock-omni-test
@@ -49,7 +47,9 @@
       Run a set of lightweight lints and tests
       (pep8, Helm chart lint, Sphinx build, Python unit tests, Bandit scan)
     run: tools/gate/playbooks/omni_test.yaml
-    timeout: 900
+    required-projects:
+      - openstack/openstack-helm-infra
+    timeout: 3600
     nodeset: airship-drydock-single-node
 
 - job:
@@ -141,7 +141,6 @@
           commit: true
         static:
           - latest
-
 - secret:
     name: airship_drydock_quay_creds
     data:

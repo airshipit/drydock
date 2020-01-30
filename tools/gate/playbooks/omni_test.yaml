@@ -47,3 +47,10 @@
         target: run_drydock
       register: result
       become: true
+    - name: Setup Apparmor
+      shell: |
+        set -xe;
+        ./tools/deployment/apparmor/001-setup-apparmor-profiles.sh
+      args:
+        chdir: "{{ zuul.projects['opendev.org/openstack/openstack-helm-infra'].src_dir }}"
+        executable: /bin/bash
