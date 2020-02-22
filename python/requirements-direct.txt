@@ -5,7 +5,7 @@ falcon
 oslo.versionedobjects==1.23.0
 requests
 oauthlib
-uwsgi==2.0.15
+uwsgi==2.0.17.1
 pymongo==3.6.1
 oslo.config==5.2.0
 click==6.7
@@ -17,7 +17,7 @@ iso8601==0.1.11
 keystoneauth1==3.3.0
 alembic==0.8.2
 sqlalchemy==1.2.8
-psycopg2==2.7.3.1
+psycopg2-binary==2.8.4
 jsonschema==2.6.0
 jinja2==2.9.6
 ulid2==0.1.1
