@@ -48,7 +48,7 @@ pbr==4.2.0
 pip==18.0
 positional==1.2.1
 prettytable==0.7.2
-psycopg2==2.7.3.1
+psycopg2-binary==2.8.4
 PTable==0.9.2
 pycadf==2.8.0
 pycrypto==2.6.1
