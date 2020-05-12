@@ -102,8 +102,8 @@ class Interface(model_base.ResourceBase):
 
         :param subnet_id: MaaS resource id of the subnet
         """
-        for l in self.links:
-            if l.get('subnet_id', None) == subnet_id:
+        for link in self.links:
+            if link.get('subnet_id', None) == subnet_id:
                 return True
 
         return False
@@ -125,14 +125,14 @@ class Interface(model_base.ResourceBase):
                 (resp.status_code, resp.text))
 
     def unlink_subnet(self, subnet_id):
-        for l in self.links:
-            if l.get('subnet_id', None) == subnet_id:
+        for link in self.links:
+            if link.get('subnet_id', None) == subnet_id:
                 url = self.interpolate_url()
 
                 resp = self.api_client.post(
                     url,
                     op='unlink_subnet',
-                    files={'id': l.get('resource_id')})
+                    files={'id': link.get('resource_id')})
 
                 if not resp.ok:
                     raise errors.DriverError("Error unlinking subnet")
@@ -229,8 +229,8 @@ class Interface(model_base.ResourceBase):
 
         :return: true if this interface should respond to the IP, false otherwise
         """
-        for l in getattr(self, 'links', []):
-            if l.get('ip_address', None) == ip_address:
+        for link in getattr(self, 'links', []):
+            if link.get('ip_address', None) == ip_address:
                 return True
 
         return False
@@ -273,13 +273,13 @@ class Interface(model_base.ResourceBase):
 
         link_list = []
         if isinstance(refined_dict.get('links', None), list):
-            for l in refined_dict['links']:
-                if isinstance(l, dict):
-                    link = {'resource_id': l['id'], 'mode': l['mode']}
+            for link in refined_dict['links']:
+                if isinstance(link, dict):
+                    link = {'resource_id': link['id'], 'mode': link['mode']}
 
-                    if l.get('subnet', None) is not None:
-                        link['subnet_id'] = l['subnet']['id']
-                        link['ip_address'] = l.get('ip_address', None)
+                    if link.get('subnet', None) is not None:
+                        link['subnet_id'] = link['subnet']['id']
+                        link['ip_address'] = link.get('ip_address', None)
 
                     link_list.append(link)
 

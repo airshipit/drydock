@@ -417,7 +417,7 @@ class Machine(model_base.ResourceBase):
                     return True
 
                 raise errors.DriverError(
-                    "Failed updating power parameters MAAS url %s - return code %s\n%s"
+                    "Failed updating power parameters MAAS url %s - return code %s\n"
                     % (url, resp.status_code.resp.text))
 
     def reset_power_parameters(self):
@@ -440,7 +440,7 @@ class Machine(model_base.ResourceBase):
                 return True
 
             raise errors.DriverError(
-                "Failed updating power parameters MAAS url {} - return code {}\n{}"
+                "Failed updating power parameters MAAS url {} - return code {}\n"
                 .format(url, resp.status_code.resp.text))
 
     def update_identity(self, n, domain="local"):

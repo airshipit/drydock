@@ -207,8 +207,8 @@ class DesignsPartsResource(StatefulResource):
 
         part_catalog.extend([{
             'kind': 'NetworkLink',
-            'key': l.get_id()
-        } for l in design.network_links])
+            'key': link.get_id()
+        } for link in design.network_links])
 
         part_catalog.extend([{
             'kind': 'HostProfile',

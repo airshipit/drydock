@@ -544,8 +544,8 @@ class Orchestrator(object):
         """
         results = set()
         if len(lists) > 1:
-            for l in lists:
-                results = results.union(set(l))
+            for current_list in lists:
+                results = results.union(set(current_list))
             return list(results)
         elif len(lists) == 1:
             return list(set(lists[0]))

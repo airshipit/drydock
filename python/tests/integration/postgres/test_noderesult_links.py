@@ -81,5 +81,5 @@ class TestNodeResultLinks(object):
 
         assert len(links_list) > 0
 
-        for l in links_list:
-            assert str(task.task_id) in l
+        for link in links_list:
+            assert str(task.task_id) in link

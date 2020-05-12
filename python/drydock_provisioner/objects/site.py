@@ -222,9 +222,9 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
 
     def get_network_link(self, link_key):
         if self.network_links:
-            for l in self.network_links:
-                if l.get_id() == link_key:
-                    return l
+            for network_link in self.network_links:
+                if network_link.get_id() == link_key:
+                    return network_link
 
         raise errors.DesignError(
             "NetworkLink %s not found in design state" % link_key)

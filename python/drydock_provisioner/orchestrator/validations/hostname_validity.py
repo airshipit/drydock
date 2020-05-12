@@ -42,10 +42,10 @@ class HostnameValidity(Validators):
 
         for n in node_list:
             domain_labels = n.get_fqdn(site_design).split('.')
-            for l in domain_labels:
-                if not valid_label.fullmatch(l):
+            for domain_label in domain_labels:
+                if not valid_label.fullmatch(domain_label):
                     msg = "FQDN %s is invalid - label '%s' is invalid." % (
-                        n.get_fqdn(site_design), l)
+                        n.get_fqdn(site_design), domain_label)
                     self.report_error(
                         msg, [n.doc_ref],
                         "RFC 1035 requires each label in a DNS name to be <= 63 characters and contain "

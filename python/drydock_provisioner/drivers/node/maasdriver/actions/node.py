@@ -444,13 +444,13 @@ class CreateNetworkTemplate(BaseMaasAction):
         domains = maas_domain.Domains(self.maas_client)
         domains.refresh()
 
-        for l in design_links:
-            if l.metalabels is not None:
+        for design_link in design_links:
+            if design_link.metalabels is not None:
                 # TODO(sh8121att): move metalabels into config
-                if 'noconfig' in l.metalabels:
+                if 'noconfig' in design_link.metalabels:
                     self.logger.info(
                         "NetworkLink %s marked 'noconfig', skipping configuration including allowed networks."
-                        % (l.name))
+                        % (design_link.name))
                     continue
 
             fabrics_found = set()
@@ -460,17 +460,17 @@ class CreateNetworkTemplate(BaseMaasAction):
             # our design. This means all self-discovered networks that are matched
             # to a link need to all be part of the same fabric. Otherwise there is no
             # way to reconcile the discovered topology with the designed topology
-            for net_name in l.allowed_networks:
+            for net_name in design_link.allowed_networks:
                 n = site_design.get_network(net_name)
 
                 if n is None:
                     msg = "Network %s allowed on link %s, but not defined." % (
-                        net_name, l.name)
+                        net_name, design_link.name)
                     self.logger.warning(msg)
                     self.task.add_status_msg(
                         msg=msg,
                         error=True,
-                        ctx=l.name,
+                        ctx=design_link.name,
                         ctx_type='network_link')
                     continue
 
@@ -480,22 +480,22 @@ class CreateNetworkTemplate(BaseMaasAction):
                     fabrics_found.add(maas_net.fabric)
 
             if len(fabrics_found) > 1:
-                msg = "MaaS self-discovered network incompatible with NetworkLink %s" % l.name
+                msg = "MaaS self-discovered network incompatible with NetworkLink %s" % design_link.name
                 self.logger.warning(msg)
                 self.task.add_status_msg(
-                    msg=msg, error=True, ctx=l.name, ctx_type='network_link')
+                    msg=msg, error=True, ctx=design_link.name, ctx_type='network_link')
                 continue
             elif len(fabrics_found) == 1:
                 link_fabric_id = fabrics_found.pop()
                 link_fabric = fabrics.select(link_fabric_id)
-                link_fabric.name = l.name
+                link_fabric.name = design_link.name
                 link_fabric.update()
             else:
-                link_fabric = fabrics.singleton({'name': l.name})
+                link_fabric = fabrics.singleton({'name': design_link.name})
 
                 if link_fabric is None:
                     link_fabric = maas_fabric.Fabric(
-                        self.maas_client, name=l.name)
+                        self.maas_client, name=design_link.name)
                     link_fabric = fabrics.add(link_fabric)
 
             # Ensure that the MTU of the untagged VLAN on the fabric
@@ -504,14 +504,14 @@ class CreateNetworkTemplate(BaseMaasAction):
             vlan_list = maas_vlan.Vlans(
                 self.maas_client, fabric_id=link_fabric.resource_id)
             vlan_list.refresh()
-            msg = "Updating native VLAN MTU = %d on network link %s" % (l.mtu,
-                                                                        l.name)
+            msg = "Updating native VLAN MTU = %d on network link %s" % (design_link.mtu,
+                                                                        design_link.name)
             self.logger.debug(msg)
             self.task.add_status_msg(
-                msg=msg, error=False, ctx=l.name, ctx_type='network_link')
+                msg=msg, error=False, ctx=design_link.name, ctx_type='network_link')
             vlan = vlan_list.singleton({'vid': 0})
             if vlan:
-                vlan.mtu = l.mtu
+                vlan.mtu = design_link.mtu
                 vlan.update()
             else:
                 self.logger.warning("Unable to find native VLAN on fabric %s."
@@ -519,7 +519,7 @@ class CreateNetworkTemplate(BaseMaasAction):
 
             # Now that we have the fabrics sorted out, check
             # that VLAN tags and subnet attributes are correct
-            for net_name in l.allowed_networks:
+            for net_name in design_link.allowed_networks:
                 n = site_design.get_network(net_name)
                 design_networks.append(n)
 
@@ -551,7 +551,7 @@ class CreateNetworkTemplate(BaseMaasAction):
 
                         fabric_list = maas_fabric.Fabrics(self.maas_client)
                         fabric_list.refresh()
-                        fabric = fabric_list.singleton({'name': l.name})
+                        fabric = fabric_list.singleton({'name': design_link.name})
 
                         if fabric is not None:
                             vlan_list = maas_vlan.Vlans(
@@ -620,7 +620,7 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 ctx_type='network')
                         else:
                             msg = "Fabric %s should be created, but cannot locate it." % (
-                                l.name)
+                                design_link.name)
                             self.logger.error(msg)
                             self.task.add_status_msg(
                                 msg=msg,
