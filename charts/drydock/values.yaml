@@ -61,7 +61,18 @@ pod:
   mandatory_access_control:
     type: apparmor
     drydock-api:
+      init: runtime/default
       drydock-api: runtime/default
+    drydock-db-init:
+      init: runtime/default
+      drydock-db-init: runtime/default
+    drydock-db-sync:
+      init: runtime/default
+      drydock-db-sync: runtime/default
+    drydock-api-test:
+      drydock-api-test: runtime/default
+    drydock-auth-test:
+      drydock-auth-test: runtime/default
   security_context:
     drydock:
       pod:

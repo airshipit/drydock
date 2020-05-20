@@ -22,10 +22,11 @@ requests */}}
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ .Release.Name }}-auth-test"
+  name: drydock-auth-test
   annotations:
     helm.sh/hook: "test-success"
     {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
+{{ dict "envAll" $envAll "podName" "drydock-auth-test" "containerNames" (list "drydock-auth-test") | include "helm-toolkit.snippets.kubernetes_mandatory_access_control_annotation" | indent 4 }}
   labels:
 {{ tuple $envAll "drydock" "auth-test" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 4 }}
 spec:
@@ -33,7 +34,7 @@ spec:
   nodeSelector:
     {{ .Values.labels.test.node_selector_key }}: {{ .Values.labels.test.node_selector_value }}
   containers:
-    - name: "{{ .Release.Name }}-auth-test"
+    - name: drydock-auth-test
       env:
         - name: 'DRYDOCK_URL'
           value: {{ tuple "physicalprovisioner" "internal" "api" . | include "helm-toolkit.endpoints.host_and_port_endpoint_uri_lookup" | quote }}
