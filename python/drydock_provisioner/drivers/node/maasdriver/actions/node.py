@@ -1986,7 +1986,8 @@ class ApplyNodeStorage(BaseMaasAction):
                     storage_layout['layout_type'] = 'flat'
                     storage_layout['root_device'] = n.get_logicalname(
                         root_dev.name)
-                    storage_layout['root_size'] = root_block.size
+                    storage_layout['root_size'] = ApplyNodeStorage.calculate_bytes(
+                        root_block.size)
                 elif isinstance(root_block, hostprofile.HostVolume):
                     storage_layout['layout_type'] = 'lvm'
                     if len(root_dev.physical_devices) != 1:
@@ -1999,12 +2000,14 @@ class ApplyNodeStorage(BaseMaasAction):
                         continue
                     storage_layout['root_device'] = n.get_logicalname(
                         root_dev.physical_devices[0])
-                    storage_layout['root_lv_size'] = root_block.size
+                    storage_layout['root_lv_size'] = ApplyNodeStorage.calculate_bytes(
+                        root_block.size)
                     storage_layout['root_lv_name'] = root_block.name
                     storage_layout['root_vg_name'] = root_dev.name
 
                 if boot_block is not None:
-                    storage_layout['boot_size'] = boot_block.size
+                    storage_layout['boot_size'] = ApplyNodeStorage.calculate_bytes(
+                        boot_block.size)
 
                 msg = "Setting node %s root storage layout: %s" % (
                     n.name, str(storage_layout))
@@ -2190,9 +2193,12 @@ class ApplyNodeStorage(BaseMaasAction):
         Calculate the size as specified in size_str in the context of the provided
         blockdev or vg. Valid size_str format below.
 
-        #m or #M or #mb or #MB = # * 1024 * 1024
-        #g or #G or #gb or #GB = # * 1024 * 1024 * 1024
-        #t or #T or #tb or #TB = # * 1024 * 1024 * 1024 * 1024
+        #m or #M or #mb or #MB = # * 1000 * 1000
+        #g or #G or #gb or #GB = # * 1000 * 1000 * 1000
+        #t or #T or #tb or #TB = # * 1000 * 1000 * 1000 * 1000
+        #mi or #Mi or #mib or #MiB = # * 1024 * 1024
+        #gi or #Gi or #gib or #GiB = # * 1024 * 1024 * 1024
+        #ti or #Ti or #tib or #TiB = # * 1024 * 1024 * 1024 * 1024
         #% = Percentage of the total storage in the context
 
         Prepend '>' to the above to note the size as a minimum and the calculated size being the
@@ -2207,7 +2213,7 @@ class ApplyNodeStorage(BaseMaasAction):
                         size_str is interpreted in the context of this device
         :return size: The calculated size in bytes
         """
-        pattern = r'(>?)(\d+)([mMbBgGtT%]{1,2})'
+        pattern = r'(>?)(\d+)([mMbBgGtTi%]{1,3})'
         regex = re.compile(pattern)
         match = regex.match(size_str)
 
@@ -2228,10 +2234,16 @@ class ApplyNodeStorage(BaseMaasAction):
             computed_size = base_size * (1000 * 1000 * 1000)
         elif match.group(3) in ['t', 'T', 'tb', 'TB']:
             computed_size = base_size * (1000 * 1000 * 1000 * 1000)
+        elif match.group(3) in ['mi', 'Mi', 'mib', 'MiB']:
+            computed_size = base_size * (1024 * 1024)
+        elif match.group(3) in ['gi', 'Gi', 'gib', 'GiB']:
+            computed_size = base_size * (1024 * 1024 * 1024)
+        elif match.group(3) in ['ti', 'Ti', 'tib', 'TiB']:
+            computed_size = base_size * (1024 * 1024 * 1024 * 1024)
         elif match.group(3) == '%':
             computed_size = math.floor((base_size / 100) * int(context.size))
 
-        if computed_size > int(context.available_size):
+        if context and computed_size > int(context.available_size):
             raise errors.NotEnoughStorage()
 
         if match.group(1) == '>':

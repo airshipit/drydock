@@ -599,6 +599,9 @@ parts:
     * m|M|mb|MB: Megabytes or 10^6 * the numeric
     * g|G|gb|GB: Gigabytes or 10^9 * the numeric
     * t|T|tb|TB: Terabytes or 10^12 * the numeric
+    * mi|Mi|mib|MiB: Mebibytes or 2^20 * the numeric
+    * gi|Gi|gib|GiB: Gibibytes or 2^30 * the numeric
+    * ti|Ti|tib|TiB: Tibibytes or 2^40 * the numeric
     * %: The percentage of total device or volume group space
 
 Volume Groups and Logical Volumes
