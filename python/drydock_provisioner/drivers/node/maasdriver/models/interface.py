@@ -273,13 +273,13 @@ class Interface(model_base.ResourceBase):
 
         link_list = []
         if isinstance(refined_dict.get('links', None), list):
-            for link in refined_dict['links']:
-                if isinstance(link, dict):
-                    link = {'resource_id': link['id'], 'mode': link['mode']}
+            for li in refined_dict['links']:
+                if isinstance(li, dict):
+                    link = {'resource_id': li['id'], 'mode': li['mode']}
 
-                    if link.get('subnet', None) is not None:
-                        link['subnet_id'] = link['subnet']['id']
-                        link['ip_address'] = link.get('ip_address', None)
+                    if li.get('subnet', None) is not None:
+                        link['subnet_id'] = li['subnet']['id']
+                        link['ip_address'] = li.get('ip_address', None)
 
                     link_list.append(link)
 
