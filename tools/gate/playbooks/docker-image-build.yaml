@@ -47,10 +47,13 @@
           with_items:
             - docker.io
             - python-pip
+            - python-setuptools
+            - python3-setuptools
           when: ansible_os_family == 'Debian'
         - pip:
             name: docker
             version: 2.7.0
+            executable: pip
       become: True
 
     - name: Make images
