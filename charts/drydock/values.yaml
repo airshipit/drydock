@@ -79,8 +79,36 @@ pod:
         runAsUser: 65534
       container:
         drydock_api:
-          allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+    db_init:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_db_init:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+    db_sync:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_db_sync:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+    api_test:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_api_test:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+    auth_test:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_auth_test:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
   lifecycle:
     upgrades:
       deployments:
