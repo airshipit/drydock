@@ -642,35 +642,55 @@ class Orchestrator(object):
         :param site_design: a populated instance of objects.SiteDesign
         """
         self.logger.info("Rendering routes for network route domains.")
-        if site_design.networks is not None:
-            routedomains = dict()
-            for n in site_design.networks:
-                if n.routedomain is not None:
-                    if n.routedomain not in routedomains:
-                        self.logger.debug("Adding routedomain %s to render map."
-                                          % n.routedomain)
-                        routedomains[n.routedomain] = list()
-                    routedomains[n.routedomain].append(n)
-            for rd, nl in routedomains.items():
-                rd_cidrs = [n.cidr for n in nl]
-                self.logger.debug("Target CIDRs for routedomain %s: %s" %
-                                  (rd, ','.join(rd_cidrs)))
+        if 'networks' in site_design:
+            if site_design.networks is not None:
+                routedomains = dict()
                 for n in site_design.networks:
-                    gw = None
-                    metric = None
-                    for r in n.routes:
-                        if 'routedomain' in r and r.get('routedomain',
-                                                        None) == rd:
-                            gw = r.get('gateway')
-                            metric = r.get('metric')
-                            self.logger.debug(
-                                "Use gateway %s for routedomain %s on network %s."
-                                % (gw, rd, n.get_name()))
-                            break
-                    if gw is not None and metric is not None:
-                        for cidr in rd_cidrs:
-                            if cidr != n.cidr:
-                                n.routes.append(
-                                    dict(
-                                        subnet=cidr, gateway=gw,
-                                        metric=metric))
+                    if 'routedomain' in n:
+                        if n.routedomain is not None:
+                            if n.routedomain not in routedomains:
+                                self.logger.debug(
+                                    "Adding routedomain %s to render "
+                                    "map." % n.routedomain)
+                                routedomains[n.routedomain] = list()
+                            routedomains[n.routedomain].append(n)
+                    else:
+                        msg = "Invalid network model: {}. Cannot find "\
+                            "routedomain field in network: {}.".format(
+                                n.name, n.url)
+                        raise errors.OrchestratorError(msg)
+                for rd, nl in routedomains.items():
+                    rd_cidrs = [n.cidr for n in nl]
+                    self.logger.debug("Target CIDRs for routedomain "
+                                      "%s: %s" % (rd, ','.join(rd_cidrs)))
+                    for n in site_design.networks:
+                        gw = None
+                        metric = None
+                        if 'routes' in n and n.routes is not None:
+                            for r in n.routes:
+                                if 'routedomain' in r and r.get('routedomain',
+                                                                None) == rd:
+                                    gw = r.get('gateway')
+                                    metric = r.get('metric')
+                                    self.logger.debug(
+                                        "Use gateway %s for routedomain %s "
+                                        "on network %s." % (gw, rd,
+                                                            n.get_name()))
+                                    break
+                            if gw is not None and metric is not None:
+                                for cidr in rd_cidrs:
+                                    if cidr != n.cidr:
+                                        n.routes.append(
+                                            dict(
+                                                subnet=cidr, gateway=gw,
+                                                metric=metric))
+                        else:
+                            msg = "Invalid network model: {}. Cannot find " \
+                                "routes field in network with routedomain: " \
+                                "{}.".format(n.name, n.url)
+                            self.logger.error(msg)
+
+        else:
+            msg = "Invalid site_design model. Cannot find networks field in " \
+                "site_design."
+            self.logger.error(msg)
