@@ -1,3 +1,4 @@
+import pylibyaml  # noqa: F401  # patch pyyaml to use libyaml bindings
 import yaml
 import jsonschema
 import pkg_resources

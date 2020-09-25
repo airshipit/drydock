@@ -1,4 +1,5 @@
-PyYAML==5.1
+pylibyaml~=0.1
+PyYAML~=5.3.1
 pyghmi==1.0.18
 netaddr
 falcon
