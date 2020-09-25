@@ -34,8 +34,23 @@ RUN echo "deb  ${UBUNTU_REPO} bionic main restricted universe multiverse" > /etc
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
 WORKDIR /tmp/drydock
-RUN ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient; \
-    rm -r /var/lib/apt/lists/*
+RUN ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
+
+# Build LibYAML
+ARG LIBYAML_VERSION=0.2.5
+RUN set -ex \
+    && apt install -y git automake make libtool \
+    && git clone https://github.com/yaml/libyaml.git \
+    && cd libyaml \
+    && git checkout $LIBYAML_VERSION \
+    && ./bootstrap \
+    && ./configure \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -fr libyaml
+
+RUN rm -r /var/lib/apt/lists/*
 
 
 FROM ${FROM}
@@ -71,6 +86,11 @@ COPY ./hostdeps.sh /tmp/drydock
 WORKDIR /tmp/drydock
 RUN ./hostdeps.sh; \
     rm -r /var/lib/apt/lists/*
+
+# Install LibYAML
+ENV LD_LIBRARY_PATH=/usr/local/lib
+COPY --from=baclient_builder /usr/local/lib /usr/local/lib
+COPY --from=baclient_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
 
 COPY ./python/requirements-lock.txt /tmp/drydock/
 RUN pip3 install \
