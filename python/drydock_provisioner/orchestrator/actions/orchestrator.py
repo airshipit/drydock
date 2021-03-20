@@ -52,7 +52,7 @@ class BaseAction(object):
         """
         task_futures = dict()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as te:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=64) as te:
             for t in subtask_id_list:
                 task_futures[t.bytes] = te.submit(fn, t, *args, **kwargs)
 
@@ -76,7 +76,7 @@ class BaseAction(object):
                     self.task.get_id()))
             split_tasks = dict()
 
-            with concurrent.futures.ThreadPoolExecutor() as te:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=64) as te:
                 for n in target_nodes:
                     split_task = self.orchestrator.create_task(
                         design_ref=self.task.design_ref,

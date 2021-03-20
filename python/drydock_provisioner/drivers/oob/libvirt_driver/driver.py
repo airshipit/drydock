@@ -90,7 +90,7 @@ class LibvirtDriver(oob_driver.OobDriver):
 
         target_nodes = self.orchestrator.get_target_nodes(task)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as e:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=64) as e:
             subtask_futures = dict()
             for n in target_nodes:
                 sub_nf = self.orchestrator.create_nodefilter_from_nodelist([n])

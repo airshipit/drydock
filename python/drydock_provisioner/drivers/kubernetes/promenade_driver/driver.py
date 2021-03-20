@@ -81,7 +81,7 @@ class PromenadeDriver(KubernetesDriver):
             else:
                 target_nodes = self.orchestrator.get_target_nodes(task)
 
-            with concurrent.futures.ThreadPoolExecutor() as e:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=64) as e:
                 subtask_futures = dict()
                 for n in target_nodes:
                     prom_client = PromenadeClient()

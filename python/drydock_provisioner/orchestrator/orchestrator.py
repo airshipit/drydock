@@ -129,7 +129,7 @@ class Orchestrator(object):
 
         # Loop trying to claim status as the active orchestrator
 
-        tp = concurrent.futures.ThreadPoolExecutor(max_workers=16)
+        tp = concurrent.futures.ThreadPoolExecutor(max_workers=64)
 
         while True:
             if self.stop_flag:
