@@ -10,7 +10,7 @@ contextlib2==0.5.5
 debtcollector==1.20.0
 defusedxml==0.5.0
 dnspython==1.15.0
-eventlet==0.24.1
+eventlet==0.31.0
 falcon==1.4.1
 fasteners==0.14.1
 futurist==1.7.0
