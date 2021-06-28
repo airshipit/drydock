@@ -23,6 +23,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: drydock-api
+  labels:
+{{ $labels | indent 4 }}
   annotations:
     {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
 spec:
