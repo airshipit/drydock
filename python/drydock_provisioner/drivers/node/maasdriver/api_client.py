@@ -17,6 +17,8 @@ import logging
 
 from oauthlib import oauth1
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 import requests.auth as req_auth
 import base64
 
@@ -58,8 +60,18 @@ class MaasRequestFactory(object):
         self.base_url = base_url + "/api/2.0/"
         self.apikey = apikey
 
+        # Adapter for maas for request retries
+        retry_strategy = Retry(
+            total=3,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=["HEAD", "GET", "POST", "PUT", "DELETE",
+                              "OPTIONS", "TRACE"]
+        )
+        self.maas_adapter = HTTPAdapter(max_retries=retry_strategy)
+
         self.signer = MaasOauth(apikey)
         self.http_session = requests.Session()
+        self.http_session.mount(self.base_url, self.maas_adapter)
 
         # TODO(sh8121att) Get logger name from config
         self.logger = logging.getLogger('drydock')
@@ -160,7 +172,7 @@ class MaasRequestFactory(object):
         # TODO(sh8121att) timeouts should be configurable
         timeout = kwargs.pop('timeout', None)
         if timeout is None:
-            timeout = (2, 30)
+            timeout = (5, 60)
 
         request = requests.Request(
             method=method,

@@ -151,10 +151,10 @@ class MaasNodeDriver(NodeDriver):
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=16) as e:
                 subtask_futures = dict()
+                maas_client = MaasRequestFactory(
+                    config.config_mgr.conf.maasdriver.maas_api_url,
+                    config.config_mgr.conf.maasdriver.maas_api_key)
                 for n in target_nodes:
-                    maas_client = MaasRequestFactory(
-                        config.config_mgr.conf.maasdriver.maas_api_url,
-                        config.config_mgr.conf.maasdriver.maas_api_key)
                     nf = self.orchestrator.create_nodefilter_from_nodelist([n])
                     subtask = self.orchestrator.create_task(
                         design_ref=task.design_ref,
