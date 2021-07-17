@@ -160,7 +160,7 @@ class MaasRequestFactory(object):
                                              part_headers)))
             kwargs['files'] = files_tuples
 
-        params = kwargs.get('params', None)
+        params = kwargs.pop('params', None)
 
         if params is None and 'op' in kwargs.keys():
             params = {'op': kwargs.pop('op')}

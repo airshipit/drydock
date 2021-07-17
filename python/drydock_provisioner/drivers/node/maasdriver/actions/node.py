@@ -249,8 +249,7 @@ class DestroyNode(BaseMaasAction):
         :return: None
         """
         try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            maas_machine.Machines(self.maas_client).empty_refresh()
         except Exception as ex:
             self.logger.warning("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -1092,7 +1091,7 @@ class IdentifyNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = find_node_in_maas(self.maas_client, n)
+                machine = find_node_in_maas(self.maas_client, n, probably_exists=False)
                 if machine is None:
                     self.task.failure(focus=n.get_id())
                     self.task.add_status_msg(
@@ -1147,8 +1146,7 @@ class ConfigureHardware(BaseMaasAction):
 
     def start(self):
         try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            maas_machine.Machines(self.maas_client).empty_refresh()
         except Exception as ex:
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -1334,8 +1332,7 @@ class ApplyNodeNetworking(BaseMaasAction):
 
     def start(self):
         try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            maas_machine.Machines(self.maas_client).empty_refresh()
 
             fabrics = maas_fabric.Fabrics(self.maas_client)
             fabrics.refresh()
@@ -1702,8 +1699,7 @@ class ApplyNodePlatform(BaseMaasAction):
 
     def start(self):
         try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            maas_machine.Machines(self.maas_client).empty_refresh()
 
             tag_list = maas_tag.Tags(self.maas_client)
             tag_list.refresh()
@@ -1890,8 +1886,7 @@ class ApplyNodeStorage(BaseMaasAction):
 
     def start(self):
         try:
-            machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            maas_machine.Machines(self.maas_client).empty_refresh()
         except Exception as ex:
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -2259,7 +2254,7 @@ class DeployNode(BaseMaasAction):
     def start(self):
         try:
             machine_list = maas_machine.Machines(self.maas_client)
-            machine_list.refresh()
+            machine_list.empty_refresh()
         except Exception as ex:
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -2462,25 +2457,28 @@ class DeployNode(BaseMaasAction):
 
         return
 
-def find_node_in_maas(maas_client, node_model):
+def find_node_in_maas(maas_client, node_model, probably_exists=True):
     """Find a node in MAAS matching the node_model.
 
-    Note that the returned Machine may be a simple Machine or
-    a RackController.
+    Note that the returned Machine may be a simple Machine or a RackController.
+
+    The ``probably_exists`` parameter provides a hint that can reduce the
+    number of MAAS API calls generated, but does not affect whether or not the
+    machine will ultimately be found.
 
     :param maas_client: instance of an active session to MAAS
     :param node_model: instance of objects.Node to match
+    :param probably_exists: whether the machine is likely to exist in MAAS with
+                            the correct hostname
     :returns: instance of maasdriver.models.Machine
     """
 
     machine_list = maas_machine.Machines(maas_client)
-    machine_list.refresh()
-    machine = machine_list.identify_baremetal_node(node_model)
+    machine = machine_list.identify_baremetal_node(node_model, probably_exists)
 
     if not machine:
         # If node isn't found a normal node, check rack controllers
         rackd_list = maas_rack.RackControllers(maas_client)
-        rackd_list.refresh()
-        machine = rackd_list.identify_baremetal_node(node_model)
+        machine = rackd_list.identify_baremetal_node(node_model, probably_exists)
 
     return machine

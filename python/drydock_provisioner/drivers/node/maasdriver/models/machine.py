@@ -532,7 +532,7 @@ class Machines(model_base.ResourceCollectionBase):
 
         :param node_name: The hostname of a node to acquire
         """
-        self.refresh()
+        self.refresh(params={'hostname': node_name})
 
         node = self.singleton({'hostname': node_name})
 
@@ -563,16 +563,35 @@ class Machines(model_base.ResourceCollectionBase):
         return node
 
     def identify_baremetal_node(self,
-                                node_model):
+                                node_model,
+                                probably_exists=True):
         """Find MaaS node resource matching Drydock BaremetalNode.
 
-        Search all the defined MaaS Machines and attempt to match
-        one against the provided Drydock BaremetalNode model. Update
-        the MaaS instance with the correct hostname
+        Performs one or more queries to the MaaS API to find a Machine matching
+        the provided Drydock BaremetalNode model, in the following order, and
+        returns the first match found:
 
-        :param node_model: Instance of objects.node.BaremetalNode to search MaaS for matching resource
+        1. If ``probably_exists`` is True, queries by hostname:
+                GET /MAAS/api/2.0/machines/?hostname={hostname}
+        2a. For ipmi or redfish, looks for a matching BMC address:
+                GET /MAAS/api/2.0/machines/?op=power_parameters
+            and if a matching system_id is found:
+                GET /MAAS/api/2.0/machines/{system_id}/
+        2b. For virsh, queries by mac address:
+            GET /MAAS/api/2.0/machines/?mac_address={mac_address}
+
+        :param node_model: Instance of objects.node.BaremetalNode to search
+                           MaaS for matching resource
+        :param probably_exists: whether the machine is likely to exist in MAAS
+                                with the correct hostname
+        :returns: instance of maasdriver.models.Machine
         """
         maas_node = None
+
+        if probably_exists:
+            maas_node = self.find_node_with_hostname(node_model.name)
+            if maas_node:
+                return maas_node
 
         if node_model.oob_type == 'ipmi' or node_model.oob_type == 'redfish':
             node_oob_network = node_model.oob_parameters['network']
@@ -582,27 +601,10 @@ class Machines(model_base.ResourceCollectionBase):
                 self.logger.warn("Node model missing OOB IP address")
                 raise ValueError('Node model missing OOB IP address')
 
-            try:
-                self.collect_power_params()
-
-                maas_node = self.singleton({
-                    'power_params.power_address':
-                    node_oob_ip
-                })
-            except ValueError:
-                self.logger.info(
-                    "Error locating matching MaaS resource for OOB IP %s" %
-                    (node_oob_ip))
-                return None
+            maas_node = self.find_node_with_power_address(node_oob_ip)
         else:
             # Use boot_mac for node's not using IPMI
-            nodes = self.find_nodes_with_mac(node_model.boot_mac)
-
-            if len(nodes) == 1:
-                maas_node = nodes[0]
-            else:
-                self.logger.debug("Error: Found %d nodes with MAC %s", len(nodes), node_model.boot_mac)
-                maas_node = None
+            maas_node = self.find_node_with_mac(node_model.boot_mac)
 
         if maas_node is None:
             self.logger.info(
@@ -613,13 +615,105 @@ class Machines(model_base.ResourceCollectionBase):
 
         return maas_node
 
-    def find_nodes_with_mac(self, mac_address):
-        """Find a list of nodes that own a NIC with ``mac_address``"""
-        node_list = []
-        for n in self.resources.values():
-            if n.interface_for_mac(mac_address):
-                node_list.append(n)
-        return node_list
+    def find_node_with_hostname(self, hostname):
+        """Find the first maching node with hostname ``hostname``"""
+        url = self.interpolate_url()
+        # query the MaaS API for machines with a matching mac address.
+        # this call returns a json list, each member representing a complete
+        # Machine
+        self.logger.debug(
+            "Finding {} with hostname: {}".format(
+                self.collection_resource.__name__, hostname
+            )
+        )
+
+        resp = self.api_client.get(url, params={"hostname": hostname})
+
+        if resp.status_code == 200:
+            json_list = resp.json()
+
+            for node in json_list:
+                # construct a Machine from the first API result and return it
+                self.logger.debug(
+                    "Finding {} with hostname: {}: Found: {}: {}".format(
+                        self.collection_resource.__name__,
+                        hostname,
+                        node.get("system_id"),
+                        node.get("hostname"),
+                    )
+                )
+                return self.collection_resource.from_dict(self.api_client, node)
+
+        return None
+
+    def find_node_with_power_address(self, power_address):
+        """Find the first matching node that has a BMC with IP ``power_address``"""
+        url = self.interpolate_url()
+        # query the MaaS API for all power parameters at once.
+        # this call returns a json dict, mapping system id to power parameters
+
+        self.logger.debug(
+            "Finding {} with power address: {}".format(
+                self.collection_resource.__name__, power_address
+            )
+        )
+
+        resp = self.api_client.get(url, op="power_parameters")
+
+        if resp.status_code == 200:
+            json_dict = resp.json()
+
+            for system_id, power_params in json_dict.items():
+                self.logger.debug(
+                    "Finding {} with power address: {}: Considering: {}: {}".format(
+                        self.collection_resource.__name__,
+                        power_address,
+                        system_id,
+                        power_params.get("power_address"),
+                    )
+                )
+                if power_params.get("power_address") == power_address:
+                    self.logger.debug(
+                        "Finding {} with power address: {}: Found: {}: {}".format(
+                            self.collection_resource.__name__,
+                            power_address,
+                            system_id,
+                            power_params.get("power_address"),
+                        )
+                    )
+
+                    # the API result isn't quite enough to contruct a Machine,
+                    # so construct one with the system_id and then refresh
+                    res = self.collection_resource(
+                        self.api_client,
+                        resource_id=system_id,
+                        power_parameters=power_params,
+                    )
+                    res.refresh()
+                    return res
+
+        return None
+
+    def find_node_with_mac(self, mac_address):
+        """Find the first maching node that own a NIC with ``mac_address``"""
+        url = self.interpolate_url()
+        # query the MaaS API for machines with a matching mac address.
+        # this call returns a json list, each member representing a complete
+        # Machine
+        resp = self.api_client.get(url, params={'mac_address': mac_address})
+
+        if resp.status_code == 200:
+            json_list = resp.json()
+
+            # if len(json_list) > 1:
+            #     # XXX: is this check worth it? maybe we ignore
+            #     raise ValueError('Multiple machines found with mac_address: {}'.format(mac_address))
+
+            for o in json_list:
+                # construct a Machine from the first API result and return it
+                return self.collection_resource.from_dict(self.api_client, o)
+
+        return None
 
     def query(self, query):
         """Custom query method to deal with complex fields."""
@@ -658,3 +752,10 @@ class Machines(model_base.ResourceCollectionBase):
 
         raise errors.DriverError("Failed updating MAAS url %s - return code %s"
                                  % (url, resp.status_code))
+
+    def empty_refresh(self):
+        """Check connectivity to MAAS machines API
+
+        Sends a valid query that should return an empty list of machines
+        """
+        self.refresh(params={'mac_address': '00:00:00:00:00:00'})

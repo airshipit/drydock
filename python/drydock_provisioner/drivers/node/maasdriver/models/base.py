@@ -233,9 +233,9 @@ class ResourceCollectionBase(object):
     Initialize or refresh the collection list from MaaS
     """
 
-    def refresh(self):
+    def refresh(self, **kwargs):
         url = self.interpolate_url()
-        resp = self.api_client.get(url)
+        resp = self.api_client.get(url, **kwargs)
 
         if resp.status_code == 200:
             self.resource = {}
