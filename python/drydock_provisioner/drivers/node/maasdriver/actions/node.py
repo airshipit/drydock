@@ -1100,7 +1100,11 @@ class IdentifyNode(BaseMaasAction):
                         ctx=n.name,
                         ctx_type='node')
                 elif type(machine) == maas_machine.Machine:
-                    machine.update_identity(n, domain=n.get_domain(site_design))
+                    machine.update_identity(
+                        n,
+                        domain=n.get_domain(site_design),
+                        use_node_oob_params=config.config_mgr.conf.maasdriver.use_node_oob_params,
+                    )
                     msg = "Node %s identified in MaaS" % n.name
                     self.logger.debug(msg)
                     self.task.add_status_msg(
@@ -1199,7 +1203,9 @@ class ConfigureHardware(BaseMaasAction):
                         self.logger.debug(
                             "Located node %s in MaaS, starting commissioning" %
                             (n.name))
-                        machine.commission()
+                        machine.commission(
+                            skip_bmc_config=config.config_mgr.conf.maasdriver.skip_bmc_config
+                        )
 
                         # Poll machine status
                         attempts = 0

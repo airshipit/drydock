@@ -274,17 +274,21 @@ class Machine(model_base.ResourceBase):
             self.logger.debug("MaaS response: %s" % resp.text)
             raise errors.DriverError(brief_msg)
 
-    def commission(self, debug=False):
+    def commission(self, debug=False, skip_bmc_config=False):
         """Start the MaaS commissioning process.
 
         :param debug: If true, enable ssh on the node and leave it power up after commission
+        :param skip_bmc_config: If true, skip re-configuration of the BMC for IPMI based machines
         """
         url = self.interpolate_url()
 
         # If we want to debug this node commissioning, enable SSH
         # after commissioning and leave the node powered up
 
-        options = {'enable_ssh': '1' if debug else '0'}
+        options = {
+            'enable_ssh': '1' if debug else '0',
+            'skip_bmc_config': '1' if skip_bmc_config else '0',
+        }
 
         resp = self.api_client.post(url, op='commission', files=options)
 
@@ -409,8 +413,22 @@ class Machine(model_base.ResourceBase):
                 for k, v in kwargs.items():
                     power_params['power_parameters_' + k] = v
 
-                self.logger.debug("Updating node %s power parameters: %s" %
-                                  (self.hostname, str(power_params)))
+                self.logger.debug(
+                    "Updating node %s power parameters: %s"
+                    % (
+                        self.hostname,
+                        str(
+                            {
+                                **power_params,
+                                **{
+                                    k: "<redacted>"
+                                    for k in power_params
+                                    if k in ["power_parameters_power_pass"]
+                                },
+                            }
+                        ),
+                    )
+                )
                 resp = self.api_client.put(url, files=power_params)
 
                 if resp.status_code == 200:
@@ -443,11 +461,13 @@ class Machine(model_base.ResourceBase):
                 "Failed updating power parameters MAAS url {} - return code {}\n"
                 .format(url, resp.status_code.resp.text))
 
-    def update_identity(self, n, domain="local"):
+    def update_identity(self, n, domain="local", use_node_oob_params=False):
         """Update this node's identity based on the Node object ``n``
 
         :param objects.Node n: The Node object to use as reference
         :param str domain: The DNS domain to register this node under
+        :param bool use_node_oob_params: If true, overwrite the discovered OOB params (type and creds)
+                    with those in the Node object. Applies to compatible types (i.e. ipmi and redfish)
         """
         try:
             self.hostname = n.name
@@ -462,6 +482,21 @@ class Machine(model_base.ResourceBase):
                     'virsh',
                     power_address=oob_params.get('libvirt_uri'),
                     power_id=n.name)
+            elif use_node_oob_params and (n.oob_type == "ipmi" or n.oob_type == "redfish"):
+                self.logger.debug(
+                    "Updating node {} MaaS power parameters for {}.".format(
+                        n.name, n.oob_type
+                    )
+                )
+                oob_params = n.oob_parameters
+                oob_network = oob_params.get("network")
+                oob_address = n.get_network_address(oob_network)
+                self.set_power_parameters(
+                    n.oob_type,
+                    power_address=oob_address,
+                    power_user=oob_params.get("account"),
+                    power_pass=oob_params.get("credential"),
+                )
             self.logger.debug("Updated MaaS resource %s hostname to %s" %
                               (self.resource_id, n.name))
         except Exception as ex:

@@ -49,6 +49,16 @@ class MaasNodeDriver(NodeDriver):
             'maas_api_key', help='The API key for accessing MaaS',
             secret=True),
         cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
+        cfg.BoolOpt(
+            'use_node_oob_params',
+            default=False,
+            help='Update MAAS to use the provided Node OOB params, overwriting discovered values',
+        ),
+        cfg.BoolOpt(
+            'skip_bmc_config',
+            default=False,
+            help='Skip BMC reconfiguration during commissioning (requires MAAS 2.7+)',
+        ),
         cfg.IntOpt(
             'poll_interval',
             default=10,

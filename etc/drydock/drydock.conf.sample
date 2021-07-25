@@ -55,6 +55,9 @@
 # Authentication URL (string value)
 #auth_url = <None>
 
+# Scope for system operations (string value)
+#system_scope = <None>
+
 # Domain ID to scope to (string value)
 #domain_id = <None>
 
@@ -295,6 +298,14 @@
 # The URL for accessing MaaS API (string value)
 #maas_api_url = <None>
 
+# Update MAAS to use the provided Node OOB params, overwriting discovered values
+# (boolean value)
+#use_node_oob_params = false
+
+# Skip BMC reconfiguration during commissioning (requires MAAS 2.7+) (boolean
+# value)
+#skip_bmc_config = false
+
 # Polling interval for querying MaaS status in seconds (integer value)
 #poll_interval = 10
 
@@ -376,13 +387,16 @@
 # From drydock_provisioner
 #
 
-# Maximum number of connection retries to Redfish server
-#max_retries = 5
+# Maximum number of connection retries to Redfish server (integer value)
+# Minimum value: 1
+#max_retries = 10
 
-# Maximum reties to wait for power state change
+# Maximum reties to wait for power state change (integer value)
+# Minimum value: 1
 #power_state_change_max_retries = 18
 
-# Polling interval in seconds between retries for power state change
+# Polling interval in seconds between retries for power state change (integer
+# value)
 #power_state_change_retry_interval = 10
 
 # Use SSL to communicate with Redfish API server (boolean value)
