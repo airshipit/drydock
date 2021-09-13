@@ -28,7 +28,7 @@
             msg: "{{ tags | to_json }}"
 
     - name: Determine tags
-      shell: echo '{{ tags | to_json }}' | python {{ zuul.project.src_dir }}/tools/image_tags.py
+      shell: echo '{{ tags | to_json }}' | python3 {{ zuul.project.src_dir }}/tools/image_tags.py
       environment:
         BRANCH: "{{ zuul.branch | default('') }}"
         CHANGE: "{{ zuul.change | default('') }}"
@@ -46,14 +46,13 @@
             name: "{{ item }}"
           with_items:
             - docker.io
-            - python-pip
-            - python-setuptools
+            - python3-pip
             - python3-setuptools
           when: ansible_os_family == 'Debian'
         - pip:
             name: docker
             version: 2.7.0
-            executable: pip
+            executable: pip3
       become: True
 
     - name: Make images
@@ -77,6 +76,9 @@
 
     - name: Publish images
       block:
+        - pip:
+            name: requests
+            executable: pip3
         - docker_login:
             username: "{{ airship_drydock_quay_creds.username }}"
             password: "{{ airship_drydock_quay_creds.password }}"
