@@ -1,6 +1,6 @@
 alembic==0.8.2
 amqp==2.6.0
-Babel==2.6.0
+Babel==2.9.1
 Beaker==1.9.1
 cachetools==2.1.0
 certifi==2018.8.24
