@@ -28,7 +28,7 @@ data:
           type: 'string'
         account:
           type: 'string'
-        credetial:
+        credential:
           type: 'string'
       additionalProperties: true
     storage:
