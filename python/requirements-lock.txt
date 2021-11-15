@@ -45,7 +45,7 @@ oslo.versionedobjects==1.23.0
 Paste==2.0.3
 PasteDeploy==1.5.2
 pbr==5.4.5
-pip==18.0
+pip==21.1
 positional==1.2.1
 prettytable==0.7.2
 psycopg2-binary==2.8.4
