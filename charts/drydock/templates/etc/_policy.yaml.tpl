@@ -34,6 +34,10 @@
 # POST  /api/v1.0/tasks
 #"physical_provisioner:destroy_node": "role:admin"
 
+# Deletes tasks by age
+# DELETE  /api/v1.0/tasks
+#"physical_provisioner:delete_tasks": "role:admin"
+
 # Read loaded design data
 # GET  /api/v1.0/designs
 # GET  /api/v1.0/designs/{design_id}

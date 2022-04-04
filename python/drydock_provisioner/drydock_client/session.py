@@ -144,6 +144,34 @@ class DrydockSession(object):
 
         return resp
 
+    def delete(self, endpoint, query=None, timeout=None):
+        """
+        Send a DELETE request to Drydock. If both body and data are specified,
+        body will will be used.
+
+        :param string endpoint: The URL string following the hostname and API prefix
+        :param dict query: A dict of k, v pairs to add to the query string
+        :param timeout: A single or tuple value for connect, read timeout.
+            A single value indicates the read timeout only
+        :return: A requests.Response object
+        """
+
+        auth_refresh = False
+        while True:
+            url = self.base_url + endpoint
+            self.logger.debug('DELETE ' + url)
+            self.logger.debug('Query Params: ' + str(query))
+            resp = self.__session.delete(
+                url, params=query, timeout=self._timeout(timeout))
+
+            if resp.status_code == 401 and not auth_refresh:
+                self.set_auth()
+                auth_refresh = True
+            else:
+                break
+
+        return resp
+
     def _timeout(self, timeout=None):
         """Calculate the default timeouts for this session
 

@@ -20,6 +20,7 @@ from drydock_provisioner.cli.task.actions import TaskList
 from drydock_provisioner.cli.task.actions import TaskShow
 from drydock_provisioner.cli.task.actions import TaskCreate
 from drydock_provisioner.cli.task.actions import TaskBuildData
+from drydock_provisioner.cli.task.actions import TasksDelete
 
 
 @click.group()
@@ -130,3 +131,15 @@ def task_builddata(ctx, task_id=None, output='yaml'):
         click.echo(
             yaml.safe_dump(
                 task_bd, allow_unicode=True, default_flow_style=False))
+
+
+@task.command(name='delete')
+@click.option('--days', '-d', help='The required number of days to retain tasks')
+@click.pass_context
+def task_delete(ctx, days=None):
+    """Delete tasks from database"""
+    if not days:
+        ctx.fail('The number of days must be specified using --days or -d')
+
+    click.echo(
+        TasksDelete(ctx.obj['CLIENT'], days=days).invoke())

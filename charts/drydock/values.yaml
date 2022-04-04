@@ -36,6 +36,7 @@ images:
     ks_service: docker.io/openstackhelm/heat:newton
     ks_endpoints: docker.io/openstackhelm/heat:newton
     drydock_db_init: docker.io/postgres:9.5
+    drydock_db_cleanup: quay.io/airshipit/drydock:master
     drydock_db_sync: quay.io/airshipit/drydock:master
   pull_policy: "IfNotPresent"
   #TODO(mattmceuen): This chart does not yet support local image caching
@@ -66,6 +67,9 @@ pod:
     drydock-db-init:
       init: runtime/default
       drydock-db-init: runtime/default
+    drydock-db-cleanup:
+      init: runtime/default
+      drydock-db-cleanup: runtime/default
     drydock-db-sync:
       init: runtime/default
       drydock-db-sync: runtime/default
@@ -86,6 +90,13 @@ pod:
         runAsUser: 65534
       container:
         drydock_db_init:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+    db_cleanup:
+      pod:
+        runAsUser: 65534
+      container:
+        drydock_db_cleanup:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
     db_sync:
@@ -175,6 +186,14 @@ pod:
         requests:
           memory: "128Mi"
           cpu: "100m"
+    cronjobs:
+      drydock_db_cleanup:
+        limits:
+          memory: "128Mi"
+          cpu: "100m"
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
 
 network_policy:
   drydock:
@@ -184,6 +203,7 @@ network_policy:
       - {}
 
 manifests:
+  cronjob_drydock_db_cleanup: false
   job_ks_service: true
   job_ks_user: true
   job_ks_endpoints: true
@@ -304,6 +324,10 @@ endpoints:
 #          ca: replace
 #          key: replace
   postgresql:
+    # frequency to run table purges
+    cleanup_schedule: "0 1 * * *"
+    # number of days to retain for the tasks table
+    days_to_retain: "90"
     name: postgresql
     auth:
       admin:

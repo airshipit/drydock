@@ -129,6 +129,22 @@ class DrydockClient(object):
 
         return resp.json()
 
+    def delete_tasks(self, days=None):
+        """
+        Enforce retention policy.
+
+        :param int days: default to 90 days retention of tasks table.
+        """
+
+        endpoint = 'v1.0/tasks'
+        endpoint = endpoint + '?days=' + str(days)
+
+        resp = self.session.delete(endpoint)
+
+        self._check_response(resp)
+
+        return "Task table purged successfully."
+
     def create_task(self, design_ref, task_action, node_filter=None):
         """
         Create a new task in Drydock

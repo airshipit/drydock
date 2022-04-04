@@ -95,6 +95,12 @@ class DrydockPolicy(object):
                                          'path': '/api/v1.0/tasks',
                                          'method': 'POST'
                                      }]),
+        policy.DocumentedRuleDefault('physical_provisioner:delete_tasks',
+                                     'role:admin', 'Deletes tasks by age',
+                                     [{
+                                         'path': '/api/v1.0/tasks',
+                                         'method': 'DELETE'
+                                     }]),
         policy.DocumentedRuleDefault('physical_provisioner:relabel_nodes',
                                      'role:admin', 'Create relabel_nodes task',
                                      [{

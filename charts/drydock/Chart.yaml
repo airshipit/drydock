@@ -15,7 +15,7 @@
 apiVersion: v1
 description: A Helm chart for Drydock
 name: drydock
-version: 0.1.0
+version: 0.1.1
 keywords:
 - drydock
 home: https://github.com/openstack/airship-drydock

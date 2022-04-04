@@ -156,3 +156,17 @@ class TaskBuildData(CliAction):
 
     def invoke(self):
         return self.api_client.get_task_build_data(self.task_id)
+
+class TasksDelete(CliAction):
+    """Action to delete tasks in database."""
+
+    def __init__(self, api_client, days):
+        """
+        :param DrydockClient api_client: the api client instance used for invocation.
+        :param str days: Number of days to keep of tasks based on the created timestamp
+        """
+        super().__init__(api_client)
+        self.days = days
+
+    def invoke(self):
+        return self.api_client.delete_tasks(days=self.days)

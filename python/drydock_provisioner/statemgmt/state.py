@@ -241,6 +241,23 @@ class DrydockState(object):
                               % (str(task_id), str(ex)))
             return False
 
+    def delete_result_message(self, task_id, msg):
+        """Delete a result message to database attached to task task_id.
+
+        :param task_id: uuid.UUID ID of the task the msg belongs to
+        :param msg: instance of objects.TaskStatusMessage
+        """
+        try:
+            with self.db_engine.connect() as conn:
+                query = self.result_message_tbl.delete().values(
+                    task_id=task_id.bytes, **(msg.to_db()))
+                conn.execute(query)
+            return True
+        except Exception as ex:
+            self.logger.error("Error delete result message for task %s: %s"
+                              % (str(task_id), str(ex)))
+            return False
+
     def _assemble_tasks(self, task_list=None):
         """Attach all the appropriate result messages to the tasks in the list.
 
@@ -303,6 +320,69 @@ class DrydockState(object):
             self.logger.error(
                 "Error updating task %s: %s" % (str(task.task_id), str(ex)))
             return False
+
+    def task_retention(self, retain_days):
+        """Delete all tasks in the database older than x days.
+
+        :param days: number of days to keep tasks
+        """
+        with self.db_engine.connect() as conn:
+            try:
+                query_tasks_text = sql.text(
+                    "DELETE FROM tasks WHERE created < now() - interval '"
+                    + retain_days
+                    + " days'").execution_options(autocommit=True)
+                conn.execute(query_tasks_text)
+                conn.close()
+            except Exception as ex:
+                self.logger.error(
+                    "Error deleting tasks: %s" % str(ex))
+                return False
+
+        with self.db_engine.connect() as conn:
+            try:
+                query_subtasks_text = (
+                    "DELETE FROM tasks "
+                    "WHERE parent_task_id IS NOT NULL AND "
+                    "parent_task_id NOT IN "
+                    "(SELECT task_id FROM tasks);")
+                conn.execute(sql.text(query_subtasks_text))
+                conn.close()
+            except Exception as ex:
+                self.logger.error(
+                    "Error deleting subtasks: %s" % str(ex))
+                return False
+
+        with self.db_engine.connect() as conn:
+            try:
+                query_result_message_text = (
+                    "DELETE FROM result_message WHERE ts IN "
+                    "(SELECT result_message.ts FROM result_message "
+                    "LEFT JOIN tasks ON "
+                    "result_message.task_id=tasks.task_id "
+                    "WHERE tasks.task_id IS NULL);")
+                conn.execute(sql.text(query_result_message_text))
+                conn.close()
+            except Exception as ex:
+                self.logger.error(
+                    "Error deleting result messages: %s" % str(ex))
+                return False
+
+        with self.db_engine.connect() as conn:
+            try:
+                real_conn = conn.connection
+                old_isolation_level = real_conn.isolation_level
+                real_conn.set_isolation_level(0)
+                query_vacuum_text = sql.text("VACUUM FULL")
+                conn.execute(query_vacuum_text)
+                real_conn.set_isolation_level(old_isolation_level)
+                conn.close()
+            except Exception as ex:
+                self.logger.error(
+                    "Error running vacuum full: %s" % str(ex))
+                return False
+
+            return True
 
     def add_subtask(self, task_id, subtask_id):
         """Add new task to subtask list.

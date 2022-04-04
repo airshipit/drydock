@@ -32,5 +32,7 @@ data:
 {{- include "helm-toolkit.scripts.pg_db_init" . | indent 4 }}
   db-sync.sh: |+
 {{ tuple "bin/_db-sync.sh.tpl" . | include "helm-toolkit.utils.template" | indent 4 }}
+  db-pg-purge-table.sh: |+
+{{ tuple "bin/_db-pg-purge-table.sh.tpl" . | include "helm-toolkit.utils.template" | indent 4 }}
 ...
 {{- end -}}

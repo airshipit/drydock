@@ -1,0 +1,71 @@
+{{/*
+Copyright (c) 2017 AT&T Intellectual Property. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/}}
+
+{{- if .Values.manifests.cronjob_drydock_db_cleanup }}
+{{- $envAll := . }}
+{{- $serviceAccountName := "drydock-db-cleanup" }}
+{{ tuple $envAll "db_cleanup" $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: drydock-db-cleanup
+  labels:
+{{ tuple $envAll "drydock" "db-cleanup" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 4 }}
+  annotations:
+    {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
+spec:
+  schedule: {{ .Values.endpoints.postgresql.cleanup_schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+{{ tuple $envAll "drydock" "db-cleanup" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 12 }}
+          annotations:
+{{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" | indent 12 }}
+{{ dict "envAll" $envAll "podName" "drydock-db-cleanup" "containerNames" (list "drydock-db-cleanup") | include "helm-toolkit.snippets.kubernetes_mandatory_access_control_annotation" | indent 12 }}
+            configmap-bin-hash: {{ tuple "configmap-bin.yaml" . | include "helm-toolkit.utils.hash" }}
+        spec:
+{{ dict "envAll" $envAll "application" "db_cleanup" | include "helm-toolkit.snippets.kubernetes_pod_security_context" | indent 10 }}
+          serviceAccountName: {{ $serviceAccountName }}
+          restartPolicy: OnFailure
+          nodeSelector:
+            {{ .Values.labels.job.node_selector_key }}: {{ .Values.labels.job.node_selector_value }}
+          containers:
+            - name: drydock-db-cleanup
+              image: {{ .Values.images.tags.drydock_db_cleanup | quote }}
+              imagePullPolicy: {{ .Values.images.pull_policy | quote }}
+{{ tuple $envAll $envAll.Values.pod.resources.cronjobs.drydock_db_cleanup | include "helm-toolkit.snippets.kubernetes_resources" | indent 12 }}
+{{ dict "envAll" $envAll "application" "db_cleanup" "container" "drydock_db_cleanup" | include "helm-toolkit.snippets.kubernetes_container_security_context" | indent 14 }}
+              envFrom:
+                - secretRef:
+                    name: {{ .Values.secrets.identity.drydock }}
+              command:
+                - /tmp/db-pg-purge-table.sh
+              volumeMounts:
+                - name: drydock-bin
+                  mountPath: /tmp/db-pg-purge-table.sh
+                  subPath: db-pg-purge-table.sh
+                  readOnly: true
+          volumes:
+            - name: drydock-bin
+              configMap:
+                name: drydock-bin
+                defaultMode: 0555
+...
+{{- end }}
+

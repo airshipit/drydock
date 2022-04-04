@@ -86,6 +86,28 @@ class TasksResource(StatefulResource):
             self.return_error(
                 resp, falcon.HTTP_500, message="Unknown error", retry=False)
 
+    @policy.ApiEnforcer('physical_provisioner:delete_tasks')
+    def on_delete(self, req, resp):
+        """Handler resource for /tasks delete endpoint."""
+        try:
+            days_to_retain = int(req.params["days"])
+        except Exception:
+            days_to_retain = 90
+
+        try:
+            retention_status = self.state_manager.task_retention(
+                retain_days=str(days_to_retain))
+            if not retention_status:
+                resp.status = falcon.HTTP_404
+                return
+            resp.body = "Tables purged successfully."
+        except Exception as e:
+            self.error(req.context, "Unknown error: %s" % (str(e)))
+            resp.body = "Unexpected error."
+            resp.status = falcon.HTTP_500
+            return
+        resp.status = falcon.HTTP_200
+
     @policy.ApiEnforcer('physical_provisioner:validate_design')
     def task_validate_design(self, req, resp, json_data):
         """Create async task for validate design."""
