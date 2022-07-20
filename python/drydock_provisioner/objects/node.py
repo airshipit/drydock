@@ -18,6 +18,7 @@
 
 from defusedxml.ElementTree import fromstring
 import logging
+import re
 from oslo_versionedobjects import fields as ovo_fields
 
 import drydock_provisioner.error as errors
@@ -252,22 +253,52 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         :param alias_name: String value of the current device alias, it is returned
                            if a logicalname is not found.
         :param bus_type: String value that is used to find the logicalname.
-        :param address: String value that is used to find the logicalname.
+        :param address: String value that is used to find the logicalname. It can be PCI address
+                            to identify a vendor or a regexp to match multiple vendors. The regexp
+                            has to start from regexp: prefix -  for example:
+                                regex:0000\\:(19|01)\\:00\\.[0-9].
         :return: String value of the logicalname or the alias_name if logicalname is not found.
         """
-        nodes = xml_root.findall(".//node[businfo='" + bus_type + "@"
-                                 + address + "'].logicalname")
-        if len(nodes) >= 1 and nodes[0].text:
-            if (len(nodes) > 1):
-                self.logger.info("Multiple nodes found for businfo=%s@%s" %
-                                 (bus_type, address))
-            for logicalname in reversed(nodes[0].text.split("/")):
+        if address.find("regex:") != -1:
+            address_regex = address.replace("regex:", "")
+            nodes = xml_root.findall(".//node")
+            counter = 0
+            logicalnames = []
+            addresses = []
+            for node in nodes:
+                if 'class' in node.attrib:
+                    if node.get('class') == "network":
+                        address = node.find('businfo').text.replace("pci@", "")
+                        addresses.append(address)
+                        if re.match(address_regex, address):
+                            counter += 1
+                            logicalnames.append(node.find('logicalname').text)
+            if len(logicalnames) > 1:
+                self.logger.info(
+                    "Multiple nodes found for businfo=%s@%s" %
+                    (bus_type, address_regex))
+            if logicalnames[0]:
+                logicalname = logicalnames[0]
+                address = addresses[0]
                 self.logger.debug(
                     "Logicalname build dict: node_name = %s, alias_name = %s, "
                     "bus_type = %s, address = %s, to logicalname = %s" %
                     (self.get_name(), alias_name, bus_type, address,
-                     logicalname))
+                        logicalname))
                 return logicalname
+        else:
+            nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
+            if len(nodes) >= 1 and nodes[0].text:
+                if (len(nodes) > 1):
+                    self.logger.info("Multiple nodes found for businfo=%s@%s" %
+                                     (bus_type, address))
+                for logicalname in reversed(nodes[0].text.split("/")):
+                    self.logger.debug(
+                        "Logicalname build dict: node_name = %s, alias_name = %s, "
+                        "bus_type = %s, address = %s, to logicalname = %s" %
+                        (self.get_name(), alias_name, bus_type, address,
+                            logicalname))
+                    return logicalname
         self.logger.debug(
             "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found"
             % (alias_name, bus_type, address))
