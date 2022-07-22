@@ -411,7 +411,7 @@ data:
   pxe_interface: 0
   device_aliases:
     prim_nic01:
-      address: 'regex:0000\:(19|01)\:00\.[0-9]'
+      address: 'regexp:0000:(19|01):00\.0'
       # address: '0000:19:00.0'
       dev_type: 'NetXtreme BCM5720 Gigabit Ethernet Controller or I350 Gigabit Ethernet Controller'
       bus_type: 'pci'

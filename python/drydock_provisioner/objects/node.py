@@ -256,44 +256,58 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         :param address: String value that is used to find the logicalname. It can be PCI address
                             to identify a vendor or a regexp to match multiple vendors. The regexp
                             has to start from regexp: prefix -  for example:
-                                regex:0000\\:(19|01)\\:00\\.[0-9].
+                                regexp:0000\\:(19|01)\\:00\\.[0-9].
         :return: String value of the logicalname or the alias_name if logicalname is not found.
         """
-        if address.find("regex:") != -1:
-            address_regex = address.replace("regex:", "")
+        if "regexp:" in address:
+            self.logger.info(
+                    "Regexp: prefix has been detected in address: %s" %
+                    (address))
+            address_regexp = address.replace("regexp:", "")
             nodes = xml_root.findall(".//node")
-            counter = 0
             logicalnames = []
             addresses = []
             for node in nodes:
                 if 'class' in node.attrib:
                     if node.get('class') == "network":
                         address = node.find('businfo').text.replace("pci@", "")
-                        addresses.append(address)
-                        if re.match(address_regex, address):
-                            counter += 1
+                        self.logger.debug(
+                            "A network device PCI address found. Address=%s. Checking for regexp %s match..." %
+                            (address, address_regexp))
+                        if re.match(address_regexp, address):
                             logicalnames.append(node.find('logicalname').text)
-            if len(logicalnames) > 1:
-                self.logger.info(
-                    "Multiple nodes found for businfo=%s@%s" %
-                    (bus_type, address_regex))
-            if logicalnames[0]:
-                logicalname = logicalnames[0]
-                address = addresses[0]
-                self.logger.debug(
-                    "Logicalname build dict: node_name = %s, alias_name = %s, "
-                    "bus_type = %s, address = %s, to logicalname = %s" %
-                    (self.get_name(), alias_name, bus_type, address,
-                        logicalname))
-                return logicalname
+                            addresses.append(address)
+                            self.logger.debug(
+                                "PCI address=%s is matching the regex %s." %
+                                (address, address_regexp))
+                        else:
+                            self.logger.debug(
+                                "A network device with PCI address=%s does not match the regex %s." %
+                                (address, address_regexp))
+            if len(logicalnames) >= 1 and logicalnames[0]:
+                if len(logicalnames) > 1:
+                    self.logger.info(
+                        "Multiple nodes found for businfo=%s@%s" %
+                        (bus_type, address_regexp))
+                for logicalname in reversed(logicalnames[0].split("/")):
+                    address = addresses[0]
+                    self.logger.info(
+                        "Logicalname build dict: node_name = %s, alias_name = %s, "
+                        "bus_type = %s, address = %s, to logicalname = %s" %
+                        (self.get_name(), alias_name, bus_type, address,
+                            logicalname))
+                    return logicalname
         else:
+            self.logger.info(
+                    "No prefix has been detected in address: %s" %
+                    (address))
             nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
             if len(nodes) >= 1 and nodes[0].text:
                 if (len(nodes) > 1):
                     self.logger.info("Multiple nodes found for businfo=%s@%s" %
                                      (bus_type, address))
                 for logicalname in reversed(nodes[0].text.split("/")):
-                    self.logger.debug(
+                    self.logger.info(
                         "Logicalname build dict: node_name = %s, alias_name = %s, "
                         "bus_type = %s, address = %s, to logicalname = %s" %
                         (self.get_name(), alias_name, bus_type, address,
