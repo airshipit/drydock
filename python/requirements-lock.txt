@@ -67,7 +67,7 @@ repoze.lru==0.7
 requests==2.22.0
 rfc3986==1.2.0
 Routes==2.4.1
-setuptools==40.4.3
+setuptools==65.5.1
 six==1.15.0
 SQLAlchemy==1.2.8
 statsd==3.3.0
