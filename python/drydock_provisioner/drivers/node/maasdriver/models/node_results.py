@@ -20,7 +20,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
 class NodeResult(model_base.ResourceBase):
 
-    resource_url = 'commissioning-results/'
+    resource_url = 'installation-results/'
     fields = [
         'resource_id', 'name', 'result_type', 'updated', 'data',
         'script_result'

@@ -376,7 +376,7 @@ class Machine(model_base.ResourceBase):
         url = self.interpolate_url()
 
         resp = self.api_client.post(
-            url, op='set_owner_data', files={key: value})
+            url, op='set_workload_annotations', files={key: value})
 
         if resp.status_code != 200:
             self.logger.error(

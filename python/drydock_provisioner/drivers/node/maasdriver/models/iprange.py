@@ -18,7 +18,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.base as model_base
 
 class IpRange(model_base.ResourceBase):
 
-    resource_url = 'iprange/{resource_id}/'
+    resource_url = 'ipranges/{resource_id}/'
     fields = ['resource_id', 'comment', 'subnet', 'type', 'start_ip', 'end_ip']
     json_fields = ['comment', 'start_ip', 'end_ip']
 
