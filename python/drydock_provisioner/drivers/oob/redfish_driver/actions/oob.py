@@ -27,6 +27,8 @@ from drydock_provisioner.drivers.oob.redfish_driver.client import RedfishSession
 import drydock_provisioner.error as errors
 import drydock_provisioner.objects.fields as hd_fields
 
+REDFISH_MAX_ATTEMPTS = 3
+
 class RedfishBaseAction(BaseAction):
     """Base action for Redfish executed actions."""
 
@@ -132,42 +134,47 @@ class SetNodeBoot(RedfishBaseAction):
         node_list = self.orchestrator.get_target_nodes(self.task)
 
         for n in node_list:
-            self.logger.debug("Setting bootdev to PXE for %s" % n.name)
             self.task.add_status_msg(
                 msg="Setting node to PXE boot.",
                 error=False,
                 ctx=n.name,
                 ctx_type='node')
 
-            bootdev = None
-            try:
-                session = self.get_redfish_session(n)
-                bootdev = self.exec_redfish_command(n, session, RedfishSession.get_bootdev)
-                if bootdev.get('bootdev', '') != 'Pxe':
-                    self.exec_redfish_command(n, session, RedfishSession.set_bootdev, 'Pxe')
+            for i in range(REDFISH_MAX_ATTEMPTS):
+                bootdev = None
+                self.logger.debug("Setting bootdev to PXE for %s attempt #%s" % (n.name, i + 1))
+                try:
+                    session = self.get_redfish_session(n)
                     bootdev = self.exec_redfish_command(n, session, RedfishSession.get_bootdev)
-                session.close_session()
-            except errors.DriverError:
-                pass
+                    if bootdev.get('bootdev', '') != 'Pxe':
+                        self.exec_redfish_command(n, session, RedfishSession.set_bootdev, 'Pxe')
+                        time.sleep(1)
+                        bootdev = self.exec_redfish_command(n, session, RedfishSession.get_bootdev)
+                    session.close_session()
+                except errors.DriverError as e:
+                    self.logger.warning(
+                        "An exception '%s' occurred while attempting to set boot device on %s" % (e, n.name))
 
-            if bootdev is not None and (bootdev.get('bootdev',
-                                                    '') == 'Pxe'):
-                self.task.add_status_msg(
-                    msg="Set bootdev to PXE.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
-                self.logger.debug("%s reports bootdev of network" % n.name)
-                self.task.success(focus=n.name)
-            else:
-                self.task.add_status_msg(
-                    msg="Unable to set bootdev to PXE.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
-                self.task.failure(focus=n.name)
-                self.logger.warning(
-                    "Unable to set node %s to PXE boot." % (n.name))
+                if bootdev is not None and (bootdev.get('bootdev',
+                                                        '') == 'Pxe'):
+                    self.task.add_status_msg(
+                        msg="Set bootdev to PXE.",
+                        error=False,
+                        ctx=n.name,
+                        ctx_type='node')
+                    self.logger.debug("%s reports bootdev of network" % n.name)
+                    self.task.success(focus=n.name)
+                    break
+
+                if i == REDFISH_MAX_ATTEMPTS - 1:
+                    self.task.add_status_msg(
+                        msg="Unable to set bootdev to PXE.",
+                        error=True,
+                        ctx=n.name,
+                        ctx_type='node')
+                    self.task.failure(focus=n.name)
+                    self.logger.warning(
+                        "Unable to set node %s to PXE boot." % (n.name))
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
