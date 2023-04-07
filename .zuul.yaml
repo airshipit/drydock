@@ -21,18 +21,15 @@
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
-        - airship-drydock-docker-build-gate-ubuntu_xenial
-        - airship-drydock-docker-build-gate-ubuntu_bionic
+        - airship-drydock-docker-build-gate-ubuntu_focal
     gate:
       jobs:
         - airship-drydock-omni-test
         - airship-drydock-chart-build-gate
-        - airship-drydock-docker-build-gate-ubuntu_xenial
-        - airship-drydock-docker-build-gate-ubuntu_bionic
+        - airship-drydock-docker-build-gate-ubuntu_focal
     post:
       jobs:
-        - airship-drydock-docker-publish-ubuntu_xenial
-        - airship-drydock-docker-publish-ubuntu_bionic
+        - airship-drydock-docker-publish-ubuntu_focal
         - drydock-upload-git-mirror
 
 - nodeset:
@@ -40,6 +37,12 @@
     nodes:
       - name: primary
         label: ubuntu-bionic
+
+- nodeset:
+    name: airship-drydock-single-node-focal
+    nodes:
+      - name: primary
+        label: ubuntu-focal
 
 - job:
     name: airship-drydock-omni-test
@@ -50,7 +53,7 @@
     required-projects:
       - openstack/openstack-helm-infra
     timeout: 3600
-    nodeset: airship-drydock-single-node
+    nodeset: airship-drydock-single-node-focal
 
 - job:
     name: airship-drydock-chart-build-gate
@@ -58,7 +61,7 @@
       Builds charts using pinned Helm toolkit.
     timeout: 900
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node
+    nodeset: airship-drydock-single-node-focal
 
 - job:
     name: airship-drydock-chart-build-latest-htk
@@ -67,46 +70,31 @@
     timeout: 900
     voting: false
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node
+    nodeset: airship-drydock-single-node-focal
     vars:
       HTK_COMMIT: master
 
 - job:
-    name: airship-drydock-docker-build-gate-ubuntu_xenial
+    name: airship-drydock-docker-build-gate-ubuntu_focal
     timeout: 1800
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node
+    nodeset: airship-drydock-single-node-focal
     irrelevant-files:
       - '^doc/.*'
       - '^charts/.*'
     vars:
       publish: false
-      distro: ubuntu_xenial
-      tags:
-        dynamic:
-          patch_set: true
-
-- job:
-    name: airship-drydock-docker-build-gate-ubuntu_bionic
-    timeout: 1800
-    run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node
-    irrelevant-files:
-      - '^doc/.*'
-      - '^charts/.*'
-    vars:
-      publish: false
-      distro: ubuntu_bionic
+      distro: ubuntu_focal
       tags:
         dynamic:
           patch_set: true
 
 
 - job:
-    name: airship-drydock-docker-publish-ubuntu_xenial
+    name: airship-drydock-docker-publish-ubuntu_focal
     timeout: 1800
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node
+    nodeset: airship-drydock-single-node-focal
     secrets:
       - airship_drydock_quay_creds
     irrelevant-files:
@@ -114,27 +102,7 @@
       - '^charts/.*'
     vars:
       publish: true
-      distro: ubuntu_xenial
-      tags:
-        dynamic:
-          branch: true
-          commit: true
-        static:
-          - latest
-
-- job:
-    name: airship-drydock-docker-publish-ubuntu_bionic
-    timeout: 1800
-    run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node
-    secrets:
-      - airship_drydock_quay_creds
-    irrelevant-files:
-      - '^doc/.*'
-      - '^charts/.*'
-    vars:
-      publish: true
-      distro: ubuntu_bionic
+      distro: ubuntu_focal
       tags:
         dynamic:
           branch: true

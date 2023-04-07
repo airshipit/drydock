@@ -13,6 +13,15 @@
 # limitations under the License.
 
 - hosts: primary
+
+
+
+  roles:
+    - bindep
+    - ensure-docker
+    - ensure-python
+    - ensure-pip
+
   tasks:
     - name: Execute the make target to package Helm charts.
       make:

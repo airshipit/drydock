@@ -14,11 +14,11 @@ then
   sudo docker stop 'psql_integration'
 fi
 
-sudo docker run --rm -dp 5432:5432 --name 'psql_integration' postgres:9.5
+sudo docker run --rm -dp 5432:5432 --name 'psql_integration' postgres:14.6
 sleep 15
 
-docker run --rm --net host postgres:9.5 psql -h localhost -c "create user drydock with password 'drydock';" postgres postgres
-docker run --rm --net host postgres:9.5 psql -h localhost -c "create database drydock;" postgres postgres
+docker run --rm --net host postgres:14.6 psql -h localhost -c "create user drydock with password 'drydock';" postgres postgres
+docker run --rm --net host postgres:14.6 psql -h localhost -c "create database drydock;" postgres postgres
 
 export DRYDOCK_DB_URL="postgresql+psycopg2://drydock:drydock@localhost:5432/drydock"
 

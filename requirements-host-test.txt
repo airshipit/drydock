@@ -1,5 +1,0 @@
-# These are host packages needed for Drydock
-# that don't come on a minimal Ubuntu install
-python-tox
-docker.io|docker-ce
-plantuml

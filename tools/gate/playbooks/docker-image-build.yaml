@@ -13,6 +13,14 @@
 # limitations under the License.
 
 - hosts: primary
+
+  roles:
+    - bindep
+    - ensure-docker
+    - ensure-python
+    - ensure-pip
+
+
   tasks:
     - name: Debug tag generation inputs
       block:
@@ -40,18 +48,11 @@
       debug:
         var: image_tags
 
-    - name: Install Docker (Debian)
+    - name: Install Docker python module for ansible docker login
       block:
-        - apt:
-            name: "{{ item }}"
-          with_items:
-            - docker.io
-            - python3-pip
-            - python3-setuptools
-          when: ansible_os_family == 'Debian'
         - pip:
             name: docker
-            version: 2.7.0
+            version: 4.4.4
             executable: pip3
       become: True
 

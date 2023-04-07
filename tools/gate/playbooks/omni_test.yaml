@@ -14,6 +14,16 @@
 # to minimize Zuul node consumption
 
 - hosts: primary
+
+
+
+  roles:
+    - bindep
+    - ensure-docker
+    - ensure-python
+    - ensure-pip
+
+
   tasks:
     - name: Execute the make target for PEP8 linting
       make:
@@ -41,12 +51,6 @@
         target: test_baclient
       become: true
       register: result
-    - name: Execute the make target for building and running the Drydock Docker image
-      make:
-        chdir: "{{ zuul.project.src_dir }}"
-        target: run_drydock
-      register: result
-      become: true
     - name: Setup Apparmor
       shell: |
         set -xe;
@@ -54,3 +58,9 @@
       args:
         chdir: "{{ zuul.projects['opendev.org/openstack/openstack-helm-infra'].src_dir }}"
         executable: /bin/bash
+    - name: Execute the make target for building and running the Drydock Docker image
+      make:
+        chdir: "{{ zuul.project.src_dir }}"
+        target: run_drydock
+      register: result
+      become: true

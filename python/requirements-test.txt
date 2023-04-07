@@ -1,13 +1,19 @@
-pytest-mock==3.1.0
-pytest
+# tests
+click==6.7
+falcon==3.1.1
+jsonschema==3.2.0
+mock==5.0.1
+pylibyaml==0.1.0
+pymongo==3.10.1
+pytest==6.2.5
 pytest-cov
-responses
-mock
-tox
-oslo.versionedobjects[fixtures]>=1.23.0
-oslo.config[fixtures]
+pytest-mock
+responses==0.23.1
+setuptools==56.0.0
+ulid2==0.1.1
+
+# tools
 yapf
 flake8
 bandit>=1.1.0
 sphinx>=1.6.2
-sphinx_rtd_theme==0.2.4

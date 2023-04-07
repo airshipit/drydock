@@ -45,7 +45,7 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
                             part input
     :param orchestrator:    Instance of drydock_provisioner.orchestrator.Orchestrator for managing tasks
     """
-    control_api = falcon.API(
+    control_api = falcon.App(
         request_type=DrydockRequest,
         middleware=[
             AuthMiddleware(),

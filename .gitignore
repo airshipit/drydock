@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Go
+baclient_built
+
 # Distribution / packaging
 .Python
 build/
@@ -108,3 +111,8 @@ ENV/
 # Chart artifacts
 charts/drydock/charts
 charts/drydock/requirements.lock
+/charts/*.tgz
+/charts/*/charts
+/charts/*/requirements.lock
+/charts/deps/*/
+/*.tgz

@@ -19,7 +19,7 @@ IMAGE_PREFIX    	?= airshipit
 IMAGE_TAG       	?= dev
 HELM            	:= $(shell realpath $(BUILD_DIR))/helm
 UBUNTU_BASE_IMAGE	?=
-DISTRO			?= ubuntu_bionic
+DISTRO			?= ubuntu_focal
 PROXY           	?= http://proxy.foo.com:8000
 NO_PROXY        	?= localhost,127.0.0.1,.svc.cluster.local
 USE_PROXY       	?= false
@@ -40,21 +40,16 @@ run_images: run_drydock
 # Run tests
 tests: pep8 security docs unit_tests test_baclient
 
-# Install external (not managed by tox/pip) dependencies
-external_dep: requirements-host.txt requirements-host-test.txt
-	sudo ./hostdeps.sh
-	touch external_dep
-
 # Run unit and Postgres integration tests in coverage mode
 coverage_test: build_drydock
 	tox -re cover
 
 # Run just unit tests
-unit_tests: external_dep
-	tox -re py36 $(TESTS)
+unit_tests:
+	tox -re py38 $(TESTS)
 
 # Run just DB integration tests
-db_integration_tests: external_dep
+db_integration_tests:
 	tox -re integration $(TESTS)
 
 # Freeze full set of Python requirements
@@ -91,27 +86,27 @@ helm-install:
 
 # Make targets intended for use by the primary targets above.
 
-build_drydock: external_dep
+build_drydock:
 	export; tools/drydock_image_build.sh
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
 endif
 
 # Make target for building bootaction signal client
-build_baclient: external_dep
-	sudo ./tools/baclient_build.sh $(shell realpath go) $(shell realpath ${BUILD_DIR})
+build_baclient:
+	./tools/baclient_build.sh $(shell realpath go) $(shell realpath ${BUILD_DIR})
 	touch ./baclient_built
 
 # Make target for testing bootaction signal client
-test_baclient: external_dep build_baclient
-	GOPATH=$(shell realpath go) go test -v baclient
+test_baclient: build_baclient
+	GOPATH=$(shell realpath go) GO111MODULE=off go test -v baclient
 
 docs: clean drydock_docs
 
-security: external_dep
+security:
 	tox -e bandit
 
-drydock_docs: external_dep render_diagrams genpolicy genconfig
+drydock_docs: render_diagrams genpolicy genconfig
 	tox -e docs
 
 render_diagrams:
@@ -129,11 +124,13 @@ clean:
 	rm -rf charts/drydock/charts
 	rm -rf charts/drydock/requirements.lock
 
-pep8: external_dep
+pep8:
 	tox -e pep8
 
 helm_lint: helm-init
+	$(HELM) dep up charts/drydock
 	$(HELM) lint charts/drydock
+
 
 .PHONY: build_baclient build_drydock charts clean coverage_test \
   db_integration_tests docs drydock drydock_docs dry-run genconfig \
