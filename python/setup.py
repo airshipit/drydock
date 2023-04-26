@@ -36,7 +36,6 @@ setup(
         'drydock_provisioner = drydock_provisioner.config:list_opts',
         'oslo.policy.policies':
         'drydock_provisioner = drydock_provisioner.policy:list_policies',
-        'console_scripts':
-        'drydock = drydock_provisioner.cli.commands:drydock'
+        'console_scripts': 'drydock = drydock_provisioner.cli.commands:drydock'
     },
 )

@@ -45,13 +45,12 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
                             part input
     :param orchestrator:    Instance of drydock_provisioner.orchestrator.Orchestrator for managing tasks
     """
-    control_api = falcon.App(
-        request_type=DrydockRequest,
-        middleware=[
-            AuthMiddleware(),
-            ContextMiddleware(),
-            LoggingMiddleware()
-        ])
+    control_api = falcon.App(request_type=DrydockRequest,
+                             middleware=[
+                                 AuthMiddleware(),
+                                 ContextMiddleware(),
+                                 LoggingMiddleware()
+                             ])
 
     control_api.add_route('/versions', VersionsResource())
 
@@ -59,11 +58,11 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
     v1_0_routes = [
         # API for managing orchestrator tasks
         ('/health',
-         HealthResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         HealthResource(state_manager=state_manager,
+                        orchestrator=orchestrator)),
         ('/health/extended',
-         HealthExtendedResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         HealthExtendedResource(state_manager=state_manager,
+                                orchestrator=orchestrator)),
         ('/tasks',
          TasksResource(state_manager=state_manager,
                        orchestrator=orchestrator)),
@@ -74,15 +73,15 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
         # API for managing site design data
         ('/designs', DesignsResource(state_manager=state_manager)),
         ('/designs/{design_id}',
-         DesignResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         DesignResource(state_manager=state_manager,
+                        orchestrator=orchestrator)),
         ('/designs/{design_id}/parts',
          DesignsPartsResource(state_manager=state_manager, ingester=ingester)),
         ('/designs/{design_id}/parts/{kind}',
          DesignsPartsKindsResource(state_manager=state_manager)),
         ('/designs/{design_id}/parts/{kind}/{name}',
-         DesignsPartResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         DesignsPartResource(state_manager=state_manager,
+                             orchestrator=orchestrator)),
 
         # API to list current MaaS nodes
         ('/nodes', NodesResource()),
@@ -91,23 +90,23 @@ def start_api(state_manager=None, ingester=None, orchestrator=None):
          NodeBuildDataResource(state_manager=state_manager)),
         # API to list current node names based
         ('/nodefilter',
-         NodeFilterResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         NodeFilterResource(state_manager=state_manager,
+                            orchestrator=orchestrator)),
         # API for nodes to discover their boot actions during curtin install
         ('/bootactions/nodes/{hostname}/units',
-         BootactionUnitsResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         BootactionUnitsResource(state_manager=state_manager,
+                                 orchestrator=orchestrator)),
         ('/bootactions/nodes/{hostname}/files',
-         BootactionFilesResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         BootactionFilesResource(state_manager=state_manager,
+                                 orchestrator=orchestrator)),
         ('/bootactions/{action_id}',
-         BootactionResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         BootactionResource(state_manager=state_manager,
+                            orchestrator=orchestrator)),
 
         # API to validate schemas
         ('/validatedesign',
-         ValidationResource(
-             state_manager=state_manager, orchestrator=orchestrator)),
+         ValidationResource(state_manager=state_manager,
+                            orchestrator=orchestrator)),
     ]
 
     for path, res in v1_0_routes:
@@ -122,10 +121,9 @@ class VersionsResource(BaseResource):
     """
 
     def on_get(self, req, resp):
-        resp.body = self.to_json({
-            'v1.0': {
+        resp.text = self.to_json(
+            {'v1.0': {
                 'path': '/api/v1.0',
                 'status': 'stable'
-            }
-        })
+            }})
         resp.status = falcon.HTTP_200

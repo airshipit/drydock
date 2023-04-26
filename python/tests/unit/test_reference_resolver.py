@@ -21,6 +21,7 @@ from drydock_provisioner.statemgmt.design.resolver import ReferenceResolver
 
 
 class TestClass(object):
+
     def test_resolve_file_url(self, input_files):
         """Test that the resolver will resolve file URLs."""
         input_file = input_files.join("fullsite.yaml")

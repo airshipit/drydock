@@ -17,6 +17,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class HostnameValidity(Validators):
+
     def __init__(self):
         super().__init__('Hostname Validity', 'DD3003')
 

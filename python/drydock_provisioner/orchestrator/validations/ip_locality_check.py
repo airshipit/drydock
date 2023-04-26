@@ -17,6 +17,7 @@ from netaddr import IPNetwork, IPAddress
 
 
 class IpLocalityCheck(Validators):
+
     def __init__(self):
         super().__init__('IP Locality Check', "DD2002")
 

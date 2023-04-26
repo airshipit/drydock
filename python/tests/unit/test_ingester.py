@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
+
     def test_ingest_deckhand(self, input_files, setup, deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 

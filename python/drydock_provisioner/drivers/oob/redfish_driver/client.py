@@ -21,10 +21,16 @@ from redfish.rest.v1 import ServerDownOrUnreachableError
 from redfish.rest.v1 import InvalidCredentialsError
 from redfish.rest.v1 import RetriesExhaustedError
 
+
 class RedfishSession(object):
     """Redfish Client to provide OOB commands"""
 
-    def __init__(self, host, account, password, use_ssl=True, connection_retries=10):
+    def __init__(self,
+                 host,
+                 account,
+                 password,
+                 use_ssl=True,
+                 connection_retries=10):
         try:
             if use_ssl:
                 redfish_url = 'https://' + host
@@ -57,7 +63,8 @@ class RedfishSession(object):
 
         # Assumption that only one system is available on Node
         if response.dict["Members@odata.count"] != 1:
-            raise RedfishException("Number of systems are more than one in the node")
+            raise RedfishException(
+                "Number of systems are more than one in the node")
         instance = response.dict["Members"][0]["@odata.id"]
 
         return instance
@@ -152,7 +159,9 @@ class RedfishSession(object):
         """
         instance = self.get_system_instance()
 
-        if powerstate not in ["On", "ForceOff", "PushPowerButton", "GracefulRestart"]:
+        if powerstate not in [
+                "On", "ForceOff", "PushPowerButton", "GracefulRestart"
+        ]:
             raise RedfishException("Unsupported powerstate")
 
         current_state = self.get_power()
@@ -160,9 +169,7 @@ class RedfishSession(object):
            (powerstate == "ForceOff" and current_state["powerstate"] == "Off"):
             return {'powerstate': powerstate}
 
-        payload = {
-            "ResetType": powerstate
-        }
+        payload = {"ResetType": powerstate}
 
         url = instance + "/Actions/ComputerSystem.Reset"
         response = self.redfish_client.post(path=url, body=payload)

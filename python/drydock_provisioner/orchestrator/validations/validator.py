@@ -38,6 +38,7 @@ from drydock_provisioner.orchestrator.validations.storage_mountpoints import Sto
 
 
 class Validator():
+
     def __init__(self, orchestrator):
         """Create a validator with a reference to the orchestrator.
 
@@ -63,8 +64,8 @@ class Validator():
 
         validation_error = False
         for rule in rule_set:
-            message_list = rule.execute(
-                site_design=site_design, orchestrator=self.orchestrator)
+            message_list = rule.execute(site_design=site_design,
+                                        orchestrator=self.orchestrator)
             result_status.message_list.extend(message_list)
             error_msg = [m for m in message_list if m.error]
             result_status.error_count = result_status.error_count + len(

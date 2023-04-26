@@ -18,6 +18,7 @@ from drydock_provisioner.orchestrator.util import SimpleBytes
 
 
 class BootStorageRational(Validators):
+
     def __init__(self):
         super().__init__('Rational Boot Storage', 'DD1001')
 

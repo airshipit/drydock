@@ -38,15 +38,15 @@ def test_put(patch1, patch2):
     """
     Test put functionality
     """
-    responses.add(
-        responses.PUT,
-        'http://promhost:80/api/v1.0/node-label/n1',
-        body='{"key1":"label1"}',
-        status=200)
+    responses.add(responses.PUT,
+                  'http://promhost:80/api/v1.0/node-label/n1',
+                  body='{"key1":"label1"}',
+                  status=200)
 
     prom_session = PromenadeSession()
-    result = prom_session.put(
-        'v1.0/node-label/n1', body='{"key1":"label1"}', timeout=(60, 60))
+    result = prom_session.put('v1.0/node-label/n1',
+                              body='{"key1":"label1"}',
+                              timeout=(60, 60))
 
     assert PROM_HOST == prom_session.host
     assert result.status_code == 200
@@ -65,8 +65,9 @@ def test_get(patch1, patch2):
     """
     Test get functionality
     """
-    responses.add(
-        responses.GET, 'http://promhost:80/api/v1.0/node-label/n1', status=200)
+    responses.add(responses.GET,
+                  'http://promhost:80/api/v1.0/node-label/n1',
+                  status=200)
 
     prom_session = PromenadeSession()
     result = prom_session.get('v1.0/node-label/n1', timeout=(60, 60))
@@ -87,15 +88,15 @@ def test_post(patch1, patch2):
     """
     Test post functionality
     """
-    responses.add(
-        responses.POST,
-        'http://promhost:80/api/v1.0/node-label/n1',
-        body='{"key1":"label1"}',
-        status=200)
+    responses.add(responses.POST,
+                  'http://promhost:80/api/v1.0/node-label/n1',
+                  body='{"key1":"label1"}',
+                  status=200)
 
     prom_session = PromenadeSession()
-    result = prom_session.post(
-        'v1.0/node-label/n1', body='{"key1":"label1"}', timeout=(60, 60))
+    result = prom_session.post('v1.0/node-label/n1',
+                               body='{"key1":"label1"}',
+                               timeout=(60, 60))
 
     assert PROM_HOST == prom_session.host
     assert result.status_code == 200
@@ -115,11 +116,10 @@ def test_relabel_node(patch1, patch2):
     Test relabel node call from Promenade
     Client
     """
-    responses.add(
-        responses.PUT,
-        'http://promhost:80/api/v1.0/node-labels/n1',
-        body='{"key1":"label1"}',
-        status=200)
+    responses.add(responses.PUT,
+                  'http://promhost:80/api/v1.0/node-labels/n1',
+                  body='{"key1":"label1"}',
+                  status=200)
 
     prom_client = PromenadeClient()
 
@@ -141,11 +141,10 @@ def test_relabel_node_403_status(patch1, patch2):
     """
     Test relabel node with 403 resp status
     """
-    responses.add(
-        responses.PUT,
-        'http://promhost:80/api/v1.0/node-labels/n1',
-        body='{"key1":"label1"}',
-        status=403)
+    responses.add(responses.PUT,
+                  'http://promhost:80/api/v1.0/node-labels/n1',
+                  body='{"key1":"label1"}',
+                  status=403)
 
     prom_client = PromenadeClient()
 
@@ -166,11 +165,10 @@ def test_relabel_node_401_status(patch1, patch2):
     """
     Test relabel node with 401 resp status
     """
-    responses.add(
-        responses.PUT,
-        'http://promhost:80/api/v1.0/node-labels/n1',
-        body='{"key1":"label1"}',
-        status=401)
+    responses.add(responses.PUT,
+                  'http://promhost:80/api/v1.0/node-labels/n1',
+                  body='{"key1":"label1"}',
+                  status=401)
 
     prom_client = PromenadeClient()
 

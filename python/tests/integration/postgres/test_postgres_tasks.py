@@ -23,16 +23,16 @@ from drydock_provisioner.control.base import DrydockRequestContext
 
 
 class TestPostgres(object):
+
     def test_task_insert(self, blank_state):
         """Test that a task can be inserted into the database."""
         ctx = DrydockRequestContext()
         ctx.user = 'sh8121'
         ctx.external_marker = str(uuid.uuid4())
 
-        task = objects.Task(
-            action='deploy_node',
-            design_ref='http://foo.bar/design',
-            context=ctx)
+        task = objects.Task(action='deploy_node',
+                            design_ref='http://foo.bar/design',
+                            context=ctx)
 
         result = blank_state.post_task(task)
 
@@ -51,11 +51,10 @@ class TestPostgres(object):
                 'filter_type': 'union'
             }]
         }
-        task = objects.Task(
-            action='deploy_node',
-            node_filter=node_filter,
-            design_ref='http://foo.bar/design',
-            context=ctx)
+        task = objects.Task(action='deploy_node',
+                            node_filter=node_filter,
+                            design_ref='http://foo.bar/design',
+                            context=ctx)
 
         result = blank_state.post_task(task)
 
@@ -68,12 +67,11 @@ class TestPostgres(object):
     def test_subtask_append(self, blank_state):
         """Test that the atomic subtask append method works."""
 
-        task = objects.Task(
-            action='deploy_node', design_ref='http://foobar/design')
-        subtask = objects.Task(
-            action='deploy_node',
-            design_ref='http://foobar/design',
-            parent_task_id=task.task_id)
+        task = objects.Task(action='deploy_node',
+                            design_ref='http://foobar/design')
+        subtask = objects.Task(action='deploy_node',
+                               design_ref='http://foobar/design',
+                               parent_task_id=task.task_id)
 
         blank_state.post_task(task)
         blank_state.post_task(subtask)
@@ -100,8 +98,8 @@ class TestPostgres(object):
     @pytest.fixture(scope='function')
     def populateddb(self, blank_state):
         """Add dummy task to test against."""
-        task = objects.Task(
-            action='prepare_site', design_ref='http://test.com/design')
+        task = objects.Task(action='prepare_site',
+                            design_ref='http://test.com/design')
 
         blank_state.post_task(task)
 

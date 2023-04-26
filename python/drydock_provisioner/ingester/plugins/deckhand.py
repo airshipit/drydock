@@ -37,7 +37,9 @@ cache_opts = {
 
 cache = CacheManager(**parse_cache_config_options(cache_opts))
 
+
 class DeckhandIngester(IngesterPlugin):
+
     def __init__(self):
         super().__init__()
         self.logger = logging.getLogger('drydock.ingester.deckhand')
@@ -54,6 +56,7 @@ class DeckhandIngester(IngesterPlugin):
 
         :returns: a tuple of a status response and a list of parsed objects from drydock_provisioner.objects
         """
+
         def local_parse():
             return self.parse_docs(kwargs.get('content'))
 
@@ -66,7 +69,9 @@ class DeckhandIngester(IngesterPlugin):
                 results = local_cache.get(key=hv, createfunc=local_parse)
                 parse_status, models = results
             except Exception as ex:
-                self.logger.debug("Error parsing design - hash %s", hv, exc_info=ex)
+                self.logger.debug("Error parsing design - hash %s",
+                                  hv,
+                                  exc_info=ex)
                 raise ex
         else:
             raise ValueError('Missing parameter "content"')
@@ -103,8 +108,8 @@ class DeckhandIngester(IngesterPlugin):
                 (schema_ns, doc_kind, doc_version) = d.get('schema',
                                                            '').split('/')
             except ValueError as ex:
-                self.logger.error(
-                    "Error with document structure.", exc_info=ex)
+                self.logger.error("Error with document structure.",
+                                  exc_info=ex)
                 self.logger.debug("Error document\n%s" % yaml.dump(d))
                 continue
             if schema_ns == 'drydock':
@@ -230,9 +235,9 @@ class DeckhandIngester(IngesterPlugin):
             tag_model.definition = t.get('definition', '')
 
             if tag_model.type not in ['lshw_xpath']:
-                raise errors.IngesterError(
-                    'Unknown definition_type in '
-                    'tag_definition instance: %s' % (t.definition_type))
+                raise errors.IngesterError('Unknown definition_type in '
+                                           'tag_definition instance: %s' %
+                                           (t.definition_type))
             model.tag_definitions.append(tag_model)
 
         auth_keys = data.get('authorized_keys', [])
@@ -419,8 +424,9 @@ class DeckhandIngester(IngesterPlugin):
         model.hugepages_confs = objects.HugepagesConfList()
 
         for c, d in data.get('hugepages', {}).items():
-            conf = objects.HugepagesConf(
-                name=c, size=d.get('size'), count=d.get('count'))
+            conf = objects.HugepagesConf(name=c,
+                                         size=d.get('size'),
+                                         count=d.get('count'))
             model.hugepages_confs.append(conf)
 
         return model
@@ -589,8 +595,8 @@ class DeckhandIngester(IngesterPlugin):
             if 'sriov' in v:
                 int_model.sriov = True
                 int_model.vf_count = v.get('sriov', {}).get('vf_count', 0)
-                int_model.trustedmode = v.get('sriov', {}).get(
-                    'trustedmode', False)
+                int_model.trustedmode = v.get('sriov',
+                                              {}).get('trustedmode', False)
 
             model.interfaces.append(int_model)
 
@@ -705,8 +711,8 @@ class DeckhandIngester(IngesterPlugin):
                     self.logger.warning(
                         "Duplicate document schemas found for document kind %s."
                         % schema_for)
-                self.logger.debug(
-                    "Loaded schema for document kind %s." % schema_for)
+                self.logger.debug("Loaded schema for document kind %s." %
+                                  schema_for)
                 self.v1_doc_schemas[schema_for] = schema.get('data')
             f.close()
 

@@ -19,6 +19,7 @@ from drydock_provisioner.orchestrator.actions.orchestrator import PrepareSite
 
 
 class TestActionPrepareSite(object):
+
     def test_preparesite(self, input_files, deckhand_ingester, setup,
                          drydock_state):
         input_file = input_files.join("deckhand_fullsite.yaml")
@@ -33,10 +34,9 @@ class TestActionPrepareSite(object):
             kubernetes_driver = 'drydock_provisioner.drivers.kubernetes.driver.KubernetesDriver'
             network_driver = None
 
-        orchestrator = orch.Orchestrator(
-            enabled_drivers=DummyConf(),
-            state_manager=drydock_state,
-            ingester=deckhand_ingester)
+        orchestrator = orch.Orchestrator(enabled_drivers=DummyConf(),
+                                         state_manager=drydock_state,
+                                         ingester=deckhand_ingester)
 
         task = orchestrator.create_task(
             design_ref=design_ref,

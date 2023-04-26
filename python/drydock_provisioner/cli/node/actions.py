@@ -47,5 +47,5 @@ class NodeBuildData(CliAction):
         self.logger.debug('NodeBuildData action initialized')
 
     def invoke(self):
-        return self.api_client.get_node_build_data(
-            self.nodename, latest=self.latest)
+        return self.api_client.get_node_build_data(self.nodename,
+                                                   latest=self.latest)

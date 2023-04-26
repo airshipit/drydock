@@ -90,10 +90,9 @@ class TaskCreate(CliAction):  # pylint: disable=too-few-public-methods
 
     def invoke(self):
         """Invoke execution of this action."""
-        task = self.api_client.create_task(
-            design_ref=self.design_ref,
-            task_action=self.action_name,
-            node_filter=self.node_filter)
+        task = self.api_client.create_task(design_ref=self.design_ref,
+                                           task_action=self.action_name,
+                                           node_filter=self.node_filter)
 
         if not self.block:
             return task
@@ -156,6 +155,7 @@ class TaskBuildData(CliAction):
 
     def invoke(self):
         return self.api_client.get_task_build_data(self.task_id)
+
 
 class TasksDelete(CliAction):
     """Action to delete tasks in database."""

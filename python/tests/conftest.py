@@ -45,15 +45,15 @@ def yaml_ingester():
 
 @pytest.fixture()
 def deckhand_orchestrator(drydock_state, deckhand_ingester):
-    orchestrator = Orchestrator(
-        state_manager=drydock_state, ingester=deckhand_ingester)
+    orchestrator = Orchestrator(state_manager=drydock_state,
+                                ingester=deckhand_ingester)
     return orchestrator
 
 
 @pytest.fixture()
 def yaml_orchestrator(drydock_state, yaml_ingester):
-    orchestrator = Orchestrator(
-        state_manager=drydock_state, ingester=yaml_ingester)
+    orchestrator = Orchestrator(state_manager=drydock_state,
+                                ingester=yaml_ingester)
     return orchestrator
 
 
@@ -101,8 +101,8 @@ def setup(setup_logging):
         group="database",
         override="postgresql+psycopg2://drydock:drydock@localhost:5432/drydock"
     )
-    config.config_mgr.conf.set_override(
-        name="leader_grace_period", override=15)
+    config.config_mgr.conf.set_override(name="leader_grace_period",
+                                        override=15)
     config.config_mgr.conf.set_override(name="poll_interval", override=3)
     return
 
@@ -124,8 +124,7 @@ def setup_logging():
     logger.propagate = False
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(user)s - %(req_id)s"
-        " - %(external_ctx)s - %(end_user)s - %(message)s"
-    )
+        " - %(external_ctx)s - %(end_user)s - %(message)s")
 
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
@@ -134,13 +133,13 @@ def setup_logging():
 
 @pytest.fixture(scope='module')
 def mock_get_build_data(drydock_state):
+
     def side_effect(**kwargs):
-        build_data = objects.BuildData(
-            node_name="test",
-            task_id="tid",
-            generator="lshw",
-            data_format="text/plain",
-            data_element="<mocktest></mocktest>")
+        build_data = objects.BuildData(node_name="test",
+                                       task_id="tid",
+                                       generator="lshw",
+                                       data_format="text/plain",
+                                       data_element="<mocktest></mocktest>")
         return [build_data]
 
     drydock_state.real_get_build_data = drydock_state.get_build_data

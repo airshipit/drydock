@@ -21,13 +21,15 @@ from drydock_provisioner import objects
 
 
 class TestPostgresBootAction(object):
+
     def test_bootaction_post(self, populateddb, drydock_state):
         """Test that a boot action status can be added."""
         id_key = os.urandom(32)
         action_id = ulid2.generate_binary_ulid()
         nodename = 'testnode'
-        result = drydock_state.post_boot_action(
-            nodename, populateddb.get_id(), id_key, action_id, 'helloworld')
+        result = drydock_state.post_boot_action(nodename, populateddb.get_id(),
+                                                id_key, action_id,
+                                                'helloworld')
 
         assert result
 
@@ -60,8 +62,8 @@ class TestPostgresBootAction(object):
     @pytest.fixture(scope='function')
     def populateddb(self, blank_state):
         """Add dummy task to test against."""
-        task = objects.Task(
-            action='prepare_site', design_ref='http://test.com/design')
+        task = objects.Task(action='prepare_site',
+                            design_ref='http://test.com/design')
 
         blank_state.post_task(task)
 

@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class StoragePartitioning(Validators):
+
     def __init__(self):
         super().__init__('Storage Partitioning', "DD2002")
 
@@ -70,8 +71,9 @@ class StoragePartitioning(Validators):
             all_volume_groups = baremetal_node.volume_groups or []
             for volume_group in all_volume_groups:
                 if volume_group.name not in volume_group_check_list:
-                    msg = ('Volume group %s not assigned any physical volumes'
-                           % (volume_group.name))
+                    msg = (
+                        'Volume group %s not assigned any physical volumes' %
+                        (volume_group.name))
                     self.report_error(
                         msg, [baremetal_node.doc_ref],
                         "Each volume group should be assigned at least one storage device "

@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
+
     def test_apply_logicalnames_else(self, input_files, deckhand_orchestrator,
                                      drydock_state, mock_get_build_data):
         """Test node apply_logicalnames hits the else block"""
@@ -129,12 +130,11 @@ class TestClass(object):
         xml_example = xml_example.replace('\n', '')
 
         def side_effect(**kwargs):
-            build_data = objects.BuildData(
-                node_name="controller01",
-                task_id="tid",
-                generator="lshw",
-                data_format="text/plain",
-                data_element=xml_example)
+            build_data = objects.BuildData(node_name="controller01",
+                                           task_id="tid",
+                                           generator="lshw",
+                                           data_format="text/plain",
+                                           data_element=xml_example)
             return [build_data]
 
         drydock_state.get_build_data = Mock(side_effect=side_effect)
@@ -162,7 +162,8 @@ class TestClass(object):
         assert nodes[0].get_logicalname('prim_nic02') == 'prim_nic02'
 
     def test_apply_logicalnames_nic_autodetect_success(self, input_files,
-                                                       deckhand_orchestrator, drydock_state,
+                                                       deckhand_orchestrator,
+                                                       drydock_state,
                                                        mock_get_build_data):
         """Test node apply_logicalnames to get the proper dictionary"""
         input_file = input_files.join("deckhand_fullsite_nic_autodetect.yaml")
@@ -265,12 +266,11 @@ class TestClass(object):
         xml_example = xml_example.replace('\n', '')
 
         def side_effect(**kwargs):
-            build_data = objects.BuildData(
-                node_name="controller01",
-                task_id="tid",
-                generator="lshw",
-                data_format="text/plain",
-                data_element=xml_example)
+            build_data = objects.BuildData(node_name="controller01",
+                                           task_id="tid",
+                                           generator="lshw",
+                                           data_format="text/plain",
+                                           data_element=xml_example)
             return [build_data]
 
         drydock_state.get_build_data = Mock(side_effect=side_effect)

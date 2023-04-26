@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestBootAction(object):
+
     def test_bootaction_parse(self, input_files, deckhand_ingester, setup):
         objects.register_all()
 

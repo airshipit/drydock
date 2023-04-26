@@ -67,43 +67,36 @@ class DrydockConfig(object):
 
     # Logging options
     logging_options = [
-        cfg.StrOpt(
-            'log_level', default='INFO', help='Global log level for Drydock'),
-        cfg.StrOpt(
-            'global_logger_name',
-            default='drydock_provisioner',
-            help='Logger name for the top-level logger'),
-        cfg.StrOpt(
-            'oobdriver_logger_name',
-            default='${global_logger_name}.oobdriver',
-            help='Logger name for OOB driver logging'),
-        cfg.StrOpt(
-            'nodedriver_logger_name',
-            default='${global_logger_name}.nodedriver',
-            help='Logger name for Node driver logging'),
-        cfg.StrOpt(
-            'kubernetesdriver_logger_name',
-            default='${global_logger_name}.kubernetesdriver',
-            help='Logger name for Kubernetes driver logging'),
-        cfg.StrOpt(
-            'control_logger_name',
-            default='${global_logger_name}.control',
-            help='Logger name for API server logging'),
+        cfg.StrOpt('log_level',
+                   default='INFO',
+                   help='Global log level for Drydock'),
+        cfg.StrOpt('global_logger_name',
+                   default='drydock_provisioner',
+                   help='Logger name for the top-level logger'),
+        cfg.StrOpt('oobdriver_logger_name',
+                   default='${global_logger_name}.oobdriver',
+                   help='Logger name for OOB driver logging'),
+        cfg.StrOpt('nodedriver_logger_name',
+                   default='${global_logger_name}.nodedriver',
+                   help='Logger name for Node driver logging'),
+        cfg.StrOpt('kubernetesdriver_logger_name',
+                   default='${global_logger_name}.kubernetesdriver',
+                   help='Logger name for Kubernetes driver logging'),
+        cfg.StrOpt('control_logger_name',
+                   default='${global_logger_name}.control',
+                   help='Logger name for API server logging'),
     ]
 
     # Database options
     database_options = [
-        cfg.StrOpt(
-            'database_connect_string',
-            help='The URI database connect string.'),
-        cfg.IntOpt(
-            'pool_size',
-            default=15,
-            help='The SQLalchemy database connection pool size.'),
-        cfg.BoolOpt(
-            'pool_pre_ping',
-            default=True,
-            help='Should DB connections be validated prior to use.'),
+        cfg.StrOpt('database_connect_string',
+                   help='The URI database connect string.'),
+        cfg.IntOpt('pool_size',
+                   default=15,
+                   help='The SQLalchemy database connection pool size.'),
+        cfg.BoolOpt('pool_pre_ping',
+                    default=True,
+                    help='Should DB connections be validated prior to use.'),
         cfg.IntOpt(
             'pool_timeout',
             default=30,
@@ -126,9 +119,8 @@ class DrydockConfig(object):
 
     # Options for the boot action framework
     bootactions_options = [
-        cfg.StrOpt(
-            'report_url',
-            default='http://localhost:9000/api/v1.0/bootactions/')
+        cfg.StrOpt('report_url',
+                   default='http://localhost:9000/api/v1.0/bootactions/')
     ]
 
     # Options for network traffic
@@ -176,10 +168,9 @@ class DrydockConfig(object):
             'drydock_provisioner.drivers.kubernetes.promenade_driver.driver.PromenadeDriver',
             help='Module path string of the Kubernetes driver to enable'),
         # TODO(sh8121att) Network driver not yet implemented
-        cfg.StrOpt(
-            'network_driver',
-            default=None,
-            help='Module path string of the Network driver enable'),
+        cfg.StrOpt('network_driver',
+                   default=None,
+                   help='Module path string of the Network driver enable'),
     ]
 
     # Timeouts for various tasks specified in minutes
@@ -192,36 +183,30 @@ class DrydockConfig(object):
             'create_network_template',
             default=2,
             help='Timeout in minutes for creating site network templates'),
-        cfg.IntOpt(
-            'configure_user_credentials',
-            default=2,
-            help='Timeout in minutes for creating user credentials'),
-        cfg.IntOpt(
-            'identify_node',
-            default=10,
-            help='Timeout in minutes for initial node identification'),
+        cfg.IntOpt('configure_user_credentials',
+                   default=2,
+                   help='Timeout in minutes for creating user credentials'),
+        cfg.IntOpt('identify_node',
+                   default=10,
+                   help='Timeout in minutes for initial node identification'),
         cfg.IntOpt(
             'configure_hardware',
             default=30,
             help=
             'Timeout in minutes for node commissioning and hardware configuration'
         ),
-        cfg.IntOpt(
-            'apply_node_networking',
-            default=5,
-            help='Timeout in minutes for configuring node networking'),
-        cfg.IntOpt(
-            'apply_node_storage',
-            default=5,
-            help='Timeout in minutes for configuring node storage'),
-        cfg.IntOpt(
-            'apply_node_platform',
-            default=5,
-            help='Timeout in minutes for configuring node platform'),
-        cfg.IntOpt(
-            'deploy_node',
-            default=45,
-            help='Timeout in minutes for deploying a node'),
+        cfg.IntOpt('apply_node_networking',
+                   default=5,
+                   help='Timeout in minutes for configuring node networking'),
+        cfg.IntOpt('apply_node_storage',
+                   default=5,
+                   help='Timeout in minutes for configuring node storage'),
+        cfg.IntOpt('apply_node_platform',
+                   default=5,
+                   help='Timeout in minutes for configuring node platform'),
+        cfg.IntOpt('deploy_node',
+                   default=45,
+                   help='Timeout in minutes for deploying a node'),
         cfg.IntOpt(
             'bootaction_final_status',
             default=15,
@@ -233,10 +218,9 @@ class DrydockConfig(object):
             default=30,
             help='Timeout in minutes for releasing a node',
         ),
-        cfg.IntOpt(
-            'relabel_node',
-            default=5,
-            help='Timeout in minutes for relabeling a node'),
+        cfg.IntOpt('relabel_node',
+                   default=5,
+                   help='Timeout in minutes for relabeling a node'),
     ]
 
     def __init__(self):
@@ -244,15 +228,15 @@ class DrydockConfig(object):
 
     def register_options(self, enable_keystone=True):
         self.conf.register_opts(DrydockConfig.options)
-        self.conf.register_opts(
-            DrydockConfig.bootactions_options, group='bootactions')
+        self.conf.register_opts(DrydockConfig.bootactions_options,
+                                group='bootactions')
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
         self.conf.register_opts(DrydockConfig.plugin_options, group='plugins')
         self.conf.register_opts(DrydockConfig.network_options, group='network')
-        self.conf.register_opts(
-            DrydockConfig.database_options, group='database')
-        self.conf.register_opts(
-            DrydockConfig.timeout_options, group='timeouts')
+        self.conf.register_opts(DrydockConfig.database_options,
+                                group='database')
+        self.conf.register_opts(DrydockConfig.timeout_options,
+                                group='timeouts')
         if enable_keystone:
             self.conf.register_opts(
                 loading.get_auth_plugin_conf_options('password'),

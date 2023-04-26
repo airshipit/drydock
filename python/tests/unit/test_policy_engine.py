@@ -17,6 +17,7 @@ from drydock_provisioner.control.base import DrydockRequestContext
 
 
 class TestDefaultRules():
+
     def test_register_policy(self, mocker):
         ''' DrydockPolicy.register_policy() should correctly register all default
             policy rules

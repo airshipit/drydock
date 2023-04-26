@@ -64,6 +64,7 @@ class ProviderDriver(object):
 
 # Execute a single task in a separate thread
 class DriverActionRunner(Thread):
+
     def __init__(self, action=None):
         super().__init__()
 

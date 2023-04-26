@@ -44,16 +44,17 @@ class PyghmiBaseAction(BaseAction):
         ipmi_address = node.get_network_address(ipmi_network)
 
         if ipmi_address is None:
-            raise errors.DriverError(
-                "Node %s has no IPMI address" % (node.name))
+            raise errors.DriverError("Node %s has no IPMI address" %
+                                     (node.name))
 
         ipmi_account = node.oob_parameters['account']
         ipmi_credential = node.oob_parameters['credential']
 
         self.logger.debug("Starting IPMI session to %s with %s/%s" %
                           (ipmi_address, ipmi_account, ipmi_credential[:1]))
-        ipmi_session = Command(
-            bmc=ipmi_address, userid=ipmi_account, password=ipmi_credential)
+        ipmi_session = Command(bmc=ipmi_address,
+                               userid=ipmi_account,
+                               password=ipmi_credential)
 
         return ipmi_session
 
@@ -99,11 +100,10 @@ class ValidateOobServices(PyghmiBaseAction):
     """Action to validation OOB services are available."""
 
     def start(self):
-        self.task.add_status_msg(
-            msg="OOB does not require services.",
-            error=False,
-            ctx='NA',
-            ctx_type='NA')
+        self.task.add_status_msg(msg="OOB does not require services.",
+                                 error=False,
+                                 ctx='NA',
+                                 ctx_type='NA')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.success()
         self.task.save()
@@ -149,35 +149,32 @@ class SetNodeBoot(PyghmiBaseAction):
 
         for n in node_list:
             self.logger.debug("Setting bootdev to PXE for %s" % n.name)
-            self.task.add_status_msg(
-                msg="Setting node to PXE boot.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Setting node to PXE boot.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             self.exec_ipmi_command(n, Command.set_bootdev, 'pxe')
 
             time.sleep(3)
 
             bootdev = self.exec_ipmi_command(n, Command.get_bootdev)
 
-            if bootdev is not None and (bootdev.get('bootdev',
-                                                    '') == 'network'):
-                self.task.add_status_msg(
-                    msg="Set bootdev to PXE.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+            if bootdev is not None and (bootdev.get('bootdev', '')
+                                        == 'network'):
+                self.task.add_status_msg(msg="Set bootdev to PXE.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug("%s reports bootdev of network" % n.name)
                 self.task.success(focus=n.name)
             else:
-                self.task.add_status_msg(
-                    msg="Unable to set bootdev to PXE.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Unable to set bootdev to PXE.",
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.name)
-                self.logger.warning(
-                    "Unable to set node %s to PXE boot." % (n.name))
+                self.logger.warning("Unable to set node %s to PXE boot." %
+                                    (n.name))
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
@@ -198,11 +195,10 @@ class PowerOffNode(PyghmiBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = off command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Sending set_power = off command.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Sending set_power = off command.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             self.exec_ipmi_command(n, Command.set_power, 'off')
 
             i = 18
@@ -212,13 +208,12 @@ class PowerOffNode(PyghmiBaseAction):
                 power_state = self.exec_ipmi_command(n, Command.get_power)
                 if power_state is not None and (power_state.get(
                         'powerstate', '') == 'off'):
-                    self.task.add_status_msg(
-                        msg="Node reports power off.",
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
-                    self.logger.debug(
-                        "Node %s reports powerstate of off" % n.name)
+                    self.task.add_status_msg(msg="Node reports power off.",
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
+                    self.logger.debug("Node %s reports powerstate of off" %
+                                      n.name)
                     self.task.success(focus=n.name)
                     break
                 time.sleep(10)
@@ -226,11 +221,10 @@ class PowerOffNode(PyghmiBaseAction):
 
             if power_state is not None and (power_state.get('powerstate', '')
                                             != 'off'):
-                self.task.add_status_msg(
-                    msg="Node failed to power off.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Node failed to power off.",
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error("Giving up on IPMI command to %s" % n.name)
                 self.task.failure(focus=n.name)
 
@@ -253,11 +247,10 @@ class PowerOnNode(PyghmiBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = off command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Sending set_power = on command.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Sending set_power = on command.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             self.exec_ipmi_command(n, Command.set_power, 'off')
 
             i = 18
@@ -267,13 +260,12 @@ class PowerOnNode(PyghmiBaseAction):
                 power_state = self.exec_ipmi_command(n, Command.get_power)
                 if power_state is not None and (power_state.get(
                         'powerstate', '') == 'on'):
-                    self.logger.debug(
-                        "Node %s reports powerstate of on" % n.name)
-                    self.task.add_status_msg(
-                        msg="Node reports power on.",
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.logger.debug("Node %s reports powerstate of on" %
+                                      n.name)
+                    self.task.add_status_msg(msg="Node reports power on.",
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.name)
                     break
                 time.sleep(10)
@@ -281,11 +273,10 @@ class PowerOnNode(PyghmiBaseAction):
 
             if power_state is not None and (power_state.get('powerstate', '')
                                             != 'on'):
-                self.task.add_status_msg(
-                    msg="Node failed to power on.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Node failed to power on.",
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error("Giving up on IPMI command to %s" % n.name)
                 self.task.failure(focus=n.name)
 
@@ -308,11 +299,10 @@ class PowerCycleNode(PyghmiBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = off command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Power cycling node via IPMI.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Power cycling node via IPMI.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             self.exec_ipmi_command(n, Command.set_power, 'off')
 
             # Wait for power state of off before booting back up
@@ -326,8 +316,8 @@ class PowerCycleNode(PyghmiBaseAction):
                     self.logger.debug("%s reports powerstate of off" % n.name)
                     break
                 elif power_state is None:
-                    self.logger.debug(
-                        "No response on IPMI power query to %s" % n.name)
+                    self.logger.debug("No response on IPMI power query to %s" %
+                                      n.name)
                 time.sleep(10)
                 i = i - 1
 
@@ -355,18 +345,17 @@ class PowerCycleNode(PyghmiBaseAction):
                     self.logger.debug("%s reports powerstate of on" % n.name)
                     break
                 elif power_state is None:
-                    self.logger.debug(
-                        "No response on IPMI power query to %s" % n.name)
+                    self.logger.debug("No response on IPMI power query to %s" %
+                                      n.name)
                 time.sleep(10)
                 i = i - 1
 
-            if power_state is not None and (power_state.get('powerstate',
-                                                            '') == 'on'):
-                self.task.add_status_msg(
-                    msg="Node power cycle complete.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+            if power_state is not None and (power_state.get('powerstate', '')
+                                            == 'on'):
+                self.task.add_status_msg(msg="Node power cycle complete.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
             else:
                 self.task.add_status_msg(
@@ -398,8 +387,8 @@ class InterrogateOob(PyghmiBaseAction):
 
         for n in node_list:
             try:
-                self.logger.debug(
-                    "Interrogating node %s IPMI interface." % n.name)
+                self.logger.debug("Interrogating node %s IPMI interface." %
+                                  n.name)
                 powerstate = self.exec_ipmi_command(n, Command.get_power)
                 if powerstate is None:
                     raise errors.DriverError()

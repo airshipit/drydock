@@ -10,6 +10,7 @@ from jsonschema.exceptions import ValidationError
 
 
 class BaseSchemaValidationTest(object):
+
     def _test_validate(self, schema, expect_failure, input_files, input):
         """validates input yaml against schema.
 
@@ -35,6 +36,7 @@ class BaseSchemaValidationTest(object):
 
 
 class TestValidation(BaseSchemaValidationTest):
+
     def test_validate_baremetalNode(self, input_files):
         self._test_validate('baremetalNode.yaml', False, input_files,
                             "baremetalNode.yaml")

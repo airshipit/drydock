@@ -30,35 +30,35 @@ class DrydockPolicy(object):
 
     # Base Policy
     base_rules = [
-        policy.RuleDefault(
-            'admin_required',
-            'role:admin or is_admin:1',
-            description='Actions requiring admin authority'),
+        policy.RuleDefault('admin_required',
+                           'role:admin or is_admin:1',
+                           description='Actions requiring admin authority'),
     ]
 
     # Orchestrator Policy
     task_rules = [
-        policy.DocumentedRuleDefault(
-            'physical_provisioner:read_task', 'role:admin', 'Get task status',
-            [{
-                'path': '/api/v1.0/tasks',
-                'method': 'GET'
-            }, {
-                'path': '/api/v1.0/tasks/{task_id}',
-                'method': 'GET'
-            }]),
+        policy.DocumentedRuleDefault('physical_provisioner:read_task',
+                                     'role:admin', 'Get task status',
+                                     [{
+                                         'path': '/api/v1.0/tasks',
+                                         'method': 'GET'
+                                     }, {
+                                         'path': '/api/v1.0/tasks/{task_id}',
+                                         'method': 'GET'
+                                     }]),
         policy.DocumentedRuleDefault('physical_provisioner:create_task',
                                      'role:admin', 'Create a task',
                                      [{
                                          'path': '/api/v1.0/tasks',
                                          'method': 'POST'
                                      }]),
-        policy.DocumentedRuleDefault(
-            'physical_provisioner:validate_design', 'role:admin',
-            'Create validate_design task', [{
-                'path': '/api/v1.0/tasks',
-                'method': 'POST'
-            }]),
+        policy.DocumentedRuleDefault('physical_provisioner:validate_design',
+                                     'role:admin',
+                                     'Create validate_design task',
+                                     [{
+                                         'path': '/api/v1.0/tasks',
+                                         'method': 'POST'
+                                     }]),
         policy.DocumentedRuleDefault('physical_provisioner:verify_site',
                                      'role:admin', 'Create verify_site task',
                                      [{
@@ -95,12 +95,12 @@ class DrydockPolicy(object):
                                          'path': '/api/v1.0/tasks',
                                          'method': 'POST'
                                      }]),
-        policy.DocumentedRuleDefault('physical_provisioner:delete_tasks',
-                                     'role:admin', 'Deletes tasks by age',
-                                     [{
-                                         'path': '/api/v1.0/tasks',
-                                         'method': 'DELETE'
-                                     }]),
+        policy.DocumentedRuleDefault(
+            'physical_provisioner:delete_tasks', 'role:admin',
+            'Deletes tasks by age', [{
+                'path': '/api/v1.0/tasks',
+                'method': 'DELETE'
+            }]),
         policy.DocumentedRuleDefault('physical_provisioner:relabel_nodes',
                                      'role:admin', 'Create relabel_nodes task',
                                      [{
@@ -110,10 +110,8 @@ class DrydockPolicy(object):
         policy.DocumentedRuleDefault(
             'physical_provisioner:read_build_data', 'role:admin',
             'Read build data for a node', [{
-                'path':
-                '/api/v1.0/nodes/{nodename}/builddata',
-                'method':
-                'GET',
+                'path': '/api/v1.0/nodes/{nodename}/builddata',
+                'method': 'GET',
             }]),
     ]
 
@@ -121,8 +119,7 @@ class DrydockPolicy(object):
     data_rules = [
         policy.DocumentedRuleDefault(
             'physical_provisioner:read_data', 'role:admin',
-            'Read loaded design data',
-            [{
+            'Read loaded design data', [{
                 'path': '/api/v1.0/designs',
                 'method': 'GET'
             }, {
@@ -131,8 +128,7 @@ class DrydockPolicy(object):
             }]),
         policy.DocumentedRuleDefault(
             'physical_provisioner:ingest_data', 'role:admin',
-            'Load design data',
-            [{
+            'Load design data', [{
                 'path': '/api/v1.0/designs',
                 'method': 'POST'
             }, {
@@ -182,6 +178,7 @@ class ApiEnforcer(object):
         self.logger = logging.getLogger('drydock.policy')
 
     def __call__(self, f):
+
         @functools.wraps(f)
         def secure_handler(slf, req, resp, *args, **kwargs):
             ctx = req.context
@@ -199,18 +196,16 @@ class ApiEnforcer(object):
                     slf.info(
                         ctx,
                         "Error - Forbidden access - action: %s" % self.action)
-                    slf.return_error(
-                        resp,
-                        falcon.HTTP_403,
-                        message="Forbidden",
-                        retry=False)
+                    slf.return_error(resp,
+                                     falcon.HTTP_403,
+                                     message="Forbidden",
+                                     retry=False)
                 else:
                     slf.info(ctx, "Error - Unauthenticated access")
-                    slf.return_error(
-                        resp,
-                        falcon.HTTP_401,
-                        message="Unauthenticated",
-                        retry=False)
+                    slf.return_error(resp,
+                                     falcon.HTTP_401,
+                                     message="Unauthenticated",
+                                     retry=False)
 
         return secure_handler
 

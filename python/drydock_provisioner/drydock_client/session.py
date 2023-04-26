@@ -91,8 +91,9 @@ class DrydockSession(object):
             url = self.base_url + endpoint
             self.logger.debug('GET ' + url)
             self.logger.debug('Query Params: ' + str(query))
-            resp = self.__session.get(
-                url, params=query, timeout=self._timeout(timeout))
+            resp = self.__session.get(url,
+                                      params=query,
+                                      timeout=self._timeout(timeout))
 
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
@@ -121,21 +122,19 @@ class DrydockSession(object):
             self.logger.debug('POST ' + url)
             self.logger.debug('Query Params: ' + str(query))
             if body is not None:
-                self.logger.debug(
-                    "Sending POST with explicit body: \n%s" % body)
-                resp = self.__session.post(
-                    self.base_url + endpoint,
-                    params=query,
-                    data=body,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending POST with explicit body: \n%s" %
+                                  body)
+                resp = self.__session.post(self.base_url + endpoint,
+                                           params=query,
+                                           data=body,
+                                           timeout=self._timeout(timeout))
             else:
-                self.logger.debug(
-                    "Sending POST with JSON body: \n%s" % str(data))
-                resp = self.__session.post(
-                    self.base_url + endpoint,
-                    params=query,
-                    json=data,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending POST with JSON body: \n%s" %
+                                  str(data))
+                resp = self.__session.post(self.base_url + endpoint,
+                                           params=query,
+                                           json=data,
+                                           timeout=self._timeout(timeout))
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
                 auth_refresh = True
@@ -161,8 +160,9 @@ class DrydockSession(object):
             url = self.base_url + endpoint
             self.logger.debug('DELETE ' + url)
             self.logger.debug('Query Params: ' + str(query))
-            resp = self.__session.delete(
-                url, params=query, timeout=self._timeout(timeout))
+            resp = self.__session.delete(url,
+                                         params=query,
+                                         timeout=self._timeout(timeout))
 
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
@@ -212,6 +212,7 @@ class DrydockSession(object):
 
 
 class KeystoneClient(object):
+
     @staticmethod
     def get_endpoint(endpoint,
                      ks_sess=None,

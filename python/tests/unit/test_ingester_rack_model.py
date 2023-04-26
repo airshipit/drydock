@@ -21,6 +21,7 @@ import pytest
 
 
 class TestClass(object):
+
     def test_rack_parse(self, deckhand_ingester, input_files, setup):
         objects.register_all()
 

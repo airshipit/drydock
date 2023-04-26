@@ -72,5 +72,6 @@ class IpRanges(model_base.ResourceCollectionBase):
             res.set_resource_id(resp_json.get('id'))
             return res
 
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                                 % (url, resp.status_code))
+        raise errors.DriverError(
+            "Failed updating MAAS url %s - return code %s" %
+            (url, resp.status_code))

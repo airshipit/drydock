@@ -22,6 +22,7 @@ from drydock_provisioner import objects
 
 
 class TestBuildData(object):
+
     def test_build_data_insert_no_collected_date(self, blank_state):
         """Test that build data can be inserted omitting collection date."""
         build_data_fields = {

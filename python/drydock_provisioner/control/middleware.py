@@ -22,6 +22,7 @@ from drydock_provisioner import policy
 
 
 class AuthMiddleware(object):
+
     def __init__(self):
         self.logger = logging.getLogger('drydock')
 
@@ -31,8 +32,8 @@ class AuthMiddleware(object):
 
         ctx.set_policy_engine(policy.policy_engine)
 
-        self.logger.debug(
-            "Request with headers: %s" % ','.join(req.headers.keys()))
+        self.logger.debug("Request with headers: %s" %
+                          ','.join(req.headers.keys()))
 
         auth_status = req.get_header('X-SERVICE-IDENTITY-STATUS')
         service = True
@@ -78,6 +79,7 @@ class AuthMiddleware(object):
 
 
 class ContextMiddleware(object):
+
     def __init__(self):
         # Setup validation pattern for external marker
         UUIDv4_pattern = '^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$'
@@ -101,6 +103,7 @@ class ContextMiddleware(object):
 
 
 class LoggingMiddleware(object):
+
     def __init__(self):
         self.logger = logging.getLogger(cfg.CONF.logging.control_logger_name)
 
@@ -111,9 +114,9 @@ class LoggingMiddleware(object):
             'external_ctx': req.context.external_marker,
             'end_user': req.context.end_user,
         }
-        self.logger.info(
-            "Request: %s %s %s" % (req.method, req.uri, req.query_string),
-            extra=extra)
+        self.logger.info("Request: %s %s %s" %
+                         (req.method, req.uri, req.query_string),
+                         extra=extra)
 
     def process_response(self, req, resp, resource, req_succeeded):
         ctx = req.context
@@ -124,6 +127,6 @@ class LoggingMiddleware(object):
             'end_user': ctx.end_user,
         }
         resp.append_header('X-Drydock-Req', ctx.request_id)
-        self.logger.info(
-            "Response: %s %s - %s" % (req.method, req.uri, resp.status),
-            extra=extra)
+        self.logger.info("Response: %s %s - %s" %
+                         (req.method, req.uri, resp.status),
+                         extra=extra)

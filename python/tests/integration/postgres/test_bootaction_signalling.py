@@ -17,6 +17,7 @@ from drydock_provisioner.objects import fields as hd_fields
 
 
 class TestBootActionSignal(object):
+
     def test_bootaction_signal_disable(self, deckhand_orchestrator,
                                        drydock_state, input_files,
                                        mock_get_build_data):

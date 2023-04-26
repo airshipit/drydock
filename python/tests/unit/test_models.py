@@ -17,6 +17,7 @@ from drydock_provisioner.objects import fields
 
 
 class TestClass(object):
+
     def test_hardwareprofile(self):
         objects.register_all()
 
@@ -45,10 +46,8 @@ class TestClass(object):
                             {
                                 'versioned_object.namespace':
                                 'drydock_provisioner.objects',
-                                'versioned_object.name':
-                                'HardwareDeviceAlias',
-                                'versioned_object.version':
-                                '1.0',
+                                'versioned_object.name': 'HardwareDeviceAlias',
+                                'versioned_object.version': '1.0',
                                 'versioned_object.data': {
                                     'alias':
                                     'nic',
@@ -65,10 +64,8 @@ class TestClass(object):
                             {
                                 'versioned_object.namespace':
                                 'drydock_provisioner.objects',
-                                'versioned_object.name':
-                                'HardwareDeviceAlias',
-                                'versioned_object.version':
-                                '1.0',
+                                'versioned_object.name': 'HardwareDeviceAlias',
+                                'versioned_object.version': '1.0',
                                 'versioned_object.data': {
                                     'alias': 'bootdisk',
                                     'source': fields.ModelSource.Designed,

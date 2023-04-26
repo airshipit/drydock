@@ -18,6 +18,7 @@ from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
 
 class TestClass(object):
+
     def test_design_inheritance(self, input_files, setup):
         input_file = input_files.join("fullsite.yaml")
 
@@ -28,8 +29,8 @@ class TestClass(object):
         ingester.enable_plugin(
             'drydock_provisioner.ingester.plugins.yaml.YamlIngester')
 
-        orchestrator = Orchestrator(
-            state_manager=design_state, ingester=ingester)
+        orchestrator = Orchestrator(state_manager=design_state,
+                                    ingester=ingester)
 
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)

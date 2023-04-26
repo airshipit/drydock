@@ -60,8 +60,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         self.source = hd_fields.ModelSource.Compiled
         self.resolve_kernel_params(site_design)
         if resolve_aliases:
-            self.logger.debug(
-                "Resolving device aliases on node %s" % self.name)
+            self.logger.debug("Resolving device aliases on node %s" %
+                              self.name)
             self.apply_logicalnames(site_design, state_manager)
         return
 
@@ -261,8 +261,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         """
         if "regexp:" in address:
             self.logger.info(
-                    "Regexp: prefix has been detected in address: %s" %
-                    (address))
+                "Regexp: prefix has been detected in address: %s" % (address))
             address_regexp = address.replace("regexp:", "")
             nodes = xml_root.findall(".//node")
             logicalnames = []
@@ -272,8 +271,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                     if node.get('class') == "network":
                         address = node.find('businfo').text.replace("pci@", "")
                         self.logger.debug(
-                            "A network device PCI address found. Address=%s. Checking for regexp %s match..." %
-                            (address, address_regexp))
+                            "A network device PCI address found. Address=%s. Checking for regexp %s match..."
+                            % (address, address_regexp))
                         if re.match(address_regexp, address):
                             logicalnames.append(node.find('logicalname').text)
                             addresses.append(address)
@@ -282,26 +281,25 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                                 (address, address_regexp))
                         else:
                             self.logger.debug(
-                                "A network device with PCI address=%s does not match the regex %s." %
-                                (address, address_regexp))
+                                "A network device with PCI address=%s does not match the regex %s."
+                                % (address, address_regexp))
             if len(logicalnames) >= 1 and logicalnames[0]:
                 if len(logicalnames) > 1:
-                    self.logger.info(
-                        "Multiple nodes found for businfo=%s@%s" %
-                        (bus_type, address_regexp))
+                    self.logger.info("Multiple nodes found for businfo=%s@%s" %
+                                     (bus_type, address_regexp))
                 for logicalname in reversed(logicalnames[0].split("/")):
                     address = addresses[0]
                     self.logger.info(
                         "Logicalname build dict: node_name = %s, alias_name = %s, "
                         "bus_type = %s, address = %s, to logicalname = %s" %
                         (self.get_name(), alias_name, bus_type, address,
-                            logicalname))
+                         logicalname))
                     return logicalname
         else:
-            self.logger.info(
-                    "No prefix has been detected in address: %s" %
-                    (address))
-            nodes = xml_root.findall(".//node[businfo='" + bus_type + "@" + address + "'].logicalname")
+            self.logger.info("No prefix has been detected in address: %s" %
+                             (address))
+            nodes = xml_root.findall(".//node[businfo='" + bus_type + "@"
+                                     + address + "'].logicalname")
             if len(nodes) >= 1 and nodes[0].text:
                 if (len(nodes) > 1):
                     self.logger.info("Multiple nodes found for businfo=%s@%s" %
@@ -311,7 +309,7 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                         "Logicalname build dict: node_name = %s, alias_name = %s, "
                         "bus_type = %s, address = %s, to logicalname = %s" %
                         (self.get_name(), alias_name, bus_type, address,
-                            logicalname))
+                         logicalname))
                     return logicalname
         self.logger.debug(
             "Logicalname build dict: alias_name = %s, bus_type = %s, address = %s, not found"
@@ -327,8 +325,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
         """
         logicalnames = {}
 
-        results = state_manager.get_build_data(
-            node_name=self.get_name(), latest=True)
+        results = state_manager.get_build_data(node_name=self.get_name(),
+                                               latest=True)
         xml_data = None
         for result in results:
             if result.generator == "lshw":
@@ -351,8 +349,8 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
                     "resolving logical names for node %s", self.get_name())
                 raise
         else:
-            self.logger.info(
-                "No Build Data found for node_name %s" % (self.get_name()))
+            self.logger.info("No Build Data found for node_name %s" %
+                             (self.get_name()))
 
         self.logicalnames = logicalnames
 

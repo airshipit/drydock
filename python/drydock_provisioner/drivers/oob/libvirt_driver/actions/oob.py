@@ -35,14 +35,14 @@ class LibvirtBaseAction(BaseAction):
         :param node: instance of objects.BaremetalNode
         """
         if node.oob_type != 'libvirt':
-            raise errors.DriverError(
-                "Node OOB type %s is not 'libvirt'" % node.oob_type)
+            raise errors.DriverError("Node OOB type %s is not 'libvirt'" %
+                                     node.oob_type)
 
         virsh_url = node.oob_parameters.get('libvirt_uri', None)
 
         if not virsh_url:
-            raise errors.DriverError(
-                "Node %s has no 'libvirt_url' defined" % (node.name))
+            raise errors.DriverError("Node %s has no 'libvirt_url' defined" %
+                                     (node.name))
 
         url_parts = urlparse(virsh_url)
 
@@ -51,8 +51,8 @@ class LibvirtBaseAction(BaseAction):
                 "Node %s has invalid libvirt URL scheme %s. "
                 "Only 'qemu+ssh' supported." % (node.name, url_parts.scheme))
 
-        self.logger.debug(
-            "Starting libvirt session to hypervisor %s " % (virsh_url))
+        self.logger.debug("Starting libvirt session to hypervisor %s " %
+                          (virsh_url))
         virsh_ses = libvirt.open(virsh_url)
 
         if not virsh_ses:
@@ -148,11 +148,10 @@ class ValidateOobServices(LibvirtBaseAction):
     """Action to validation OOB services are available."""
 
     def start(self):
-        self.task.add_status_msg(
-            msg="OOB does not require services.",
-            error=False,
-            ctx='NA',
-            ctx_type='NA')
+        self.task.add_status_msg(msg="OOB does not require services.",
+                                 error=False,
+                                 ctx='NA',
+                                 ctx_type='NA')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.success()
         self.task.save()
@@ -198,11 +197,10 @@ class SetNodeBoot(LibvirtBaseAction):
 
         for n in node_list:
             self.logger.debug("Setting bootdev to PXE for %s" % n.name)
-            self.task.add_status_msg(
-                msg="Setting node to PXE boot.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Setting node to PXE boot.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
 
             try:
                 self.set_node_pxe(n)
@@ -213,14 +211,13 @@ class SetNodeBoot(LibvirtBaseAction):
                     ctx=n.name,
                     ctx_type='node')
                 self.task.failure(focus=n.name)
-                self.logger.warning(
-                    "Unable to set node %s to PXE boot." % (n.name))
+                self.logger.warning("Unable to set node %s to PXE boot." %
+                                    (n.name))
             else:
-                self.task.add_status_msg(
-                    msg="Set bootdev to PXE.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Set bootdev to PXE.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug("%s reports bootdev of network" % n.name)
                 self.task.success(focus=n.name)
 
@@ -244,21 +241,27 @@ class PowerOffNode(LibvirtBaseAction):
         for n in node_list:
             msg = "Shutting down domain %s" % n.name
             self.logger.debug(msg)
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx=n.name, ctx_type='node')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
 
             try:
                 self.poweroff_node(n)
             except Exception as ex:
                 msg = "Node failed to power off: %s" % str(ex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error(msg)
                 self.task.failure(focus=n.name)
             else:
                 msg = "Node %s powered off." % n.name
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(msg)
                 self.task.success(focus=n.name)
 
@@ -282,21 +285,27 @@ class PowerOnNode(LibvirtBaseAction):
         for n in node_list:
             msg = "Starting domain %s" % n.name
             self.logger.debug(msg)
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx=n.name, ctx_type='node')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
 
             try:
                 self.poweron_node(n)
             except Exception as ex:
                 msg = "Node failed to power on: %s" % str(ex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error(msg)
                 self.task.failure(focus=n.name)
             else:
                 msg = "Node %s powered on." % n.name
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(msg)
                 self.task.success(focus=n.name)
 
@@ -320,22 +329,28 @@ class PowerCycleNode(LibvirtBaseAction):
         for n in node_list:
             msg = ("Power cycling domain for node %s" % n.name)
             self.logger.debug(msg)
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx=n.name, ctx_type='node')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
 
             try:
                 self.poweroff_node(n)
                 self.poweron_node(n)
             except Exception as ex:
                 msg = "Node failed to power cycle: %s" % str(ex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error(msg)
                 self.task.failure(focus=n.name)
             else:
                 msg = "Node %s power cycled." % n.name
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(msg)
                 self.task.success(focus=n.name)
 
@@ -361,14 +376,18 @@ class InterrogateOob(LibvirtBaseAction):
                 node_status = self.get_node_status(n)
             except Exception as ex:
                 msg = "Node failed tatus check: %s" % str(ex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.error(msg)
                 self.task.failure(focus=n.name)
             else:
                 msg = "Node %s status is %s." % (n.name, node_status)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(msg)
                 self.task.success(focus=n.name)
 

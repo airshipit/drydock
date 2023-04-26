@@ -79,8 +79,9 @@ class PromenadeSession(object):
             url = self.base_url + route
             self.logger.debug('GET ' + url)
             self.logger.debug('Query Params: ' + str(query))
-            resp = self.__session.get(
-                url, params=query, timeout=self._timeout(timeout))
+            resp = self.__session.get(url,
+                                      params=query,
+                                      timeout=self._timeout(timeout))
 
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
@@ -109,21 +110,19 @@ class PromenadeSession(object):
             self.logger.debug('PUT ' + url)
             self.logger.debug('Query Params: ' + str(query))
             if body is not None:
-                self.logger.debug(
-                    "Sending PUT with explicit body: \n%s" % body)
-                resp = self.__session.put(
-                    self.base_url + endpoint,
-                    params=query,
-                    data=body,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending PUT with explicit body: \n%s" %
+                                  body)
+                resp = self.__session.put(self.base_url + endpoint,
+                                          params=query,
+                                          data=body,
+                                          timeout=self._timeout(timeout))
             else:
-                self.logger.debug(
-                    "Sending PUT with JSON body: \n%s" % str(data))
-                resp = self.__session.put(
-                    self.base_url + endpoint,
-                    params=query,
-                    json=data,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending PUT with JSON body: \n%s" %
+                                  str(data))
+                resp = self.__session.put(self.base_url + endpoint,
+                                          params=query,
+                                          json=data,
+                                          timeout=self._timeout(timeout))
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
                 auth_refresh = True
@@ -151,21 +150,19 @@ class PromenadeSession(object):
             self.logger.debug('POST ' + url)
             self.logger.debug('Query Params: ' + str(query))
             if body is not None:
-                self.logger.debug(
-                    "Sending POST with explicit body: \n%s" % body)
-                resp = self.__session.post(
-                    self.base_url + endpoint,
-                    params=query,
-                    data=body,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending POST with explicit body: \n%s" %
+                                  body)
+                resp = self.__session.post(self.base_url + endpoint,
+                                           params=query,
+                                           data=body,
+                                           timeout=self._timeout(timeout))
             else:
-                self.logger.debug(
-                    "Sending POST with JSON body: \n%s" % str(data))
-                resp = self.__session.post(
-                    self.base_url + endpoint,
-                    params=query,
-                    json=data,
-                    timeout=self._timeout(timeout))
+                self.logger.debug("Sending POST with JSON body: \n%s" %
+                                  str(data))
+                resp = self.__session.post(self.base_url + endpoint,
+                                           params=query,
+                                           json=data,
+                                           timeout=self._timeout(timeout))
             if resp.status_code == 401 and not auth_refresh:
                 self.set_auth()
                 auth_refresh = True
@@ -284,9 +281,9 @@ class PromenadeClient(object):
             raise errors.ClientUnauthorizedError(
                 "Unauthorized access to %s, include valid token." % resp.url)
         elif resp.status_code == 403:
-            raise errors.ClientForbiddenError(
-                "Forbidden access to %s" % resp.url)
+            raise errors.ClientForbiddenError("Forbidden access to %s" %
+                                              resp.url)
         elif not resp.ok:
-            raise errors.ClientError(
-                "Error - received %d: %s" % (resp.status_code, resp.text),
-                code=resp.status_code)
+            raise errors.ClientError("Error - received %d: %s" %
+                                     (resp.status_code, resp.text),
+                                     code=resp.status_code)

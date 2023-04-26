@@ -24,14 +24,15 @@ from drydock_provisioner.drivers.node.maasdriver.models.volumegroup import Volum
 
 
 class TestCalculateBytes():
+
     def test_calculate_m_label(self):
         '''Convert megabyte labels to x * 10^6 bytes.'''
         size_str = '15m'
         drive_size = 20 * 10**6
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**6
 
@@ -41,8 +42,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**6
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**6
 
@@ -52,8 +53,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**6
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**6
 
@@ -63,8 +64,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**6
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**6
 
@@ -74,8 +75,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**9
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**9
 
@@ -85,8 +86,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**9
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**9
 
@@ -96,8 +97,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**9
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**9
 
@@ -107,8 +108,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**9
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**9
 
@@ -118,8 +119,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**12
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**12
 
@@ -129,8 +130,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**12
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**12
 
@@ -140,8 +141,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**12
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**12
 
@@ -151,8 +152,8 @@ class TestCalculateBytes():
         drive_size = 20 * 10**12
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 10**12
 
@@ -162,8 +163,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**20
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**20
 
@@ -173,8 +174,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**20
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**20
 
@@ -184,8 +185,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**20
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**20
 
@@ -195,8 +196,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**20
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**20
 
@@ -206,8 +207,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**30
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**30
 
@@ -217,8 +218,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**30
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**30
 
@@ -228,8 +229,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**30
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**30
 
@@ -239,8 +240,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**30
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**30
 
@@ -250,8 +251,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**40
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**40
 
@@ -261,8 +262,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**40
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**40
 
@@ -272,8 +273,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**40
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**40
 
@@ -283,8 +284,8 @@ class TestCalculateBytes():
         drive_size = 20 * 2**40
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == 15 * 2**40
 
@@ -296,8 +297,8 @@ class TestCalculateBytes():
 
         drive = BlockDevice(None, size=drive_size, available_size=drive_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=drive)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=drive)
 
         assert calc_size == part_size
 
@@ -309,8 +310,8 @@ class TestCalculateBytes():
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_size)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=vg)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=vg)
 
         assert calc_size == lv_size
 
@@ -333,7 +334,7 @@ class TestCalculateBytes():
 
         vg = VolumeGroup(None, size=vg_size, available_size=vg_available)
 
-        calc_size = ApplyNodeStorage.calculate_bytes(
-            size_str=size_str, context=vg)
+        calc_size = ApplyNodeStorage.calculate_bytes(size_str=size_str,
+                                                     context=vg)
 
         assert calc_size == vg_available - ApplyNodeStorage.PART_TABLE_RESERVATION

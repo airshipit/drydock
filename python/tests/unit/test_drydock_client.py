@@ -43,11 +43,10 @@ def test_session_init_minimal_no_port():
 
 @responses.activate
 def test_session_get():
-    responses.add(
-        responses.GET,
-        'http://foo.bar.baz/api/v1.0/test',
-        body='okay',
-        status=200)
+    responses.add(responses.GET,
+                  'http://foo.bar.baz/api/v1.0/test',
+                  body='okay',
+                  status=200)
     host = 'foo.bar.baz'
     token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
     marker = '40c3eaf6-6a8a-11e7-a4bd-080027ef795a'
@@ -65,16 +64,14 @@ def test_session_get():
 
 
 @responses.activate
-@mock.patch.object(
-    dc_session.KeystoneClient,
-    'get_token',
-    return_value='5f1e08b6-38ec-4a99-9d0f-00d29c4e325b')
+@mock.patch.object(dc_session.KeystoneClient,
+                   'get_token',
+                   return_value='5f1e08b6-38ec-4a99-9d0f-00d29c4e325b')
 def test_session_get_returns_401(*args):
-    responses.add(
-        responses.GET,
-        'http://foo.bar.baz/api/v1.0/test',
-        body='okay',
-        status=401)
+    responses.add(responses.GET,
+                  'http://foo.bar.baz/api/v1.0/test',
+                  body='okay',
+                  status=401)
     host = 'foo.bar.baz'
     token = '5f1e08b6-38ec-4a99-9d0f-00d29c4e325b'
     marker = '40c3eaf6-6a8a-11e7-a4bd-080027ef795a'
@@ -132,11 +129,10 @@ def test_client_get_nodes_for_filter_post():
 
     host = 'foo.bar.baz'
 
-    responses.add(
-        responses.POST,
-        "http://%s/api/v1.0/nodefilter" % (host),
-        json=node_list,
-        status=200)
+    responses.add(responses.POST,
+                  "http://%s/api/v1.0/nodefilter" % (host),
+                  json=node_list,
+                  status=200)
 
     dd_ses = dc_session.DrydockSession(host)
     dd_client = dc_client.DrydockClient(dd_ses)
@@ -154,11 +150,10 @@ def test_client_validate_design_post():
 
     host = 'foo.bar.baz'
 
-    responses.add(
-        responses.POST,
-        "http://%s/api/v1.0/validatedesign" % (host),
-        json=validation,
-        status=200)
+    responses.add(responses.POST,
+                  "http://%s/api/v1.0/validatedesign" % (host),
+                  json=validation,
+                  status=200)
 
     dd_ses = dc_session.DrydockSession(host)
     dd_client = dc_client.DrydockClient(dd_ses)

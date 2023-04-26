@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
+
     def test_bootaction_pipeline_base64(self):
         objects.register_all()
 

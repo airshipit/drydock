@@ -29,5 +29,5 @@ def test_get_versions(mocker):
 
     expected = api.to_json({'v1.0': {'path': '/api/v1.0', 'status': 'stable'}})
 
-    assert resp.body == expected
+    assert resp.text == expected
     assert resp.status == falcon.HTTP_200

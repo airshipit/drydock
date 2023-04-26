@@ -47,6 +47,7 @@ import drydock_provisioner.drivers.node.maasdriver.models.domain as maas_domain
 
 
 class BaseMaasAction(BaseAction):
+
     def __init__(self, *args, maas_client=None):
         super().__init__(*args)
 
@@ -59,13 +60,12 @@ class BaseMaasAction(BaseAction):
         result_details = machine.get_task_results(result_type=result_type)
         for r in result_details:
             if r.get_decoded_data():
-                bd = objects.BuildData(
-                    node_name=node.name,
-                    task_id=self.task.task_id,
-                    collected_date=r.updated,
-                    generator="{}:{}".format(stage, r.name),
-                    data_format='text/plain',
-                    data_element=r.get_decoded_data())
+                bd = objects.BuildData(node_name=node.name,
+                                       task_id=self.task.task_id,
+                                       collected_date=r.updated,
+                                       generator="{}:{}".format(stage, r.name),
+                                       data_format='text/plain',
+                                       data_element=r.get_decoded_data())
                 self.state_manager.post_build_data(bd)
         log_href = "%s/tasks/%s/builddata" % (get_internal_api_href("v1.0"),
                                               str(self.task.task_id))
@@ -82,11 +82,10 @@ class ValidateNodeServices(BaseMaasAction):
         try:
             if self.maas_client.test_connectivity():
                 self.logger.info("Able to connect to MaaS.")
-                self.task.add_status_msg(
-                    msg='Able to connect to MaaS.',
-                    error=False,
-                    ctx='NA',
-                    ctx_type='NA')
+                self.task.add_status_msg(msg='Able to connect to MaaS.',
+                                         error=False,
+                                         ctx='NA',
+                                         ctx_type='NA')
                 self.task.success()
                 if self.maas_client.test_authentication():
                     self.logger.info("Able to authenticate with MaaS API.")
@@ -147,32 +146,37 @@ class ValidateNodeServices(BaseMaasAction):
                             else:
                                 msg = "Rack controller %s not healthy." % r.hostname
                                 self.logger.info(msg)
-                                self.task.add_status_msg(
-                                    msg=msg,
-                                    error=True,
-                                    ctx=r.hostname,
-                                    ctx_type='rack_ctlr')
+                                self.task.add_status_msg(msg=msg,
+                                                         error=True,
+                                                         ctx=r.hostname,
+                                                         ctx_type='rack_ctlr')
                         if not healthy_rackd:
                             msg = "No healthy rack controllers found."
                             self.logger.info(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx='maas',
-                                ctx_type='cluster')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx='maas',
+                                                     ctx_type='cluster')
                             self.task.failure()
 
         except errors.TransientDriverError as ex:
-            self.task.add_status_msg(
-                msg=str(ex), error=True, ctx='NA', ctx_type='NA', retry=True)
+            self.task.add_status_msg(msg=str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA',
+                                     retry=True)
             self.task.failure()
         except errors.PersistentDriverError as ex:
-            self.task.add_status_msg(
-                msg=str(ex), error=True, ctx='NA', ctx_type='NA')
+            self.task.add_status_msg(msg=str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.failure()
         except Exception as ex:
-            self.task.add_status_msg(
-                msg=str(ex), error=True, ctx='NA', ctx_type='NA')
+            self.task.add_status_msg(msg=str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.failure()
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -268,11 +272,10 @@ class DestroyNode(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -287,15 +290,19 @@ class DestroyNode(BaseMaasAction):
                 if machine is None:
                     msg = "Could not locate machine for node {}".format(n.name)
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
                     continue
                 elif type(machine) == maas_rack.RackController:
                     msg = "Cannot delete rack controller {}.".format(n.name)
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure(focus=n.get_id())
                     continue
 
@@ -311,8 +318,10 @@ class DestroyNode(BaseMaasAction):
                         msg = "Error Releasing node {}, skipping".format(
                             n.name)
                         self.logger.warning(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.get_id())
                         continue
 
@@ -323,9 +332,8 @@ class DestroyNode(BaseMaasAction):
                         * 60) // config.config_mgr.conf.maasdriver.poll_interval
 
                     while (attempts < max_attempts
-                            and (not machine.status_name.startswith('Ready')
-                                 and not
-                                 machine.status_name.startswith('Failed'))):
+                           and (not machine.status_name.startswith('Ready')
+                                and not machine.status_name.startswith('Failed'))):
                         attempts = attempts + 1
                         time.sleep(
                             config.config_mgr.conf.maasdriver.poll_interval)
@@ -343,14 +351,18 @@ class DestroyNode(BaseMaasAction):
                         msg = "Node {} released and disk erased.".format(
                             n.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.success(focus=n.get_id())
                     else:
                         msg = "Node {} release timed out".format(n.name)
                         self.logger.warning(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.get_id())
                 else:
                     # Node is in a state that cannot be released from MaaS API.
@@ -359,8 +371,10 @@ class DestroyNode(BaseMaasAction):
                         n.name, machine.status_name)
                     self.logger.info(msg)
                     machine.reset_storage_config()
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
 
                 # for both cases above delete the node to force re-commissioning
                 # But, before deleting the node reset it power type in maas if
@@ -380,16 +394,20 @@ class DestroyNode(BaseMaasAction):
                 msg = "Deleted Node: {} in status: {}.".format(
                     n.name, machine.status_name)
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.get_id())
 
             except errors.DriverError as dex:
                 msg = "Driver error, while destroying node {}, skipping".format(
                     n.name)
                 self.logger.warning(msg, exc_info=dex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
@@ -409,11 +427,10 @@ class CreateNetworkTemplate(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -422,8 +439,10 @@ class CreateNetworkTemplate(BaseMaasAction):
         if not site_design.network_links:
             msg = ("Site design has no network links, no work to do.")
             self.logger.debug(msg)
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx='NA', ctx_type='NA')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.success()
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.save()
@@ -466,11 +485,10 @@ class CreateNetworkTemplate(BaseMaasAction):
                     msg = "Network %s allowed on link %s, but not defined." % (
                         net_name, design_link.name)
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg,
-                        error=True,
-                        ctx=design_link.name,
-                        ctx_type='network_link')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=design_link.name,
+                                             ctx_type='network_link')
                     continue
 
                 maas_net = subnets.singleton({'cidr': n.cidr})
@@ -481,8 +499,10 @@ class CreateNetworkTemplate(BaseMaasAction):
             if len(fabrics_found) > 1:
                 msg = "MaaS self-discovered network incompatible with NetworkLink %s" % design_link.name
                 self.logger.warning(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=design_link.name, ctx_type='network_link')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=design_link.name,
+                                         ctx_type='network_link')
                 continue
             elif len(fabrics_found) == 1:
                 link_fabric_id = fabrics_found.pop()
@@ -493,28 +513,31 @@ class CreateNetworkTemplate(BaseMaasAction):
                 link_fabric = fabrics.singleton({'name': design_link.name})
 
                 if link_fabric is None:
-                    link_fabric = maas_fabric.Fabric(
-                        self.maas_client, name=design_link.name)
+                    link_fabric = maas_fabric.Fabric(self.maas_client,
+                                                     name=design_link.name)
                     link_fabric = fabrics.add(link_fabric)
 
             # Ensure that the MTU of the untagged VLAN on the fabric
             # matches that on the NetworkLink config
 
-            vlan_list = maas_vlan.Vlans(
-                self.maas_client, fabric_id=link_fabric.resource_id)
+            vlan_list = maas_vlan.Vlans(self.maas_client,
+                                        fabric_id=link_fabric.resource_id)
             vlan_list.refresh()
-            msg = "Updating native VLAN MTU = %d on network link %s" % (design_link.mtu,
-                                                                        design_link.name)
+            msg = "Updating native VLAN MTU = %d on network link %s" % (
+                design_link.mtu, design_link.name)
             self.logger.debug(msg)
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx=design_link.name, ctx_type='network_link')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx=design_link.name,
+                                     ctx_type='network_link')
             vlan = vlan_list.singleton({'vid': 0})
             if vlan:
                 vlan.mtu = design_link.mtu
                 vlan.update()
             else:
-                self.logger.warning("Unable to find native VLAN on fabric %s."
-                                    % link_fabric.resource_id)
+                self.logger.warning(
+                    "Unable to find native VLAN on fabric %s." %
+                    link_fabric.resource_id)
 
             # Now that we have the fabrics sorted out, check
             # that VLAN tags and subnet attributes are correct
@@ -532,10 +555,9 @@ class CreateNetworkTemplate(BaseMaasAction):
                         self.logger.info(
                             'Network domain not found, adding: %s',
                             n.dns_domain)
-                        domain = maas_domain.Domain(
-                            self.maas_client,
-                            name=n.dns_domain,
-                            authoritative=False)
+                        domain = maas_domain.Domain(self.maas_client,
+                                                    name=n.dns_domain,
+                                                    authoritative=False)
                         domain = domains.add(domain)
                         domains.refresh()
 
@@ -545,12 +567,15 @@ class CreateNetworkTemplate(BaseMaasAction):
                         msg = "Subnet for network %s not found, creating..." % (
                             n.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx='NA',
+                                                 ctx_type='NA')
 
                         fabric_list = maas_fabric.Fabrics(self.maas_client)
                         fabric_list.refresh()
-                        fabric = fabric_list.singleton({'name': design_link.name})
+                        fabric = fabric_list.singleton(
+                            {'name': design_link.name})
 
                         if fabric is not None:
                             vlan_list = maas_vlan.Vlans(
@@ -572,11 +597,10 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 msg = "VLAN %s found for network %s, updated attributes" % (
                                     vlan.resource_id, n.name)
                                 self.logger.debug(msg)
-                                self.task.add_status_msg(
-                                    msg=msg,
-                                    error=False,
-                                    ctx=n.name,
-                                    ctx_type='network')
+                                self.task.add_status_msg(msg=msg,
+                                                         error=False,
+                                                         ctx=n.name,
+                                                         ctx_type='network')
                             else:
                                 # Create a new VLAN in this fabric and assign subnet to it
                                 vlan = maas_vlan.Vlan(
@@ -590,11 +614,10 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 msg = "VLAN %s created for network %s" % (
                                     vlan.resource_id, n.name)
                                 self.logger.debug(msg)
-                                self.task.add_status_msg(
-                                    msg=msg,
-                                    error=False,
-                                    ctx=n.name,
-                                    ctx_type='network')
+                                self.task.add_status_msg(msg=msg,
+                                                         error=False,
+                                                         ctx=n.name,
+                                                         ctx_type='network')
 
                             # If subnet did not exist, create it here and attach it to the fabric/VLAN
                             subnet = maas_subnet.Subnet(
@@ -612,35 +635,32 @@ class CreateNetworkTemplate(BaseMaasAction):
                             msg = "Created subnet %s for CIDR %s on VLAN %s" % (
                                 subnet.resource_id, subnet.cidr, subnet.vlan)
                             self.logger.debug(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='network')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='network')
                         else:
                             msg = "Fabric %s should be created, but cannot locate it." % (
                                 design_link.name)
                             self.logger.error(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='network_link')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='network_link')
                     else:
                         subnet.name = n.name
                         subnet.dns_servers = n.dns_servers
 
                         msg = "Subnet %s found for network %s, updated attributes" % (
                             subnet.resource_id, n.name)
-                        self.task.add_status_msg(
-                            msg=msg,
-                            error=False,
-                            ctx=n.name,
-                            ctx_type='network')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='network')
                         self.logger.info(msg)
 
-                        vlan_list = maas_vlan.Vlans(
-                            self.maas_client, fabric_id=subnet.fabric)
+                        vlan_list = maas_vlan.Vlans(self.maas_client,
+                                                    fabric_id=subnet.fabric)
                         vlan_list.refresh()
 
                         vlan = vlan_list.select(subnet.vlan)
@@ -656,20 +676,18 @@ class CreateNetworkTemplate(BaseMaasAction):
                             msg = "VLAN %s found for network %s, updated attributes" % (
                                 vlan.resource_id, n.name)
                             self.logger.debug(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='network')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='network')
                         else:
                             msg = "MaaS subnet %s does not have a matching VLAN" % (
                                 subnet.resource_id)
                             self.logger.error(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='network')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='network')
                             self.task.failure(focus=n.name)
 
                     # Check if the routes have a default route
@@ -687,14 +705,13 @@ class CreateNetworkTemplate(BaseMaasAction):
                             msg = "Error adding range to network %s: %s" % (
                                 n.name, str(r))
                             self.logger.error(msg, exc_info=e)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='network')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='network')
 
-                    vlan_list = maas_vlan.Vlans(
-                        self.maas_client, fabric_id=subnet.fabric)
+                    vlan_list = maas_vlan.Vlans(self.maas_client,
+                                                fabric_id=subnet.fabric)
                     vlan_list.refresh()
                     vlan = vlan_list.select(subnet.vlan)
 
@@ -703,11 +720,10 @@ class CreateNetworkTemplate(BaseMaasAction):
                         msg = "DHCP enabled for subnet %s, activating in MaaS" % (
                             subnet.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg,
-                            error=False,
-                            ctx=n.name,
-                            ctx_type='network')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='network')
 
                         rack_ctlrs = maas_rack.RackControllers(
                             self.maas_client)
@@ -725,8 +741,9 @@ class CreateNetworkTemplate(BaseMaasAction):
                                 if r.interface_for_ip(
                                         n.dhcp_relay_upstream_target):
                                     if not r.is_healthy():
-                                        msg = ("Rack controller %s with DHCP relay is not healthy." %
-                                               r.hostname)
+                                        msg = (
+                                            "Rack controller %s with DHCP relay is not healthy."
+                                            % r.hostname)
                                         self.logger.info(msg)
                                         self.task.add_status_msg(
                                             msg=msg,
@@ -757,8 +774,9 @@ class CreateNetworkTemplate(BaseMaasAction):
                                         rackctl_id = r.resource_id
 
                                         if not r.is_healthy():
-                                            msg = ("Rack controller %s not healthy, skipping DHCP config." %
-                                                   r.resource_id)
+                                            msg = (
+                                                "Rack controller %s not healthy, skipping DHCP config."
+                                                % r.resource_id)
                                             self.logger.info(msg)
                                             self.task.add_status_msg(
                                                 msg=msg,
@@ -797,11 +815,10 @@ class CreateNetworkTemplate(BaseMaasAction):
                             msg = "Network %s requires DHCP, but could not locate a rack controller to serve it." % (
                                 n.name)
                             self.logger.error(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='network')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='network')
                             self.task.failure(focus=n.name)
 
                 except ValueError:
@@ -823,14 +840,15 @@ class CreateNetworkTemplate(BaseMaasAction):
                     continue
                 dest_subnet = subnet_list.singleton({'cidr': route_net})
                 if dest_subnet is not None:
-                    src_subnet.add_static_route(
-                        dest_subnet.resource_id,
-                        r.get('gateway'),
-                        metric=r.get('metric', 100))
+                    src_subnet.add_static_route(dest_subnet.resource_id,
+                                                r.get('gateway'),
+                                                metric=r.get('metric', 100))
                 else:
                     msg = "Could not locate destination network for static route to %s." % route_net
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='network')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='network')
                     self.task.failure(focus=n.name)
                     self.logger.info(msg)
                     continue
@@ -852,8 +870,10 @@ class CreateNetworkTemplate(BaseMaasAction):
             else:
                 msg = "Network %s defined, but not found in MaaS after network config task." % n.name
                 self.logger.error(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='network')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='network')
                 self.task.failure(focus=n.name)
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -874,11 +894,10 @@ class ConfigureNodeProvisioner(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -891,11 +910,10 @@ class ConfigureNodeProvisioner(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg='Error accessing MaaS SshKeys API',
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg='Error accessing MaaS SshKeys API',
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -906,9 +924,8 @@ class ConfigureNodeProvisioner(BaseMaasAction):
         if repo_list:
             for r in repo_list:
                 try:
-                    existing_repo = current_repos.singleton({
-                        'name': r.get_id()
-                    })
+                    existing_repo = current_repos.singleton(
+                        {'name': r.get_id()})
                     new_repo = self.create_maas_repo(self.maas_client, r)
                     if existing_repo:
                         new_repo.resource_id = existing_repo.resource_id
@@ -916,22 +933,28 @@ class ConfigureNodeProvisioner(BaseMaasAction):
                         msg = "Updating repository definition for %s." % (
                             r.name)
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx='NA',
+                                                 ctx_type='NA')
                         self.task.success()
                     else:
                         new_repo = current_repos.add(new_repo)
                         msg = "Adding repository definition for %s." % (r.name)
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx='NA',
+                                                 ctx_type='NA')
                         self.task.success()
                 except Exception as ex:
                     msg = "Error adding repository to MaaS configuration: %s" % str(
                         ex)
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx='NA', ctx_type='NA')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx='NA',
+                                             ctx_type='NA')
                     self.task.failure()
             if repo_list.remove_unlisted:
                 defined_repos = [x.get_id() for x in repo_list]
@@ -946,8 +969,10 @@ class ConfigureNodeProvisioner(BaseMaasAction):
             msg = ("No repositories to add, no work to do.")
             self.logger.debug(msg)
             self.task.success()
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx='NA', ctx_type='NA')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
@@ -997,11 +1022,10 @@ class ConfigureUserCredentials(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1014,11 +1038,10 @@ class ConfigureUserCredentials(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg='Error accessing MaaS SshKeys API',
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg='Error accessing MaaS SshKeys API',
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -1029,37 +1052,44 @@ class ConfigureUserCredentials(BaseMaasAction):
         if key_list:
             for k in key_list:
                 try:
-                    if len(current_keys.query({
-                            'key': k.replace("\n", "")
-                    })) == 0:
+                    if len(current_keys.query({'key': k.replace("\n",
+                                                                "")})) == 0:
                         new_key = maas_keys.SshKey(self.maas_client, key=k)
                         new_key = current_keys.add(new_key)
                         msg = "Added SSH key %s to MaaS user profile. Will be installed on all deployed nodes." % (
                             k[:16])
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx='NA',
+                                                 ctx_type='NA')
                         self.task.success()
                     else:
                         msg = "SSH key %s already exists in MaaS user profile." % k[:
                                                                                     16]
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx='NA', ctx_type='NA')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx='NA',
+                                                 ctx_type='NA')
                         self.task.success()
                 except Exception as ex:
                     msg = "Error adding SSH key to MaaS user profile: %s" % str(
                         ex)
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx='NA', ctx_type='NA')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx='NA',
+                                             ctx_type='NA')
                     self.task.failure()
         else:
             msg = ("No keys to add, no work to do.")
             self.logger.debug(msg)
             self.task.success()
-            self.task.add_status_msg(
-                msg=msg, error=False, ctx='NA', ctx_type='NA')
+            self.task.add_status_msg(msg=msg,
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
@@ -1076,11 +1106,10 @@ class IdentifyNode(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1091,49 +1120,51 @@ class IdentifyNode(BaseMaasAction):
 
         for n in nodes:
             try:
-                machine = find_node_in_maas(self.maas_client, n, probably_exists=False)
+                machine = find_node_in_maas(self.maas_client,
+                                            n,
+                                            probably_exists=False)
                 if machine is None:
                     self.task.failure(focus=n.get_id())
-                    self.task.add_status_msg(
-                        msg="Node %s not found in MaaS" % n.name,
-                        error=True,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.task.add_status_msg(msg="Node %s not found in MaaS" %
+                                             n.name,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                 elif type(machine) == maas_machine.Machine:
                     machine.update_identity(
                         n,
                         domain=n.get_domain(site_design),
-                        use_node_oob_params=config.config_mgr.conf.maasdriver.use_node_oob_params,
+                        use_node_oob_params=config.config_mgr.conf.maasdriver.
+                        use_node_oob_params,
                     )
                     msg = "Node %s identified in MaaS" % n.name
                     self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg,
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
                 elif type(machine) == maas_rack.RackController:
                     msg = "Rack controller %s identified in MaaS" % n.name
                     self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg,
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
             except ApiNotAvailable as api_ex:
-                self.logger.debug("Error accessing the MaaS API.", exc_info=api_ex)
+                self.logger.debug("Error accessing the MaaS API.",
+                                  exc_info=api_ex)
                 self.task.failure()
-                self.task.add_status_msg(
-                    msg='Error accessing MaaS API: %s' % str(api_ex),
-                    error=True,
-                    ctx='NA',
-                    ctx_type='NA')
+                self.task.add_status_msg(msg='Error accessing MaaS API: %s' %
+                                         str(api_ex),
+                                         error=True,
+                                         ctx='NA',
+                                         ctx_type='NA')
                 self.task.save()
             except Exception as ex:
-                self.logger.debug(
-                    "Exception caught in identify node.", exc_info=ex)
+                self.logger.debug("Exception caught in identify node.",
+                                  exc_info=ex)
                 self.task.failure(focus=n.get_id())
                 self.task.add_status_msg(
                     msg="Error trying to location %s in MAAS" % n.name,
@@ -1144,6 +1175,7 @@ class IdentifyNode(BaseMaasAction):
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
         return
+
 
 class ConfigureHardware(BaseMaasAction):
     """Action to start commissioning a server."""
@@ -1169,11 +1201,10 @@ class ConfigureHardware(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1185,15 +1216,17 @@ class ConfigureHardware(BaseMaasAction):
         # TODO(sh8121att): Better way of representing the node statuses than static strings
         for n in nodes:
             try:
-                self.logger.debug(
-                    "Locating node %s for commissioning" % (n.name))
+                self.logger.debug("Locating node %s for commissioning" %
+                                  (n.name))
                 machine = find_node_in_maas(self.maas_client, n)
                 if type(machine) == maas_rack.RackController:
                     msg = "Located node %s in MaaS as rack controller. Skipping." % (
                         n.name)
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
                 elif machine is not None:
                     if machine.status_name in [
@@ -1203,9 +1236,8 @@ class ConfigureHardware(BaseMaasAction):
                         self.logger.debug(
                             "Located node %s in MaaS, starting commissioning" %
                             (n.name))
-                        machine.commission(
-                            skip_bmc_config=config.config_mgr.conf.maasdriver.skip_bmc_config
-                        )
+                        machine.commission(skip_bmc_config=config.config_mgr.
+                                           conf.maasdriver.skip_bmc_config)
 
                         # Poll machine status
                         attempts = 0
@@ -1216,8 +1248,7 @@ class ConfigureHardware(BaseMaasAction):
 
                         while (attempts < max_attempts
                                and (machine.status_name != 'Ready'
-                                    and not
-                                    machine.status_name.startswith('Failed'))):
+                                    and not machine.status_name.startswith('Failed'))):
                             attempts = attempts + 1
                             time.sleep(config.config_mgr.conf.maasdriver.
                                        poll_interval)
@@ -1235,35 +1266,36 @@ class ConfigureHardware(BaseMaasAction):
                         if machine.status_name == 'Ready':
                             msg = "Node %s commissioned." % (n.name)
                             self.logger.info(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='node')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
                             self.task.success(focus=n.get_id())
                             self.collect_build_data(machine)
                         else:
                             msg = "Node %s failed commissioning." % (n.name)
                             self.logger.info(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='node')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
                             self.task.failure(focus=n.get_id())
-                        self._add_detail_logs(
-                            n,
-                            machine,
-                            'commission',
-                            result_type='commissioning')
-                        self._add_detail_logs(
-                            n, machine, 'testing', result_type='testing')
+                        self._add_detail_logs(n,
+                                              machine,
+                                              'commission',
+                                              result_type='commissioning')
+                        self._add_detail_logs(n,
+                                              machine,
+                                              'testing',
+                                              result_type='testing')
                     elif machine.status_name in ['Commissioning', 'Testing']:
                         msg = "Located node %s in MaaS, node already being commissioned. Skipping..." % (
                             n.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.success(focus=n.get_id())
                     elif machine.status_name in [
                             'Ready', 'Deploying', 'Allocated', 'Deployed'
@@ -1271,21 +1303,27 @@ class ConfigureHardware(BaseMaasAction):
                         msg = "Located node %s in MaaS, node commissioned. Skipping..." % (
                             n.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.success(focus=n.get_id())
                     else:
                         msg = "Located node %s in MaaS, unknown status %s. Skipping." % (
                             n, machine.status_name)
                         self.logger.warning(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.get_id())
                 else:
                     msg = "Node %s not found in MaaS" % n.name
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure(focus=n.get_id())
             except Exception as ex:
                 msg = "Error commissioning node %s: %s" % (n.name, str(ex))
@@ -1293,8 +1331,10 @@ class ConfigureHardware(BaseMaasAction):
                 self.logger.debug(
                     "Unhandled exception attempting to commission node.",
                     exc_info=ex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -1312,25 +1352,23 @@ class ConfigureHardware(BaseMaasAction):
                         df = 'text/xml'
                     else:
                         df = 'text/plain'
-                    bd = objects.BuildData(
-                        node_name=machine.hostname,
-                        task_id=self.task.get_id(),
-                        generator=t,
-                        collected_date=datetime.utcnow(),
-                        data_format=df,
-                        data_element=d.decode())
-                    self.logger.debug(
-                        "Saving build data from generator %s" % t)
+                    bd = objects.BuildData(node_name=machine.hostname,
+                                           task_id=self.task.get_id(),
+                                           generator=t,
+                                           collected_date=datetime.utcnow(),
+                                           data_format=df,
+                                           data_element=d.decode())
+                    self.logger.debug("Saving build data from generator %s" %
+                                      t)
                     self.state_manager.post_build_data(bd)
-                    self.task.add_status_msg(
-                        msg="Saving build data element.",
-                        error=False,
-                        ctx=machine.hostname,
-                        ctx_type='node')
+                    self.task.add_status_msg(msg="Saving build data element.",
+                                             error=False,
+                                             ctx=machine.hostname,
+                                             ctx_type='node')
         except Exception as ex:
-            self.logger.error(
-                "Error collecting node build data for %s" % machine.hostname,
-                exc_info=ex)
+            self.logger.error("Error collecting node build data for %s" %
+                              machine.hostname,
+                              exc_info=ex)
 
 
 class ApplyNodeNetworking(BaseMaasAction):
@@ -1349,11 +1387,11 @@ class ApplyNodeNetworking(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg="Error accessing MaaS API: %s" % str(ex),
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error accessing MaaS API: %s" %
+                                     str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -1363,11 +1401,10 @@ class ApplyNodeNetworking(BaseMaasAction):
         try:
             site_design = self._load_site_design(resolve_aliases=True)
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1385,14 +1422,14 @@ class ApplyNodeNetworking(BaseMaasAction):
                 machine = find_node_in_maas(self.maas_client, n)
 
                 if type(machine) is maas_rack.RackController:
-                    msg = ("Node %s is a rack controller, skipping deploy action." %
-                           n.name)
+                    msg = (
+                        "Node %s is a rack controller, skipping deploy action."
+                        % n.name)
                     self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg,
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.name)
                     continue
                 elif machine is not None:
@@ -1409,25 +1446,28 @@ class ApplyNodeNetworking(BaseMaasAction):
                                 "Node %s could not be released, skipping deployment."
                                 % n.name)
                             self.logger.info(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=True,
-                                ctx=n.name,
-                                ctx_type='node')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=True,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
                             self.task.failure(focus=n.name)
                             continue
                         msg = ("Released failed node %s to retry deployment." %
                                n.name)
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
 
                     if machine.status_name == 'Ready':
                         msg = "Located node %s in MaaS, starting interface configuration" % (
                             n.name)
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
 
                         machine.reset_network_config()
                         machine.refresh()
@@ -1454,11 +1494,10 @@ class ApplyNodeNetworking(BaseMaasAction):
                                 msg = "No fabric found for NetworkLink %s" % (
                                     nl.name)
                                 self.logger.error(msg)
-                                self.task.add_status_msg(
-                                    msg=msg,
-                                    error=True,
-                                    ctx=n.name,
-                                    ctx_type='node')
+                                self.task.add_status_msg(msg=msg,
+                                                         error=True,
+                                                         ctx=n.name,
+                                                         ctx_type='node')
                                 self.task.failure(focus=n.name)
                                 continue
 
@@ -1467,11 +1506,10 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     msg = "Building node %s interface %s as a bond." % (
                                         n.name, i.device_name)
                                     self.logger.debug(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=False,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=False,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                                     hw_iface_list = i.get_hw_slaves()
                                     hw_iface_logicalname_list = []
                                     for hw_iface in hw_iface_list:
@@ -1493,11 +1531,10 @@ class ApplyNodeNetworking(BaseMaasAction):
                                           "interface %s has less than 2 slaves." % \
                                           (nl.name, i.device_name)
                                     self.logger.warning(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=True,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=True,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                                     self.task.failure(focus=n.name)
                                     continue
                             else:
@@ -1505,32 +1542,29 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     msg = "Network link %s disables bonding, interface %s has multiple slaves." % \
                                           (nl.name, i.device_name)
                                     self.logger.warning(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=True,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=True,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                                     self.task.failure(n.name)
                                     continue
                                 elif len(i.get_hw_slaves()) == 0:
                                     msg = "Interface %s has 0 slaves." % (
                                         i.device_name)
                                     self.logger.warning(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=True,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=True,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                                     self.task.failure(focus=n.name)
                                 else:
                                     msg = "Configuring interface %s on node %s" % (
                                         i.device_name, n.name)
                                     self.logger.debug(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=False,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=False,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                                     hw_iface = i.get_hw_slaves()[0]
                                     # TODO(sh8121att): HardwareProfile device alias integration
                                     iface = machine.get_network_interface(
@@ -1540,11 +1574,10 @@ class ApplyNodeNetworking(BaseMaasAction):
                                 msg = "Interface %s not found on node %s, skipping configuration" % (
                                     i.device_name, machine.resource_id)
                                 self.logger.warning(msg)
-                                self.task.add_status_msg(
-                                    msg=msg,
-                                    error=True,
-                                    ctx=n.name,
-                                    ctx_type='node')
+                                self.task.add_status_msg(msg=msg,
+                                                         error=True,
+                                                         ctx=n.name,
+                                                         ctx_type='node')
                                 self.task.failure(focus=n.name)
                                 continue
 
@@ -1640,11 +1673,10 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     msg = "Linking system %s interface %s to subnet %s" % (
                                         n.name, i.device_name, dd_net.cidr)
                                     self.logger.info(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=False,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=False,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
 
                                     link_iface.link_subnet(**link_options)
                                     self.task.success(focus=n.name)
@@ -1652,18 +1684,20 @@ class ApplyNodeNetworking(BaseMaasAction):
                                     self.task.failure(focus=n.name)
                                     msg = "Did not find a defined Network %s to attach to interface" % iface_net
                                     self.logger.error(msg)
-                                    self.task.add_status_msg(
-                                        msg=msg,
-                                        error=True,
-                                        ctx=n.name,
-                                        ctx_type='node')
+                                    self.task.add_status_msg(msg=msg,
+                                                             error=True,
+                                                             ctx=n.name,
+                                                             ctx_type='node')
                     elif machine.status_name == 'Broken':
-                        msg = ("Located node %s in MaaS, status broken. Run "
-                               "ConfigureHardware before configurating network"
-                               % (n.name))
+                        msg = (
+                            "Located node %s in MaaS, status broken. Run "
+                            "ConfigureHardware before configurating network" %
+                            (n.name))
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.name)
                     elif machine.status_name == 'Deployed':
                         msg = (
@@ -1671,29 +1705,37 @@ class ApplyNodeNetworking(BaseMaasAction):
                             "and considering success. Destroy node first if redeploy needed."
                             % (n.name))
                         self.logger.info(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.success(focus=n.name)
 
                     else:
                         msg = "Located node %s in MaaS, unknown status %s. Skipping..." % (
                             n.name, machine.status_name)
                         self.logger.warning(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.name)
                 else:
                     msg = "Node %s not found in MaaS" % n.name
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure()
             except Exception as ex:
                 msg = "Error configuring network for node %s: %s" % (n.name,
                                                                      str(ex))
                 self.logger.warning(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.name)
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -1713,11 +1755,11 @@ class ApplyNodePlatform(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg="Error accessing MaaS API: %s" % str(ex),
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error accessing MaaS API: %s" %
+                                     str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -1727,11 +1769,10 @@ class ApplyNodePlatform(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1750,23 +1791,29 @@ class ApplyNodePlatform(BaseMaasAction):
                 if machine is None:
                     msg = "Could not locate machine for node %s" % n.name
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure(focus=n.get_id())
                     continue
             except Exception as ex1:
                 msg = "Error locating machine for node %s: %s" % (n, str(ex1))
                 self.task.failure(focus=n.get_id())
                 self.logger.error(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 continue
 
             if type(machine) is maas_rack.RackController:
                 msg = ("Skipping changes to rack controller %s." % n.name)
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
                 continue
             elif machine.status_name == 'Deployed':
@@ -1775,8 +1822,10 @@ class ApplyNodePlatform(BaseMaasAction):
                     "and considering success. Destroy node first if redeploy needed."
                     % (n.name))
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
                 continue
 
@@ -1796,39 +1845,46 @@ class ApplyNodePlatform(BaseMaasAction):
                     msg = "Creating kernel_params tag for node %s: %s" % (
                         n.name, kp_string)
                     self.logger.debug(msg)
-                    node_kp_tag = maas_tag.Tag(
-                        self.maas_client,
-                        name="%s_kp" % (n.name),
-                        kernel_opts=kp_string)
+                    node_kp_tag = maas_tag.Tag(self.maas_client,
+                                               name="%s_kp" % (n.name),
+                                               kernel_opts=kp_string)
                     node_kp_tag = tag_list.add(node_kp_tag)
                     node_kp_tag.apply_to_node(machine.resource_id)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
 
                     msg = "Applied kernel parameters to node %s" % n.name
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
                 else:
                     msg = "No kernel parameters to apply for %s." % n.name
                     self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
             except Exception as ex2:
                 msg = "Error configuring kernel parameters for node %s" % (
                     n.name)
                 self.logger.error(msg + ": %s" % str(ex2))
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
             try:
                 if n.tags is not None and len(n.tags) > 0:
-                    self.logger.info(
-                        "Configuring static tags for node %s" % (n.name))
+                    self.logger.info("Configuring static tags for node %s" %
+                                     (n.name))
 
                     for t in n.tags:
                         tag_list.refresh()
@@ -1853,23 +1909,29 @@ class ApplyNodePlatform(BaseMaasAction):
                         msg = "Applying tag %s to node %s" % (
                             tag.resource_id, machine.resource_id)
                         self.logger.debug(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         tag.apply_to_node(machine.resource_id)
-                    self.logger.info(
-                        "Applied static tags to node %s" % (n.name))
+                    self.logger.info("Applied static tags to node %s" %
+                                     (n.name))
                     self.task.success(focus=n.get_id())
                 else:
                     msg = "No node tags to apply for %s." % n.name
                     self.logger.debug(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.get_id())
             except Exception as ex3:
                 msg = "Error configuring static tags for node %s" % (n.name)
                 self.logger.error(msg + ": " + str(ex3))
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
@@ -1897,11 +1959,11 @@ class ApplyNodeStorage(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg="Error accessing MaaS API: %s" % str(ex),
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error accessing MaaS API: %s" %
+                                     str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -1911,11 +1973,10 @@ class ApplyNodeStorage(BaseMaasAction):
         try:
             site_design = self._load_site_design(resolve_aliases=True)
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -1934,24 +1995,31 @@ class ApplyNodeStorage(BaseMaasAction):
                 if machine is None:
                     msg = "Could not locate machine for node %s" % n.name
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure(focus=n.get_id())
                     continue
             except Exception as ex:
                 msg = "Error locating machine for node %s" % (n.name)
                 self.logger.error(msg + ": " + str(ex))
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
             if type(machine) is maas_rack.RackController:
-                msg = ("Skipping configuration updates to rack controller %s." %
-                       n.name)
+                msg = (
+                    "Skipping configuration updates to rack controller %s." %
+                    n.name)
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
                 continue
             elif machine.status_name == 'Deployed':
@@ -1960,8 +2028,10 @@ class ApplyNodeStorage(BaseMaasAction):
                     "and considering success. Destroy node first if redeploy needed."
                     % (n.name))
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
                 continue
 
@@ -1975,8 +2045,10 @@ class ApplyNodeStorage(BaseMaasAction):
                 """
                 msg = "Clearing current storage layout on node %s." % n.name
                 self.logger.debug(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 machine.reset_storage_config()
 
                 (root_dev, root_block) = n.find_fs_block_device('/')
@@ -1987,56 +2059,63 @@ class ApplyNodeStorage(BaseMaasAction):
                     storage_layout['layout_type'] = 'flat'
                     storage_layout['root_device'] = n.get_logicalname(
                         root_dev.name)
-                    storage_layout['root_size'] = ApplyNodeStorage.calculate_bytes(
-                        root_block.size)
+                    storage_layout[
+                        'root_size'] = ApplyNodeStorage.calculate_bytes(
+                            root_block.size)
                 elif isinstance(root_block, hostprofile.HostVolume):
                     storage_layout['layout_type'] = 'lvm'
                     if len(root_dev.physical_devices) != 1:
                         msg = "Root LV in VG with multiple physical devices on node %s" % (
                             n.name)
                         self.logger.error(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.get_id())
                         continue
                     storage_layout['root_device'] = n.get_logicalname(
                         root_dev.physical_devices[0])
-                    storage_layout['root_lv_size'] = ApplyNodeStorage.calculate_bytes(
-                        root_block.size)
+                    storage_layout[
+                        'root_lv_size'] = ApplyNodeStorage.calculate_bytes(
+                            root_block.size)
                     storage_layout['root_lv_name'] = root_block.name
                     storage_layout['root_vg_name'] = root_dev.name
 
                 if boot_block is not None:
-                    storage_layout['boot_size'] = ApplyNodeStorage.calculate_bytes(
-                        boot_block.size)
+                    storage_layout[
+                        'boot_size'] = ApplyNodeStorage.calculate_bytes(
+                            boot_block.size)
 
                 msg = "Setting node %s root storage layout: %s" % (
                     n.name, str(storage_layout))
                 self.logger.debug(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 machine.set_storage_layout(**storage_layout)
                 vg_devs = {}
 
                 for d in n.storage_devices:
-                    maas_dev = machine.block_devices.singleton({
-                        'name':
-                        n.get_logicalname(d.name)
-                    })
+                    maas_dev = machine.block_devices.singleton(
+                        {'name': n.get_logicalname(d.name)})
                     if maas_dev is None:
                         msg = "Dev %s (%s) not found on node %s" % (
-                                d.name, n.get_logicalname(d.name), n.name)
+                            d.name, n.get_logicalname(d.name), n.name)
                         self.logger.warning(msg)
-                        self.task.add_status_msg(
-                            msg=msg, error=True, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=True,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
                         self.task.failure(focus=n.get_id())
                         continue
 
                     if d.volume_group is not None:
                         self.logger.debug(
                             "Adding dev %s (%s) to volume group %s" %
-                            (d.name, n.get_logicalname(d.name),
-                             d.volume_group))
+                            (d.name, n.get_logicalname(
+                                d.name), d.volume_group))
                         if d.volume_group not in vg_devs:
                             vg_devs[d.volume_group] = {'b': [], 'p': []}
                         vg_devs[d.volume_group]['b'].append(
@@ -2055,16 +2134,19 @@ class ApplyNodeStorage(BaseMaasAction):
                         maas_dev.refresh()
                         size = ApplyNodeStorage.calculate_bytes(
                             size_str=p.size, context=maas_dev)
-                        part = maas_partition.Partition(
-                            self.maas_client, size=size, bootable=p.bootable)
+                        part = maas_partition.Partition(self.maas_client,
+                                                        size=size,
+                                                        bootable=p.bootable)
                         if p.part_uuid is not None:
                             part.uuid = p.part_uuid
                         msg = "Creating partition %s sized %d bytes on dev %s (%s)" % (
                             p.name, size, d.name, n.get_logicalname(d.name))
                         self.logger.debug(msg)
                         part = maas_dev.create_partition(part)
-                        self.task.add_status_msg(
-                            msg=msg, error=False, ctx=n.name, ctx_type='node')
+                        self.task.add_status_msg(msg=msg,
+                                                 error=False,
+                                                 ctx=n.name,
+                                                 ctx_type='node')
 
                         if p.volume_group is not None:
                             self.logger.debug(
@@ -2086,11 +2168,10 @@ class ApplyNodeStorage(BaseMaasAction):
                                                                      p.fstype)
                             self.logger.debug(msg)
                             part.format(**format_opts)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='node')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
                             mount_opts = {
                                 'mount_point': p.mountpoint,
                                 'mount_options': p.mount_options,
@@ -2099,14 +2180,13 @@ class ApplyNodeStorage(BaseMaasAction):
                                 p.name, p.mountpoint)
                             self.logger.debug(msg)
                             part.mount(**mount_opts)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='node')
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
 
-                self.logger.debug(
-                    "Finished configuring node %s partitions" % n.name)
+                self.logger.debug("Finished configuring node %s partitions" %
+                                  n.name)
 
                 for v in n.volume_groups:
                     if v.is_sys():
@@ -2119,8 +2199,8 @@ class ApplyNodeStorage(BaseMaasAction):
                             % (v.name))
                         continue
 
-                    maas_volgroup = maas_vg.VolumeGroup(
-                        self.maas_client, name=v.name)
+                    maas_volgroup = maas_vg.VolumeGroup(self.maas_client,
+                                                        name=v.name)
 
                     if v.vg_uuid is not None:
                         maas_volgroup.uuid = v.vg_uuid
@@ -2138,14 +2218,17 @@ class ApplyNodeStorage(BaseMaasAction):
 
                     maas_volgroup = machine.volume_groups.add(maas_volgroup)
                     maas_volgroup.refresh()
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
 
                     for lv in v.logical_volumes:
                         calc_size = ApplyNodeStorage.calculate_bytes(
                             size_str=lv.size, context=maas_volgroup)
-                        bd_id = maas_volgroup.create_lv(
-                            name=lv.name, uuid_str=lv.lv_uuid, size=calc_size)
+                        bd_id = maas_volgroup.create_lv(name=lv.name,
+                                                        uuid_str=lv.lv_uuid,
+                                                        size=calc_size)
 
                         if lv.mountpoint is not None:
                             machine.refresh()
@@ -2153,32 +2236,29 @@ class ApplyNodeStorage(BaseMaasAction):
                             msg = "Formatting LV %s as filesystem on node %s." % (
                                 lv.name, n.name)
                             self.logger.debug(msg)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='node')
-                            maas_lv.format(
-                                fstype=lv.fstype, uuid_str=lv.fs_uuid)
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
+                            maas_lv.format(fstype=lv.fstype,
+                                           uuid_str=lv.fs_uuid)
                             msg = "Mounting LV %s at %s on node %s." % (
                                 lv.name, lv.mountpoint, n.name)
                             self.logger.debug(msg)
-                            maas_lv.mount(
-                                mount_point=lv.mountpoint,
-                                mount_options=lv.mount_options)
-                            self.task.add_status_msg(
-                                msg=msg,
-                                error=False,
-                                ctx=n.name,
-                                ctx_type='node')
+                            maas_lv.mount(mount_point=lv.mountpoint,
+                                          mount_options=lv.mount_options)
+                            self.task.add_status_msg(msg=msg,
+                                                     error=False,
+                                                     ctx=n.name,
+                                                     ctx_type='node')
                 self.task.success(focus=n.get_id())
             except Exception as ex:
                 self.task.failure(focus=n.get_id())
-                self.task.add_status_msg(
-                    msg="Error configuring storage.  %s" % str(ex),
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Error configuring storage.  %s" %
+                                         str(ex),
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug("Error configuring storage for node %s: %s" %
                                   (n.name, str(ex)))
 
@@ -2219,8 +2299,8 @@ class ApplyNodeStorage(BaseMaasAction):
         match = regex.match(size_str)
 
         if not match:
-            raise errors.InvalidSizeFormat(
-                "Invalid size string format: %s" % size_str)
+            raise errors.InvalidSizeFormat("Invalid size string format: %s" %
+                                           size_str)
 
         if ((match.group(1) == '>' or match.group(3) == '%') and not context):
             raise errors.InvalidSizeFormat(
@@ -2265,11 +2345,11 @@ class DeployNode(BaseMaasAction):
             self.logger.debug("Error accessing the MaaS API.", exc_info=ex)
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
-            self.task.add_status_msg(
-                msg="Error accessing MaaS API: %s" % str(ex),
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error accessing MaaS API: %s" %
+                                     str(ex),
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.save()
             return
 
@@ -2279,11 +2359,10 @@ class DeployNode(BaseMaasAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -2299,8 +2378,10 @@ class DeployNode(BaseMaasAction):
                 if type(machine) is maas_rack.RackController:
                     msg = "Skipping configuration of rack controller %s." % n.name
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.name)
                     continue
                 elif machine.status_name.startswith(
@@ -2309,34 +2390,44 @@ class DeployNode(BaseMaasAction):
                     msg = "Node %s already deployed or deploying, skipping." % (
                         n.name)
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.name)
                     continue
                 elif machine.status_name == 'Ready':
                     msg = "Acquiring node %s for deployment" % (n.name)
                     self.logger.info(msg)
                     machine = machine_list.acquire_node(n.name)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                 elif machine.status_name.startswith('Allocated'):
                     msg = "Node %s already acquired." % (n.name)
                     self.logger.info(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                 else:
                     msg = "Unexpected status %s for node %s, skipping deployment." % (
                         machine.status_name, n.name)
                     self.logger.warning(msg)
-                    self.task.add_status_msg(
-                        msg=msg, error=True, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=True,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.failure(focus=n.get_id())
                     continue
             except errors.DriverError as dex:
                 msg = "Error acquiring node %s, skipping" % n.name
                 self.logger.warning(msg, exc_info=dex)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
@@ -2347,19 +2438,23 @@ class DeployNode(BaseMaasAction):
                     msg = "Set owner data %s = %s for node %s" % (k, v, n.name)
                     self.logger.debug(msg)
                     machine.set_owner_data(k, v)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
             except Exception as ex:
                 msg = "Error setting node %s owner data" % n.name
                 self.logger.warning(msg + ": " + str(ex))
                 self.task.failure(focus=n.get_id())
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 continue
 
             # Saving boot action context for a node
-            self.logger.info(
-                "Saving Boot Action context for node %s." % (n.name))
+            self.logger.info("Saving Boot Action context for node %s." %
+                             (n.name))
             try:
                 ba_key = self.orchestrator.create_bootaction_context(
                     n.name, self.task)
@@ -2374,13 +2469,15 @@ class DeployNode(BaseMaasAction):
                     msg = "Creating boot action id key tag for node %s" % (
                         n.name)
                     self.logger.debug(msg)
-                    node_baid_tag = maas_tag.Tag(
-                        self.maas_client,
-                        name="%s__baid__%s" % (n.name, ba_key.hex()))
+                    node_baid_tag = maas_tag.Tag(self.maas_client,
+                                                 name="%s__baid__%s" %
+                                                 (n.name, ba_key.hex()))
                     node_baid_tag = tag_list.add(node_baid_tag)
                     node_baid_tag.apply_to_node(machine.resource_id)
-                    self.task.add_status_msg(
-                        msg=msg, error=False, ctx=n.name, ctx_type='node')
+                    self.task.add_status_msg(msg=msg,
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
             except Exception as ex:
                 self.logger.error(
                     "Error setting boot action id key tag for %s." % n.name,
@@ -2408,15 +2505,16 @@ class DeployNode(BaseMaasAction):
                              (n.name, n.image, n.kernel))
 
             try:
-                machine.deploy(
-                    platform=n.image,
-                    kernel=n.kernel,
-                    user_data=user_data_string)
+                machine.deploy(platform=n.image,
+                               kernel=n.kernel,
+                               user_data=user_data_string)
             except errors.DriverError:
                 msg = "Error deploying node %s, skipping" % n.name
                 self.logger.warning(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
                 continue
 
@@ -2442,26 +2540,33 @@ class DeployNode(BaseMaasAction):
             if machine.status_name.startswith('Deployed'):
                 msg = "Node %s deployed" % (n.name)
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.get_id())
             elif machine.status_name.startswith('Failed'):
                 msg = "Node %s deployment failed" % (n.name)
                 self.logger.info(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
             else:
                 msg = "Node %s deployment timed out" % (n.name)
                 self.logger.warning(msg)
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.failure(focus=n.get_id())
             self._add_detail_logs(n, machine, 'deploy', result_type='deploy')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
 
         return
+
 
 def find_node_in_maas(maas_client, node_model, probably_exists=True):
     """Find a node in MAAS matching the node_model.
@@ -2485,6 +2590,7 @@ def find_node_in_maas(maas_client, node_model, probably_exists=True):
     if not machine:
         # If node isn't found a normal node, check rack controllers
         rackd_list = maas_rack.RackControllers(maas_client)
-        machine = rackd_list.identify_baremetal_node(node_model, probably_exists)
+        machine = rackd_list.identify_baremetal_node(node_model,
+                                                     probably_exists)
 
     return machine

@@ -106,14 +106,15 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 COPY --from=baclient_builder /usr/local/lib /usr/local/lib
 COPY --from=baclient_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
 
-COPY ./python/requirements-lock.txt /tmp/drydock/
+COPY ./python/requirements-frozen.txt /tmp/drydock/
 RUN pip3 install \
     --no-cache-dir \
-    -r /tmp/drydock/requirements-lock.txt
+    -r /tmp/drydock/requirements-frozen.txt
 
 COPY ./python /tmp/drydock/python
 WORKDIR /tmp/drydock/python
-RUN python3 setup.py install
+RUN cd /tmp/drydock/python \
+    && pip3 install $(pwd)
 
 COPY ./alembic /tmp/drydock/alembic
 COPY ./alembic.ini /tmp/drydock/alembic.ini

@@ -25,10 +25,9 @@ from drydock_provisioner.cli.part.actions import PartCreate
 
 
 @click.group()
-@click.option(
-    '--design-id',
-    '-d',
-    help='The id of the design containing the target parts')
+@click.option('--design-id',
+              '-d',
+              help='The id of the design containing the target parts')
 @click.pass_context
 def part(ctx, design_id=None):
     """Drydock part commands."""
@@ -39,8 +38,9 @@ def part(ctx, design_id=None):
 
 
 @part.command(name='create')
-@click.option(
-    '--file', '-f', help='The file name containing the part to create')
+@click.option('--file',
+              '-f',
+              help='The file name containing the part to create')
 @click.pass_context
 def part_create(ctx, file=None):
     """Create a part."""
@@ -52,10 +52,9 @@ def part_create(ctx, file=None):
         # here is where some potential validation could be done on the input file
         click.echo(
             json.dumps(
-                PartCreate(
-                    ctx.obj['CLIENT'],
-                    design_id=ctx.obj['DESIGN_ID'],
-                    in_file=file_contents).invoke()))
+                PartCreate(ctx.obj['CLIENT'],
+                           design_id=ctx.obj['DESIGN_ID'],
+                           in_file=file_contents).invoke()))
 
 
 @part.command(name='list')
@@ -83,9 +82,8 @@ def part_show(ctx, source, kind, key):
 
     click.echo(
         json.dumps(
-            PartShow(
-                ctx.obj['CLIENT'],
-                design_id=ctx.obj['DESIGN_ID'],
-                kind=kind,
-                key=key,
-                source=source).invoke()))
+            PartShow(ctx.obj['CLIENT'],
+                     design_id=ctx.obj['DESIGN_ID'],
+                     kind=kind,
+                     key=key,
+                     source=source).invoke()))

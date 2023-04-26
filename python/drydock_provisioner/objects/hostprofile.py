@@ -116,8 +116,9 @@ class HostProfile(base.DrydockPersistentObject, base.DrydockObject):
         for f in inheritable_field_list:
             setattr(
                 self, f,
-                objects.Utils.apply_field_inheritance(
-                    getattr(self, f, None), getattr(parent, f, None)))
+                objects.Utils.apply_field_inheritance(getattr(self, f, None),
+                                                      getattr(parent, f,
+                                                              None)))
 
         # Now compute inheritance for complex types
         self.oob_parameters = objects.Utils.merge_dicts(
@@ -310,8 +311,8 @@ class HostVolumeGroup(base.DrydockObject):
     fields = {
         'name': obj_fields.StringField(),
         'vg_uuid': obj_fields.StringField(nullable=True),
-        'logical_volumes': obj_fields.ObjectField(
-            'HostVolumeList', nullable=True),
+        'logical_volumes': obj_fields.ObjectField('HostVolumeList',
+                                                  nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -431,8 +432,8 @@ class HostStorageDevice(base.DrydockObject):
         'name': obj_fields.StringField(),
         'volume_group': obj_fields.StringField(nullable=True),
         'labels': obj_fields.DictOfStringsField(nullable=True),
-        'partitions': obj_fields.ObjectField(
-            'HostPartitionList', nullable=True),
+        'partitions': obj_fields.ObjectField('HostPartitionList',
+                                             nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -535,28 +536,18 @@ class HostPartition(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'name':
-        obj_fields.StringField(),
-        'source':
-        hd_fields.ModelSourceField(),
-        'bootable':
-        obj_fields.BooleanField(default=False),
-        'volume_group':
-        obj_fields.StringField(nullable=True),
-        'part_uuid':
-        obj_fields.UUIDField(nullable=True),
-        'size':
-        obj_fields.StringField(nullable=True),
-        'mountpoint':
-        obj_fields.StringField(nullable=True),
-        'fstype':
-        obj_fields.StringField(nullable=True, default='ext4'),
-        'mount_options':
-        obj_fields.StringField(nullable=True, default='defaults'),
-        'fs_uuid':
-        obj_fields.UUIDField(nullable=True),
-        'fs_label':
-        obj_fields.StringField(nullable=True),
+        'name': obj_fields.StringField(),
+        'source': hd_fields.ModelSourceField(),
+        'bootable': obj_fields.BooleanField(default=False),
+        'volume_group': obj_fields.StringField(nullable=True),
+        'part_uuid': obj_fields.UUIDField(nullable=True),
+        'size': obj_fields.StringField(nullable=True),
+        'mountpoint': obj_fields.StringField(nullable=True),
+        'fstype': obj_fields.StringField(nullable=True, default='ext4'),
+        'mount_options': obj_fields.StringField(nullable=True,
+                                                default='defaults'),
+        'fs_uuid': obj_fields.UUIDField(nullable=True),
+        'fs_label': obj_fields.StringField(nullable=True),
     }
 
     def __init__(self, **kwargs):
@@ -672,24 +663,16 @@ class HostVolume(base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'name':
-        obj_fields.StringField(),
-        'source':
-        hd_fields.ModelSourceField(),
-        'lv_uuid':
-        obj_fields.UUIDField(nullable=True),
-        'size':
-        obj_fields.StringField(nullable=True),
-        'mountpoint':
-        obj_fields.StringField(nullable=True),
-        'fstype':
-        obj_fields.StringField(nullable=True, default='ext4'),
-        'mount_options':
-        obj_fields.StringField(nullable=True, default='defaults'),
-        'fs_uuid':
-        obj_fields.UUIDField(nullable=True),
-        'fs_label':
-        obj_fields.StringField(nullable=True),
+        'name': obj_fields.StringField(),
+        'source': hd_fields.ModelSourceField(),
+        'lv_uuid': obj_fields.UUIDField(nullable=True),
+        'size': obj_fields.StringField(nullable=True),
+        'mountpoint': obj_fields.StringField(nullable=True),
+        'fstype': obj_fields.StringField(nullable=True, default='ext4'),
+        'mount_options': obj_fields.StringField(nullable=True,
+                                                default='defaults'),
+        'fs_uuid': obj_fields.UUIDField(nullable=True),
+        'fs_label': obj_fields.StringField(nullable=True),
     }
 
     def __init__(self, **kwargs):

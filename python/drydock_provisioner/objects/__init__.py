@@ -104,10 +104,10 @@ class Utils(object):
             effective_list.extend(
                 [x for x in child_list if not x.startswith("!")])
 
-            effective_list.extend(
-                [x for x in parent_list
-                 if ("!" + x) not in child_list
-                 and x not in effective_list])
+            effective_list.extend([
+                x for x in parent_list
+                if ("!" + x) not in child_list and x not in effective_list
+            ])
         except TypeError:
             raise TypeError("Error iterating list argument")
 

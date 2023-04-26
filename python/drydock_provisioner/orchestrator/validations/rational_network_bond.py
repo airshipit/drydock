@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class RationalNetworkBond(Validators):
+
     def __init__(self):
         super().__init__('Network Bond Rationality', 'DD1006')
 

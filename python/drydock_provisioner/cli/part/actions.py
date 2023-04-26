@@ -85,8 +85,7 @@ class PartShow(PartBase):  # pylint: disable=too-few-public-methods
             ' kind=%s, key=%s, source=%s', design_id, kind, key, source)
 
     def invoke(self):
-        return self.api_client.get_part(
-            design_id=self.design_id,
-            kind=self.kind,
-            key=self.key,
-            source=self.source)
+        return self.api_client.get_part(design_id=self.design_id,
+                                        kind=self.kind,
+                                        key=self.key,
+                                        source=self.source)

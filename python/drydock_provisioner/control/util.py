@@ -25,8 +25,9 @@ def get_internal_api_href(ver):
 
     if ver in supported_versions:
         ks_sess = KeystoneUtils.get_session()
-        url = KeystoneClient.get_endpoint(
-            "physicalprovisioner", ks_sess=ks_sess, interface='internal')
+        url = KeystoneClient.get_endpoint("physicalprovisioner",
+                                          ks_sess=ks_sess,
+                                          interface='internal')
         return url
     else:
         raise ApiError("API version %s unknown." % ver)

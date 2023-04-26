@@ -19,6 +19,7 @@ from drydock_provisioner.drivers.node.maasdriver.actions.node import ConfigureHa
 
 
 class TestBuildDataCollection(object):
+
     def test_build_data_collection(self, setup, blank_state, mocker,
                                    deckhand_orchestrator):
         """Test that the build data collection from MaaS works."""

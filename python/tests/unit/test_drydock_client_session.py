@@ -17,6 +17,7 @@ from drydock_provisioner.drydock_client.session import DrydockSession
 
 
 class TestClientSession(object):
+
     def test_create_session(self):
         """Tests setting up an Drydock client session"""
         sess = DrydockSession("testdrydock")

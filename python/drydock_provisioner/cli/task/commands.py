@@ -29,17 +29,16 @@ def task():
 
 
 @task.command(name='create')
-@click.option(
-    '--design-ref', '-d', help='The design reference for this action')
+@click.option('--design-ref',
+              '-d',
+              help='The design reference for this action')
 @click.option('--action', '-a', help='The action to perform')
-@click.option(
-    '--node-names',
-    '-n',
-    help='The nodes targeted by this action, comma separated')
-@click.option(
-    '--rack-names',
-    '-r',
-    help='The racks targeted by this action, comma separated')
+@click.option('--node-names',
+              '-n',
+              help='The nodes targeted by this action, comma separated')
+@click.option('--rack-names',
+              '-r',
+              help='The racks targeted by this action, comma separated')
 @click.option(
     '--node-tags',
     '-t',
@@ -49,10 +48,9 @@ def task():
     '-b',
     help='The CLI will wait until the created completes before exitting',
     default=False)
-@click.option(
-    '--poll-interval',
-    help='Polling interval to check task status in blocking mode.',
-    default=15)
+@click.option('--poll-interval',
+              help='Polling interval to check task status in blocking mode.',
+              default=15)
 @click.pass_context
 def task_create(ctx,
                 design_ref=None,
@@ -112,8 +110,10 @@ def task_show(ctx, task_id=None, block=False):
 
 @task.command(name='builddata')
 @click.option('--task-id', '-t', help='The required task id')
-@click.option(
-    '--output', '-o', help='The output format (yaml|json)', default='yaml')
+@click.option('--output',
+              '-o',
+              help='The output format (yaml|json)',
+              default='yaml')
 @click.pass_context
 def task_builddata(ctx, task_id=None, output='yaml'):
     """Show builddata assoicated with ``task_id``."""
@@ -129,17 +129,19 @@ def task_builddata(ctx, task_id=None, output='yaml'):
             click.echo(
                 'Invalid output format {}, defaulting to YAML.'.format(output))
         click.echo(
-            yaml.safe_dump(
-                task_bd, allow_unicode=True, default_flow_style=False))
+            yaml.safe_dump(task_bd,
+                           allow_unicode=True,
+                           default_flow_style=False))
 
 
 @task.command(name='delete')
-@click.option('--days', '-d', help='The required number of days to retain tasks')
+@click.option('--days',
+              '-d',
+              help='The required number of days to retain tasks')
 @click.pass_context
 def task_delete(ctx, days=None):
     """Delete tasks from database"""
     if not days:
         ctx.fail('The number of days must be specified using --days or -d')
 
-    click.echo(
-        TasksDelete(ctx.obj['CLIENT'], days=days).invoke())
+    click.echo(TasksDelete(ctx.obj['CLIENT'], days=days).invoke())

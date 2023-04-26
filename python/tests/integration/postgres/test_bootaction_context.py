@@ -25,6 +25,7 @@ from drydock_provisioner.control.api import start_api
 
 
 class TestBootActionContext(object):
+
     def test_bootaction_context(self, falcontest, seed_bootaction_multinode):
         """Test that the API will return a boot action context"""
         for n, c in seed_bootaction_multinode.items():
@@ -56,8 +57,8 @@ class TestBootActionContext(object):
         for n in design_data.baremetal_nodes:
             id_key = deckhand_orchestrator.create_bootaction_context(
                 n.name, test_task)
-            node_ctx = dict(
-                task_id=test_task.get_id(), identity_key=id_key.hex())
+            node_ctx = dict(task_id=test_task.get_id(),
+                            identity_key=id_key.hex())
             ba_ctx[n.name] = node_ctx
 
         return ba_ctx
@@ -67,7 +68,6 @@ class TestBootActionContext(object):
                    deckhand_orchestrator, mock_get_build_data):
         """Create a test harness for the Falcon API framework."""
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))

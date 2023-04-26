@@ -14,7 +14,9 @@
 
 from drydock_provisioner.orchestrator.validations.validators import Validators
 
+
 class StorageMountpoints(Validators):
+
     def __init__(self):
         super().__init__('Storage Mountpoint', "DD2004")
 
@@ -43,11 +45,10 @@ class StorageMountpoints(Validators):
                     if mountpoint is None:
                         continue
                     if mountpoint in mountpoint_list:
-                        msg = ('Mountpoint "{}" already exists'
-                               .format(mountpoint))
-                        self.report_error(
-                            msg, [baremetal_node.doc_ref],
-                            'Please use unique mountpoints.')
+                        msg = ('Mountpoint "{}" already exists'.format(
+                            mountpoint))
+                        self.report_error(msg, [baremetal_node.doc_ref],
+                                          'Please use unique mountpoints.')
                         return
                     else:
                         mountpoint_list.append(mountpoint)
@@ -66,8 +67,8 @@ class StorageMountpoints(Validators):
                                 if mountpoint is None:
                                     continue
                                 if mountpoint in mountpoint_list:
-                                    msg = ('Mountpoint "{}" already exists'
-                                           .format(mountpoint))
+                                    msg = ('Mountpoint "{}" already exists'.
+                                           format(mountpoint))
                                     self.report_error(
                                         msg, [baremetal_node.doc_ref],
                                         'Please use unique mountpoints.')

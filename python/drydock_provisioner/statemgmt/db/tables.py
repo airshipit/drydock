@@ -20,6 +20,7 @@ from sqlalchemy.dialects import postgresql as pg
 
 
 class ExtendTable(Table):
+
     def __new__(cls, metadata):
         self = super().__new__(cls, cls.__tablename__, metadata,
                                *cls.__schema__)

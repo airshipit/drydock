@@ -20,7 +20,9 @@ from drydock_provisioner.objects import fields as hd_fields
 
 import drydock_provisioner.config as config
 
+
 class Validators:
+
     def __init__(self, long_name, name):
         self.name = name
         self.long_name = long_name
@@ -42,13 +44,12 @@ class Validators:
         :param level: String - More detailed of the severity level of this message
         """
         fmt_msg = "%s: %s" % (self.long_name, msg)
-        msg_obj = objects.ValidationMessage(
-            fmt_msg,
-            self.name,
-            error=error,
-            level=level,
-            docs=docs,
-            diagnostic=diagnostic)
+        msg_obj = objects.ValidationMessage(fmt_msg,
+                                            self.name,
+                                            error=error,
+                                            level=level,
+                                            docs=docs,
+                                            diagnostic=diagnostic)
         self.messages.append(msg_obj)
 
     def report_error(self, msg, docs, diagnostic):

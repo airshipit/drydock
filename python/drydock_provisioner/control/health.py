@@ -40,10 +40,9 @@ class HealthResource(StatefulResource):
         """
         Returns 204 on healthy, otherwise 503, without response body.
         """
-        hc = HealthCheckCombined(
-            state_manager=self.state_manager,
-            orchestrator=self.orchestrator,
-            extended=False)
+        hc = HealthCheckCombined(state_manager=self.state_manager,
+                                 orchestrator=self.orchestrator,
+                                 extended=False)
         return hc.get(req, resp)
 
 
@@ -65,10 +64,9 @@ class HealthExtendedResource(StatefulResource):
         """
         Returns 200 on success, otherwise 503, with a response body.
         """
-        hc = HealthCheckCombined(
-            state_manager=self.state_manager,
-            orchestrator=self.orchestrator,
-            extended=True)
+        hc = HealthCheckCombined(state_manager=self.state_manager,
+                                 orchestrator=self.orchestrator,
+                                 extended=True)
         return hc.get(req, resp)
 
 
@@ -97,8 +95,8 @@ class HealthCheckCombined(object):
             if now is None:
                 raise Exception('None received from database for now()')
         except Exception:
-            hcm = HealthCheckMessage(
-                msg='Unable to connect to database', error=True)
+            hcm = HealthCheckMessage(msg='Unable to connect to database',
+                                     error=True)
             health_check.add_detail_msg(msg=hcm)
 
         # Test MaaS connection
@@ -111,12 +109,12 @@ class HealthCheckCombined(object):
             if maas_validation.task.get_status() == ActionResult.Failure:
                 raise Exception('MaaS task failure')
         except Exception:
-            hcm = HealthCheckMessage(
-                msg='Unable to connect to MaaS', error=True)
+            hcm = HealthCheckMessage(msg='Unable to connect to MaaS',
+                                     error=True)
             health_check.add_detail_msg(msg=hcm)
 
         if self.extended:
-            resp.body = json.dumps(health_check.to_dict())
+            resp.text = json.dumps(health_check.to_dict())
 
         if health_check.is_healthy() and self.extended:
             resp.status = falcon.HTTP_200

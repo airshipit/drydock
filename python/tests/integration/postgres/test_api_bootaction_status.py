@@ -25,6 +25,7 @@ from drydock_provisioner.control.api import start_api
 
 
 class TestClass(object):
+
     def test_bootaction_detail(self, falcontest, seed_bootaction_status):
         """Test that the API allows boot action detail messages."""
         url = "/api/v1.0/bootactions/%s" % seed_bootaction_status['action_id']
@@ -42,8 +43,9 @@ class TestClass(object):
             ]
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         assert result.status == falcon.HTTP_200
 
@@ -65,13 +67,15 @@ class TestClass(object):
             ]
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         assert result.status == falcon.HTTP_200
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         assert result.status == falcon.HTTP_409
 
@@ -87,8 +91,9 @@ class TestClass(object):
             'foo': 'Success',
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         assert result.status == falcon.HTTP_400
 
@@ -106,18 +111,16 @@ class TestClass(object):
         blank_state.post_boot_action('compute01', test_task.get_id(), id_key,
                                      action_id, 'helloworld')
 
-        ba = dict(
-            nodename='compute01',
-            task_id=test_task.get_id(),
-            identity_key=id_key.hex(),
-            action_id=ulid2.encode_ulid_base32(action_id))
+        ba = dict(nodename='compute01',
+                  task_id=test_task.get_id(),
+                  identity_key=id_key.hex(),
+                  action_id=ulid2.encode_ulid_base32(action_id))
         return ba
 
     @pytest.fixture()
     def falcontest(self, drydock_state, yaml_ingester, yaml_orchestrator):
         """Create a test harness for the Falcon API framework."""
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=yaml_ingester,
-                orchestrator=yaml_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=yaml_ingester,
+                      orchestrator=yaml_orchestrator))

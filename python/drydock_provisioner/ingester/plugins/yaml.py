@@ -28,6 +28,7 @@ from drydock_provisioner.ingester.plugins import IngesterPlugin
 
 
 class YamlIngester(IngesterPlugin):
+
     def __init__(self):
         super().__init__()
         self.logger = logging.getLogger('drydock.ingester.yaml')
@@ -96,8 +97,10 @@ class YamlIngester(IngesterPlugin):
                         ctx = d.get('metadata').get('name')
                     else:
                         ctx = 'Unknown'
-                    ps.add_status_msg(
-                        msg=msg, error=True, ctx_type='document', ctx=ctx)
+                    ps.add_status_msg(msg=msg,
+                                      error=True,
+                                      ctx_type='document',
+                                      ctx=ctx)
                     ps.set_status(hd_fields.ValidationResult.Failure)
                 except Exception as ex:
                     msg = "Unexpected error processing document: %s" % str(ex)
@@ -106,8 +109,10 @@ class YamlIngester(IngesterPlugin):
                         ctx = d.get('metadata').get('name')
                     else:
                         ctx = 'Unknown'
-                    ps.add_status_msg(
-                        msg=msg, error=True, ctx_type='document', ctx=ctx)
+                    ps.add_status_msg(msg=msg,
+                                      error=True,
+                                      ctx_type='document',
+                                      ctx=ctx)
                     ps.set_status(hd_fields.ValidationResult.Failure)
             elif api.startswith('promenade/'):
                 (foo, api_version) = api.split('/')
@@ -193,9 +198,9 @@ class YamlIngester(IngesterPlugin):
             tag_model.definition = t.get('definition', '')
 
             if tag_model.type not in ['lshw_xpath']:
-                raise errors.IngesterError(
-                    'Unknown definition_type in '
-                    'tag_definition instance: %s' % (t.definition_type))
+                raise errors.IngesterError('Unknown definition_type in '
+                                           'tag_definition instance: %s' %
+                                           (t.definition_type))
             model.tag_definitions.append(tag_model)
 
         auth_keys = data.get('authorized_keys', [])
@@ -637,8 +642,8 @@ class YamlIngester(IngesterPlugin):
                     self.logger.warning(
                         "Duplicate document schemas found for document kind %s."
                         % schema_for)
-                self.logger.debug(
-                    "Loaded schema for document kind %s." % schema_for)
+                self.logger.debug("Loaded schema for document kind %s." %
+                                  schema_for)
                 self.v1_doc_schemas[schema_for] = schema
             f.close()
 

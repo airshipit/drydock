@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class IpmiValidity(Validators):
+
     def __init__(self):
         super().__init__('Valid IPMI Configuration', 'DD4001')
 
@@ -32,9 +33,8 @@ class IpmiValidity(Validators):
             if baremetal_node.oob_type == 'ipmi':
                 for p in required_params:
                     if not baremetal_node.oob_parameters.get(p, None):
-                        msg = (
-                            'OOB parameter %s for IPMI node %s missing.' % p,
-                            baremetal_node.name)
+                        msg = ('OOB parameter %s for IPMI node %s missing.' %
+                               p, baremetal_node.name)
                         self.report_error(msg, [baremetal_node.doc_ref],
                                           "Define OOB parameter %s" % p)
                 oob_addr = None

@@ -34,8 +34,10 @@ def start_drydock(enable_keystone=True):
 
     # Setup configuration parsing
     cli_options = [
-        cfg.BoolOpt(
-            'debug', short='d', default=False, help='Enable debug logging'),
+        cfg.BoolOpt('debug',
+                    short='d',
+                    default=False,
+                    help='Enable debug logging'),
     ]
 
     config.config_mgr.conf.register_cli_opts(cli_options)
@@ -43,8 +45,9 @@ def start_drydock(enable_keystone=True):
     config.config_mgr.conf(sys.argv[1:])
 
     if config.config_mgr.conf.debug:
-        config.config_mgr.conf.set_override(
-            name='log_level', override='DEBUG', group='logging')
+        config.config_mgr.conf.set_override(name='log_level',
+                                            override='DEBUG',
+                                            group='logging')
 
     # Setup root logger
     logger = logging.getLogger(
@@ -64,8 +67,7 @@ def start_drydock(enable_keystone=True):
     logger.propagate = False
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(user)s - %(req_id)s"
-        " - %(external_ctx)s - %(end_user)s - %(message)s"
-    )
+        " - %(external_ctx)s - %(end_user)s - %(message)s")
 
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
@@ -77,10 +79,9 @@ def start_drydock(enable_keystone=True):
     input_ingester = Ingester()
     input_ingester.enable_plugin(config.config_mgr.conf.plugins.ingester)
 
-    orchestrator = Orchestrator(
-        enabled_drivers=config.config_mgr.conf.plugins,
-        state_manager=state,
-        ingester=input_ingester)
+    orchestrator = Orchestrator(enabled_drivers=config.config_mgr.conf.plugins,
+                                state_manager=state,
+                                ingester=input_ingester)
 
     orch_thread = threading.Thread(target=orchestrator.watch_for_tasks)
     orch_thread.start()
@@ -98,10 +99,9 @@ def start_drydock(enable_keystone=True):
     policy.policy_engine.register_policy()
 
     # Ensure that the policy_engine is initialized before starting the API
-    wsgi_callable = api.start_api(
-        state_manager=state,
-        ingester=input_ingester,
-        orchestrator=orchestrator)
+    wsgi_callable = api.start_api(state_manager=state,
+                                  ingester=input_ingester,
+                                  orchestrator=orchestrator)
 
     # Now that loggers are configured, log the effective config
     config.config_mgr.conf.log_opt_values(

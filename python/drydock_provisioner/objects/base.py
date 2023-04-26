@@ -91,6 +91,7 @@ class DrydockPersistentObject(base.VersionedObject):
 
 
 class DrydockObjectListBase(base.ObjectListBase):
+
     def __init__(self, **kwargs):
         super(DrydockObjectListBase, self).__init__(**kwargs)
 

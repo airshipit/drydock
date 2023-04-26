@@ -17,6 +17,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class CidrValidity(Validators):
+
     def __init__(self):
         super().__init__('CIDR Validity', 'DD2006')
 
@@ -40,8 +41,10 @@ class CidrValidity(Validators):
                 except ValueError as e:
                     if str(e) == (net.cidr + " has host bits set"):
                         msg = 'The provided CIDR %s has host bits set' % net.cidr
-                        valid_cidr = ipaddress.ip_network(net.cidr, strict=False)
+                        valid_cidr = ipaddress.ip_network(net.cidr,
+                                                          strict=False)
                         self.report_error(
-                                    msg, [net.doc_ref],
-                                    "Provide a CIDR acceptable by MAAS: %s" % str(valid_cidr))
+                            msg, [net.doc_ref],
+                            "Provide a CIDR acceptable by MAAS: %s" %
+                            str(valid_cidr))
         return

@@ -23,6 +23,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestLibvirtOobDriver():
+
     def test_libvirt_init_session(self, mocker, deckhand_orchestrator,
                                   input_files, setup):
         """Test session initialization."""

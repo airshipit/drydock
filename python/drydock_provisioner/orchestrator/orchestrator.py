@@ -41,7 +41,9 @@ from .validations.validator import Validator
 class Orchestrator(object):
     """Defines functionality for task execution workflow."""
 
-    def __init__(self, enabled_drivers=None, state_manager=None,
+    def __init__(self,
+                 enabled_drivers=None,
+                 state_manager=None,
                  ingester=None):
         """Initialize the orchestrator. A single instance should be executing at a time.
 
@@ -81,9 +83,8 @@ class Orchestrator(object):
                         if self.enabled_drivers.get('oob', None) is None:
                             self.enabled_drivers['oob'] = []
                         self.enabled_drivers['oob'].append(
-                            oob_driver_class(
-                                state_manager=state_manager,
-                                orchestrator=self))
+                            oob_driver_class(state_manager=state_manager,
+                                             orchestrator=self))
 
             node_driver_name = enabled_drivers.node_driver
             if node_driver_name is not None:
@@ -97,8 +98,8 @@ class Orchestrator(object):
             network_driver_name = enabled_drivers.network_driver
             if network_driver_name is not None:
                 m, c = network_driver_name.rsplit('.', 1)
-                network_driver_class = getattr(
-                    importlib.import_module(m), c, None)
+                network_driver_class = getattr(importlib.import_module(m), c,
+                                               None)
                 if network_driver_class is not None:
                     self.enabled_drivers['network'] = network_driver_class(
                         state_manager=state_manager, orchestrator=self)
@@ -106,8 +107,8 @@ class Orchestrator(object):
             kubernetes_driver_name = enabled_drivers.kubernetes_driver
             if kubernetes_driver_name is not None:
                 m, c = kubernetes_driver_name.rsplit('.', 1)
-                kubernetes_driver_class = getattr(
-                    importlib.import_module(m), c, None)
+                kubernetes_driver_class = getattr(importlib.import_module(m),
+                                                  c, None)
                 if kubernetes_driver_class is not None:
                     self.enabled_drivers[
                         'kubernetes'] = kubernetes_driver_class(
@@ -191,8 +192,8 @@ class Orchestrator(object):
                             else:
                                 self.logger.warning(
                                     "Task %s has unsupported action %s, ending execution."
-                                    % (str(next_task.get_id()),
-                                       next_task.action))
+                                    % (str(
+                                        next_task.get_id()), next_task.action))
                                 next_task.add_status_msg(
                                     msg="Unsupported action %s." %
                                     next_task.action,
@@ -230,8 +231,8 @@ class Orchestrator(object):
         :param propagate: whether the termination should propagatge to subtasks
         """
         if task is None:
-            raise errors.OrchestratorError(
-                "Could find task %s" % str(task.get_id()))
+            raise errors.OrchestratorError("Could find task %s" %
+                                           str(task.get_id()))
         else:
             # Terminate initial task first to prevent add'l subtasks
             self.logger.debug("Terminating task %s." % str(task.get_id()))
@@ -243,8 +244,9 @@ class Orchestrator(object):
 
                 for st_id in subtasks:
                     st = self.state_manager.get_task(st_id)
-                    self.terminate_task(
-                        st, propagate=True, terminated_by=terminated_by)
+                    self.terminate_task(st,
+                                        propagate=True,
+                                        terminated_by=terminated_by)
 
     def create_task(self, **kwargs):
         """Create a new task and persist it."""
@@ -263,13 +265,14 @@ class Orchestrator(object):
             nodes = site_design.baremetal_nodes
             for n in nodes or []:
                 try:
-                    n.compile_applied_model(
-                        site_design,
-                        state_manager=self.state_manager,
-                        resolve_aliases=resolve_aliases)
+                    n.compile_applied_model(site_design,
+                                            state_manager=self.state_manager,
+                                            resolve_aliases=resolve_aliases)
                 except Exception as ex:
                     self.logger.debug(
-                        "Failed to build applied model for node %s.", n.name, exc_info=ex)
+                        "Failed to build applied model for node %s.",
+                        n.name,
+                        exc_info=ex)
                     raise ex
         except AttributeError:
             self.logger.debug(
@@ -305,21 +308,21 @@ class Orchestrator(object):
         try:
             status, site_design = self.get_described_site(design_ref)
             if status.status == hd_fields.ValidationResult.Success:
-                self.compute_model_inheritance(
-                    site_design, resolve_aliases=resolve_aliases)
+                self.compute_model_inheritance(site_design,
+                                               resolve_aliases=resolve_aliases)
                 self.compute_bootaction_targets(site_design)
                 self.render_route_domains(site_design)
                 status = val.validate_design(site_design, result_status=status)
         except Exception as ex:
             if status is not None:
-                status.add_status_msg(
-                    "Error loading effective site: %s" % str(ex),
-                    error=True,
-                    ctx='NA',
-                    ctx_type='NA')
+                status.add_status_msg("Error loading effective site: %s" %
+                                      str(ex),
+                                      error=True,
+                                      ctx='NA',
+                                      ctx_type='NA')
                 status.set_status(hd_fields.ActionResult.Failure)
-            self.logger.error(
-                "Error getting site definition: %s" % str(ex), exc_info=ex)
+            self.logger.error("Error getting site definition: %s" % str(ex),
+                              exc_info=ex)
 
         return status, site_design
 
@@ -368,9 +371,8 @@ class Orchestrator(object):
 
         nf['filter_set_type'] = 'intersection'
         nf['filter_set'] = [
-            dict(
-                node_names=[x.get_id() for x in node_list],
-                filter_type='union')
+            dict(node_names=[x.get_id() for x in node_list],
+                 filter_type='union')
         ]
 
         return nf
@@ -418,8 +420,8 @@ class Orchestrator(object):
             for f in node_filter.get('filter_set', []):
                 result_sets.append(self.process_filter(target_nodes, f))
 
-            return self.join_filter_sets(
-                node_filter.get('filter_set_type'), result_sets)
+            return self.join_filter_sets(node_filter.get('filter_set_type'),
+                                         result_sets)
 
         elif isinstance(node_filter, objects.NodeFilterSet):
             for f in node_filter.filter_set:
@@ -434,8 +436,8 @@ class Orchestrator(object):
         elif filter_set_type == 'intersection':
             return self.list_intersection(*result_sets)
         else:
-            raise errors.OrchestratorError(
-                "Unknown filter set type %s" % filter_set_type)
+            raise errors.OrchestratorError("Unknown filter set type %s" %
+                                           filter_set_type)
 
     def process_filter(self, node_set, filter_set):
         """Take a filter and apply it to the node_set.
@@ -500,11 +502,10 @@ class Orchestrator(object):
                 target_nodes['rack_labels'] = node_set
 
             if set_type == 'union':
-                return self.list_union(
-                    target_nodes.get('node_names', []),
-                    target_nodes.get('node_tags', []),
-                    target_nodes.get('rack_names', []),
-                    target_nodes.get('node_labels', []))
+                return self.list_union(target_nodes.get('node_names', []),
+                                       target_nodes.get('node_tags', []),
+                                       target_nodes.get('rack_names', []),
+                                       target_nodes.get('node_labels', []))
             elif set_type == 'intersection':
                 return self.list_intersection(
                     target_nodes.get('node_names', None),
@@ -514,8 +515,8 @@ class Orchestrator(object):
 
         except Exception as ex:
             self.logger.error("Error processing node filter.", exc_info=ex)
-            raise errors.OrchestratorError(
-                "Error processing node filter: %s" % str(ex))
+            raise errors.OrchestratorError("Error processing node filter: %s" %
+                                           str(ex))
 
     def list_intersection(self, a, *rest):
         """Take the intersection of a with the intersection of all the rest.
@@ -569,12 +570,12 @@ class Orchestrator(object):
 
         identity_key = None
 
-        self.logger.debug(
-            "Creating boot action context for node %s" % nodename)
+        self.logger.debug("Creating boot action context for node %s" %
+                          nodename)
 
         for ba in site_design.bootactions:
-            self.logger.debug(
-                "Boot actions target nodes: %s" % ba.target_nodes)
+            self.logger.debug("Boot actions target nodes: %s" %
+                              ba.target_nodes)
             if nodename in ba.target_nodes:
                 if identity_key is None:
                     identity_key = os.urandom(32)
@@ -591,13 +592,12 @@ class Orchestrator(object):
                         "Boot action %s has disabled signaling, marking unreported."
                         % ba.name)
                 action_id = ulid2.generate_binary_ulid()
-                self.state_manager.post_boot_action(
-                    nodename,
-                    task.get_id(),
-                    identity_key,
-                    action_id,
-                    ba.name,
-                    action_status=init_status)
+                self.state_manager.post_boot_action(nodename,
+                                                    task.get_id(),
+                                                    identity_key,
+                                                    action_id,
+                                                    ba.name,
+                                                    action_status=init_status)
         return identity_key
 
     def find_node_package_lists(self, nodename, task):
@@ -611,8 +611,8 @@ class Orchestrator(object):
         if site_design.bootactions is None:
             return None
 
-        self.logger.debug(
-            "Extracting package install list for node %s" % nodename)
+        self.logger.debug("Extracting package install list for node %s" %
+                          nodename)
 
         pkg_list = dict()
 
@@ -668,22 +668,22 @@ class Orchestrator(object):
                         metric = None
                         if 'routes' in n and n.routes is not None:
                             for r in n.routes:
-                                if 'routedomain' in r and r.get('routedomain',
-                                                                None) == rd:
+                                if 'routedomain' in r and r.get(
+                                        'routedomain', None) == rd:
                                     gw = r.get('gateway')
                                     metric = r.get('metric')
                                     self.logger.debug(
                                         "Use gateway %s for routedomain %s "
-                                        "on network %s." % (gw, rd,
-                                                            n.get_name()))
+                                        "on network %s." %
+                                        (gw, rd, n.get_name()))
                                     break
                             if gw is not None and metric is not None:
                                 for cidr in rd_cidrs:
                                     if cidr != n.cidr:
                                         n.routes.append(
-                                            dict(
-                                                subnet=cidr, gateway=gw,
-                                                metric=metric))
+                                            dict(subnet=cidr,
+                                                 gateway=gw,
+                                                 metric=metric))
                         else:
                             msg = "Invalid network model: {}. Cannot find " \
                                 "routes field in network with routedomain: " \

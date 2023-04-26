@@ -31,6 +31,7 @@ LOG = logging.getLogger(__name__)
 power_lock = Lock()
 power_cv = Condition(lock=power_lock)
 
+
 class Machine(model_base.ResourceBase):
 
     resource_url = 'machines/{resource_id}/'
@@ -62,8 +63,8 @@ class Machine(model_base.ResourceBase):
                     api_client, system_id=self.resource_id)
                 self.volume_groups.refresh()
             except Exception:
-                self.logger.warning(
-                    "Failed load node %s volume groups." % (self.resource_id))
+                self.logger.warning("Failed load node %s volume groups." %
+                                    (self.resource_id))
         else:
             self.interfaces = None
             self.block_devices = None
@@ -123,28 +124,28 @@ class Machine(model_base.ResourceBase):
         Removes all the volume groups/logical volumes and all the physical
         device partitions on this machine.
         """
-        self.logger.info(
-            "Resetting storage configuration on node %s" % (self.resource_id))
+        self.logger.info("Resetting storage configuration on node %s" %
+                         (self.resource_id))
         if self.volume_groups is not None and self.volume_groups.len() > 0:
             for vg in self.volume_groups:
                 self.logger.debug("Removing VG %s" % vg.name)
                 vg.delete()
         else:
-            self.logger.debug(
-                "No VGs configured on node %s" % (self.resource_id))
+            self.logger.debug("No VGs configured on node %s" %
+                              (self.resource_id))
 
         if self.block_devices is not None:
             for d in self.block_devices:
                 if d.partitions is not None and d.partitions.len() > 0:
-                    self.logger.debug(
-                        "Clearing partitions on device %s" % d.name)
+                    self.logger.debug("Clearing partitions on device %s" %
+                                      d.name)
                     d.clear_partitions()
                 else:
-                    self.logger.debug(
-                        "No partitions found on device %s" % d.name)
+                    self.logger.debug("No partitions found on device %s" %
+                                      d.name)
         else:
-            self.logger.debug(
-                "No block devices found on node %s" % (self.resource_id))
+            self.logger.debug("No block devices found on node %s" %
+                              (self.resource_id))
 
     def set_storage_layout(self,
                            layout_type='flat',
@@ -199,12 +200,13 @@ class Machine(model_base.ResourceBase):
                 if root_lv_name:
                     data['lv_name'] = root_lv_name
 
-            resp = self.api_client.post(
-                url, op='set_storage_layout', files=data)
+            resp = self.api_client.post(url,
+                                        op='set_storage_layout',
+                                        files=data)
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS Error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS Error: %s - %s" %
+                                (resp.status_code, resp.text))
         except Exception as ex:
             msg = "Error: failed configuring node %s storage layout: %s" % (
                 self.resource_id, str(ex))
@@ -356,10 +358,9 @@ class Machine(model_base.ResourceBase):
         :param str result_type: the type of results to return. One of
                          ``all``, ``commissioning``, ``testing``, ``deploy``
         """
-        node_results = maas_nr.NodeResults(
-            self.api_client,
-            system_id_list=[self.resource_id],
-            result_type=result_type)
+        node_results = maas_nr.NodeResults(self.api_client,
+                                           system_id_list=[self.resource_id],
+                                           result_type=result_type)
         node_results.refresh()
 
         return node_results
@@ -375,8 +376,9 @@ class Machine(model_base.ResourceBase):
         """
         url = self.interpolate_url()
 
-        resp = self.api_client.post(
-            url, op='set_workload_annotations', files={key: value})
+        resp = self.api_client.post(url,
+                                    op='set_workload_annotations',
+                                    files={key: value})
 
         if resp.status_code != 200:
             self.logger.error(
@@ -406,29 +408,26 @@ class Machine(model_base.ResourceBase):
             if kwargs:
                 power_params = dict()
 
-                self.logger.debug("Setting node power type to %s." % power_type)
+                self.logger.debug("Setting node power type to %s." %
+                                  power_type)
                 self.power_type = power_type
                 power_params['power_type'] = power_type
 
                 for k, v in kwargs.items():
                     power_params['power_parameters_' + k] = v
 
-                self.logger.debug(
-                    "Updating node %s power parameters: %s"
-                    % (
-                        self.hostname,
-                        str(
-                            {
-                                **power_params,
-                                **{
-                                    k: "<redacted>"
-                                    for k in power_params
-                                    if k in ["power_parameters_power_pass"]
-                                },
-                            }
-                        ),
-                    )
-                )
+                self.logger.debug("Updating node %s power parameters: %s" % (
+                    self.hostname,
+                    str({
+                        **power_params,
+                        **{
+                            k: "<redacted>"
+                            for k in power_params if k in [
+                                "power_parameters_power_pass"
+                            ]
+                        },
+                    }),
+                ))
                 resp = self.api_client.put(url, files=power_params)
 
                 if resp.status_code == 200:
@@ -448,8 +447,9 @@ class Machine(model_base.ResourceBase):
         with power_cv:
             url = self.interpolate_url()
 
-            self.logger.debug("Resetting node power type for machine {}".format(
-                self.resource_id))
+            self.logger.debug(
+                "Resetting node power type for machine {}".format(
+                    self.resource_id))
             self.power_type = 'manual'
             power_params = {'power_type': 'manual'}
             resp = self.api_client.put(url, files=power_params)
@@ -482,12 +482,11 @@ class Machine(model_base.ResourceBase):
                     'virsh',
                     power_address=oob_params.get('libvirt_uri'),
                     power_id=n.name)
-            elif use_node_oob_params and (n.oob_type == "ipmi" or n.oob_type == "redfish"):
+            elif use_node_oob_params and (n.oob_type == "ipmi"
+                                          or n.oob_type == "redfish"):
                 self.logger.debug(
                     "Updating node {} MaaS power parameters for {}.".format(
-                        n.name, n.oob_type
-                    )
-                )
+                        n.name, n.oob_type))
                 oob_params = n.oob_parameters
                 oob_network = oob_params.get("network")
                 oob_address = n.get_network_address(oob_network)
@@ -585,21 +584,20 @@ class Machines(model_base.ResourceCollectionBase):
 
         url = self.interpolate_url()
 
-        resp = self.api_client.post(
-            url, op='allocate', files={'system_id': node.resource_id})
+        resp = self.api_client.post(url,
+                                    op='allocate',
+                                    files={'system_id': node.resource_id})
 
         if not resp.ok:
-            self.logger.error(
-                "Error acquiring node, MaaS returned %s" % resp.status_code)
+            self.logger.error("Error acquiring node, MaaS returned %s" %
+                              resp.status_code)
             self.logger.debug("MaaS response: %s" % resp.text)
-            raise errors.DriverError(
-                "Error acquiring node, MaaS returned %s" % resp.status_code)
+            raise errors.DriverError("Error acquiring node, MaaS returned %s" %
+                                     resp.status_code)
 
         return node
 
-    def identify_baremetal_node(self,
-                                node_model,
-                                probably_exists=True):
+    def identify_baremetal_node(self, node_model, probably_exists=True):
         """Find MaaS node resource matching Drydock BaremetalNode.
 
         Performs one or more queries to the MaaS API to find a Machine matching
@@ -642,8 +640,8 @@ class Machines(model_base.ResourceCollectionBase):
             maas_node = self.find_node_with_mac(node_model.boot_mac)
 
         if maas_node is None:
-            self.logger.info(
-                "Could not locate node %s in MaaS" % node_model.name)
+            self.logger.info("Could not locate node %s in MaaS" %
+                             node_model.name)
         else:
             self.logger.debug("Found MaaS resource %s matching Node %s" %
                               (maas_node.resource_id, node_model.get_id()))
@@ -656,11 +654,8 @@ class Machines(model_base.ResourceCollectionBase):
         # query the MaaS API for machines with a matching mac address.
         # this call returns a json list, each member representing a complete
         # Machine
-        self.logger.debug(
-            "Finding {} with hostname: {}".format(
-                self.collection_resource.__name__, hostname
-            )
-        )
+        self.logger.debug("Finding {} with hostname: {}".format(
+            self.collection_resource.__name__, hostname))
 
         resp = self.api_client.get(url, params={"hostname": hostname})
 
@@ -675,9 +670,9 @@ class Machines(model_base.ResourceCollectionBase):
                         hostname,
                         node.get("system_id"),
                         node.get("hostname"),
-                    )
-                )
-                return self.collection_resource.from_dict(self.api_client, node)
+                    ))
+                return self.collection_resource.from_dict(
+                    self.api_client, node)
 
         return None
 
@@ -687,11 +682,8 @@ class Machines(model_base.ResourceCollectionBase):
         # query the MaaS API for all power parameters at once.
         # this call returns a json dict, mapping system id to power parameters
 
-        self.logger.debug(
-            "Finding {} with power address: {}".format(
-                self.collection_resource.__name__, power_address
-            )
-        )
+        self.logger.debug("Finding {} with power address: {}".format(
+            self.collection_resource.__name__, power_address))
 
         resp = self.api_client.get(url, op="power_parameters")
 
@@ -700,22 +692,22 @@ class Machines(model_base.ResourceCollectionBase):
 
             for system_id, power_params in json_dict.items():
                 self.logger.debug(
-                    "Finding {} with power address: {}: Considering: {}: {}".format(
+                    "Finding {} with power address: {}: Considering: {}: {}".
+                    format(
                         self.collection_resource.__name__,
                         power_address,
                         system_id,
                         power_params.get("power_address"),
-                    )
-                )
+                    ))
                 if power_params.get("power_address") == power_address:
                     self.logger.debug(
-                        "Finding {} with power address: {}: Found: {}: {}".format(
+                        "Finding {} with power address: {}: Found: {}: {}".
+                        format(
                             self.collection_resource.__name__,
                             power_address,
                             system_id,
                             power_params.get("power_address"),
-                        )
-                    )
+                        ))
 
                     # the API result isn't quite enough to contruct a Machine,
                     # so construct one with the system_id and then refresh
@@ -758,8 +750,8 @@ class Machines(model_base.ResourceCollectionBase):
                 field = k[13:]
                 result = [
                     i for i in result if str(
-                        getattr(i, 'power_parameters', {}).
-                        get(field, None)) == str(v)
+                        getattr(i, 'power_parameters', {}).get(field, None))
+                    == str(v)
                 ]
             else:
                 result = [
@@ -785,8 +777,9 @@ class Machines(model_base.ResourceCollectionBase):
             res.set_resource_id(resp_json.get('system_id'))
             return res
 
-        raise errors.DriverError("Failed updating MAAS url %s - return code %s"
-                                 % (url, resp.status_code))
+        raise errors.DriverError(
+            "Failed updating MAAS url %s - return code %s" %
+            (url, resp.status_code))
 
     def empty_refresh(self):
         """Check connectivity to MAAS machines API

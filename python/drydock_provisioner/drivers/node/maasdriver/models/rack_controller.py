@@ -66,8 +66,9 @@ class RackController(maas_machine.Machine):
 
     def update_identity(self, n, domain="local"):
         """Cannot update rack controller identity."""
-        self.logger.debug("Cannot update rack controller identity for %s, no-op." %
-                          self.hostname)
+        self.logger.debug(
+            "Cannot update rack controller identity for %s, no-op." %
+            self.hostname)
         return
 
     def is_healthy(self):
@@ -81,6 +82,7 @@ class RackController(maas_machine.Machine):
                 if rack_svc[s] not in ("running", "off"):
                     healthy = False
         return healthy
+
 
 class RackControllers(maas_machine.Machines):
     """Model for a collection of rack controllers."""

@@ -29,6 +29,7 @@ import drydock_provisioner.objects.bootaction as bootaction
 
 
 class Ingester(object):
+
     def __init__(self):
         self.logger = logging.getLogger("drydock.ingester")
         self.registered_plugin = None
@@ -50,8 +51,8 @@ class Ingester(object):
             klass = getattr(mod, classname)
             self.registered_plugin = klass()
         except Exception as ex:
-            self.logger.error(
-                "Could not enable plugin %s - %s" % (plugin, str(ex)))
+            self.logger.error("Could not enable plugin %s - %s" %
+                              (plugin, str(ex)))
 
         if self.registered_plugin is None:
             self.logger.error("Could not enable at least one plugin")
@@ -89,8 +90,8 @@ class Ingester(object):
             "Ingester:ingest_data ingesting design parts for design %s" %
             design_ref)
         design_blob = design_state.get_design_documents(design_ref)
-        self.logger.debug(
-            "Ingesting design data of %d bytes." % len(design_blob))
+        self.logger.debug("Ingesting design data of %d bytes." %
+                          len(design_blob))
 
         try:
             status, design_items = self.registered_plugin.ingest_data(
@@ -100,8 +101,8 @@ class Ingester(object):
                 "Ingester:ingest_data - Unexpected error processing data - %s"
                 % (str(vex)))
             return None, None
-        self.logger.debug("Ingester:ingest_data parsed %s design parts" % str(
-            len(design_items)))
+        self.logger.debug("Ingester:ingest_data parsed %s design parts" %
+                          str(len(design_items)))
         design_data = objects.SiteDesign()
         for m in design_items:
             if context is not None:

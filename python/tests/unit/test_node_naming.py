@@ -17,6 +17,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestNodeNaming(object):
+
     def test_node_fqdn(self, deckhand_orchestrator, input_files, setup):
         """Test fqdn rendering."""
         input_file = input_files.join("deckhand_fullsite.yaml")

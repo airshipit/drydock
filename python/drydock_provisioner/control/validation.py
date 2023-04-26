@@ -62,12 +62,12 @@ class ValidationResource(StatefulResource):
                 resp_message = validation.to_dict()
                 resp_message['code'] = 200
                 resp.status = falcon.HTTP_200
-                resp.body = json.dumps(resp_message)
+                resp.text = json.dumps(resp_message)
             else:
                 resp_message = validation.to_dict()
                 resp_message['code'] = 400
                 resp.status = falcon.HTTP_400
-                resp.body = json.dumps(resp_message)
+                resp.text = json.dumps(resp_message)
 
         except errors.InvalidFormat as e:
             err_message = str(e)

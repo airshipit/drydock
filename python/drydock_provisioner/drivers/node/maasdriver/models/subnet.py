@@ -44,10 +44,8 @@ class Subnet(model_base.ResourceBase):
         current_ranges.refresh()
 
         exists = current_ranges.query({
-            'start_ip':
-            addr_range.get('start', None),
-            'end_ip':
-            addr_range.get('end', None)
+            'start_ip': addr_range.get('start', None),
+            'end_ip': addr_range.get('end', None)
         })
 
         if len(exists) > 0:
@@ -90,12 +88,11 @@ class Subnet(model_base.ResourceBase):
         if current_route is not None:
             current_route.delete()
 
-        new_route = maas_route.StaticRoute(
-            self.api_client,
-            source=self.resource_id,
-            destination=dest_subnet,
-            gateway_ip=gateway,
-            metric=metric)
+        new_route = maas_route.StaticRoute(self.api_client,
+                                           source=self.resource_id,
+                                           destination=dest_subnet,
+                                           gateway_ip=gateway,
+                                           metric=metric)
         new_route = sr.add(new_route)
         return new_route
 

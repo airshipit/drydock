@@ -31,10 +31,9 @@ def design():
 
 
 @design.command(name='create')
-@click.option(
-    '--base-design',
-    '-b',
-    help='The base design to model this new design after')
+@click.option('--base-design',
+              '-b',
+              help='The base design to model this new design after')
 @click.pass_context
 def design_create(ctx, base_design=None):
     """Create a design."""
@@ -61,8 +60,9 @@ def design_show(ctx, design_id):
 
 
 @design.command(name='validate')
-@click.option(
-    '--design-href', '-h', help='The design href key to the design ref')
+@click.option('--design-href',
+              '-h',
+              help='The design href key to the design ref')
 @click.pass_context
 def design_validate(ctx, design_href=None):
     """Validate a design."""

@@ -32,7 +32,7 @@ and policy file templates to be customized
     $ tox -e genpolicy
     $ virtualenv -p python3.5 /var/tmp/drydock
     $ . /var/tmp/drydock/bin/activate
-    $ pip install -r requirements-lock.txt
+    $ pip install -r requirements-frozen.txt
     $ pip install .
     $ cp -r etc/drydock /etc/drydock
 

@@ -19,6 +19,7 @@ from drydock_provisioner.drivers.node.maasdriver.errors import RackControllerCon
 
 
 class TestMaasVlan():
+
     def test_add_rack_controller(self, mocker):
         '''Test vlan model method for setting a managing rack controller.'''
 

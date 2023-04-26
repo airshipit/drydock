@@ -23,14 +23,15 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNetworkCidr(object):
+
     def test_valid_network_cidr(self, mocker, deckhand_ingester, drydock_state,
                                 input_files):
 
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -47,8 +48,8 @@ class TestNetworkCidr(object):
         input_file = input_files.join("invalid_network_cidr.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -64,4 +65,4 @@ class TestNetworkCidr(object):
         assert any([
             regex_diagnostic.search(msg.get('diagnostic')),
             regex_message.search(msg.get('message'))
-                  ])
+        ])

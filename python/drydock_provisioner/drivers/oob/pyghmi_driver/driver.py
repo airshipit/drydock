@@ -70,8 +70,8 @@ class PyghmiDriver(oob_driver.OobDriver):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        cfg.CONF.register_opts(
-            PyghmiDriver.pyghmi_driver_options, group=PyghmiDriver.driver_key)
+        cfg.CONF.register_opts(PyghmiDriver.pyghmi_driver_options,
+                               group=PyghmiDriver.driver_key)
 
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.oobdriver_logger_name)
@@ -86,8 +86,9 @@ class PyghmiDriver(oob_driver.OobDriver):
         if task.action not in self.supported_actions:
             self.logger.error("Driver %s doesn't support task action %s" %
                               (self.driver_desc, task.action))
-            raise errors.DriverError("Driver %s doesn't support task action %s"
-                                     % (self.driver_desc, task.action))
+            raise errors.DriverError(
+                "Driver %s doesn't support task action %s" %
+                (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()
@@ -133,10 +134,9 @@ class PyghmiDriver(oob_driver.OobDriver):
                     task.failure()
                 else:
                     if f.exception():
-                        self.logger.error(
-                            "Uncaught exception in subtask %s" % str(
-                                uuid.UUID(bytes=t)),
-                            exc_info=f.exception())
+                        self.logger.error("Uncaught exception in subtask %s" %
+                                          str(uuid.UUID(bytes=t)),
+                                          exc_info=f.exception())
             task.align_result()
             task.bubble_results()
             task.set_status(hd_fields.TaskStatus.Complete)

@@ -85,8 +85,8 @@ class Interface(model_base.ResourceBase):
         fabric_vlan = fabric.vlans.singleton({'vid': 0})
 
         if fabric_vlan is None:
-            self.logger.warning(
-                "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
+            self.logger.warning("Cannot locate untagged VLAN on fabric %s" %
+                                (fabric_id))
             raise errors.DriverError(
                 "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
 
@@ -112,8 +112,8 @@ class Interface(model_base.ResourceBase):
         """Disconnect this interface from subnets and VLANs."""
         url = self.interpolate_url()
 
-        self.logger.debug(
-            "Disconnecting interface %s from networks." % (self.name))
+        self.logger.debug("Disconnecting interface %s from networks." %
+                          (self.name))
         resp = self.api_client.post(url, op='disconnect')
 
         if not resp.ok:
@@ -242,7 +242,8 @@ class Interface(model_base.ResourceBase):
 
         :return: true if this interface will respond to this MAC
         """
-        if mac_address.replace(':', '').upper() == self.mac_address.replace(':', '').upper():
+        if mac_address.replace(':', '').upper() == self.mac_address.replace(
+                ':', '').upper():
             return True
 
         return False
@@ -311,10 +312,10 @@ class Interfaces(model_base.ResourceCollectionBase):
         parent_iface = self.singleton({'name': parent_name})
 
         if parent_iface is None:
-            self.logger.error(
-                "Cannot locate parent interface %s" % (parent_name))
-            raise errors.DriverError(
-                "Cannot locate parent interface %s" % (parent_name))
+            self.logger.error("Cannot locate parent interface %s" %
+                              (parent_name))
+            raise errors.DriverError("Cannot locate parent interface %s" %
+                                     (parent_name))
 
         if parent_iface.vlan is None:
             self.logger.error(
@@ -324,8 +325,8 @@ class Interfaces(model_base.ResourceCollectionBase):
                 "Cannot create VLAN interface on disconnected parent %s" %
                 (parent_iface.resource_id))
 
-        vlans = maas_vlan.Vlans(
-            self.api_client, fabric_id=parent_iface.fabric_id)
+        vlans = maas_vlan.Vlans(self.api_client,
+                                fabric_id=parent_iface.fabric_id)
         vlans.refresh()
 
         vlan = vlans.singleton({'vid': vlan_tag})

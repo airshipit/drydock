@@ -22,6 +22,7 @@ from drydock_provisioner.objects import fields as hd_fields
 
 
 class TestBootactionRenderAction(object):
+
     def test_bootaction_render_nodename(self, input_files, deckhand_ingester,
                                         setup):
         """Test the bootaction render routine provides expected output."""
@@ -142,8 +143,8 @@ class TestBootactionRenderAction(object):
 
         design_ref = "file://%s" % str(input_file)
 
-        test_task = Task(
-            action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
+        test_task = Task(action=hd_fields.OrchestratorAction.Noop,
+                         design_ref=design_ref)
 
         pkg_list = deckhand_orchestrator.find_node_package_lists(
             'compute01', test_task)

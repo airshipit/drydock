@@ -21,6 +21,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestKernelParameterReferences(object):
+
     def test_valid_param_reference(self, deckhand_ingester, input_files,
                                    setup):
         input_file = input_files.join("deckhand_fullsite.yaml")
@@ -28,8 +29,8 @@ class TestKernelParameterReferences(object):
         design_state = DrydockState()
         design_ref = "file://%s" % str(input_file)
 
-        orchestrator = Orchestrator(
-            state_manager=design_state, ingester=deckhand_ingester)
+        orchestrator = Orchestrator(state_manager=design_state,
+                                    ingester=deckhand_ingester)
 
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)

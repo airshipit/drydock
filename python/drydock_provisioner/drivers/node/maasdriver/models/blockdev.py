@@ -93,8 +93,8 @@ class BlockDevice(model_base.ResourceBase):
             resp = self.api_client.post(url, op='format', files=data)
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS error: %s - %s" %
+                                (resp.status_code, resp.text))
 
             self.refresh()
         except Exception as ex:
@@ -126,8 +126,8 @@ class BlockDevice(model_base.ResourceBase):
             resp = self.api_client.post(url, op='unformat')
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS error: %s - %s" %
+                                (resp.status_code, resp.text))
             self.refresh()
         except Exception as ex:
             msg = "Error: unformat of device %s on node %s failed: %s" \
@@ -156,8 +156,8 @@ class BlockDevice(model_base.ResourceBase):
             resp = self.api_client.post(url, op='mount', files=data)
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS error: %s - %s" %
+                                (resp.status_code, resp.text))
 
             self.refresh()
         except Exception as ex:
@@ -183,8 +183,8 @@ class BlockDevice(model_base.ResourceBase):
             resp = self.api_client.post(url, op='unmount')
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS error: %s - %s" %
+                                (resp.status_code, resp.text))
 
             self.refresh()
         except Exception as ex:
@@ -202,8 +202,8 @@ class BlockDevice(model_base.ResourceBase):
             resp = self.api_client.post(url, op='set_boot_disk')
 
             if not resp.ok:
-                raise Exception(
-                    "MAAS error: %s - %s" % (resp.status_code, resp.text))
+                raise Exception("MAAS error: %s - %s" %
+                                (resp.status_code, resp.text))
 
             self.refresh()
         except Exception as ex:

@@ -72,8 +72,8 @@ class BaseAction(object):
 
         if len(target_nodes) > 1:
             self.logger.info(
-                "Found multiple target nodes in task %s, splitting..." % str(
-                    self.task.get_id()))
+                "Found multiple target nodes in task %s, splitting..." %
+                str(self.task.get_id()))
             split_tasks = dict()
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=64) as te:
@@ -101,8 +101,8 @@ class BaseAction(object):
         :param timeout: The number of seconds to wait for all Futures to complete
         :param bubble: Whether to bubble results from collected subtasks
         """
-        finished, timed_out = concurrent.futures.wait(
-            subtask_futures.values(), timeout=timeout)
+        finished, timed_out = concurrent.futures.wait(subtask_futures.values(),
+                                                      timeout=timeout)
 
         for k, v in subtask_futures.items():
             if not v.done():
@@ -116,8 +116,8 @@ class BaseAction(object):
             else:
                 if v.exception():
                     self.logger.error(
-                        "Uncaught excetion in subtask %s future:" % str(
-                            uuid.UUID(bytes=k)),
+                        "Uncaught excetion in subtask %s future:" %
+                        str(uuid.UUID(bytes=k)),
                         exc_info=v.exception())
             st = self.state_manager.get_task(uuid.UUID(bytes=k))
             st.bubble_results()
@@ -184,16 +184,20 @@ class Noop(BaseAction):
             self.logger.debug("Terminating action.")
             self.task.set_status(hd_fields.TaskStatus.Terminated)
             self.task.failure()
-            self.task.add_status_msg(
-                msg="Action terminated.", ctx_type='NA', ctx='NA', error=False)
+            self.task.add_status_msg(msg="Action terminated.",
+                                     ctx_type='NA',
+                                     ctx='NA',
+                                     error=False)
         else:
             self.logger.debug("Marked task as successful.")
             self.task.set_status(hd_fields.TaskStatus.Complete)
             target_nodes = self.orchestrator.get_target_nodes(self.task)
             for n in target_nodes:
                 self.task.success(focus=n.name)
-            self.task.add_status_msg(
-                msg="Noop action.", ctx_type='NA', ctx='NA', error=False)
+            self.task.add_status_msg(msg="Noop action.",
+                                     ctx_type='NA',
+                                     ctx='NA',
+                                     error=False)
         self.task.save()
         self.logger.debug("Saved task state.")
         self.logger.debug("Finished Noop Action.")
@@ -226,11 +230,10 @@ class DestroyNodes(BaseAction):
         target_nodes = self.orchestrator.get_target_nodes(self.task)
 
         if not target_nodes:
-            self.task.add_status_msg(
-                msg="No nodes in scope, no work to do.",
-                error=False,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="No nodes in scope, no work to do.",
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.success()
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.save()
@@ -325,11 +328,11 @@ class VerifySite(BaseAction):
         node_driver_task = self.state_manager.get_task(
             node_driver_task.get_id())
 
-        self.task.add_status_msg(
-            msg="Collected subtask %s" % str(node_driver_task.get_id()),
-            error=False,
-            ctx=str(node_driver_task.get_id()),
-            ctx_type='task')
+        self.task.add_status_msg(msg="Collected subtask %s" %
+                                 str(node_driver_task.get_id()),
+                                 error=False,
+                                 ctx=str(node_driver_task.get_id()),
+                                 ctx_type='task')
 
         self.task = self.state_manager.get_task(self.task.get_id())
         self.task.set_status(hd_fields.TaskStatus.Complete)
@@ -386,11 +389,11 @@ class PrepareSite(BaseAction):
 
         driver.execute_task(config_prov_task.get_id())
 
-        self.task.add_status_msg(
-            msg="Collected subtask %s" % str(config_prov_task.get_id()),
-            error=False,
-            ctx=str(config_prov_task.get_id()),
-            ctx_type='task')
+        self.task.add_status_msg(msg="Collected subtask %s" %
+                                 str(config_prov_task.get_id()),
+                                 error=False,
+                                 ctx=str(config_prov_task.get_id()),
+                                 ctx_type='task')
         self.logger.info("Node driver task %s:%s is complete." %
                          (config_prov_task.get_id(), config_prov_task.action))
 
@@ -410,13 +413,13 @@ class PrepareSite(BaseAction):
 
         driver.execute_task(site_network_task.get_id())
 
-        self.task.add_status_msg(
-            msg="Collected subtask %s" % str(site_network_task.get_id()),
-            error=False,
-            ctx=str(site_network_task.get_id()),
-            ctx_type='task')
-        self.logger.info(
-            "Node driver task %s complete" % (site_network_task.get_id()))
+        self.task.add_status_msg(msg="Collected subtask %s" %
+                                 str(site_network_task.get_id()),
+                                 error=False,
+                                 ctx=str(site_network_task.get_id()),
+                                 ctx_type='task')
+        self.logger.info("Node driver task %s complete" %
+                         (site_network_task.get_id()))
 
     def step_usercredentials(self, driver):
         """Run the ConfigureUserCredentials step of this action.
@@ -434,13 +437,13 @@ class PrepareSite(BaseAction):
 
         driver.execute_task(user_creds_task.get_id())
 
-        self.task.add_status_msg(
-            msg="Collected subtask %s" % str(user_creds_task.get_id()),
-            error=False,
-            ctx=str(user_creds_task.get_id()),
-            ctx_type='task')
-        self.logger.info(
-            "Node driver task %s complete" % (user_creds_task.get_id()))
+        self.task.add_status_msg(msg="Collected subtask %s" %
+                                 str(user_creds_task.get_id()),
+                                 error=False,
+                                 ctx=str(user_creds_task.get_id()),
+                                 ctx_type='task')
+        self.logger.info("Node driver task %s complete" %
+                         (user_creds_task.get_id()))
 
 
 class VerifyNodes(BaseAction):
@@ -504,19 +507,18 @@ class VerifyNodes(BaseAction):
             try:
                 self._collect_subtask_futures(
                     task_futures,
-                    timeout=(
-                        config.config_mgr.conf.timeouts.drydock_timeout * 60))
-                self.logger.debug(
-                    "Collected subtasks for task %s" % str(self.task.get_id()))
+                    timeout=(config.config_mgr.conf.timeouts.drydock_timeout
+                             * 60))
+                self.logger.debug("Collected subtasks for task %s" %
+                                  str(self.task.get_id()))
             except errors.CollectSubtaskTimeout as ex:
                 self.logger.warning(str(ex))
         else:
             # no target nodes
-            self.task.add_status_msg(
-                msg="No nodes in scope, no work to do.",
-                error=False,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="No nodes in scope, no work to do.",
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.success()
 
         # Set task complete and persist that info.
@@ -554,11 +556,10 @@ class PrepareNodes(BaseAction):
         target_nodes = self.orchestrator.get_target_nodes(self.task)
 
         if not target_nodes:
-            self.task.add_status_msg(
-                msg="No nodes in scope, no work to do.",
-                error=False,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="No nodes in scope, no work to do.",
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.success()
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.save()
@@ -701,8 +702,9 @@ class PrepareNodes(BaseAction):
                     create_nodefilter_from_nodelist(node_list))
                 self.task.register_subtask(node_identify_task)
 
-            self.logger.info("Starting node driver task %s to identify nodes."
-                             % (node_identify_task.get_id()))
+            self.logger.info(
+                "Starting node driver task %s to identify nodes." %
+                (node_identify_task.get_id()))
 
             node_driver.execute_task(node_identify_task.get_id())
 
@@ -742,8 +744,8 @@ class PrepareNodes(BaseAction):
             oob_driver = self._get_driver('oob', oob_type)
 
             if oob_driver is None:
-                self.logger.warning(
-                    "Node OOB type %s has no enabled driver." % oob_type)
+                self.logger.warning("Node OOB type %s has no enabled driver." %
+                                    oob_type)
                 self.task.failure()
                 for n in oob_nodes:
                     self.task.add_status_msg(
@@ -772,8 +774,8 @@ class PrepareNodes(BaseAction):
             self._collect_subtask_futures(
                 task_futures,
                 timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
-            self.logger.debug(
-                "Collected subtasks for task %s" % str(self.task.get_id()))
+            self.logger.debug("Collected subtasks for task %s" %
+                              str(self.task.get_id()))
         except errors.CollectSubtaskTimeout as ex:
             self.logger.warning(str(ex))
 
@@ -799,8 +801,8 @@ class PrepareNodes(BaseAction):
             oob_driver = self._get_driver('oob', oob_type)
 
             if oob_driver is None:
-                self.logger.warning(
-                    "Node OOB type %s has no enabled driver." % oob_type)
+                self.logger.warning("Node OOB type %s has no enabled driver." %
+                                    oob_type)
                 self.task.failure()
                 for n in oob_nodes:
                     self.task.add_status_msg(
@@ -830,8 +832,8 @@ class PrepareNodes(BaseAction):
             self._collect_subtask_futures(
                 task_futures,
                 timeout=(config.config_mgr.conf.timeouts.drydock_timeout * 60))
-            self.logger.debug(
-                "Collected subtasks for task %s" % str(self.task.get_id()))
+            self.logger.debug("Collected subtasks for task %s" %
+                              str(self.task.get_id()))
         except errors.CollectSubtaskTimeout as ex:
             self.logger.warning(str(ex))
 
@@ -897,11 +899,10 @@ class DeployNodes(BaseAction):
         target_nodes = self.orchestrator.get_target_nodes(self.task)
 
         if not target_nodes:
-            self.task.add_status_msg(
-                msg="No nodes in scope, no work to do.",
-                error=False,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="No nodes in scope, no work to do.",
+                                     error=False,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.success()
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.save()
@@ -952,8 +953,8 @@ class DeployNodes(BaseAction):
         if (node_storage_task is not None
                 and len(node_storage_task.result.successes) > 0):
             self.logger.info(
-                "Configured storage on %s nodes, configuring platform." % (len(
-                    node_storage_task.result.successes)))
+                "Configured storage on %s nodes, configuring platform." %
+                (len(node_storage_task.result.successes)))
 
             node_platform_task = self.orchestrator.create_task(
                 design_ref=self.task.design_ref,
@@ -979,8 +980,8 @@ class DeployNodes(BaseAction):
         if node_platform_task is not None and len(
                 node_platform_task.result.successes) > 0:
             self.logger.info(
-                "Configured platform on %s nodes, starting deployment." % (len(
-                    node_platform_task.result.successes)))
+                "Configured platform on %s nodes, starting deployment." %
+                (len(node_platform_task.result.successes)))
 
             while True:
                 if node_deploy_task is None:
@@ -1078,8 +1079,9 @@ class RelabelNodes(BaseAction):
             node_filter=nf)
         self.task.register_subtask(relabel_node_task)
 
-        self.logger.info("Starting kubernetes driver task %s to relabel nodes."
-                         % (relabel_node_task.get_id()))
+        self.logger.info(
+            "Starting kubernetes driver task %s to relabel nodes." %
+            (relabel_node_task.get_id()))
         kubernetes_driver.execute_task(relabel_node_task.get_id())
 
         relabel_node_task = self.state_manager.get_task(
@@ -1118,8 +1120,8 @@ class BootactionReport(BaseAction):
                 bas = self.state_manager.get_boot_actions_for_node(n)
                 running_bas = {
                     k: v
-                    for (k, v) in bas.items() if v.
-                    get('action_status') == hd_fields.ActionResult.Incomplete
+                    for (k, v) in bas.items() if v.get('action_status')
+                    == hd_fields.ActionResult.Incomplete
                 }
                 if len(running_bas) > 0:
                     still_running = True
@@ -1166,11 +1168,11 @@ class BootactionReport(BaseAction):
                     ctx=n,
                     ctx_type='node')
             for ba in running_bas.values():
-                self.task.add_status_msg(
-                    msg="Boot action %s timed out." % (ba['action_name']),
-                    error=True,
-                    ctx=n,
-                    ctx_type='node')
+                self.task.add_status_msg(msg="Boot action %s timed out." %
+                                         (ba['action_name']),
+                                         error=True,
+                                         ctx=n,
+                                         ctx_type='node')
 
             if len(failure_bas) == 0 and len(running_bas) == 0:
                 self.task.success(focus=n)

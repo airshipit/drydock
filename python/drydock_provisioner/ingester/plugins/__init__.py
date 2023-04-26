@@ -19,6 +19,7 @@ import logging
 
 
 class IngesterPlugin(object):
+
     def __init__(self):
         self.log = logging.Logger('ingester')
         return

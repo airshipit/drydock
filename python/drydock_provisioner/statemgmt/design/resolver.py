@@ -84,13 +84,13 @@ class ReferenceResolver(object):
         :param design_uri: Tuple as returned by urllib.parse for the design reference
         """
         if design_uri.username is not None and design_uri.password is not None:
-            response = requests.get(
-                design_uri.geturl(),
-                auth=(design_uri.username, design_uri.password),
-                timeout=get_client_timeouts())
+            response = requests.get(design_uri.geturl(),
+                                    auth=(design_uri.username,
+                                          design_uri.password),
+                                    timeout=get_client_timeouts())
         else:
-            response = requests.get(
-                design_uri.geturl(), timeout=get_client_timeouts())
+            response = requests.get(design_uri.geturl(),
+                                    timeout=get_client_timeouts())
 
         return response.content
 

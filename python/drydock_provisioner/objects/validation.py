@@ -123,8 +123,8 @@ class DocumentReference(base.DrydockObject):
 
     def __hash__(self):
         """Override default hashing function."""
-        return hash(
-            str(self.doc_type), str(self.doc_schema), str(self.doc_name))
+        return hash(str(self.doc_type), str(self.doc_schema),
+                    str(self.doc_name))
 
     def to_dict(self):
         """Serialize to a dictionary for further serialization."""

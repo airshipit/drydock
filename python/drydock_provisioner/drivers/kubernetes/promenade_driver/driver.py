@@ -61,8 +61,9 @@ class PromenadeDriver(KubernetesDriver):
             raise errors.DriverError("Invalid task %s" % (task_id))
 
         if task.action not in self.supported_actions:
-            raise errors.DriverError("Driver %s doesn't support task action %s"
-                                     % (self.driver_desc, task.action))
+            raise errors.DriverError(
+                "Driver %s doesn't support task action %s" %
+                (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()
@@ -71,11 +72,10 @@ class PromenadeDriver(KubernetesDriver):
             if task.retry > 0:
                 msg = "Retrying task %s on previous failed entities." % str(
                     task.get_id())
-                task.add_status_msg(
-                    msg=msg,
-                    error=False,
-                    ctx=str(task.get_id()),
-                    ctx_type='task')
+                task.add_status_msg(msg=msg,
+                                    error=False,
+                                    ctx=str(task.get_id()),
+                                    ctx_type='task')
                 target_nodes = self.orchestrator.get_target_nodes(
                     task, failures=True)
             else:
@@ -108,22 +108,20 @@ class PromenadeDriver(KubernetesDriver):
 
             for t, f in subtask_futures.items():
                 if not f.done():
-                    task.add_status_msg(
-                        "Subtask timed out before completing.",
-                        error=True,
-                        ctx=str(uuid.UUID(bytes=t)),
-                        ctx_type='task')
+                    task.add_status_msg("Subtask timed out before completing.",
+                                        error=True,
+                                        ctx=str(uuid.UUID(bytes=t)),
+                                        ctx_type='task')
                     task.failure()
                 else:
                     if f.exception():
                         msg = ("Subtask %s raised unexpected exception: %s" %
                                (str(uuid.UUID(bytes=t)), str(f.exception())))
                         self.logger.error(msg, exc_info=f.exception())
-                        task.add_status_msg(
-                            msg=msg,
-                            error=True,
-                            ctx=str(uuid.UUID(bytes=t)),
-                            ctx_type='task')
+                        task.add_status_msg(msg=msg,
+                                            error=True,
+                                            ctx=str(uuid.UUID(bytes=t)),
+                                            ctx_type='task')
                         task.failure()
 
             task.bubble_results()
@@ -138,14 +136,14 @@ class PromenadeDriver(KubernetesDriver):
                     prom_client=prom_client)
                 action.start()
             except Exception as e:
-                msg = ("Subtask for action %s raised unexpected exception: %s"
-                       % (task.action, str(e)))
+                msg = (
+                    "Subtask for action %s raised unexpected exception: %s" %
+                    (task.action, str(e)))
                 self.logger.error(msg, exc_info=e)
-                task.add_status_msg(
-                    msg=msg,
-                    error=True,
-                    ctx=str(task.get_id()),
-                    ctx_type='task')
+                task.add_status_msg(msg=msg,
+                                    error=True,
+                                    ctx=str(task.get_id()),
+                                    ctx_type='task')
                 task.failure()
 
         task.set_status(hd_fields.TaskStatus.Complete)

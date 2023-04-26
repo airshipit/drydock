@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class NoDuplicateIpsCheck(Validators):
+
     def __init__(self):
         super().__init__('Duplicated IP Check', "DD2005")
 

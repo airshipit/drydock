@@ -2,6 +2,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class HugepagesValidity(Validators):
+
     def __init__(self):
         super().__init__('Hugepages', 'DD1008')
 

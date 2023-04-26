@@ -18,11 +18,11 @@ import drydock_provisioner.objects.fields as hd_fields
 
 
 class TestTaskFilterGeneration(object):
+
     def test_task_success_focus(self, setup):
         """Test that marking a task successful works correctly."""
-        task = objects.Task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref="http://foo.com")
+        task = objects.Task(action=hd_fields.OrchestratorAction.Noop,
+                            design_ref="http://foo.com")
 
         task.success(focus='foo')
 
@@ -31,9 +31,8 @@ class TestTaskFilterGeneration(object):
 
     def test_task_failure_focus(self, setup):
         """Test that marking a task failed works correctly."""
-        task = objects.Task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref="http://foo.com")
+        task = objects.Task(action=hd_fields.OrchestratorAction.Noop,
+                            design_ref="http://foo.com")
 
         task.failure(focus='foo')
 
@@ -42,9 +41,8 @@ class TestTaskFilterGeneration(object):
 
     def test_task_success_nf(self, setup):
         """Test that a task can generate a node filter based on its success."""
-        task = objects.Task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref="http://foo.com")
+        task = objects.Task(action=hd_fields.OrchestratorAction.Noop,
+                            design_ref="http://foo.com")
 
         expected_nf = {
             'filter_set_type': 'intersection',
@@ -62,9 +60,8 @@ class TestTaskFilterGeneration(object):
 
     def test_task_failure_nf(self, setup):
         """Test that a task can generate a node filter based on its failure."""
-        task = objects.Task(
-            action=hd_fields.OrchestratorAction.Noop,
-            design_ref="http://foo.com")
+        task = objects.Task(action=hd_fields.OrchestratorAction.Noop,
+                            design_ref="http://foo.com")
 
         expected_nf = {
             'filter_set_type': 'intersection',

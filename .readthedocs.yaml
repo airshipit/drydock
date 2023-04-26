@@ -22,5 +22,5 @@ python:
   version: 3.8
   install:
     - requirements: doc/requirements-doc.txt
-    - requirements: python/requirements-lock.txt
-    - requirements: python/requirements-test.txt
+    - requirements: python/requirements-frozen.txt
+    - requirements: python/test-requirements.txt

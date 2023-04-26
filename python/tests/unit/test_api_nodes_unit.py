@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNodesApiUnit(object):
+
     def test_post_nodes_resp(self, input_files, falcontest,
                              mock_process_node_filter):
 
@@ -41,8 +42,9 @@ class TestNodesApiUnit(object):
             'design_ref': design_ref,
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
@@ -54,8 +56,9 @@ class TestNodesApiUnit(object):
         hdr = self.get_standard_header()
         body = {}
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
@@ -68,10 +71,9 @@ class TestNodesApiUnit(object):
         policy.policy_engine.register_policy()
 
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))
 
     def get_standard_header(self):
         hdr = {
@@ -93,6 +95,7 @@ def mock_process_node_filter(mocker, deckhand_orchestrator):
     n2.site = 'test2'
     mock_results = [n1, n2]
 
-    with mocker.patch('drydock_provisioner.orchestrator.orchestrator.Orchestrator.process_node_filter',
-                      mocker.MagicMock(return_value=mock_results)):
+    with mocker.patch(
+            'drydock_provisioner.orchestrator.orchestrator.Orchestrator.process_node_filter',
+            mocker.MagicMock(return_value=mock_results)):
         yield

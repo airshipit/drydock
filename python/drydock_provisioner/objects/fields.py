@@ -16,6 +16,7 @@ from oslo_versionedobjects import fields
 
 
 class BaseDrydockEnum(fields.Enum):
+
     def __init__(self):
         super(BaseDrydockEnum, self).__init__(valid_values=self.__class__.ALL)
 

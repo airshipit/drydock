@@ -29,8 +29,8 @@ class Rack(base.DrydockPersistentObject, base.DrydockObject):
         'name': obj_fields.StringField(nullable=False),
         'site': obj_fields.StringField(nullable=False),
         'source': hd_fields.ModelSourceField(nullable=False),
-        'tor_switches': obj_fields.ObjectField(
-            'TorSwitchList', nullable=False),
+        'tor_switches': obj_fields.ObjectField('TorSwitchList',
+                                               nullable=False),
         'location': obj_fields.DictOfStringsField(nullable=False),
         'local_networks': obj_fields.ListOfStringsField(nullable=True),
     }

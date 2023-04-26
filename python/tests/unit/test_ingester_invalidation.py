@@ -21,6 +21,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestClass(object):
+
     def test_bootaction_parse(self, input_files, deckhand_ingester, setup):
         design_status, design_data = self.parse_design(
             "invalid_bootaction.yaml", input_files, deckhand_ingester)

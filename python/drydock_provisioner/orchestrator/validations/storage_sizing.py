@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class StorageSizing(Validators):
+
     def __init__(self):
         super().__init__('Storage Sizing', 'DD2003')
 

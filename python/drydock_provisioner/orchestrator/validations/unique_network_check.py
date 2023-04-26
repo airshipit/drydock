@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class UniqueNetworkCheck(Validators):
+
     def __init__(self):
         super().__init__('Allowed Network Check', 'DD1007')
 
@@ -53,8 +54,8 @@ class UniqueNetworkCheck(Validators):
                     for name in duplicated_names:
                         msg = (
                             'Allowed network %s duplicated on NetworkLink %s and NetworkLink '
-                            '%s' % (name, network_link_name,
-                                    network_link_name_2))
+                            '%s' %
+                            (name, network_link_name, network_link_name_2))
                         self.report_error(
                             msg, [],
                             "Each network is only allowed to cross a single network link."

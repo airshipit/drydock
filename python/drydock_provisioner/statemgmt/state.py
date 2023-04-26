@@ -33,6 +33,7 @@ from .design.resolver import ReferenceResolver
 
 
 class DrydockState(object):
+
     def __init__(self):
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.global_logger_name)
@@ -74,8 +75,8 @@ class DrydockState(object):
 
         with self.db_engine.connect() as conn:
             for t in table_names:
-                query_text = sql.text(
-                    "TRUNCATE TABLE %s" % t).execution_options(autocommit=True)
+                query_text = sql.text("TRUNCATE TABLE %s" %
+                                      t).execution_options(autocommit=True)
                 conn.execute(query_text)
 
     def get_design_documents(self, design_ref):
@@ -169,8 +170,9 @@ class DrydockState(object):
             with self.db_engine.connect() as conn:
                 if allowed_actions is None:
                     query = self.tasks_tbl.select().where(
-                        self.tasks_tbl.c.status == hd_fields.TaskStatus.
-                        Queued).order_by(self.tasks_tbl.c.created.asc())
+                        self.tasks_tbl.c.status
+                        == hd_fields.TaskStatus.Queued).order_by(
+                            self.tasks_tbl.c.created.asc())
                     rs = conn.execute(query)
                 else:
                     query = sql.text("SELECT * FROM tasks WHERE "
@@ -192,9 +194,9 @@ class DrydockState(object):
             else:
                 return None
         except Exception as ex:
-            self.logger.error(
-                "Error querying for next queued task: %s" % str(ex),
-                exc_info=True)
+            self.logger.error("Error querying for next queued task: %s" %
+                              str(ex),
+                              exc_info=True)
             return None
 
     def get_task(self, task_id):
@@ -211,17 +213,17 @@ class DrydockState(object):
 
             task = objects.Task.from_db(dict(r))
 
-            self.logger.debug(
-                "Assembling result messages for task %s." % str(task.task_id))
+            self.logger.debug("Assembling result messages for task %s." %
+                              str(task.task_id))
             self._assemble_tasks(task_list=[task])
             task.statemgr = self
 
             return task
 
         except Exception as ex:
-            self.logger.error(
-                "Error querying task %s: %s" % (str(task_id), str(ex)),
-                exc_info=True)
+            self.logger.error("Error querying task %s: %s" %
+                              (str(task_id), str(ex)),
+                              exc_info=True)
             return None
 
     def post_result_message(self, task_id, msg):
@@ -237,8 +239,9 @@ class DrydockState(object):
                 conn.execute(query)
             return True
         except Exception as ex:
-            self.logger.error("Error inserting result message for task %s: %s"
-                              % (str(task_id), str(ex)))
+            self.logger.error(
+                "Error inserting result message for task %s: %s" %
+                (str(task_id), str(ex)))
             return False
 
     def delete_result_message(self, task_id, msg):
@@ -254,8 +257,8 @@ class DrydockState(object):
                 conn.execute(query)
             return True
         except Exception as ex:
-            self.logger.error("Error delete result message for task %s: %s"
-                              % (str(task_id), str(ex)))
+            self.logger.error("Error delete result message for task %s: %s" %
+                              (str(task_id), str(ex)))
             return False
 
     def _assemble_tasks(self, task_list=None):
@@ -292,13 +295,13 @@ class DrydockState(object):
         """
         try:
             with self.db_engine.connect() as conn:
-                query = self.tasks_tbl.insert().values(
-                    **(task.to_db(include_id=True)))
+                query = self.tasks_tbl.insert().values(**(task.to_db(
+                    include_id=True)))
                 conn.execute(query)
             return True
         except Exception as ex:
-            self.logger.error(
-                "Error inserting task %s: %s" % (str(task.task_id), str(ex)))
+            self.logger.error("Error inserting task %s: %s" %
+                              (str(task.task_id), str(ex)))
             return False
 
     def put_task(self, task):
@@ -317,8 +320,8 @@ class DrydockState(object):
                 else:
                     return False
         except Exception as ex:
-            self.logger.error(
-                "Error updating task %s: %s" % (str(task.task_id), str(ex)))
+            self.logger.error("Error updating task %s: %s" %
+                              (str(task.task_id), str(ex)))
             return False
 
     def task_retention(self, retain_days):
@@ -335,22 +338,19 @@ class DrydockState(object):
                 conn.execute(query_tasks_text)
                 conn.close()
             except Exception as ex:
-                self.logger.error(
-                    "Error deleting tasks: %s" % str(ex))
+                self.logger.error("Error deleting tasks: %s" % str(ex))
                 return False
 
         with self.db_engine.connect() as conn:
             try:
-                query_subtasks_text = (
-                    "DELETE FROM tasks "
-                    "WHERE parent_task_id IS NOT NULL AND "
-                    "parent_task_id NOT IN "
-                    "(SELECT task_id FROM tasks);")
+                query_subtasks_text = ("DELETE FROM tasks "
+                                       "WHERE parent_task_id IS NOT NULL AND "
+                                       "parent_task_id NOT IN "
+                                       "(SELECT task_id FROM tasks);")
                 conn.execute(sql.text(query_subtasks_text))
                 conn.close()
             except Exception as ex:
-                self.logger.error(
-                    "Error deleting subtasks: %s" % str(ex))
+                self.logger.error("Error deleting subtasks: %s" % str(ex))
                 return False
 
         with self.db_engine.connect() as conn:
@@ -364,8 +364,8 @@ class DrydockState(object):
                 conn.execute(sql.text(query_result_message_text))
                 conn.close()
             except Exception as ex:
-                self.logger.error(
-                    "Error deleting result messages: %s" % str(ex))
+                self.logger.error("Error deleting result messages: %s" %
+                                  str(ex))
                 return False
 
         with self.db_engine.connect() as conn:
@@ -378,8 +378,7 @@ class DrydockState(object):
                 real_conn.set_isolation_level(old_isolation_level)
                 conn.close()
             except Exception as ex:
-                self.logger.error(
-                    "Error running vacuum full: %s" % str(ex))
+                self.logger.error("Error running vacuum full: %s" % str(ex))
                 return False
 
             return True
@@ -397,10 +396,9 @@ class DrydockState(object):
 
         try:
             with self.db_engine.connect() as conn:
-                rs = conn.execute(
-                    query_string,
-                    new_subtask=subtask_id.bytes,
-                    task_id=task_id.bytes)
+                rs = conn.execute(query_string,
+                                  new_subtask=subtask_id.bytes,
+                                  task_id=task_id.bytes)
                 rc = rs.rowcount
                 if rc == 1:
                     return True
@@ -419,8 +417,8 @@ class DrydockState(object):
         try:
             with self.db_engine.connect() as conn:
                 query = self.active_instance_tbl.update().where(
-                    self.active_instance_tbl.c.identity == leader_id.
-                    bytes).values(last_ping=datetime.utcnow())
+                    self.active_instance_tbl.c.identity
+                    == leader_id.bytes).values(last_ping=datetime.utcnow())
                 rs = conn.execute(query)
                 rc = rs.rowcount
 
@@ -509,17 +507,16 @@ class DrydockState(object):
                     "WHERE ba1.node_name = :node").execution_options(
                         autocommit=True)
 
-                conn.execute(
-                    query,
-                    node=nodename,
-                    task_id=task_id.bytes,
-                    identity=identity)
+                conn.execute(query,
+                             node=nodename,
+                             task_id=task_id.bytes,
+                             identity=identity)
 
             return True
         except Exception as ex:
-            self.logger.error(
-                "Error posting boot action context for node %s" % nodename,
-                exc_info=ex)
+            self.logger.error("Error posting boot action context for node %s" %
+                              nodename,
+                              exc_info=ex)
             return False
 
     def get_boot_action_context(self, nodename):
@@ -576,8 +573,8 @@ class DrydockState(object):
                 conn.execute(query)
                 return True
         except Exception as ex:
-            self.logger.error(
-                "Error saving boot action %s." % action_id, exc_info=ex)
+            self.logger.error("Error saving boot action %s." % action_id,
+                              exc_info=ex)
             return False
 
     def put_bootaction_status(self,
@@ -596,9 +593,9 @@ class DrydockState(object):
                 conn.execute(query)
                 return True
         except Exception as ex:
-            self.logger.error(
-                "Error updating boot action %s status." % action_id,
-                exc_info=ex)
+            self.logger.error("Error updating boot action %s status." %
+                              action_id,
+                              exc_info=ex)
             return False
 
     def get_boot_actions_for_node(self, nodename):
@@ -623,9 +620,9 @@ class DrydockState(object):
                     actions[ba_dict.get('action_name', 'undefined')] = ba_dict
                 return actions
         except Exception as ex:
-            self.logger.error(
-                "Error selecting boot actions for node %s" % nodename,
-                exc_info=ex)
+            self.logger.error("Error selecting boot actions for node %s" %
+                              nodename,
+                              exc_info=ex)
             return None
 
     def get_boot_action(self, action_id):
@@ -649,8 +646,8 @@ class DrydockState(object):
                 else:
                     return None
         except Exception as ex:
-            self.logger.error(
-                "Error querying boot action %s" % action_id, exc_info=ex)
+            self.logger.error("Error querying boot action %s" % action_id,
+                              exc_info=ex)
 
     def post_build_data(self, build_data):
         """Write a new build data element to the database.
@@ -695,8 +692,9 @@ class DrydockState(object):
                 if node_name and task_id:
                     query = self.build_data_tbl.select().where(
                         self.build_data_tbl.c.node_name == node_name
-                        and self.build_data_tbl.c.task_id == task_id.bytes
-                    ).order_by(self.build_data_tbl.c.collected_date.desc())
+                        and self.build_data_tbl.c.task_id
+                        == task_id.bytes).order_by(
+                            self.build_data_tbl.c.collected_date.desc())
                     rs = conn.execute(query)
                 elif node_name:
                     if latest:

@@ -381,6 +381,7 @@ class InvalidSizeFormat(DriverError):
 
 
 class ApiError(Exception):
+
     def __init__(self, msg, code=500):
         super().__init__(msg)
         self.message = msg

@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class LibvirtValidity(Validators):
+
     def __init__(self):
         super().__init__('Valid Libvirt Configuration', 'DD4002')
 

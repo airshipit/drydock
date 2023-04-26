@@ -22,15 +22,17 @@ from drydock_provisioner.orchestrator.validations.\
 
 LOG = logging.getLogger(__name__)
 
+
 class TestStorageMountpoints(object):
+
     def test_storage_mountpoints(self, deckhand_ingester, drydock_state,
                                  input_files):
 
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StorageMountpoints()
@@ -47,8 +49,8 @@ class TestStorageMountpoints(object):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -69,8 +71,8 @@ class TestStorageMountpoints(object):
         input_file = input_files.join("invalid_mountpoint.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -92,8 +94,8 @@ class TestStorageMountpoints(object):
         input_file = input_files.join("partitions_without_mountpoints.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
         validator = StorageMountpoints()

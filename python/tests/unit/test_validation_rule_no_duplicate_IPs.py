@@ -22,13 +22,14 @@ LOG = logging.getLogger(__name__)
 
 
 class TestDuplicateIPs(object):
+
     def test_no_duplicate_IPs(self, input_files, drydock_state,
                               deckhand_ingester):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -38,13 +39,14 @@ class TestDuplicateIPs(object):
 
         assert msg.get('error') is False
 
-    def test_no_duplicate_IPs_no_baremetal_node(
-            self, input_files, drydock_state, deckhand_ingester):
+    def test_no_duplicate_IPs_no_baremetal_node(self, input_files,
+                                                drydock_state,
+                                                deckhand_ingester):
         input_file = input_files.join("no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -60,8 +62,8 @@ class TestDuplicateIPs(object):
         input_file = input_files.join("no_duplicate_IPs_no_addressing.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -77,8 +79,8 @@ class TestDuplicateIPs(object):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

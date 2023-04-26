@@ -59,8 +59,8 @@ class DesignShow(CliAction):  # pylint: disable=too-few-public-methods
                           design_id)
 
     def invoke(self):
-        return self.api_client.get_design(
-            design_id=self.design_id, source=self.source)
+        return self.api_client.get_design(design_id=self.design_id,
+                                          source=self.source)
 
 
 class DesignValidate(CliAction):  # pylint: disable=too-few-public-methods

@@ -45,19 +45,21 @@ from .actions.node import ConfigureNodeProvisioner
 
 class MaasNodeDriver(NodeDriver):
     maasdriver_options = [
-        cfg.StrOpt(
-            'maas_api_key', help='The API key for accessing MaaS',
-            secret=True),
+        cfg.StrOpt('maas_api_key',
+                   help='The API key for accessing MaaS',
+                   secret=True),
         cfg.StrOpt('maas_api_url', help='The URL for accessing MaaS API'),
         cfg.BoolOpt(
             'use_node_oob_params',
             default=False,
-            help='Update MAAS to use the provided Node OOB params, overwriting discovered values',
+            help=
+            'Update MAAS to use the provided Node OOB params, overwriting discovered values',
         ),
         cfg.BoolOpt(
             'skip_bmc_config',
             default=False,
-            help='Skip BMC reconfiguration during commissioning (requires MAAS 2.7+)',
+            help=
+            'Skip BMC reconfiguration during commissioning (requires MAAS 2.7+)',
         ),
         cfg.IntOpt(
             'poll_interval',
@@ -105,8 +107,8 @@ class MaasNodeDriver(NodeDriver):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        cfg.CONF.register_opts(
-            MaasNodeDriver.maasdriver_options, group=MaasNodeDriver.driver_key)
+        cfg.CONF.register_opts(MaasNodeDriver.maasdriver_options,
+                               group=MaasNodeDriver.driver_key)
 
         self.logger = logging.getLogger(
             cfg.CONF.logging.nodedriver_logger_name)
@@ -139,8 +141,9 @@ class MaasNodeDriver(NodeDriver):
             raise errors.DriverError("Invalid task %s" % (task_id))
 
         if task.action not in self.supported_actions:
-            raise errors.DriverError("Driver %s doesn't support task action %s"
-                                     % (self.driver_desc, task.action))
+            raise errors.DriverError(
+                "Driver %s doesn't support task action %s" %
+                (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()
@@ -149,11 +152,10 @@ class MaasNodeDriver(NodeDriver):
             if task.retry > 0:
                 msg = "Retrying task %s on previous failed entities." % str(
                     task.get_id())
-                task.add_status_msg(
-                    msg=msg,
-                    error=False,
-                    ctx=str(task.get_id()),
-                    ctx_type='task')
+                task.add_status_msg(msg=msg,
+                                    error=False,
+                                    ctx=str(task.get_id()),
+                                    ctx_type='task')
                 target_nodes = self.orchestrator.get_target_nodes(
                     task, failures=True)
             else:
@@ -197,10 +199,9 @@ class MaasNodeDriver(NodeDriver):
                     task.failure()
                 else:
                     if f.exception():
-                        self.logger.error(
-                            "Uncaught exception in subtask %s." % str(
-                                uuid.UUID(bytes=t)),
-                            exc_info=f.exception())
+                        self.logger.error("Uncaught exception in subtask %s." %
+                                          str(uuid.UUID(bytes=t)),
+                                          exc_info=f.exception())
                         task.failure()
             task.bubble_results()
             task.align_result()
@@ -216,14 +217,14 @@ class MaasNodeDriver(NodeDriver):
                     maas_client=maas_client)
                 action.start()
             except Exception as e:
-                msg = ("Subtask for action %s raised unexpected exception: %s"
-                       % (task.action, str(e)))
+                msg = (
+                    "Subtask for action %s raised unexpected exception: %s" %
+                    (task.action, str(e)))
                 self.logger.error(msg, exc_info=e)
-                task.add_status_msg(
-                    msg=msg,
-                    error=True,
-                    ctx=str(task.get_id()),
-                    ctx_type='task')
+                task.add_status_msg(msg=msg,
+                                    error=True,
+                                    ctx=str(task.get_id()),
+                                    ctx_type='task')
                 task.failure()
 
         task.set_status(hd_fields.TaskStatus.Complete)

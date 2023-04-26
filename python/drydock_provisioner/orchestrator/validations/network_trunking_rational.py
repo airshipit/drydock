@@ -17,6 +17,7 @@ import drydock_provisioner.objects.fields as hd_fields
 
 
 class NetworkTrunkingRational(Validators):
+
     def __init__(self):
         super().__init__('Network Trunking Rationalty', "DD2004")
 
@@ -30,8 +31,8 @@ class NetworkTrunkingRational(Validators):
         for network_link in network_link_list:
             allowed_networks = network_link.allowed_networks
             # if allowed networks > 1 trunking must be enabled
-            if (len(allowed_networks) > 1 and network_link.
-                    trunk_mode == hd_fields.NetworkLinkTrunkingMode.Disabled):
+            if (len(allowed_networks) > 1 and network_link.trunk_mode
+                    == hd_fields.NetworkLinkTrunkingMode.Disabled):
                 msg = ('If there is more than 1 allowed network,'
                        'trunking mode must be enabled')
                 self.report_error(
@@ -40,15 +41,17 @@ class NetworkTrunkingRational(Validators):
                 )
 
             # trunking mode is disabled, default_network must be defined
-            if (network_link.trunk_mode == hd_fields.NetworkLinkTrunkingMode.
-                    Disabled and network_link.native_network is None):
+            if (network_link.trunk_mode
+                    == hd_fields.NetworkLinkTrunkingMode.Disabled
+                    and network_link.native_network is None):
 
                 msg = 'Trunking mode is disabled, a trunking default_network must be defined'
                 self.report_error(
                     msg, [network_link.doc_ref],
                     "Non-trunked links must have a native network defined.")
-            elif (network_link.trunk_mode == hd_fields.NetworkLinkTrunkingMode.
-                  Disabled and network_link.native_network is not None):
+            elif (network_link.trunk_mode
+                  == hd_fields.NetworkLinkTrunkingMode.Disabled
+                  and network_link.native_network is not None):
                 network = site_design.get_network(network_link.native_network)
                 if network and network.vlan_id:
                     msg = "Network link native network has a defined VLAN tag."

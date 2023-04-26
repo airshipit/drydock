@@ -18,6 +18,7 @@ import drydock_provisioner.error as errors
 
 
 class SimpleBytes():
+
     def calculate_bytes(size_str):
         """
         Calculate the size in bytes of a size_str.
@@ -34,8 +35,8 @@ class SimpleBytes():
         match = regex.match(size_str)
 
         if not match:
-            raise errors.InvalidSizeFormat(
-                "Invalid size string format: %s" % size_str)
+            raise errors.InvalidSizeFormat("Invalid size string format: %s" %
+                                           size_str)
 
         base_size = int(match.group(1))
 

@@ -30,6 +30,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestTasksApiUnit(object):
+
     def test_get_tasks_id_resp(self, falcontest):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111111'
         hdr = self.get_standard_header()
@@ -57,8 +58,9 @@ class TestTasksApiUnit(object):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111111'
         hdr = self.get_standard_header()
 
-        result = falcontest.simulate_get(
-            url, headers=hdr, query_string='subtaskerrors=true')
+        result = falcontest.simulate_get(url,
+                                         headers=hdr,
+                                         query_string='subtaskerrors=true')
 
         assert result.status == falcon.HTTP_200
         response_json = json.loads(result.text)
@@ -70,8 +72,9 @@ class TestTasksApiUnit(object):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111113'
         hdr = self.get_standard_header()
 
-        result = falcontest.simulate_get(
-            url, headers=hdr, query_string='subtaskerrors=true')
+        result = falcontest.simulate_get(url,
+                                         headers=hdr,
+                                         query_string='subtaskerrors=true')
 
         assert result.status == falcon.HTTP_200
         response_json = json.loads(result.text)
@@ -85,8 +88,9 @@ class TestTasksApiUnit(object):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111111'
         hdr = self.get_standard_header()
 
-        result = falcontest.simulate_get(
-            url, headers=hdr, query_string='builddata=true')
+        result = falcontest.simulate_get(url,
+                                         headers=hdr,
+                                         query_string='builddata=true')
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
@@ -116,8 +120,9 @@ class TestTasksApiUnit(object):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111113'
         hdr = self.get_standard_header()
 
-        result = falcontest.simulate_get(
-            url, headers=hdr, query_string='layers=2')
+        result = falcontest.simulate_get(url,
+                                         headers=hdr,
+                                         query_string='layers=2')
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
@@ -140,8 +145,9 @@ class TestTasksApiUnit(object):
         url = '/api/v1.0/tasks/11111111-1111-1111-1111-111111111113'
         hdr = self.get_standard_header()
 
-        result = falcontest.simulate_get(
-            url, headers=hdr, query_string='layers=-1')
+        result = falcontest.simulate_get(url,
+                                         headers=hdr,
+                                         query_string='layers=-1')
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
@@ -210,10 +216,9 @@ class TestTasksApiUnit(object):
         policy.policy_engine.register_policy()
 
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))
 
     def get_standard_header(self):
         hdr = {
@@ -227,6 +232,7 @@ class TestTasksApiUnit(object):
 
 @pytest.fixture()
 def mock_get_task(drydock_state):
+
     def side_effect(*args):
         task_id = str(args[0])
         LOG.debug(task_id)
@@ -236,8 +242,10 @@ def mock_get_task(drydock_state):
             new_task.task_id = '11111111-1111-1111-1111-111111111111'
             new_task.result = objects.TaskStatus()
             new_task.result.set_status(hd_fields.ActionResult.Failure)
-            new_task.result.add_status_msg(
-                msg='Test', error=True, ctx_type='N/A', ctx='N/A')
+            new_task.result.add_status_msg(msg='Test',
+                                           error=True,
+                                           ctx_type='N/A',
+                                           ctx='N/A')
             return new_task
         # Task not found
         if task_id == '11111111-1111-1111-1111-111111111112':
@@ -268,8 +276,10 @@ def mock_get_task(drydock_state):
             new_task.task_id = '11111111-1111-1111-1111-111111111116'
             new_task.result = objects.TaskStatus()
             new_task.result.set_status(hd_fields.ActionResult.Failure)
-            new_task.result.add_status_msg(
-                msg='Test', error=True, ctx_type='N/A', ctx='N/A')
+            new_task.result.add_status_msg(msg='Test',
+                                           error=True,
+                                           ctx_type='N/A',
+                                           ctx='N/A')
             LOG.debug('error_count')
             LOG.debug(new_task.result.error_count)
             return new_task

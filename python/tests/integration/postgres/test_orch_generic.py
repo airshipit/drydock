@@ -20,13 +20,14 @@ import drydock_provisioner.objects.fields as hd_fields
 
 
 class TestClass(object):
+
     def test_task_complete(self, deckhand_ingester, input_files, setup,
                            blank_state, mock_get_build_data):
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orchestrator = orch.Orchestrator(
-            state_manager=blank_state, ingester=deckhand_ingester)
+        orchestrator = orch.Orchestrator(state_manager=blank_state,
+                                         ingester=deckhand_ingester)
         orch_task = orchestrator.create_task(
             action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
         orch_task.set_status(hd_fields.TaskStatus.Queued)
@@ -50,8 +51,8 @@ class TestClass(object):
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orchestrator = orch.Orchestrator(
-            state_manager=blank_state, ingester=deckhand_ingester)
+        orchestrator = orch.Orchestrator(state_manager=blank_state,
+                                         ingester=deckhand_ingester)
         orch_task = orchestrator.create_task(
             action=hd_fields.OrchestratorAction.Noop, design_ref=design_ref)
 

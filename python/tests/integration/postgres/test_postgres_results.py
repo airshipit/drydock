@@ -4,6 +4,7 @@ from drydock_provisioner import objects
 
 
 class TestPostgres(object):
+
     def test_result_message_insert(self, populateddb, drydock_state):
         """Test that a result message for a task can be added."""
         msg1 = objects.TaskStatusMessage('Error 1', True, 'node', 'node1')
@@ -23,8 +24,8 @@ class TestPostgres(object):
     @pytest.fixture(scope='function')
     def populateddb(self, blank_state):
         """Add dummy task to test against."""
-        task = objects.Task(
-            action='prepare_site', design_ref='http://test.com/design')
+        task = objects.Task(action='prepare_site',
+                            design_ref='http://test.com/design')
 
         blank_state.post_task(task)
 

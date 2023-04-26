@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class TestEnforcerDecorator():
+
     def test_apienforcer_decorator(self, mocker):
         ''' DrydockPolicy.authorized() should correctly use oslo_policy to enforce
             RBAC policy based on a DrydockRequestContext instance. authorized() is

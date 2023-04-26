@@ -28,6 +28,7 @@ import falcon
 
 
 class TestTasksApi():
+
     def test_read_tasks(self, falcontest, blank_state):
         """Test that the tasks API responds with list of tasks."""
         url = '/api/v1.0/tasks'
@@ -61,18 +62,18 @@ class TestTasksApi():
             context=ctx)
 
         # Seed DB with build data for task
-        build_data = objects.BuildData(
-            node_name='foo',
-            task_id=task.get_id(),
-            generator='hello_world',
-            data_format='text/plain',
-            data_element='Hello World!')
+        build_data = objects.BuildData(node_name='foo',
+                                       task_id=task.get_id(),
+                                       generator='hello_world',
+                                       data_format='text/plain',
+                                       data_element='Hello World!')
         blank_state.post_build_data(build_data)
 
         url = '/api/v1.0/tasks/%s' % str(task.get_id())
 
-        resp = falcontest.simulate_get(
-            url, headers=req_hdr, query_string="builddata=true")
+        resp = falcontest.simulate_get(url,
+                                       headers=req_hdr,
+                                       query_string="builddata=true")
 
         assert resp.status == falcon.HTTP_200
 
@@ -111,7 +112,6 @@ class TestTasksApi():
         policy.policy_engine.register_policy()
 
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))

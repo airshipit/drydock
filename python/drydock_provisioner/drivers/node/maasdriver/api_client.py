@@ -26,6 +26,7 @@ import drydock_provisioner.error as errors
 
 
 class MaasOauth(req_auth.AuthBase):
+
     def __init__(self, apikey):
         self.consumer_key, self.token_key, self.token_secret = apikey.split(
             ':')
@@ -55,18 +56,19 @@ class MaasOauth(req_auth.AuthBase):
 
 
 class MaasRequestFactory(object):
+
     def __init__(self, base_url, apikey):
         # The URL in the config should end in /MAAS/, but the api is behind /MAAS/api/2.0/
         self.base_url = base_url + "/api/2.0/"
         self.apikey = apikey
 
         # Adapter for maas for request retries
-        retry_strategy = Retry(
-            total=3,
-            status_forcelist=[429, 500, 502, 503, 504],
-            method_whitelist=["HEAD", "GET", "POST", "PUT", "DELETE",
-                              "OPTIONS", "TRACE"]
-        )
+        retry_strategy = Retry(total=3,
+                               status_forcelist=[429, 500, 502, 503, 504],
+                               method_whitelist=[
+                                   "HEAD", "GET", "POST", "PUT", "DELETE",
+                                   "OPTIONS", "TRACE"
+                               ])
         self.maas_adapter = HTTPAdapter(max_retries=retry_strategy)
 
         self.signer = MaasOauth(apikey)
@@ -109,8 +111,8 @@ class MaasRequestFactory(object):
         except requests.Timeout:
             raise errors.TransientDriverError("Timeout connection to MaaS")
         except Exception as ex:
-            raise errors.PersistentDriverError(
-                "Error accessing MaaS: %s" % str(ex))
+            raise errors.PersistentDriverError("Error accessing MaaS: %s" %
+                                               str(ex))
 
         if resp.status_code in [401, 403]:
             raise errors.PersistentDriverError(
@@ -149,15 +151,15 @@ class MaasRequestFactory(object):
                             str(i).encode('utf-8')).decode('utf-8')
                         content_type = 'text/plain; charset="utf-8"'
                         part_headers = {'Content-Transfer-Encoding': 'base64'}
-                        files_tuples.append((k, (None, value, content_type,
-                                                 part_headers)))
+                        files_tuples.append(
+                            (k, (None, value, content_type, part_headers)))
                 else:
                     value = base64.b64encode(
                         str(v).encode('utf-8')).decode('utf-8')
                     content_type = 'text/plain; charset="utf-8"'
                     part_headers = {'Content-Transfer-Encoding': 'base64'}
-                    files_tuples.append((k, (None, value, content_type,
-                                             part_headers)))
+                    files_tuples.append(
+                        (k, (None, value, content_type, part_headers)))
             kwargs['files'] = files_tuples
 
         params = kwargs.pop('params', None)
@@ -174,13 +176,12 @@ class MaasRequestFactory(object):
         if timeout is None:
             timeout = (5, 60)
 
-        request = requests.Request(
-            method=method,
-            url=self.base_url + endpoint,
-            auth=self.signer,
-            headers=headers,
-            params=params,
-            **kwargs)
+        request = requests.Request(method=method,
+                                   url=self.base_url + endpoint,
+                                   auth=self.signer,
+                                   headers=headers,
+                                   params=params,
+                                   **kwargs)
 
         prepared_req = self.http_session.prepare_request(request)
 
@@ -191,6 +192,6 @@ class MaasRequestFactory(object):
                 "Received error response - URL: %s %s - RESPONSE: %s" %
                 (prepared_req.method, prepared_req.url, resp.status_code))
             self.logger.debug("Response content: %s" % resp.text)
-            raise errors.DriverError(
-                "MAAS Error: %s - %s" % (resp.status_code, resp.text))
+            raise errors.DriverError("MAAS Error: %s - %s" %
+                                     (resp.status_code, resp.text))
         return resp

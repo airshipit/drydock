@@ -16,9 +16,11 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
-    def test_bootaction_scoping_blankfilter(
-            self, input_files, deckhand_orchestrator, drydock_state,
-            mock_get_build_data):
+
+    def test_bootaction_scoping_blankfilter(self, input_files,
+                                            deckhand_orchestrator,
+                                            drydock_state,
+                                            mock_get_build_data):
         """Test a boot action with no node filter scopes correctly."""
         input_file = input_files.join("deckhand_fullsite.yaml")
 
@@ -36,9 +38,10 @@ class TestClass(object):
                 assert 'compute01' in ba.target_nodes
                 assert 'controller01' in ba.target_nodes
 
-    def test_bootaction_scoping_unionfilter(
-            self, input_files, deckhand_orchestrator, drydock_state,
-            mock_get_build_data):
+    def test_bootaction_scoping_unionfilter(self, input_files,
+                                            deckhand_orchestrator,
+                                            drydock_state,
+                                            mock_get_build_data):
         """Test a boot action with a union node filter scopes correctly."""
         input_file = input_files.join("deckhand_fullsite.yaml")
 

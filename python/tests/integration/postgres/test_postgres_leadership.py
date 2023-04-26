@@ -17,6 +17,7 @@ import time
 
 
 class TestPostgres(object):
+
     def test_claim_leadership(self, blank_state):
         """Test that a node can claim leadership.
 
@@ -41,8 +42,8 @@ class TestPostgres(object):
 
         time.sleep(20)
 
-        print(
-            "Claiming leadership for %s after 20s" % str(second_leader.bytes))
+        print("Claiming leadership for %s after 20s" %
+              str(second_leader.bytes))
         crown = ds.claim_leadership(second_leader)
 
         assert crown

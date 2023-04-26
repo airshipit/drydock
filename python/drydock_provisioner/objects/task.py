@@ -91,11 +91,10 @@ class Task(object):
                 self.result.failures) > 0):
             if not max_attempts or (max_attempts
                                     and self.retry < max_attempts):
-                self.add_status_msg(
-                    msg="Retrying task for failed entities.",
-                    error=False,
-                    ctx='NA',
-                    ctx_type='NA')
+                self.add_status_msg(msg="Retrying task for failed entities.",
+                                    error=False,
+                                    ctx='NA',
+                                    ctx_type='NA')
                 self.retry = self.retry + 1
                 if len(self.result.successes) > 0:
                     self.result.status = hd_fields.ActionResult.Success
@@ -104,11 +103,10 @@ class Task(object):
                 self.save()
                 return True
             else:
-                self.add_status_msg(
-                    msg="Retry requested, out of attempts.",
-                    error=False,
-                    ctx='NA',
-                    ctx_type='NA')
+                self.add_status_msg(msg="Retry requested, out of attempts.",
+                                    error=False,
+                                    ctx='NA',
+                                    ctx_type='NA')
                 raise errors.MaxRetriesReached("Retries reached max attempts.")
         else:
             return False
@@ -182,12 +180,11 @@ class Task(object):
             raise errors.OrchestratorError("Cannot add subtask for parent"
                                            " marked for termination")
         if self.statemgr.add_subtask(self.task_id, subtask.task_id):
-            self.add_status_msg(
-                msg="Started subtask %s for action %s" % (str(
-                    subtask.get_id()), subtask.action),
-                error=False,
-                ctx=str(self.get_id()),
-                ctx_type='task')
+            self.add_status_msg(msg="Started subtask %s for action %s" %
+                                (str(subtask.get_id()), subtask.action),
+                                error=False,
+                                ctx=str(self.get_id()),
+                                ctx_type='task')
             self.subtask_id_list.append(subtask.task_id)
             subtask.parent_task_id = self.task_id
             subtask.save()
@@ -261,8 +258,8 @@ class Task(object):
 
         :param action_filter: string action name to filter subtasks on
         """
-        self.logger.debug(
-            "Bubbling subtask results up to task %s." % str(self.task_id))
+        self.logger.debug("Bubbling subtask results up to task %s." %
+                          str(self.task_id))
         self.result.successes = []
         self.result.failures = []
         for st in self.statemgr.get_complete_subtasks(self.task_id):
@@ -340,13 +337,12 @@ class Task(object):
             msg_list = task_result.message_list
 
         for m in msg_list:
-            self.add_status_msg(
-                msg=m.msg,
-                error=m.error,
-                ctx_type=m.ctx_type,
-                ctx=m.ctx,
-                ts=m.ts,
-                **m.extra)
+            self.add_status_msg(msg=m.msg,
+                                error=m.error,
+                                ctx_type=m.ctx_type,
+                                ctx=m.ctx,
+                                ts=m.ts,
+                                **m.extra)
 
     def to_db(self, include_id=True):
         """Convert this instance to a dictionary for use persisting to a db.
@@ -666,9 +662,8 @@ class TaskStatusMessage(object):
 
         :param d: dictionary of values
         """
-        i = TaskStatusMessage(
-            d.get('message', None), d.get('error'), d.get('context_type'),
-            d.get('context'))
+        i = TaskStatusMessage(d.get('message', None), d.get('error'),
+                              d.get('context_type'), d.get('context'))
         if 'extra' in d:
             i.extra = d.get('extra')
         i.ts = d.get('ts', None)

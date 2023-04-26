@@ -48,20 +48,22 @@ class ManualDriver(oob.OobDriver):
         if task.action not in self.supported_actions:
             self.logger.error("Driver %s doesn't support task action %s" %
                               (self.driver_desc, task.action))
-            raise errors.DriverError("Driver %s doesn't support task action %s"
-                                     % (self.driver_desc, task.action))
+            raise errors.DriverError(
+                "Driver %s doesn't support task action %s" %
+                (self.driver_desc, task.action))
 
         design_ref = task.design_ref
 
         if design_ref is None:
-            raise errors.DriverError(
-                "No design ID specified in task %s" % (task_id))
+            raise errors.DriverError("No design ID specified in task %s" %
+                                     (task_id))
 
         self.orchestrator.task_field_update(
             task.get_id(), status=hd_fields.TaskStatus.Running)
 
-        self.logger.info("Sleeping 60s to allow time for manual OOB %s action"
-                         % task.action)
+        self.logger.info(
+            "Sleeping 60s to allow time for manual OOB %s action" %
+            task.action)
 
         time.sleep(60)
 

@@ -74,10 +74,13 @@ class Vlan(model_base.ResourceBase):
         raise RackControllerConflict exception.
         """
         if not self.primary_rack or self.primary_rack == rack_id:
-            self.logger.debug("Setting primary DHCP controller %s on VLAN %s", rack_id, self.resource_id)
+            self.logger.debug("Setting primary DHCP controller %s on VLAN %s",
+                              rack_id, self.resource_id)
             self.primary_rack = rack_id
         elif not self.secondary_rack or self.secondary_rack == rack_id:
-            self.logger.debug("Setting secondary DHCP controller %s on VLAN %s.", rack_id, self.resource_id)
+            self.logger.debug(
+                "Setting secondary DHCP controller %s on VLAN %s.", rack_id,
+                self.resource_id)
             self.secondary_rack = rack_id
         else:
             raise RackControllerConflict(
@@ -92,7 +95,8 @@ class Vlan(model_base.ResourceBase):
 
         :param bool commit: Whether to commit reset to MAAS API
         """
-        self.logger.debug("Resetting DHCP control on VLAN %s.", self.resource_id)
+        self.logger.debug("Resetting DHCP control on VLAN %s.",
+                          self.resource_id)
         self.relay_vlan = None
         self.dhcp_on = False
         self.primary_rack = None

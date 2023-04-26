@@ -22,6 +22,7 @@ from drydock_provisioner.orchestrator.actions.orchestrator import BaseAction
 
 
 class PromenadeAction(BaseAction):
+
     def __init__(self, *args, prom_client=None):
         super().__init__(*args)
 
@@ -42,11 +43,10 @@ class RelabelNode(PromenadeAction):
         try:
             site_design = self._load_site_design()
         except errors.OrchestratorError:
-            self.task.add_status_msg(
-                msg="Error loading site design.",
-                error=True,
-                ctx='NA',
-                ctx_type='NA')
+            self.task.add_status_msg(msg="Error loading site design.",
+                                     error=True,
+                                     ctx='NA',
+                                     ctx_type='NA')
             self.task.set_status(hd_fields.TaskStatus.Complete)
             self.task.failure()
             self.task.save()
@@ -58,14 +58,16 @@ class RelabelNode(PromenadeAction):
         for n in nodes:
             # Relabel node through Promenade
             try:
-                self.logger.info(
-                    "Relabeling node %s with node label data." % n.name)
+                self.logger.info("Relabeling node %s with node label data." %
+                                 n.name)
 
                 labels_dict = n.get_node_labels()
                 msg = "Set labels %s for node %s" % (str(labels_dict), n.name)
 
-                self.task.add_status_msg(
-                    msg=msg, error=False, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
 
                 # Call promenade to invoke relabel node
                 self.promenade_client.relabel_node(n.get_id(), labels_dict)
@@ -74,8 +76,10 @@ class RelabelNode(PromenadeAction):
                 msg = "Error relabeling node %s with label data" % n.name
                 self.logger.warning(msg + ": " + str(ex))
                 self.task.failure(focus=n.get_id())
-                self.task.add_status_msg(
-                    msg=msg, error=True, ctx=n.name, ctx_type='node')
+                self.task.add_status_msg(msg=msg,
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 continue
 
         self.task.set_status(hd_fields.TaskStatus.Complete)

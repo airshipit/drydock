@@ -11,15 +11,15 @@ LOG = logging.getLogger(__name__)
 
 
 class TestValidPlatform(object):
+
     def test_valid_platform(self, deckhand_ingester, drydock_state,
                             input_files):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state,
-            ingester=deckhand_ingester,
-            enabled_drivers=config.config_mgr.conf.plugins)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester,
+                            enabled_drivers=config.config_mgr.conf.plugins)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -41,10 +41,9 @@ class TestValidPlatform(object):
         input_file = input_files.join("invalid_hugepages.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state,
-            ingester=deckhand_ingester,
-            enabled_drivers=config.config_mgr.conf.plugins)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester,
+                            enabled_drivers=config.config_mgr.conf.plugins)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

@@ -28,6 +28,7 @@ import falcon
 
 
 class TestNodeBuildDataApi():
+
     def test_read_builddata_all(self, falcontest, seeded_builddata):
         """Test that by default the API returns all build data for a node."""
         url = '/api/v1.0/nodes/foo/builddata'
@@ -68,14 +69,14 @@ class TestNodeBuildDataApi():
         nodelist = ['foo']
         generatorlist = ['hello', 'hello', 'bye']
         count = 3
-        seeded_builddata(
-            nodelist=nodelist,
-            generatorlist=generatorlist,
-            count=count,
-            random_dates=True)
+        seeded_builddata(nodelist=nodelist,
+                         generatorlist=generatorlist,
+                         count=count,
+                         random_dates=True)
 
-        resp = falcontest.simulate_get(
-            url, headers=req_hdr, query_string="latest=true")
+        resp = falcontest.simulate_get(url,
+                                       headers=req_hdr,
+                                       query_string="latest=true")
 
         assert resp.status == falcon.HTTP_200
 
@@ -121,13 +122,12 @@ class TestNodeBuildDataApi():
                         generator = generatorlist[i]
                     else:
                         generator = 'hello_world'
-                    bd = objects.BuildData(
-                        node_name=n,
-                        task_id=task_id,
-                        generator=generator,
-                        data_format='text/plain',
-                        collected_date=collected_date,
-                        data_element='Hello World!')
+                    bd = objects.BuildData(node_name=n,
+                                           task_id=task_id,
+                                           generator=generator,
+                                           data_format='text/plain',
+                                           collected_date=collected_date,
+                                           data_element='Hello World!')
                     blank_state.post_build_data(bd)
                     i = i + 1
 
@@ -142,10 +142,9 @@ class TestNodeBuildDataApi():
         policy.policy_engine.register_policy()
 
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))
 
     @policy.ApiEnforcer('physical_provisioner:read_task')
     def target_function(self, req, resp):

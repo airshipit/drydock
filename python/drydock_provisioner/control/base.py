@@ -22,6 +22,7 @@ import drydock_provisioner.error as errors
 
 
 class BaseResource(object):
+
     def __init__(self):
         self.logger = logging.getLogger('drydock')
 
@@ -52,18 +53,18 @@ class BaseResource(object):
                 json_body = json.loads(raw_body.decode('utf-8'))
                 return json_body
             except json.JSONDecodeError as jex:
-                print(
-                    "Invalid JSON in request: \n%s" % raw_body.decode('utf-8'))
+                print("Invalid JSON in request: \n%s" %
+                      raw_body.decode('utf-8'))
                 self.error(
                     req.context,
                     "Invalid JSON in request: \n%s" % raw_body.decode('utf-8'))
-                raise errors.InvalidFormat(
-                    "%s: Invalid JSON in body: %s" % (req.path, jex))
+                raise errors.InvalidFormat("%s: Invalid JSON in body: %s" %
+                                           (req.path, jex))
         else:
             raise errors.InvalidFormat("Requires application/json payload")
 
     def return_error(self, resp, status_code, message="", retry=False):
-        resp.body = json.dumps({
+        resp.text = json.dumps({
             'type': 'error',
             'message': message,
             'retry': retry
@@ -71,8 +72,12 @@ class BaseResource(object):
         resp.status = status_code
 
     def log_error(self, ctx, level, msg):
-        extra = {'user': 'N/A', 'req_id': 'N/A', 'external_ctx': 'N/A',
-                 'end_user': 'N/A'}
+        extra = {
+            'user': 'N/A',
+            'req_id': 'N/A',
+            'external_ctx': 'N/A',
+            'end_user': 'N/A'
+        }
 
         if ctx is not None:
             extra = {
@@ -104,6 +109,7 @@ class BaseResource(object):
 
 
 class StatefulResource(BaseResource):
+
     def __init__(self, state_manager=None, **kwargs):
         super(StatefulResource, self).__init__(**kwargs)
 
@@ -119,6 +125,7 @@ class StatefulResource(BaseResource):
 
 
 class DrydockRequestContext(object):
+
     def __init__(self):
         self.log_level = 'ERROR'
         self.user = None  # Username

@@ -15,6 +15,7 @@ from drydock_provisioner.orchestrator.validations.validators import Validators
 
 
 class PlatformSelection(Validators):
+
     def __init__(self):
         super().__init__('Platform Selection', 'DD3001')
 
@@ -39,8 +40,9 @@ class PlatformSelection(Validators):
         try:
             valid_images = node_driver.get_available_images()
         except Exception:
-            msg = ("Platform validation: Could not load images from driver, skipping"
-                   "image and kernel selection validation.")
+            msg = (
+                "Platform validation: Could not load images from driver, skipping"
+                "image and kernel selection validation.")
             self.report_warn(
                 msg, [],
                 "Cannot validate platform selection without accessing the node provisioner."
@@ -53,8 +55,9 @@ class PlatformSelection(Validators):
             try:
                 valid_kernels[i] = node_driver.get_available_kernels(i)
             except Exception:
-                msg = ("Platform validation: Could not load kernels from driver, skipping"
-                       "image and kernel selection validation.")
+                msg = (
+                    "Platform validation: Could not load kernels from driver, skipping"
+                    "image and kernel selection validation.")
                 self.report_warn(
                     msg, [],
                     "Cannot validate platform selection without accessing the node provisioner."

@@ -16,6 +16,7 @@ from drydock_provisioner.objects import TaskStatus
 
 
 class TestTaskStatusLinks():
+
     def test_links_add(self):
         '''Add a link to a task status.'''
         ts = TaskStatus()

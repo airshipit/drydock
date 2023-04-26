@@ -23,13 +23,14 @@ LOG = logging.getLogger(__name__)
 
 
 class TestStoragePartitioning(object):
+
     def test_storage_partitioning(self, deckhand_ingester, drydock_state,
                                   input_files):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -40,14 +41,15 @@ class TestStoragePartitioning(object):
         assert len(message_list) == 1
         assert msg.get('error') is False
 
-    def test_storage_partitioning_unassigned_partition(
-            self, deckhand_ingester, drydock_state, input_files):
+    def test_storage_partitioning_unassigned_partition(self, deckhand_ingester,
+                                                       drydock_state,
+                                                       input_files):
         input_file = input_files.join(
             "storage_partitioning_unassigned_partition.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -65,8 +67,8 @@ class TestStoragePartitioning(object):
 
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

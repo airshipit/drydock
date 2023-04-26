@@ -27,8 +27,9 @@ LOG = logging.getLogger(__name__)
 
 
 class TestValidationApi(object):
-    def test_post_validation_resp(self, setup_logging, input_files, falcontest, drydock_state,
-                                  mock_get_build_data):
+
+    def test_post_validation_resp(self, setup_logging, input_files, falcontest,
+                                  drydock_state, mock_get_build_data):
 
         input_file = input_files.join("deckhand_fullsite.yaml")
         design_ref = "file://%s" % str(input_file)
@@ -46,8 +47,9 @@ class TestValidationApi(object):
             'type': "application/x-yaml",
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_200
@@ -66,8 +68,9 @@ class TestValidationApi(object):
             'type': "application/x-yaml",
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
@@ -82,14 +85,15 @@ class TestValidationApi(object):
         }
         body = {}
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         LOG.debug(result.text)
         assert result.status == falcon.HTTP_400
 
-    def test_invalid_post_resp(self, setup_logging, input_files, falcontest, drydock_state,
-                               mock_get_build_data):
+    def test_invalid_post_resp(self, setup_logging, input_files, falcontest,
+                               drydock_state, mock_get_build_data):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
@@ -106,8 +110,9 @@ class TestValidationApi(object):
             'type': "application/x-yaml",
         }
 
-        result = falcontest.simulate_post(
-            url, headers=hdr, body=json.dumps(body))
+        result = falcontest.simulate_post(url,
+                                          headers=hdr,
+                                          body=json.dumps(body))
 
         assert result.status == falcon.HTTP_400
 
@@ -119,7 +124,6 @@ class TestValidationApi(object):
         policy.policy_engine.register_policy()
 
         return testing.TestClient(
-            start_api(
-                state_manager=drydock_state,
-                ingester=deckhand_ingester,
-                orchestrator=deckhand_orchestrator))
+            start_api(state_manager=drydock_state,
+                      ingester=deckhand_ingester,
+                      orchestrator=deckhand_orchestrator))

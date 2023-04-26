@@ -24,6 +24,7 @@ from .base import BaseResource, StatefulResource
 
 
 class NodesResource(BaseResource):
+
     def __init__(self):
         super().__init__()
 
@@ -41,22 +42,23 @@ class NodesResource(BaseResource):
             for m in machine_list:
                 m.get_power_params()
                 node_view.append(
-                    dict(
-                        hostname=m.hostname,
-                        memory=m.memory,
-                        cpu_count=m.cpu_count,
-                        status_name=m.status_name,
-                        boot_mac=m.boot_mac,
-                        power_state=m.power_state,
-                        power_address=m.power_parameters.get('power_address'),
-                        boot_ip=m.boot_ip))
+                    dict(hostname=m.hostname,
+                         memory=m.memory,
+                         cpu_count=m.cpu_count,
+                         status_name=m.status_name,
+                         boot_mac=m.boot_mac,
+                         power_state=m.power_state,
+                         power_address=m.power_parameters.get('power_address'),
+                         boot_ip=m.boot_ip))
 
-            resp.body = json.dumps(node_view)
+            resp.text = json.dumps(node_view)
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
-            self.return_error(
-                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.return_error(resp,
+                              falcon.HTTP_500,
+                              message="Unknown error",
+                              retry=False)
 
 
 class NodeBuildDataResource(StatefulResource):
@@ -68,27 +70,29 @@ class NodeBuildDataResource(StatefulResource):
             latest = req.params.get('latest', 'false').upper()
             latest = True if latest == 'TRUE' else False
 
-            node_bd = self.state_manager.get_build_data(
-                node_name=hostname, latest=latest)
+            node_bd = self.state_manager.get_build_data(node_name=hostname,
+                                                        latest=latest)
 
             if not node_bd:
-                self.return_error(
-                    resp,
-                    falcon.HTTP_404,
-                    message="No build data found",
-                    retry=False)
+                self.return_error(resp,
+                                  falcon.HTTP_404,
+                                  message="No build data found",
+                                  retry=False)
             else:
                 node_bd = [bd.to_dict() for bd in node_bd]
                 resp.status = falcon.HTTP_200
-                resp.body = json.dumps(node_bd)
+                resp.text = json.dumps(node_bd)
                 resp.content_type = falcon.MEDIA_JSON
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
-            self.return_error(
-                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.return_error(resp,
+                              falcon.HTTP_500,
+                              message="Unknown error",
+                              retry=False)
 
 
 class NodeFilterResource(StatefulResource):
+
     def __init__(self, orchestrator=None, **kwargs):
         """Object initializer.
 
@@ -117,9 +121,11 @@ class NodeFilterResource(StatefulResource):
                 node_filter=node_filter, site_design=site_design)
             resp_list = [n.name for n in nodes if nodes]
 
-            resp.body = json.dumps(resp_list)
+            resp.text = json.dumps(resp_list)
             resp.status = falcon.HTTP_200
         except Exception as ex:
             self.error(req.context, "Unknown error: %s" % str(ex), exc_info=ex)
-            self.return_error(
-                resp, falcon.HTTP_500, message="Unknown error", retry=False)
+            self.return_error(resp,
+                              falcon.HTTP_500,
+                              message="Unknown error",
+                              retry=False)

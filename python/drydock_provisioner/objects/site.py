@@ -208,8 +208,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
                 if n.get_id() == network_key:
                     return n
 
-        raise errors.DesignError(
-            "Network %s not found in design state" % network_key)
+        raise errors.DesignError("Network %s not found in design state" %
+                                 network_key)
 
     def add_network_link(self, new_network_link):
         if new_network_link is None:
@@ -226,8 +226,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
                 if network_link.get_id() == link_key:
                     return network_link
 
-        raise errors.DesignError(
-            "NetworkLink %s not found in design state" % link_key)
+        raise errors.DesignError("NetworkLink %s not found in design state" %
+                                 link_key)
 
     def add_rack(self, new_rack):
         if new_rack is None:
@@ -243,8 +243,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             for r in self.racks:
                 if r.get_id() == rack_key:
                     return r
-        raise errors.DesignError(
-            "Rack %s not found in design state" % rack_key)
+        raise errors.DesignError("Rack %s not found in design state" %
+                                 rack_key)
 
     def add_bootaction(self, new_ba):
         """Add a bootaction definition to this site design.
@@ -265,8 +265,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
             for ba in self.bootactions:
                 if ba.get_id() == ba_key:
                     return ba
-        raise errors.DesignError(
-            "BootAction %s not found in design state" % ba_key)
+        raise errors.DesignError("BootAction %s not found in design state" %
+                                 ba_key)
 
     def add_host_profile(self, new_host_profile):
         if new_host_profile is None:
@@ -283,8 +283,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
                 if p.get_id() == profile_key:
                     return p
 
-        raise errors.DesignError(
-            "HostProfile %s not found in design state" % profile_key)
+        raise errors.DesignError("HostProfile %s not found in design state" %
+                                 profile_key)
 
     def add_hardware_profile(self, new_hardware_profile):
         if new_hardware_profile is None:
@@ -319,8 +319,8 @@ class SiteDesign(base.DrydockPersistentObject, base.DrydockObject):
                 if n.get_id() == node_key:
                     return n
 
-        raise errors.DesignError(
-            "BaremetalNode %s not found in design state" % node_key)
+        raise errors.DesignError("BaremetalNode %s not found in design state" %
+                                 node_key)
 
     def add_promenade_config(self, prom_conf):
         if self.prom_configs is None:

@@ -31,8 +31,10 @@ def node():
 
 
 @node.command(name='list')
-@click.option(
-    '--output', '-o', help='Output format: table|json', default='table')
+@click.option('--output',
+              '-o',
+              help='Output format: table|json',
+              default='table')
 @click.pass_context
 def node_list(ctx, output='table'):
     """List nodes."""
@@ -59,12 +61,13 @@ def node_list(ctx, output='table'):
 
 
 @node.command(name='builddata')
-@click.option(
-    '--latest/--no-latest',
-    help='Retrieve only the latest data items.',
-    default=True)
-@click.option(
-    '--output', '-o', help='Output format: yaml|json', default='yaml')
+@click.option('--latest/--no-latest',
+              help='Retrieve only the latest data items.',
+              default=True)
+@click.option('--output',
+              '-o',
+              help='Output format: yaml|json',
+              default='yaml')
 @click.argument('nodename')
 @click.pass_context
 def node_builddata(ctx, nodename, latest=True, output='yaml'):
@@ -78,5 +81,6 @@ def node_builddata(ctx, nodename, latest=True, output='yaml'):
             click.echo(
                 "Invalid output format {}, default to YAML.".format(output))
         click.echo(
-            yaml.safe_dump(
-                node_bd, allow_unicode=True, default_flow_style=False))
+            yaml.safe_dump(node_bd,
+                           allow_unicode=True,
+                           default_flow_style=False))

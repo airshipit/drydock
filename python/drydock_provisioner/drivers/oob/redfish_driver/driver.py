@@ -48,19 +48,19 @@ class RedfishDriver(oob_driver.OobDriver):
             default=10,
             min=1,
             help='Maximum number of connection retries to Redfish server'),
-        cfg.IntOpt(
-            'power_state_change_max_retries',
-            default=18,
-            min=1,
-            help='Maximum reties to wait for power state change'),
+        cfg.IntOpt('power_state_change_max_retries',
+                   default=18,
+                   min=1,
+                   help='Maximum reties to wait for power state change'),
         cfg.IntOpt(
             'power_state_change_retry_interval',
             default=10,
-            help='Polling interval in seconds between retries for power state change'),
-        cfg.BoolOpt(
-            'use_ssl',
-            default=True,
-            help='Use SSL to communicate with Redfish API server'),
+            help=
+            'Polling interval in seconds between retries for power state change'
+        ),
+        cfg.BoolOpt('use_ssl',
+                    default=True,
+                    help='Use SSL to communicate with Redfish API server'),
     ]
 
     oob_types_supported = ['redfish']
@@ -82,8 +82,8 @@ class RedfishDriver(oob_driver.OobDriver):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        cfg.CONF.register_opts(
-            RedfishDriver.redfish_driver_options, group=RedfishDriver.driver_key)
+        cfg.CONF.register_opts(RedfishDriver.redfish_driver_options,
+                               group=RedfishDriver.driver_key)
 
         self.logger = logging.getLogger(
             config.config_mgr.conf.logging.oobdriver_logger_name)
@@ -98,8 +98,9 @@ class RedfishDriver(oob_driver.OobDriver):
         if task.action not in self.supported_actions:
             self.logger.error("Driver %s doesn't support task action %s" %
                               (self.driver_desc, task.action))
-            raise errors.DriverError("Driver %s doesn't support task action %s"
-                                     % (self.driver_desc, task.action))
+            raise errors.DriverError(
+                "Driver %s doesn't support task action %s" %
+                (self.driver_desc, task.action))
 
         task.set_status(hd_fields.TaskStatus.Running)
         task.save()
@@ -145,10 +146,9 @@ class RedfishDriver(oob_driver.OobDriver):
                     task.failure()
                 else:
                     if f.exception():
-                        self.logger.error(
-                            "Uncaught exception in subtask %s" % str(
-                                uuid.UUID(bytes=t)),
-                            exc_info=f.exception())
+                        self.logger.error("Uncaught exception in subtask %s" %
+                                          str(uuid.UUID(bytes=t)),
+                                          exc_info=f.exception())
             task.align_result()
             task.bubble_results()
             task.set_status(hd_fields.TaskStatus.Complete)

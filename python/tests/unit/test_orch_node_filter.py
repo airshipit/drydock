@@ -18,6 +18,7 @@ import drydock_provisioner.objects as objects
 
 
 class TestClass(object):
+
     def test_node_filter_obj(self, input_files, setup, deckhand_orchestrator,
                              deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
@@ -31,8 +32,8 @@ class TestClass(object):
         nf = objects.NodeFilter()
         nf.filter_type = 'intersection'
         nf.node_names = ['compute01']
-        nfs = objects.NodeFilterSet(
-            filter_set_type='intersection', filter_set=[nf])
+        nfs = objects.NodeFilterSet(filter_set_type='intersection',
+                                    filter_set=[nf])
 
         node_list = deckhand_orchestrator.process_node_filter(nfs, design_data)
 
@@ -63,8 +64,8 @@ class TestClass(object):
 
         assert len(node_list) == 1
 
-    def test_node_filter_by_rackname(self, input_files, setup, deckhand_orchestrator,
-                                     deckhand_ingester):
+    def test_node_filter_by_rackname(self, input_files, setup,
+                                     deckhand_orchestrator, deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_state = DrydockState()
@@ -88,13 +89,14 @@ class TestClass(object):
 
         assert len(node_list) == 2
 
-    def test_node_filter_by_nodetag(self, input_files, setup, deckhand_orchestrator,
-                                    deckhand_ingester):
+    def test_node_filter_by_nodetag(self, input_files, setup,
+                                    deckhand_orchestrator, deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
         design_ref = "file://%s" % str(input_file)
 
-        design_status, design_data = deckhand_orchestrator.get_effective_site(design_ref)
+        design_status, design_data = deckhand_orchestrator.get_effective_site(
+            design_ref)
 
         nfs = {
             'filter_set_type':
@@ -111,7 +113,8 @@ class TestClass(object):
 
         assert len(node_list) == 3
 
-    def test_node_filter_by_nodelabel(self, input_files, setup, deckhand_orchestrator,
+    def test_node_filter_by_nodelabel(self, input_files, setup,
+                                      deckhand_orchestrator,
                                       deckhand_ingester):
         input_file = input_files.join("deckhand_fullsite.yaml")
 
@@ -127,7 +130,9 @@ class TestClass(object):
             'filter_set': [
                 {
                     'filter_type': 'intersection',
-                    'node_labels': {'foo': 'baz'},
+                    'node_labels': {
+                        'foo': 'baz'
+                    },
                 },
             ],
         }

@@ -192,9 +192,9 @@ class DrydockClient(object):
             raise errors.ClientUnauthorizedError(
                 "Unauthorized access to %s, include valid token." % resp.url)
         elif resp.status_code == 403:
-            raise errors.ClientForbiddenError(
-                "Forbidden access to %s" % resp.url)
+            raise errors.ClientForbiddenError("Forbidden access to %s" %
+                                              resp.url)
         elif not resp.ok:
-            raise errors.ClientError(
-                "Error - received %d: %s" % (resp.status_code, resp.text),
-                code=resp.status_code)
+            raise errors.ClientError("Error - received %d: %s" %
+                                     (resp.status_code, resp.text),
+                                     code=resp.status_code)

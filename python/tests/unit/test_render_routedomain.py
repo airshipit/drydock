@@ -19,6 +19,7 @@ from drydock_provisioner.orchestrator.orchestrator import Orchestrator
 
 
 class TestRouteDomains(object):
+
     def test_routedomain_render(self, input_files, setup):
         input_file = input_files.join("deckhand_routedomain.yaml")
 
@@ -29,8 +30,8 @@ class TestRouteDomains(object):
         ingester.enable_plugin(
             'drydock_provisioner.ingester.plugins.deckhand.DeckhandIngester')
 
-        orchestrator = Orchestrator(
-            state_manager=design_state, ingester=ingester)
+        orchestrator = Orchestrator(state_manager=design_state,
+                                    ingester=ingester)
 
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)
@@ -60,8 +61,8 @@ class TestRouteDomains(object):
         ingester.enable_plugin(
             'drydock_provisioner.ingester.plugins.deckhand.DeckhandIngester')
 
-        orchestrator = Orchestrator(
-            state_manager=design_state, ingester=ingester)
+        orchestrator = Orchestrator(state_manager=design_state,
+                                    ingester=ingester)
 
         design_status, design_data = orchestrator.get_effective_site(
             design_ref)

@@ -34,18 +34,13 @@ class BootAction(base.DrydockPersistentObject, base.DrydockObject):
     VERSION = '1.0'
 
     fields = {
-        'name':
-        ovo_fields.StringField(),
-        'source':
-        hd_fields.ModelSourceField(nullable=False),
-        'asset_list':
-        ovo_fields.ObjectField('BootActionAssetList', nullable=False),
-        'node_filter':
-        ovo_fields.ObjectField('NodeFilterSet', nullable=True),
-        'target_nodes':
-        ovo_fields.ListOfStringsField(nullable=True),
-        'signaling':
-        ovo_fields.BooleanField(default=True),
+        'name': ovo_fields.StringField(),
+        'source': hd_fields.ModelSourceField(nullable=False),
+        'asset_list': ovo_fields.ObjectField('BootActionAssetList',
+                                             nullable=False),
+        'node_filter': ovo_fields.ObjectField('NodeFilterSet', nullable=True),
+        'target_nodes': ovo_fields.ListOfStringsField(nullable=True),
+        'signaling': ovo_fields.BooleanField(default=True),
     }
 
     def __init__(self, **kwargs):
@@ -160,8 +155,9 @@ class BootActionAsset(base.DrydockObject):
                                              action_key, design_ref)
 
         if self.location is not None:
-            rendered_location = self.execute_pipeline(
-                self.location, self.location_pipeline, tpl_ctx=tpl_ctx)
+            rendered_location = self.execute_pipeline(self.location,
+                                                      self.location_pipeline,
+                                                      tpl_ctx=tpl_ctx)
             data_block = self.resolve_asset_location(rendered_location)
             if self.type == hd_fields.BootactionAssetType.PackageList:
                 self._parse_package_list(data_block)
@@ -169,8 +165,9 @@ class BootActionAsset(base.DrydockObject):
             data_block = self.data.encode('utf-8')
 
         if self.type != hd_fields.BootactionAssetType.PackageList:
-            value = self.execute_pipeline(
-                data_block, self.data_pipeline, tpl_ctx=tpl_ctx)
+            value = self.execute_pipeline(data_block,
+                                          self.data_pipeline,
+                                          tpl_ctx=tpl_ctx)
 
             if isinstance(value, str):
                 value = value.encode('utf-8')
@@ -222,9 +219,9 @@ class BootActionAsset(base.DrydockObject):
         :param design_ref: The design reference representing ``site_design``
         """
 
-        return dict(
-            node=self._get_node_context(nodename, site_design),
-            action=self._get_action_context(action_id, action_key, design_ref))
+        return dict(node=self._get_node_context(nodename, site_design),
+                    action=self._get_action_context(action_id, action_key,
+                                                    design_ref))
 
     def _get_action_context(self, action_id, action_key, design_ref):
         """Create the action-specific context items for template rendering.
@@ -233,11 +230,10 @@ class BootActionAsset(base.DrydockObject):
         :param action_key: random key of this boot action
         :param design_ref: Design reference representing the site design
         """
-        return dict(
-            action_id=ulid2.ulid_to_base32(action_id),
-            action_key=action_key.hex(),
-            report_url=config.config_mgr.conf.bootactions.report_url,
-            design_ref=design_ref)
+        return dict(action_id=ulid2.ulid_to_base32(action_id),
+                    action_key=action_key.hex(),
+                    report_url=config.config_mgr.conf.bootactions.report_url,
+                    design_ref=design_ref)
 
     def _get_node_context(self, nodename, site_design):
         """Create the node-specific context items for template rendering.
@@ -246,14 +242,13 @@ class BootActionAsset(base.DrydockObject):
         :param site_design: full site design
         """
         node = site_design.get_baremetal_node(nodename)
-        return dict(
-            hostname=nodename,
-            domain=node.get_domain(site_design),
-            tags=[t for t in node.tags],
-            labels={k: v
-                    for (k, v) in node.owner_data.items()},
-            network=self._get_node_network_context(node, site_design),
-            interfaces=self._get_node_interface_context(node))
+        return dict(hostname=nodename,
+                    domain=node.get_domain(site_design),
+                    tags=[t for t in node.tags],
+                    labels={k: v
+                            for (k, v) in node.owner_data.items()},
+                    network=self._get_node_network_context(node, site_design),
+                    interfaces=self._get_node_interface_context(node))
 
     def _get_node_network_context(self, node, site_design):
         """Create a node's network configuration context.
@@ -298,8 +293,8 @@ class BootActionAsset(base.DrydockObject):
             return ReferenceResolver.resolve_reference(asset_url)
         except Exception as ex:
             raise errors.InvalidAssetLocation(
-                "Unable to resolve asset reference %s: %s" % (asset_url,
-                                                              str(ex)))
+                "Unable to resolve asset reference %s: %s" %
+                (asset_url, str(ex)))
 
     def execute_pipeline(self, data, pipeline, tpl_ctx=None):
         """Execute a pipeline against a data element.

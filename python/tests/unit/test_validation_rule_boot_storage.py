@@ -23,13 +23,14 @@ LOG = logging.getLogger(__name__)
 
 
 class TestRationalBootStorage(object):
+
     def test_boot_storage_rational(self, deckhand_ingester, drydock_state,
                                    input_files, mock_get_build_data):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -45,8 +46,8 @@ class TestRationalBootStorage(object):
         input_file = input_files.join("invalid_boot_storage_small.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -69,8 +70,8 @@ class TestRationalBootStorage(object):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

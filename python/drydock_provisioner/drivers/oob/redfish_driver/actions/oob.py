@@ -29,6 +29,7 @@ import drydock_provisioner.objects.fields as hd_fields
 
 REDFISH_MAX_ATTEMPTS = 3
 
+
 class RedfishBaseAction(BaseAction):
     """Base action for Redfish executed actions."""
 
@@ -44,8 +45,8 @@ class RedfishBaseAction(BaseAction):
         oob_network = node.oob_parameters['network']
         oob_address = node.get_network_address(oob_network)
         if oob_address is None:
-            raise errors.DriverError(
-                "Node %s has no OOB Redfish address" % (node.name))
+            raise errors.DriverError("Node %s has no OOB Redfish address" %
+                                     (node.name))
 
         oob_account = node.oob_parameters['account']
         oob_credential = node.oob_parameters['credential']
@@ -53,11 +54,12 @@ class RedfishBaseAction(BaseAction):
         self.logger.debug("Starting Redfish session to %s with %s" %
                           (oob_address, oob_account))
         try:
-            redfish_obj = RedfishSession(host=oob_address,
-                                         account=oob_account,
-                                         password=oob_credential,
-                                         use_ssl=cfg.CONF.redfish_driver.use_ssl,
-                                         connection_retries=cfg.CONF.redfish_driver.max_retries)
+            redfish_obj = RedfishSession(
+                host=oob_address,
+                account=oob_account,
+                password=oob_credential,
+                use_ssl=cfg.CONF.redfish_driver.use_ssl,
+                connection_retries=cfg.CONF.redfish_driver.max_retries)
         except (RedfishException, errors.DriverError) as iex:
             self.logger.error(
                 "Error initializing Redfish session for node %s" % node.name)
@@ -81,7 +83,8 @@ class RedfishBaseAction(BaseAction):
             return response
         except RedfishException as iex:
             self.logger.error(
-                "Error executing Redfish command %s for node %s" % (func.__name__, node.name))
+                "Error executing Redfish command %s for node %s" %
+                (func.__name__, node.name))
             self.logger.error("Redfish Exception: %s" % str(iex))
 
         raise errors.DriverError("Redfish command failed.")
@@ -91,11 +94,10 @@ class ValidateOobServices(RedfishBaseAction):
     """Action to validate OOB services are available."""
 
     def start(self):
-        self.task.add_status_msg(
-            msg="OOB does not require services.",
-            error=False,
-            ctx='NA',
-            ctx_type='NA')
+        self.task.add_status_msg(msg="OOB does not require services.",
+                                 error=False,
+                                 ctx='NA',
+                                 ctx_type='NA')
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.success()
         self.task.save()
@@ -134,34 +136,38 @@ class SetNodeBoot(RedfishBaseAction):
         node_list = self.orchestrator.get_target_nodes(self.task)
 
         for n in node_list:
-            self.task.add_status_msg(
-                msg="Setting node to PXE boot.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Setting node to PXE boot.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
 
             for i in range(REDFISH_MAX_ATTEMPTS):
                 bootdev = None
-                self.logger.debug("Setting bootdev to PXE for %s attempt #%s" % (n.name, i + 1))
+                self.logger.debug("Setting bootdev to PXE for %s attempt #%s" %
+                                  (n.name, i + 1))
                 try:
                     session = self.get_redfish_session(n)
-                    bootdev = self.exec_redfish_command(n, session, RedfishSession.get_bootdev)
+                    bootdev = self.exec_redfish_command(
+                        n, session, RedfishSession.get_bootdev)
                     if bootdev.get('bootdev', '') != 'Pxe':
-                        self.exec_redfish_command(n, session, RedfishSession.set_bootdev, 'Pxe')
+                        self.exec_redfish_command(n, session,
+                                                  RedfishSession.set_bootdev,
+                                                  'Pxe')
                         time.sleep(1)
-                        bootdev = self.exec_redfish_command(n, session, RedfishSession.get_bootdev)
+                        bootdev = self.exec_redfish_command(
+                            n, session, RedfishSession.get_bootdev)
                     session.close_session()
                 except errors.DriverError as e:
                     self.logger.warning(
-                        "An exception '%s' occurred while attempting to set boot device on %s" % (e, n.name))
+                        "An exception '%s' occurred while attempting to set boot device on %s"
+                        % (e, n.name))
 
-                if bootdev is not None and (bootdev.get('bootdev',
-                                                        '') == 'Pxe'):
-                    self.task.add_status_msg(
-                        msg="Set bootdev to PXE.",
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                if bootdev is not None and (bootdev.get('bootdev', '')
+                                            == 'Pxe'):
+                    self.task.add_status_msg(msg="Set bootdev to PXE.",
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.logger.debug("%s reports bootdev of network" % n.name)
                     self.task.success(focus=n.name)
                     break
@@ -173,8 +179,8 @@ class SetNodeBoot(RedfishBaseAction):
                         ctx=n.name,
                         ctx_type='node')
                     self.task.failure(focus=n.name)
-                    self.logger.warning(
-                        "Unable to set node %s to PXE boot." % (n.name))
+                    self.logger.warning("Unable to set node %s to PXE boot." %
+                                        (n.name))
 
         self.task.set_status(hd_fields.TaskStatus.Complete)
         self.task.save()
@@ -192,56 +198,58 @@ class PowerOffNode(RedfishBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = off command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Sending set_power = off command.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Sending set_power = off command.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             session = self.get_redfish_session(n)
 
             # If power is already off, continue with the next node
-            power_state = self.exec_redfish_command(n, RedfishSession.get_power)
-            if power_state is not None and (power_state.get(
-                    'powerstate', '') == 'Off'):
-                self.task.add_status_msg(
-                    msg="Node reports power off.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+            power_state = self.exec_redfish_command(n,
+                                                    RedfishSession.get_power)
+            if power_state is not None and (power_state.get('powerstate', '')
+                                            == 'Off'):
+                self.task.add_status_msg(msg="Node reports power off.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(
-                    "Node %s reports powerstate already off. No action required" % n.name)
+                    "Node %s reports powerstate already off. No action required"
+                    % n.name)
                 self.task.success(focus=n.name)
                 continue
 
-            self.exec_redfish_command(n, session, RedfishSession.set_power, 'ForceOff')
+            self.exec_redfish_command(n, session, RedfishSession.set_power,
+                                      'ForceOff')
 
             attempts = cfg.CONF.redfish_driver.power_state_change_max_retries
 
             while attempts > 0:
                 self.logger.debug("Polling powerstate waiting for success.")
-                power_state = self.exec_redfish_command(n, RedfishSession.get_power)
+                power_state = self.exec_redfish_command(
+                    n, RedfishSession.get_power)
                 if power_state is not None and (power_state.get(
                         'powerstate', '') == 'Off'):
-                    self.task.add_status_msg(
-                        msg="Node reports power off.",
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
-                    self.logger.debug(
-                        "Node %s reports powerstate of off" % n.name)
+                    self.task.add_status_msg(msg="Node reports power off.",
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
+                    self.logger.debug("Node %s reports powerstate of off" %
+                                      n.name)
                     self.task.success(focus=n.name)
                     break
-                time.sleep(cfg.CONF.redfish_driver.power_state_change_retry_interval)
+                time.sleep(
+                    cfg.CONF.redfish_driver.power_state_change_retry_interval)
                 attempts = attempts - 1
 
             if power_state is not None and (power_state.get('powerstate', '')
                                             != 'Off'):
-                self.task.add_status_msg(
-                    msg="Node failed to power off.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
-                self.logger.error("Giving up on Redfish command to %s" % n.name)
+                self.task.add_status_msg(msg="Node failed to power off.",
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
+                self.logger.error("Giving up on Redfish command to %s" %
+                                  n.name)
                 self.task.failure(focus=n.name)
 
             session.close_session()
@@ -262,56 +270,58 @@ class PowerOnNode(RedfishBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = on command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Sending set_power = on command.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Sending set_power = on command.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             session = self.get_redfish_session(n)
 
             # If power is already on, continue with the next node
-            power_state = self.exec_redfish_command(n, RedfishSession.get_power)
-            if power_state is not None and (power_state.get(
-                    'powerstate', '') == 'On'):
-                self.task.add_status_msg(
-                    msg="Node reports power on.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+            power_state = self.exec_redfish_command(n,
+                                                    RedfishSession.get_power)
+            if power_state is not None and (power_state.get('powerstate', '')
+                                            == 'On'):
+                self.task.add_status_msg(msg="Node reports power on.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.logger.debug(
-                    "Node %s reports powerstate already on. No action required" % n.name)
+                    "Node %s reports powerstate already on. No action required"
+                    % n.name)
                 self.task.success(focus=n.name)
                 continue
 
-            self.exec_redfish_command(n, session, RedfishSession.set_power, 'On')
+            self.exec_redfish_command(n, session, RedfishSession.set_power,
+                                      'On')
 
             attempts = cfg.CONF.redfish_driver.power_state_change_max_retries
 
             while attempts > 0:
                 self.logger.debug("Polling powerstate waiting for success.")
-                power_state = self.exec_redfish_command(n, session, RedfishSession.get_power)
+                power_state = self.exec_redfish_command(
+                    n, session, RedfishSession.get_power)
                 if power_state is not None and (power_state.get(
                         'powerstate', '') == 'On'):
-                    self.logger.debug(
-                        "Node %s reports powerstate of on" % n.name)
-                    self.task.add_status_msg(
-                        msg="Node reports power on.",
-                        error=False,
-                        ctx=n.name,
-                        ctx_type='node')
+                    self.logger.debug("Node %s reports powerstate of on" %
+                                      n.name)
+                    self.task.add_status_msg(msg="Node reports power on.",
+                                             error=False,
+                                             ctx=n.name,
+                                             ctx_type='node')
                     self.task.success(focus=n.name)
                     break
-                time.sleep(cfg.CONF.redfish_driver.power_state_change_retry_interval)
+                time.sleep(
+                    cfg.CONF.redfish_driver.power_state_change_retry_interval)
                 attempts = attempts - 1
 
             if power_state is not None and (power_state.get('powerstate', '')
                                             != 'On'):
-                self.task.add_status_msg(
-                    msg="Node failed to power on.",
-                    error=True,
-                    ctx=n.name,
-                    ctx_type='node')
-                self.logger.error("Giving up on Redfish command to %s" % n.name)
+                self.task.add_status_msg(msg="Node failed to power on.",
+                                         error=True,
+                                         ctx=n.name,
+                                         ctx_type='node')
+                self.logger.error("Giving up on Redfish command to %s" %
+                                  n.name)
                 self.task.failure(focus=n.name)
 
             session.close_session()
@@ -332,19 +342,20 @@ class PowerCycleNode(RedfishBaseAction):
 
         for n in node_list:
             self.logger.debug("Sending set_power = off command to %s" % n.name)
-            self.task.add_status_msg(
-                msg="Power cycling node via Redfish.",
-                error=False,
-                ctx=n.name,
-                ctx_type='node')
+            self.task.add_status_msg(msg="Power cycling node via Redfish.",
+                                     error=False,
+                                     ctx=n.name,
+                                     ctx_type='node')
             session = self.get_redfish_session(n)
-            self.exec_redfish_command(n, session, RedfishSession.set_power, 'ForceOff')
+            self.exec_redfish_command(n, session, RedfishSession.set_power,
+                                      'ForceOff')
 
             # Wait for power state of off before booting back up
             attempts = cfg.CONF.redfish_driver.power_state_change_max_retries
 
             while attempts > 0:
-                power_state = self.exec_redfish_command(n, session, RedfishSession.get_power)
+                power_state = self.exec_redfish_command(
+                    n, session, RedfishSession.get_power)
                 if power_state is not None and power_state.get(
                         'powerstate', '') == 'Off':
                     self.logger.debug("%s reports powerstate of off" % n.name)
@@ -352,7 +363,8 @@ class PowerCycleNode(RedfishBaseAction):
                 elif power_state is None:
                     self.logger.debug(
                         "No response on Redfish power query to %s" % n.name)
-                time.sleep(cfg.CONF.redfish_driver.power_state_change_retry_interval)
+                time.sleep(
+                    cfg.CONF.redfish_driver.power_state_change_retry_interval)
                 attempts = attempts - 1
 
             if power_state.get('powerstate', '') != 'Off':
@@ -368,12 +380,14 @@ class PowerCycleNode(RedfishBaseAction):
                 break
 
             self.logger.debug("Sending set_power = on command to %s" % n.name)
-            self.exec_redfish_command(n, session, RedfishSession.set_power, 'On')
+            self.exec_redfish_command(n, session, RedfishSession.set_power,
+                                      'On')
 
             attempts = cfg.CONF.redfish_driver.power_state_change_max_retries
 
             while attempts > 0:
-                power_state = self.exec_redfish_command(n, session, RedfishSession.get_power)
+                power_state = self.exec_redfish_command(
+                    n, session, RedfishSession.get_power)
                 if power_state is not None and power_state.get(
                         'powerstate', '') == 'On':
                     self.logger.debug("%s reports powerstate of on" % n.name)
@@ -381,16 +395,16 @@ class PowerCycleNode(RedfishBaseAction):
                 elif power_state is None:
                     self.logger.debug(
                         "No response on Redfish power query to %s" % n.name)
-                time.sleep(cfg.CONF.redfish_driver.power_state_change_retry_interval)
+                time.sleep(
+                    cfg.CONF.redfish_driver.power_state_change_retry_interval)
                 attempts = attempts - 1
 
-            if power_state is not None and (power_state.get('powerstate',
-                                                            '') == 'On'):
-                self.task.add_status_msg(
-                    msg="Node power cycle complete.",
-                    error=False,
-                    ctx=n.name,
-                    ctx_type='node')
+            if power_state is not None and (power_state.get('powerstate', '')
+                                            == 'On'):
+                self.task.add_status_msg(msg="Node power cycle complete.",
+                                         error=False,
+                                         ctx=n.name,
+                                         ctx_type='node')
                 self.task.success(focus=n.name)
             else:
                 self.task.add_status_msg(
@@ -421,16 +435,17 @@ class InterrogateOob(RedfishBaseAction):
 
         for n in node_list:
             try:
-                self.logger.debug(
-                    "Interrogating node %s Redfish interface." % n.name)
+                self.logger.debug("Interrogating node %s Redfish interface." %
+                                  n.name)
                 session = self.get_redfish_session(n)
-                powerstate = self.exec_redfish_command(n, session, RedfishSession.get_power)
+                powerstate = self.exec_redfish_command(
+                    n, session, RedfishSession.get_power)
                 session.close_session()
                 if powerstate is None:
                     raise errors.DriverError()
                 self.task.add_status_msg(
-                    msg="Redfish interface interrogation yielded powerstate %s" %
-                    powerstate.get('powerstate'),
+                    msg="Redfish interface interrogation yielded powerstate %s"
+                    % powerstate.get('powerstate'),
                     error=False,
                     ctx=n.name,
                     ctx_type='node')

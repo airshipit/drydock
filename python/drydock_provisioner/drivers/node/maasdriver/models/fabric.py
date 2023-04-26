@@ -37,8 +37,8 @@ class Fabric(model_base.ResourceBase):
         return
 
     def refresh_vlans(self):
-        self.vlans = model_vlan.Vlans(
-            self.api_client, fabric_id=self.resource_id)
+        self.vlans = model_vlan.Vlans(self.api_client,
+                                      fabric_id=self.resource_id)
         self.vlans.refresh()
 
     def set_resource_id(self, res_id):

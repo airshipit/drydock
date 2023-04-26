@@ -22,12 +22,13 @@ LOG = logging.getLogger(__name__)
 
 
 class TestIPLocality(object):
+
     def test_ip_locality(self, input_files, drydock_state, deckhand_ingester):
         input_file = input_files.join("validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -42,8 +43,8 @@ class TestIPLocality(object):
         input_file = input_files.join("ip_locality_no_networks.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -59,8 +60,8 @@ class TestIPLocality(object):
         input_file = input_files.join("ip_locality_no_gateway.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -76,8 +77,8 @@ class TestIPLocality(object):
         input_file = input_files.join("no_baremetal_node.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 
@@ -88,13 +89,14 @@ class TestIPLocality(object):
         assert 'No baremetal_nodes found' in msg.get('message')
         assert msg.get('error') is False
 
-    def test_invalid_ip_locality_invalid_network(
-            self, input_files, drydock_state, deckhand_ingester):
+    def test_invalid_ip_locality_invalid_network(self, input_files,
+                                                 drydock_state,
+                                                 deckhand_ingester):
         input_file = input_files.join("invalid_validation.yaml")
         design_ref = "file://%s" % str(input_file)
 
-        orch = Orchestrator(
-            state_manager=drydock_state, ingester=deckhand_ingester)
+        orch = Orchestrator(state_manager=drydock_state,
+                            ingester=deckhand_ingester)
 
         status, site_design = Orchestrator.get_effective_site(orch, design_ref)
 

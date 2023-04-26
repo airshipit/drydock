@@ -76,8 +76,8 @@ class BootactionResource(StatefulResource):
         try:
             ba_entry = self.state_manager.get_boot_action(action_id)
         except Exception as ex:
-            self.logger.error(
-                "Error querying for boot action %s" % action_id, exc_info=ex)
+            self.logger.error("Error querying for boot action %s" % action_id,
+                              exc_info=ex)
             raise falcon.HTTPInternalServerError(str(ex))
 
         if ba_entry is None:
@@ -103,8 +103,8 @@ class BootactionResource(StatefulResource):
                 action_id)
 
         for m in json_body.get('details', []):
-            rm = objects.TaskStatusMessage(
-                m.get('message'), m.get('error'), 'bootaction', action_id)
+            rm = objects.TaskStatusMessage(m.get('message'), m.get('error'),
+                                           'bootaction', action_id)
             for f, v in m.items():
                 if f not in ['message', 'error']:
                     rm['extra'] = dict()
@@ -124,11 +124,12 @@ class BootactionResource(StatefulResource):
         resp.content_type = 'application/json'
         ba_entry['task_id'] = str(ba_entry['task_id'])
         ba_entry['action_id'] = ulid2.encode_ulid_base32(ba_entry['action_id'])
-        resp.body = json.dumps(ba_entry)
+        resp.text = json.dumps(ba_entry)
         return
 
 
 class BootactionAssetsResource(StatefulResource):
+
     def __init__(self, orchestrator=None, **kwargs):
         super().__init__(**kwargs)
         self.orchestrator = orchestrator
@@ -149,8 +150,8 @@ class BootactionAssetsResource(StatefulResource):
         try:
             ba_ctx = self.state_manager.get_boot_action_context(hostname)
         except Exception as ex:
-            self.logger.error(
-                "Error locating boot action for %s" % hostname, exc_info=ex)
+            self.logger.error("Error locating boot action for %s" % hostname,
+                              exc_info=ex)
             raise falcon.HTTPNotFound()
 
         if ba_ctx is None:
@@ -178,19 +179,19 @@ class BootactionAssetsResource(StatefulResource):
                     action_id = ba_status.get('action_id')
                     action_key = ba_status.get('identity_key')
                     assets.extend(
-                        ba.render_assets(
-                            hostname,
-                            site_design,
-                            action_id,
-                            action_key,
-                            task.design_ref,
-                            type_filter=asset_type_filter))
+                        ba.render_assets(hostname,
+                                         site_design,
+                                         action_id,
+                                         action_key,
+                                         task.design_ref,
+                                         type_filter=asset_type_filter))
 
             tarball = BootactionUtils.tarbuilder(asset_list=assets)
             resp.set_header('Content-Type', 'application/gzip')
             resp.set_header(
-                'Content-Disposition', "attachment; filename=\"%s-%s.tar.gz\""
-                % (hostname, asset_type))
+                'Content-Disposition',
+                "attachment; filename=\"%s-%s.tar.gz\"" %
+                (hostname, asset_type))
             resp.data = tarball
             resp.status = falcon.HTTP_200
             return
@@ -200,16 +201,18 @@ class BootactionAssetsResource(StatefulResource):
 
 
 class BootactionUnitsResource(BootactionAssetsResource):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def on_get(self, req, resp, hostname):
-        self.logger.debug(
-            "Accessing boot action units resource for host %s." % hostname)
+        self.logger.debug("Accessing boot action units resource for host %s." %
+                          hostname)
         self.do_get(req, resp, hostname, 'unit')
 
 
 class BootactionFilesResource(BootactionAssetsResource):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -233,18 +236,17 @@ class BootactionUtils(object):
         identity_key = req.get_header('X-Bootaction-Key', default='')
 
         if identity_key == '':
-            raise falcon.HTTPUnauthorized(
-                title='Unauthorized',
-                description='No X-Bootaction-Key',
-                challenges=['Bootaction-Key'])
+            raise falcon.HTTPUnauthorized(title='Unauthorized',
+                                          description='No X-Bootaction-Key',
+                                          challenges=['Bootaction-Key'])
 
         if ba_ctx['identity_key'] != bytes.fromhex(identity_key):
             logger.warn(
                 "Forbidding boot action access - node: %s, identity_key: %s, req header: %s"
-                % (ba_ctx['node_name'], str(ba_ctx['identity_key']),
-                   str(bytes.fromhex(identity_key))))
-            raise falcon.HTTPForbidden(
-                title='Unauthorized', description='Invalid X-Bootaction-Key')
+                % (ba_ctx['node_name'], str(
+                    ba_ctx['identity_key']), str(bytes.fromhex(identity_key))))
+            raise falcon.HTTPForbidden(title='Unauthorized',
+                                       description='Invalid X-Bootaction-Key')
 
     @staticmethod
     def tarbuilder(asset_list=None):
@@ -259,8 +261,9 @@ class BootactionUtils(object):
         :param asset_list: list of objects.BootActionAsset instances
         """
         tarbytes = io.BytesIO()
-        tarball = tarfile.open(
-            mode='w:gz', fileobj=tarbytes, format=tarfile.GNU_FORMAT)
+        tarball = tarfile.open(mode='w:gz',
+                               fileobj=tarbytes,
+                               format=tarfile.GNU_FORMAT)
         asset_list = [
             a for a in asset_list if a.type != BootactionAssetType.PackageList
         ]

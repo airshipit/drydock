@@ -34,8 +34,9 @@ def test_taskcli_blank_nodefilter():
     dd_ses = dc_session.DrydockSession(host)
     dd_client = dc_client.DrydockClient(dd_ses)
 
-    action = TaskCreate(
-        dd_client, "http://foo.bar", action_name="deploy_nodes")
+    action = TaskCreate(dd_client,
+                        "http://foo.bar",
+                        action_name="deploy_nodes")
 
     assert action.node_filter is None
 
@@ -77,8 +78,8 @@ def test_taskcli_builddata_command(mocker):
     api_client = mocker.MagicMock()
     api_client.get_task_build_data.return_value = build_data
 
-    mocker.patch(
-        'drydock_provisioner.cli.commands.DrydockClient', new=api_client)
+    mocker.patch('drydock_provisioner.cli.commands.DrydockClient',
+                 new=api_client)
     mocker.patch('drydock_provisioner.cli.commands.KeystoneClient')
 
     runner = CliRunner()
@@ -88,6 +89,6 @@ def test_taskcli_builddata_command(mocker):
     print(result.exc_info)
     api_client.get_task_build_data.assert_called_with(task_id)
 
-    assert yaml.safe_dump(
-        build_data, allow_unicode=True,
-        default_flow_style=False) in result.output
+    assert yaml.safe_dump(build_data,
+                          allow_unicode=True,
+                          default_flow_style=False) in result.output
