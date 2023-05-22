@@ -64,7 +64,7 @@ pytz==2018.5
 PyYAML==5.3.1
 redfish==2.0.1
 repoze.lru==0.7
-requests==2.22.0
+requests==2.31.0
 rfc3986==1.2.0
 Routes==2.4.1
 setuptools==40.4.3
