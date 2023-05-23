@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker stop 'psql_integration'
+docker stop 'psql_integration'

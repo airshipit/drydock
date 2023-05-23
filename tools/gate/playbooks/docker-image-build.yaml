@@ -56,6 +56,16 @@
             executable: pip3
       become: True
 
+
+    - name: Run images
+      shell: |
+        make run_images
+      args:
+        chdir: "{{ zuul.project.src_dir }}"
+        executable: /bin/bash
+      become: True
+
+
     - name: Make images
       when: not publish
       block:
@@ -69,11 +79,10 @@
 
         - shell: "docker images"
           register: docker_images
-
         - debug:
             var: docker_images
-
       become: True
+
 
     - name: Publish images
       block:

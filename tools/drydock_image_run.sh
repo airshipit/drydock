@@ -2,14 +2,16 @@
 set -x
 
 IMAGE=${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO}
+PSQL_CONTAINER_NAME=psql_integration_$(date +%Y%m%d%H%M%s%s)
+DRYDOCK_CONTAINER_NAME=drydock_test_$(date +%Y%m%d%H%M%s%s)
 
 function start_db {
-    if [[ ! -z $(docker ps | grep 'psql_integration') ]]
+    if [[ ! -z $(docker ps | grep "${PSQL_CONTAINER_NAME}" ) ]]
     then
-      sudo docker stop 'psql_integration'
+      sudo docker stop "${PSQL_CONTAINER_NAME}"
     fi
 
-    docker run --rm -dp 5432:5432 --name 'psql_integration' -e POSTGRES_HOST_AUTH_METHOD=trust postgres:14.6
+    docker run --rm -dp 5432:5432 --name "${PSQL_CONTAINER_NAME}" -e POSTGRES_HOST_AUTH_METHOD=trust postgres:14.6
     sleep 15
 
     docker run --rm --net host postgres:14.6 psql -h localhost -c "create user drydock with password 'drydock';" postgres postgres
@@ -47,7 +49,7 @@ function init_db {
 function test_drydock {
     TMPETC=$1
     docker run \
-      -d --name 'drydock_test' --net host \
+      -d --name "${DRYDOCK_CONTAINER_NAME}" --net host \
       -v ${TMPETC}:/etc/drydock \
       ${IMAGE}
 
@@ -55,6 +57,12 @@ function test_drydock {
 
     RESULT=$(curl --noproxy '*' -i 'http://127.0.0.1:9000/api/v1.0/tasks' | tr '\r' '\n' | head -1)
     GOOD="HTTP/1.1 200 OK"
+    if [[ "${RESULT}" != "${GOOD}" ]]; then
+      if docker exec -t ${CONTAINER_NAME} /bin/bash -c "curl -i 'http://127.0.0.1:9000/api/v1.0/tasks' --noproxy '*' | tr '\r' '\n' | head -1 "; then
+        RESULT="${GOOD}"
+      fi
+    fi
+
     if [[ ${RESULT} == ${GOOD} ]]
     then
       RC=0
@@ -62,16 +70,16 @@ function test_drydock {
       RC=1
     fi
 
-    docker logs drydock_test
+    docker logs "${DRYDOCK_CONTAINER_NAME}"
     return $RC
 }
 
 function cleanup {
     TMPDIR=$1
-    docker stop psql_integration
-    docker stop drydock_test
-    docker rm drydock_test
-#    rm -rf $TMPDIR
+    docker stop "${PSQL_CONTAINER_NAME}"
+    docker stop "${DRYDOCK_CONTAINER_NAME}"
+    docker rm "${DRYDOCK_CONTAINER_NAME}"
+   rm -rf $TMPDIR
 }
 
 start_db

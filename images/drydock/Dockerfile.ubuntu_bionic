@@ -23,13 +23,18 @@ ENV container docker
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Copy direct dependency requirements only to build a dependency layer
-RUN echo "deb  ${UBUNTU_REPO} bionic main restricted universe multiverse" > /etc/apt/sources.list; \
-    echo "deb  ${UBUNTU_REPO} bionic-security main restricted universe multiverse" >> /etc/apt/sources.list; \
-    echo "deb  ${UBUNTU_REPO} bionic-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
-    cat /etc/apt/sources.list; \
-    echo "APT::Get::AllowUnauthenticated ${ALLOW_UNAUTHENTICATED};" >> /etc/apt/apt.conf.d/00-local-mirrors;
-
+COPY ./bindep.txt /tmp/drydock/
+WORKDIR /tmp/drydock
+RUN apt update \
+    && apt install -y --allow-downgrades \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-venv \
+        python3-setuptools \
+    && DEBIAN_FRONTEND=noninteractive apt install  --no-install-recommends -y tzdata \
+    && pip3 install bindep \
+    && bindep -f /tmp/drydock/bindep.txt --brief | xargs  apt install -y
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
@@ -73,29 +78,36 @@ ENV PORT 9000
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Copy direct dependency requirements only to build a dependency layer
-RUN echo "deb  ${UBUNTU_REPO} bionic main restricted universe multiverse" > /etc/apt/sources.list; \
-    echo "deb  ${UBUNTU_REPO} bionic-security main restricted universe multiverse" >> /etc/apt/sources.list; \
-    echo "deb  ${UBUNTU_REPO} bionic-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
-    cat /etc/apt/sources.list; \
-    echo "APT::Get::AllowUnauthenticated ${ALLOW_UNAUTHENTICATED};" >> /etc/apt/apt.conf.d/00-local-mirrors;
-
-
-COPY ./requirements-host.txt /tmp/drydock/
-COPY ./hostdeps.sh /tmp/drydock
-WORKDIR /tmp/drydock
-RUN ./hostdeps.sh; \
-    rm -r /var/lib/apt/lists/*
+RUN DEBIAN_FRONTEND=noninteractive \
+        apt update \
+    && DEBIAN_FRONTEND=noninteractive \
+        apt install -y \
+            --allow-downgrades \
+             --no-install-recommends \
+                python3-dev \
+                python3-pip \
+                python3-setuptools \
+                pkg-config \
+                libvirt-dev \
+                libssl-dev \
+                libpq-dev \
+                gcc \
+                ssh\
+                curl \
+                netbase \
+    && rm -r /var/lib/apt/lists/*
 
 # Install LibYAML
 ENV LD_LIBRARY_PATH=/usr/local/lib
 COPY --from=baclient_builder /usr/local/lib /usr/local/lib
 COPY --from=baclient_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
 
-COPY ./python/requirements-frozen.txt /tmp/drydock/
-RUN pip3 install \
+COPY ./python/requirements-frozen-bionic.txt /tmp/drydock/
+RUN \
+    pip3 install --upgrade pip \
+    && pip3 install \
     --no-cache-dir \
-    -r /tmp/drydock/requirements-frozen.txt
+    -r /tmp/drydock/requirements-frozen-bionic.txt
 
 COPY ./python /tmp/drydock/python
 WORKDIR /tmp/drydock/python

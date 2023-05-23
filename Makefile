@@ -16,7 +16,7 @@ BUILD_DIR       	:= $(shell mkdir -p build && mktemp -d -p build)
 DOCKER_REGISTRY 	?= quay.io
 IMAGE_NAME      	?= drydock
 IMAGE_PREFIX    	?= airshipit
-IMAGE_TAG       	?= dev
+IMAGE_TAG       	?= latest
 HELM            	:= $(shell realpath $(BUILD_DIR))/helm
 UBUNTU_BASE_IMAGE	?=
 DISTRO				?= ubuntu_focal
@@ -35,7 +35,7 @@ export
 images: build_drydock
 
 # Run an image locally and exercise simple tests
-run_images: run_drydock
+run_images: build_drydock run_drydock
 
 # Run tests
 tests: pep8 security docs unit_tests test_baclient
@@ -57,7 +57,7 @@ req_freeze:
 	tox -re freeze
 
 # Run the drydock container and exercise simple tests
-run_drydock: build_drydock
+run_drydock:
 	tools/drydock_image_run.sh
 
 # It seems CICD expects the target 'drydock' to

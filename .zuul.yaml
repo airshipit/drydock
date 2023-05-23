@@ -13,23 +13,33 @@
 - project:
     templates:
       - docs-on-readthedocs
+      - openstack-python38-jobs
+      - openstack-python36-jobs
     vars:
       rtd_webhook_id: '38809'
       rtd_project_name: 'airship-drydock'
     check:
       jobs:
-        - airship-drydock-omni-test
+        - airship-drydock-openstack-tox-cover-focal
+        - airship-drydock-openstack-tox-pep8-focal
+        - airship-drydock-baclient-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
         - airship-drydock-docker-build-gate-ubuntu_focal
+        - airship-drydock-docker-build-gate-ubuntu_bionic
+
     gate:
       jobs:
-        - airship-drydock-omni-test
+        - airship-drydock-openstack-tox-cover-focal
+        - airship-drydock-openstack-tox-pep8-focal
+        - airship-drydock-baclient-test
         - airship-drydock-chart-build-gate
         - airship-drydock-docker-build-gate-ubuntu_focal
+        - airship-drydock-docker-build-gate-ubuntu_bionic
     post:
       jobs:
         - airship-drydock-docker-publish-ubuntu_focal
+        - airship-drydock-docker-publish-ubuntu_bionic
         - drydock-upload-git-mirror
 
 - nodeset:
@@ -45,13 +55,24 @@
         label: ubuntu-focal
 
 - job:
-    name: airship-drydock-omni-test
+    name: airship-drydock-openstack-tox-cover-focal
+    parent: openstack-tox-cover
+    description: Runs cover job on focal
+    nodeset: airship-drydock-single-node-focal
+    pre-run: tools/gate/playbooks/install-docker.yaml
+
+
+- job:
+    name: airship-drydock-openstack-tox-pep8-focal
+    parent: openstack-tox-pep8
+    description: Runs pep8 job on focal
+    nodeset: airship-drydock-single-node-focal
+
+- job:
+    name: airship-drydock-baclient-test
     description: |
-      Run a set of lightweight lints and tests
-      (pep8, Helm chart lint, Sphinx build, Python unit tests, Bandit scan)
-    run: tools/gate/playbooks/omni_test.yaml
-    required-projects:
-      - openstack/openstack-helm-infra
+      Run a bootaction drydock client test
+    run: tools/gate/playbooks/baclient_test.yaml
     timeout: 3600
     nodeset: airship-drydock-single-node-focal
 
@@ -62,6 +83,8 @@
     timeout: 900
     run: tools/gate/playbooks/build-charts.yaml
     nodeset: airship-drydock-single-node-focal
+    vars:
+      HTK_COMMIT: a7cd689280cdbc0acd04a7a1b745941260e8700b
 
 - job:
     name: airship-drydock-chart-build-latest-htk
@@ -91,6 +114,22 @@
 
 
 - job:
+    name: airship-drydock-docker-build-gate-ubuntu_bionic
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node
+    irrelevant-files:
+      - '^doc/.*'
+      - '^charts/.*'
+    vars:
+      publish: false
+      distro: ubuntu_bionic
+      tags:
+        dynamic:
+          patch_set: true
+
+
+- job:
     name: airship-drydock-docker-publish-ubuntu_focal
     timeout: 1800
     run: tools/gate/playbooks/docker-image-build.yaml
@@ -109,6 +148,28 @@
           commit: true
         static:
           - latest
+
+- job:
+    name: airship-drydock-docker-publish-ubuntu_bionic
+    timeout: 1800
+    run: tools/gate/playbooks/docker-image-build.yaml
+    nodeset: airship-drydock-single-node-focal
+    secrets:
+      - airship_drydock_quay_creds
+    irrelevant-files:
+      - '^doc/.*'
+      - '^charts/.*'
+    vars:
+      publish: true
+      distro: ubuntu_bionic
+      tags:
+        dynamic:
+          branch: true
+          commit: true
+        static:
+          - latest
+
+
 - secret:
     name: airship_drydock_quay_creds
     data:
@@ -143,15 +204,15 @@
       git_mirror_repository: airshipit/drydock
     secrets:
       - name: git_mirror_credentials
-        secret: drydock-airshipit-github-secret
+        secret: drydock-airshipit-github-secret-2023-03-23
         pass-to-parent: true
 
 - secret:
-    name: drydock-airshipit-github-secret
+    name: drydock-airshipit-github-secret-2023-03-23
     data:
       user: git
       host: github.com
-      host_key: github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+      host_key: github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
       ssh_key: !encrypted/pkcs1-oaep
         - UjLtbrpoJqWLQQBAjOWgiHPpJP6WqYenCJYtkv10ayR0esOS0BOUVSOCUC2TC+fBKx/rn
           dREF8XuQSDH2gmSUvTafzMhGZmy+Rk/KOi2Et+V3uNCdczxFPEovliQCQmt2LwZADubMg

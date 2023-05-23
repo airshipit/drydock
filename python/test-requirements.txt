@@ -1,19 +1,18 @@
 # tests
-click==6.7
+click
 falcon==3.1.1
 jsonschema==3.2.0
 mock==5.0.1
 pylibyaml==0.1.0
-pymongo==3.10.1
+pymongo
 pytest >= 3.0
 pytest-cov==4.0.0
 pytest-mock
-responses==0.23.1
-setuptools==56.0.0
-ulid2==0.1.1
+responses
+ulid2
 
 # tools
 yapf
 flake8
-bandit>=1.1.0
-sphinx>=1.6.2
+bandit==1.6.0
+sphinx<7.0.0

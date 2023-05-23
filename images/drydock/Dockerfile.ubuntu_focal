@@ -95,6 +95,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
                 pkg-config \
                 libvirt-dev \
                 libssl-dev \
+                libpq-dev \
                 gcc \
                 ssh\
                 curl \
@@ -107,7 +108,9 @@ COPY --from=baclient_builder /usr/local/lib /usr/local/lib
 COPY --from=baclient_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
 
 COPY ./python/requirements-frozen.txt /tmp/drydock/
-RUN pip3 install \
+RUN \
+    pip3 install --upgrade pip \
+    && pip3 install \
     --no-cache-dir \
     -r /tmp/drydock/requirements-frozen.txt
 
