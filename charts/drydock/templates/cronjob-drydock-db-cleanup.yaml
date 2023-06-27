@@ -28,9 +28,13 @@ metadata:
   annotations:
     {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
 spec:
+  successfulJobsHistoryLimit: {{ .Values.endpoints.postgresql.history.success }}
+  failedJobsHistoryLimit: {{ .Values.endpoints.postgresql.history.failed }}
+  concurrencyPolicy: Forbid
   schedule: {{ .Values.endpoints.postgresql.cleanup_schedule | quote }}
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: {{ .Values.endpoints.postgresql.ttl_finished }}
       template:
         metadata:
           labels:
@@ -68,4 +72,3 @@ spec:
                 defaultMode: 0555
 ...
 {{- end }}
-

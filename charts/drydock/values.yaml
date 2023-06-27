@@ -326,8 +326,12 @@ endpoints:
   postgresql:
     # frequency to run table purges
     cleanup_schedule: "0 1 * * *"
+    ttl_finished: 86400
     # number of days to retain for the tasks table
     days_to_retain: "90"
+    history:
+      success: 3
+      failed: 1
     name: postgresql
     auth:
       admin:
