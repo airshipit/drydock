@@ -296,7 +296,7 @@ class DestroyNode(BaseMaasAction):
                                              ctx_type='node')
                     self.task.success(focus=n.get_id())
                     continue
-                elif type(machine) == maas_rack.RackController:
+                elif type(machine) is maas_rack.RackController:
                     msg = "Cannot delete rack controller {}.".format(n.name)
                     self.logger.info(msg)
                     self.task.add_status_msg(msg=msg,
@@ -1130,7 +1130,7 @@ class IdentifyNode(BaseMaasAction):
                                              error=True,
                                              ctx=n.name,
                                              ctx_type='node')
-                elif type(machine) == maas_machine.Machine:
+                elif type(machine) is maas_machine.Machine:
                     machine.update_identity(
                         n,
                         domain=n.get_domain(site_design),
@@ -1144,7 +1144,7 @@ class IdentifyNode(BaseMaasAction):
                                              ctx=n.name,
                                              ctx_type='node')
                     self.task.success(focus=n.get_id())
-                elif type(machine) == maas_rack.RackController:
+                elif type(machine) is maas_rack.RackController:
                     msg = "Rack controller %s identified in MaaS" % n.name
                     self.logger.debug(msg)
                     self.task.add_status_msg(msg=msg,
@@ -1219,7 +1219,7 @@ class ConfigureHardware(BaseMaasAction):
                 self.logger.debug("Locating node %s for commissioning" %
                                   (n.name))
                 machine = find_node_in_maas(self.maas_client, n)
-                if type(machine) == maas_rack.RackController:
+                if type(machine) is maas_rack.RackController:
                     msg = "Located node %s in MaaS as rack controller. Skipping." % (
                         n.name)
                     self.logger.info(msg)

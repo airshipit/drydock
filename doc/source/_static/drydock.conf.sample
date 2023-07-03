@@ -78,7 +78,7 @@
 # Domain name containing project (string value)
 #project_domain_name = <None>
 
-# ID of the trust to use as a trustee use (string value)
+# Trust ID (string value)
 #trust_id = <None>
 
 # Optional domain ID to use with v3 and v2 parameters. It will be used for both

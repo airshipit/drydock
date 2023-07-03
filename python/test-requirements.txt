@@ -1,15 +1,7 @@
-# tests
-click
-falcon==3.1.1
-jsonschema==3.2.0
-mock==5.0.1
-pylibyaml==0.1.0
-pymongo
 pytest >= 3.0
 pytest-cov==4.0.0
 pytest-mock
-responses
-ulid2
+
 
 # tools
 yapf

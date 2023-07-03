@@ -35,7 +35,7 @@ images:
     ks_user: docker.io/openstackhelm/heat:newton
     ks_service: docker.io/openstackhelm/heat:newton
     ks_endpoints: docker.io/openstackhelm/heat:newton
-    drydock_db_init: docker.io/postgres:14.6
+    drydock_db_init: docker.io/postgres:14.8
     drydock_db_cleanup: quay.io/airshipit/drydock:master
     drydock_db_sync: quay.io/airshipit/drydock:master
   pull_policy: "IfNotPresent"
