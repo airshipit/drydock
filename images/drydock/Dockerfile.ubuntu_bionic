@@ -44,6 +44,7 @@ RUN ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
 # Build LibYAML
 ARG LIBYAML_VERSION=0.2.5
 RUN set -ex \
+    && apt-get update && apt-get upgrade -y \
     && apt install -y git automake make libtool \
     && git clone https://github.com/yaml/libyaml.git \
     && cd libyaml \

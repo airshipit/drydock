@@ -99,7 +99,7 @@
 
 - job:
     name: airship-drydock-docker-build-gate-ubuntu_focal
-    timeout: 1800
+    timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node-focal
     irrelevant-files:
@@ -115,7 +115,7 @@
 
 - job:
     name: airship-drydock-docker-build-gate-ubuntu_bionic
-    timeout: 1800
+    timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node
     irrelevant-files:
@@ -131,7 +131,7 @@
 
 - job:
     name: airship-drydock-docker-publish-ubuntu_focal
-    timeout: 1800
+    timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node-focal
     secrets:
@@ -151,7 +151,7 @@
 
 - job:
     name: airship-drydock-docker-publish-ubuntu_bionic
-    timeout: 1800
+    timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node-focal
     secrets:
