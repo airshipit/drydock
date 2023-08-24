@@ -122,7 +122,7 @@ types-PyYAML==6.0.12.9
 typing_extensions==4.5.0
 ulid2==0.1.1
 urllib3==1.26.15
-uWSGI==2.0.21
+uWSGI==2.0.22
 vine==5.0.0
 WebOb==1.8.7
 wheel==0.40.0
