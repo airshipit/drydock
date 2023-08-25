@@ -146,8 +146,6 @@
         dynamic:
           branch: true
           commit: true
-        static:
-          - latest
 
 - job:
     name: airship-drydock-docker-publish-ubuntu_bionic
@@ -166,8 +164,6 @@
         dynamic:
           branch: true
           commit: true
-        static:
-          - latest
 
 
 - secret:
