@@ -81,7 +81,7 @@
     run: tools/gate/playbooks/build-charts.yaml
     nodeset: airship-drydock-single-node-focal
     vars:
-      HTK_COMMIT: 97ce6d7d8e9a090c748800d69a57bbd9af698b60
+      HTK_COMMIT: 51c70e48dff173281a77d374d87af2c49caa6348
 
 - job:
     name: airship-drydock-chart-build-latest-htk
