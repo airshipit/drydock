@@ -1502,7 +1502,7 @@ class ApplyNodeNetworking(BaseMaasAction):
                                 continue
 
                             if nl.bonding_mode != hd_fields.NetworkLinkBondingMode.Disabled:
-                                if len(i.get_hw_slaves()) > 1:
+                                if len(i.get_hw_slaves()) >= 1:
                                     msg = "Building node %s interface %s as a bond." % (
                                         n.name, i.device_name)
                                     self.logger.debug(msg)
