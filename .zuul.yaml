@@ -81,7 +81,7 @@
     run: tools/gate/playbooks/build-charts.yaml
     nodeset: airship-drydock-single-node-focal
     vars:
-      HTK_COMMIT: 51c70e48dff173281a77d374d87af2c49caa6348
+      HTK_COMMIT: cfff60ec10a6c386f38db79bb9f59a552c2b032f
 
 - job:
     name: airship-drydock-chart-build-latest-htk
@@ -130,7 +130,7 @@
           commit: true
         static:
           - latest
-          - airflow_2.6.2
+          - airflow_2.8.1
 
 
 - secret:
