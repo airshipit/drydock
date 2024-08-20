@@ -9,7 +9,7 @@ if $(uname -a | grep -q Ubuntu); then
   if [[ ! -f ./baclient_built ]]; then
     whereis go
     go env
-    GO111MODULE=off GOPATH=${GOPATH} /usr/bin/go build -v -o ${BUILD_DIR}/baclient baclient
+    GO111MODULE=off GOPATH=${GOPATH} go build -v -o ${BUILD_DIR}/baclient baclient
   else
     echo "Baclient library is already built. No action."
   fi

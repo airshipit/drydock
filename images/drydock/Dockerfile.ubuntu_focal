@@ -19,6 +19,7 @@ ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
 ARG TRUSTED_UBUNTU_REPO=no
 ARG ALLOW_UNAUTHENTICATED=false
 ARG BUILD_DIR
+ARG GOLANG_VERSION=1.21.11
 ENV container docker
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
@@ -37,11 +38,18 @@ RUN apt update \
     && pip3 install bindep \
     && bindep -f /tmp/drydock/bindep.txt --brief | xargs  apt install -y
 
+# Update GoLang to fix CVE
+RUN apt remove golang-go -y \
+    && apt purge golang-go -y \
+    && wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz
+
+
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
 
 WORKDIR /tmp/drydock
-RUN ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
+RUN PATH=$PATH:/usr/local/go/bin ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
 
 # Build LibYAML
 ARG LIBYAML_VERSION=0.2.5
