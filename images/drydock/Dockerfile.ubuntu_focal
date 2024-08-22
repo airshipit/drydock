@@ -12,44 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG FROM=ubuntu:20.04
-FROM ${FROM} AS baclient_builder
+ARG FROM=ubuntu:focal
 
-ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
-ARG TRUSTED_UBUNTU_REPO=no
-ARG ALLOW_UNAUTHENTICATED=false
-ARG BUILD_DIR
-ARG GOLANG_VERSION=1.21.11
-ENV container docker
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
-
-
-COPY ./bindep.txt /tmp/drydock/
-WORKDIR /tmp/drydock
-RUN apt update \
-    && apt install -y --allow-downgrades \
-        python3 \
-        python3-dev \
-        python3-pip \
-        python3-venv \
-        python3-setuptools \
-    && DEBIAN_FRONTEND=noninteractive apt install  --no-install-recommends -y tzdata \
-    && pip3 install bindep \
-    && bindep -f /tmp/drydock/bindep.txt --brief | xargs  apt install -y
-
-# Update GoLang to fix CVE
-RUN apt remove golang-go -y \
-    && apt purge golang-go -y \
-    && wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz
-
+FROM golang:1.22.5  as baclient_builder
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
 
 WORKDIR /tmp/drydock
 RUN PATH=$PATH:/usr/local/go/bin ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
+
+FROM ${FROM} AS libyaml_builder
 
 # Build LibYAML
 ARG LIBYAML_VERSION=0.2.5
@@ -113,8 +86,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
 
 # Install LibYAML
 ENV LD_LIBRARY_PATH=/usr/local/lib
-COPY --from=baclient_builder /usr/local/lib /usr/local/lib
-COPY --from=baclient_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
+COPY --from=libyaml_builder /usr/local/lib /usr/local/lib
+COPY --from=libyaml_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
 
 COPY ./python/requirements-frozen.txt /tmp/drydock/
 RUN \
