@@ -13,30 +13,31 @@
 - project:
     templates:
       - docs-on-readthedocs
-      - openstack-python38-jobs
     vars:
       rtd_webhook_id: '38809'
       rtd_project_name: 'airship-drydock'
     check:
       jobs:
-        - airship-drydock-openstack-tox-cover-focal
-        - airship-drydock-openstack-tox-pep8-focal
+        - openstack-tox-py310
+        - airship-drydock-openstack-tox-cover-jammy
+        - airship-drydock-openstack-tox-pep8-jammy
         - airship-drydock-baclient-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
-        - airship-drydock-docker-build-gate-ubuntu_focal
+        - airship-drydock-docker-build-gate-ubuntu_jammy
 
     gate:
       jobs:
-        - airship-drydock-openstack-tox-cover-focal
-        - airship-drydock-openstack-tox-pep8-focal
+        - openstack-tox-py310
+        - airship-drydock-openstack-tox-cover-jammy
+        - airship-drydock-openstack-tox-pep8-jammy
         - airship-drydock-baclient-test
         - airship-drydock-chart-build-gate
-        - airship-drydock-docker-build-gate-ubuntu_focal
+        - airship-drydock-docker-build-gate-ubuntu_jammy
 
     post:
       jobs:
-        - airship-drydock-docker-publish-ubuntu_focal
+        - airship-drydock-docker-publish-ubuntu_jammy
         - drydock-upload-git-mirror
 
 - nodeset:
@@ -46,24 +47,24 @@
         label: ubuntu-bionic
 
 - nodeset:
-    name: airship-drydock-single-node-focal
+    name: airship-drydock-single-node-jammy
     nodes:
       - name: primary
-        label: ubuntu-focal
+        label: ubuntu-jammy
 
 - job:
-    name: airship-drydock-openstack-tox-cover-focal
+    name: airship-drydock-openstack-tox-cover-jammy
     parent: openstack-tox-cover
-    description: Runs cover job on focal
-    nodeset: airship-drydock-single-node-focal
+    description: Runs cover job on jammy
+    nodeset: airship-drydock-single-node-jammy
     pre-run: tools/gate/playbooks/install-docker.yaml
 
 
 - job:
-    name: airship-drydock-openstack-tox-pep8-focal
+    name: airship-drydock-openstack-tox-pep8-jammy
     parent: openstack-tox-pep8
-    description: Runs pep8 job on focal
-    nodeset: airship-drydock-single-node-focal
+    description: Runs pep8 job on jammy
+    nodeset: airship-drydock-single-node-jammy
 
 - job:
     name: airship-drydock-baclient-test
@@ -71,7 +72,7 @@
       Run a bootaction drydock client test
     run: tools/gate/playbooks/baclient_test.yaml
     timeout: 3600
-    nodeset: airship-drydock-single-node-focal
+    nodeset: airship-drydock-single-node-jammy
 
 - job:
     name: airship-drydock-chart-build-gate
@@ -79,9 +80,9 @@
       Builds charts using pinned Helm toolkit.
     timeout: 900
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node-focal
+    nodeset: airship-drydock-single-node-jammy
     vars:
-      HTK_COMMIT: cfff60ec10a6c386f38db79bb9f59a552c2b032f
+      HTK_COMMIT: 43fd7143481b6ddda0dbd2f26bf6ec39a417b15b
 
 - job:
     name: airship-drydock-chart-build-latest-htk
@@ -90,21 +91,21 @@
     timeout: 900
     voting: false
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node-focal
+    nodeset: airship-drydock-single-node-jammy
     vars:
       HTK_COMMIT: master
 
 - job:
-    name: airship-drydock-docker-build-gate-ubuntu_focal
+    name: airship-drydock-docker-build-gate-ubuntu_jammy
     timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node-focal
+    nodeset: airship-drydock-single-node-jammy
     irrelevant-files:
       - '^doc/.*'
       - '^charts/.*'
     vars:
       publish: false
-      distro: ubuntu_focal
+      distro: ubuntu_jammy
       tags:
         dynamic:
           patch_set: true
@@ -112,10 +113,10 @@
 
 
 - job:
-    name: airship-drydock-docker-publish-ubuntu_focal
+    name: airship-drydock-docker-publish-ubuntu_jammy
     timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node-focal
+    nodeset: airship-drydock-single-node-jammy
     secrets:
       - airship_drydock_quay_creds
     irrelevant-files:
@@ -123,14 +124,14 @@
       - '^charts/.*'
     vars:
       publish: true
-      distro: ubuntu_focal
+      distro: ubuntu_jammy
       tags:
         dynamic:
           branch: true
           commit: true
         static:
           - latest
-          - airflow_2.8.2
+          - airflow_2.10.0
 
 
 - secret:

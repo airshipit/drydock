@@ -1,0 +1,116 @@
+# Copyright 2017 AT&T Intellectual Property.  All other rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG FROM=ubuntu:jammy
+
+FROM golang:1.22.7  as baclient_builder
+
+COPY ./tools/baclient_build.sh /tmp/drydock/
+COPY ./go /tmp/drydock/go
+
+WORKDIR /tmp/drydock
+RUN PATH=$PATH:/usr/local/go/bin ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
+
+FROM ${FROM} AS libyaml_builder
+
+# Build LibYAML
+ARG LIBYAML_VERSION=0.2.5
+RUN set -ex \
+    && apt-get update && apt-get upgrade -y \
+    && apt install -y git automake make libtool \
+    && git clone https://github.com/yaml/libyaml.git \
+    && cd libyaml \
+    && git checkout $LIBYAML_VERSION \
+    && ./bootstrap \
+    && ./configure \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -fr libyaml
+
+RUN rm -r /var/lib/apt/lists/*
+
+
+FROM ${FROM}
+
+LABEL org.opencontainers.image.authors='airship-discuss@lists.airshipit.org, irc://#airshipit@freenode' \
+      org.opencontainers.image.url='https://airshipit.org' \
+      org.opencontainers.image.documentation='https://airship-drydock.readthedocs.org' \
+      org.opencontainers.image.source='https://git.openstack.org/openstack/airship-drydock' \
+      org.opencontainers.image.vendor='The Airship Authors' \
+      org.opencontainers.image.licenses='Apache-2.0'
+
+ARG UBUNTU_REPO=http://archive.ubuntu.com/ubuntu
+ARG TRUSTED_UBUNTU_REPO=no
+ARG ALLOW_UNAUTHENTICATED=false
+ARG PIP_TRUSTED_HOST=foo.com
+ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG BUILD_DIR
+ENV container docker
+ENV PORT 9000
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
+
+# COPY ./bindep-python.txt /tmp/drydock/
+WORKDIR /tmp/drydock
+RUN DEBIAN_FRONTEND=noninteractive \
+        apt update \
+    && DEBIAN_FRONTEND=noninteractive \
+        apt install -y \
+            --allow-downgrades \
+             --no-install-recommends \
+                python3-dev \
+                python3-pip \
+                python3-setuptools \
+                pkg-config \
+                libvirt-dev \
+                libssl-dev \
+                libpq-dev \
+                gcc \
+                openssh-client\
+                curl \
+                netbase \
+    && rm -r /var/lib/apt/lists/*
+
+# Install LibYAML
+ENV LD_LIBRARY_PATH=/usr/local/lib
+COPY --from=libyaml_builder /usr/local/lib /usr/local/lib
+COPY --from=libyaml_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
+
+COPY ./python/requirements-frozen.txt /tmp/drydock/
+RUN \
+    pip3 install --upgrade pip \
+    && pip3 install \
+    --no-cache-dir \
+    -r /tmp/drydock/requirements-frozen.txt
+
+COPY ./python /tmp/drydock/python
+WORKDIR /tmp/drydock/python
+RUN cd /tmp/drydock/python \
+    && pip3 install $(pwd)
+
+COPY ./alembic /tmp/drydock/alembic
+COPY ./alembic.ini /tmp/drydock/alembic.ini
+COPY ./entrypoint.sh /tmp/drydock/entrypoint.sh
+
+COPY --from=baclient_builder /tmp/drydock/baclient /tmp/drydock/python/drydock_provisioner/assets/baclient
+
+
+EXPOSE $PORT
+
+WORKDIR /tmp/drydock
+
+ENTRYPOINT ["./entrypoint.sh"]
+CMD ["server"]
