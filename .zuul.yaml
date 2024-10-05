@@ -131,7 +131,7 @@
           commit: true
         static:
           - latest
-          - airflow_2.10.0
+          - airflow_2.10.2
 
 
 - secret:
