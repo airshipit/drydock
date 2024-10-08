@@ -1,5 +1,6 @@
-sphinx_rtd_theme==1.2.0
-pylibyaml==0.1.0
-oslo.versionedobjects==3.1.0
+sphinx_rtd_theme
+pylibyaml
+oslo.versionedobjects
 falcon
-keystoneauth1<=5.1.1
+keystoneauth1
+sphinx

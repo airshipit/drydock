@@ -65,7 +65,7 @@ class MaasRequestFactory(object):
         # Adapter for maas for request retries
         retry_strategy = Retry(total=3,
                                status_forcelist=[429, 500, 502, 503, 504],
-                               method_whitelist=[
+                               allowed_methods=[
                                    "HEAD", "GET", "POST", "PUT", "DELETE",
                                    "OPTIONS", "TRACE"
                                ])
