@@ -20,7 +20,7 @@ IMAGE_TAG       	?= latest
 HELM            	:= $(shell realpath $(BUILD_DIR))/helm
 UBUNTU_BASE_IMAGE	?=
 DISTRO				?= ubuntu_jammy
-DISTRO_ALIAS		?= ubuntu_focal
+DISTRO_ALIAS		?= ubuntu_jammy
 PROXY           	?= http://proxy.foo.com:8000
 NO_PROXY        	?= localhost,127.0.0.1,.svc.cluster.local
 USE_PROXY       	?= false
@@ -93,10 +93,12 @@ build_drydock:
 
 ifneq ($(DISTRO), $(DISTRO_ALIAS))
 	docker tag $(IMAGE) $(IMAGE_ALIAS)
+ifeq ($(DOCKER_REGISTRY), localhost:5000)
+	docker push $(IMAGE_ALIAS)
+endif
 endif
 ifeq ($(DOCKER_REGISTRY), localhost:5000)
 	docker push $(IMAGE)
-	docker push $(IMAGE_ALIAS)
 endif
 ifeq ($(PUSH_IMAGE), true)
 	docker push $(IMAGE)
