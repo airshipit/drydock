@@ -49,7 +49,7 @@ class DrydockState(object):
             max_overflow=config.config_mgr.conf.database.pool_overflow,
             pool_timeout=config.config_mgr.conf.database.pool_timeout,
             pool_recycle=config.config_mgr.conf.database.connection_recycle)
-        self.db_metadata = MetaData(bind=self.db_engine)
+        self.db_metadata = MetaData()
 
         self.tasks_tbl = tables.Tasks(self.db_metadata)
         self.result_message_tbl = tables.ResultMessage(self.db_metadata)

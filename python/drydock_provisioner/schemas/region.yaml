@@ -6,7 +6,7 @@ metadata:
   labels:
     application: drydock
 data:
-  $schema: 'http://json-schema.org/schema#'
+  $schema: 'http://json-schema.org/draft-04/schema#'
   id: 'http://att.com/att-comdev/drydock/region.yaml'
   type: 'object'
   properties:

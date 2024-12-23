@@ -18,7 +18,7 @@ import logging
 import base64
 import jsonschema
 import os
-import pkg_resources
+from importlib.resources import files
 
 import drydock_provisioner.objects.fields as hd_fields
 
@@ -648,8 +648,7 @@ class YamlIngester(IngesterPlugin):
             f.close()
 
     def _get_schema_dir(self):
-        return pkg_resources.resource_filename('drydock_provisioner',
-                                               'schemas')
+        return str(files('drydock_provisioner') / 'schemas')
 
     # Mapping of handlers for different document kinds
     v1_doc_handlers = {

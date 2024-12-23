@@ -97,7 +97,7 @@ class Ingester(object):
             status, design_items = self.registered_plugin.ingest_data(
                 content=design_blob, **kwargs)
         except errors.IngesterError as vex:
-            self.logger.warn(
+            self.logger.warning(
                 "Ingester:ingest_data - Unexpected error processing data - %s"
                 % (str(vex)))
             return None, None

@@ -18,9 +18,9 @@
 # 429 Too Many Requests - Server message: too many requests:
 #   You have reached your pull rate limit.
 #   You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
-ARG FROM=public.ecr.aws/docker/library/ubuntu:jammy
+ARG FROM=quay.io/airshipit/ubuntu:jammy
 
-FROM public.ecr.aws/docker/library/golang:1.23.1-bullseye  as baclient_builder
+FROM quay.io/airshipit/golang:1.23.1-bullseye  as baclient_builder
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go

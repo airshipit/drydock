@@ -1,7 +1,7 @@
 import pylibyaml  # noqa: F401  # patch pyyaml to use libyaml bindings
 import yaml
 import jsonschema
-import pkg_resources
+from importlib.resources import files
 import os
 import shutil
 import pytest
@@ -18,8 +18,7 @@ class BaseSchemaValidationTest(object):
         :param expect_failure: should the validation pass or fail.
         :param input_files: pytest fixture used to access the test input files
         :param input: test input yaml doc filename"""
-        schema_dir = pkg_resources.resource_filename('drydock_provisioner',
-                                                     'schemas')
+        schema_dir = str(files('drydock_provisioner') / 'schemas')
         schema_filename = os.path.join(schema_dir, schema)
         schema_file = open(schema_filename, 'r')
         schema = yaml.safe_load(schema_file)

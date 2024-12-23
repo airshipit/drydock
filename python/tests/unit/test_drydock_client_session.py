@@ -53,7 +53,6 @@ class TestClientSession(object):
         sess = DrydockSession("testdrydock")
         result = sess.get('bogus')
         assert result.status_code == 200
-        return True
 
     @responses.activate
     def test_get_with_timeout(self):
@@ -62,7 +61,6 @@ class TestClientSession(object):
         sess = DrydockSession("testdrydock")
         result = sess.get('bogus', timeout=(60, 60))
         assert result.status_code == 200
-        return True
 
     post_responses_inp = {
         'method': 'POST',
@@ -79,7 +77,6 @@ class TestClientSession(object):
         sess = DrydockSession("testdrydock")
         result = sess.post('bogus')
         assert result.status_code == 200
-        return True
 
     @responses.activate
     def test_post_with_timeout(self):
@@ -88,7 +85,6 @@ class TestClientSession(object):
         sess = DrydockSession("testdrydock")
         result = sess.post('bogus', timeout=(60, 60))
         assert result.status_code == 200
-        return True
 
     def test_timeout(self):
         """Tests the _timeout method"""

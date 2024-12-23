@@ -241,7 +241,7 @@ class BootactionUtils(object):
                                           challenges=['Bootaction-Key'])
 
         if ba_ctx['identity_key'] != bytes.fromhex(identity_key):
-            logger.warn(
+            logger.warning(
                 "Forbidding boot action access - node: %s, identity_key: %s, req header: %s"
                 % (ba_ctx['node_name'], str(
                     ba_ctx['identity_key']), str(bytes.fromhex(identity_key))))

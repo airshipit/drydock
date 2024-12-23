@@ -95,7 +95,8 @@ def mock_process_node_filter(mocker, deckhand_orchestrator):
     n2.site = 'test2'
     mock_results = [n1, n2]
 
-    with mocker.patch(
-            'drydock_provisioner.orchestrator.orchestrator.Orchestrator.process_node_filter',
-            mocker.MagicMock(return_value=mock_results)):
-        yield
+    mocker.patch(
+        'drydock_provisioner.orchestrator.orchestrator.Orchestrator.process_node_filter',
+        return_value=mock_results
+    )
+    yield

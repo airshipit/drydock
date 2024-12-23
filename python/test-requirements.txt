@@ -1,5 +1,5 @@
-pytest >= 3.0
-pytest-cov==4.0.0
+pytest
+pytest-cov
 pytest-mock
 
 

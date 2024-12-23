@@ -203,7 +203,7 @@ class PromenadeSession(object):
             elif timeout is not None:
                 raise ValueError("Non integer timeout value")
         except ValueError:
-            self.logger.warn(
+            self.logger.warning(
                 "Timeout value must be a tuple of integers or a "
                 "single integer. Proceeding with values of "
                 "(%s, %s)", connect_timeout, read_timeout)

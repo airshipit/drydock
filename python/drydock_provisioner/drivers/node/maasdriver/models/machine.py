@@ -631,7 +631,7 @@ class Machines(model_base.ResourceCollectionBase):
             node_oob_ip = node_model.get_network_address(node_oob_network)
 
             if node_oob_ip is None:
-                self.logger.warn("Node model missing OOB IP address")
+                self.logger.warning("Node model missing OOB IP address")
                 raise ValueError('Node model missing OOB IP address')
 
             maas_node = self.find_node_with_power_address(node_oob_ip)
