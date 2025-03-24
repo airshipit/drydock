@@ -76,6 +76,9 @@ target/
 # pyenv
 .python-version
 
+# devcontainer
+.devcontainer/
+
 # celery beat schedule file
 celerybeat-schedule
 
