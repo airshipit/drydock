@@ -20,32 +20,13 @@
 #   You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
 ARG FROM=quay.io/airshipit/ubuntu:jammy
 
-FROM quay.io/airshipit/golang:1.23.1-bullseye  as baclient_builder
+FROM quay.io/airshipit/golang:1.23.8-bullseye  as baclient_builder
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
 
 WORKDIR /tmp/drydock
 RUN PATH=$PATH:/usr/local/go/bin ./baclient_build.sh /tmp/drydock/go /tmp/drydock/baclient
-
-FROM ${FROM} AS libyaml_builder
-
-# Build LibYAML
-ARG LIBYAML_VERSION=0.2.5
-RUN set -ex \
-    && apt-get update && apt-get upgrade -y \
-    && apt install -y git automake make libtool \
-    && git clone https://github.com/yaml/libyaml.git \
-    && cd libyaml \
-    && git checkout $LIBYAML_VERSION \
-    && ./bootstrap \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -fr libyaml
-
-RUN rm -r /var/lib/apt/lists/*
 
 
 FROM ${FROM}
@@ -74,33 +55,52 @@ WORKDIR /tmp/drydock
 RUN DEBIAN_FRONTEND=noninteractive \
         apt update \
     && DEBIAN_FRONTEND=noninteractive \
+        apt-get upgrade -y \
+    && DEBIAN_FRONTEND=noninteractive \
         apt install -y \
             --allow-downgrades \
              --no-install-recommends \
+                ca-certificates \
                 python3-dev \
-                python3-pip \
                 python3-setuptools \
-                pkg-config \
-                libvirt-dev \
-                libssl-dev \
-                libpq-dev \
-                gcc \
                 openssh-client\
                 curl \
                 netbase \
+                libvirt0 \
     && rm -r /var/lib/apt/lists/*
 
-# Install LibYAML
-ENV LD_LIBRARY_PATH=/usr/local/lib
-COPY --from=libyaml_builder /usr/local/lib /usr/local/lib
-COPY --from=libyaml_builder /usr/local/include/yaml.h /usr/local/include/yaml.h
-
 COPY ./python/requirements-frozen.txt /tmp/drydock/
-RUN \
-    pip3 install --upgrade pip \
-    && pip3 install \
-    --no-cache-dir \
-    -r /tmp/drydock/requirements-frozen.txt
+
+RUN set -ex \
+        && buildDeps=' \
+        automake \
+        gcc \
+        libffi-dev \
+        libpq-dev \
+        libssl-dev \
+        libtool \
+        libyaml-dev \
+        libvirt-dev \
+        make \
+        python3-pip \
+        pkg-config \
+        ' \
+        && apt-get -qq update \
+        # Keep git separate so it's not removed below
+        && apt-get install -y $buildDeps git --no-install-recommends \
+        && python3 -m pip install -U pip \
+        && pip3 install -r /tmp/drydock/requirements-frozen.txt --no-cache-dir \
+        && apt-get purge -y --auto-remove $buildDeps \
+        && apt-get autoremove -yqq --purge \
+        && apt-get clean \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /tmp/* \
+            /var/tmp/* \
+            /usr/share/man \
+            /usr/share/doc \
+            /usr/share/doc-base
+
 
 COPY ./python /tmp/drydock/python
 WORKDIR /tmp/drydock/python

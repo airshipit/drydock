@@ -10,6 +10,7 @@ libpq-dev
 libre2-dev
 libsasl2-dev
 libssl-dev
+libyaml-dev
 libvirt-dev
 libzmq3-dev
 netbase
