@@ -22,6 +22,8 @@
         - airship-drydock-openstack-tox-cover-jammy
         - airship-drydock-openstack-tox-pep8-jammy
         - airship-drydock-baclient-test
+        - airship-drydock-run-test
+        - airship-drydock-integration-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
         - airship-drydock-docker-build-gate-ubuntu_jammy
@@ -32,6 +34,8 @@
         - airship-drydock-openstack-tox-cover-jammy
         - airship-drydock-openstack-tox-pep8-jammy
         - airship-drydock-baclient-test
+        - airship-drydock-run-test
+        - airship-drydock-integration-test
         - airship-drydock-chart-build-gate
         - airship-drydock-docker-build-gate-ubuntu_jammy
 
@@ -58,13 +62,16 @@
     description: Runs cover job on jammy
     nodeset: airship-drydock-single-node-jammy
     pre-run: tools/gate/playbooks/install-docker.yaml
-
+    vars:
+      tox_environment:
+        DISTRO: ubuntu_jammy
 
 - job:
     name: airship-drydock-openstack-tox-pep8-jammy
     parent: openstack-tox-pep8
     description: Runs pep8 job on jammy
     nodeset: airship-drydock-single-node-jammy
+    pre-run: tools/gate/playbooks/install-docker.yaml
 
 - job:
     name: airship-drydock-baclient-test
@@ -73,6 +80,29 @@
     run: tools/gate/playbooks/baclient_test.yaml
     timeout: 3600
     nodeset: airship-drydock-single-node-jammy
+    pre-run: tools/gate/playbooks/install-docker.yaml
+
+- job:
+    name: airship-drydock-run-test
+    description: |
+      Run a bootaction drydock client test
+    run: tools/gate/playbooks/run_drydock.yaml
+    timeout: 3600
+    nodeset: airship-drydock-single-node-jammy
+    pre-run: tools/gate/playbooks/install-docker.yaml
+    vars:
+      distro: ubuntu_jammy
+
+- job:
+    name: airship-drydock-integration-test
+    description: |
+      Run a bootaction drydock client test
+    run: tools/gate/playbooks/integration_test.yaml
+    timeout: 3600
+    nodeset: airship-drydock-single-node-jammy
+    pre-run: tools/gate/playbooks/install-docker.yaml
+    vars:
+      distro: ubuntu_jammy
 
 - job:
     name: airship-drydock-chart-build-gate

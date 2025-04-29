@@ -9,15 +9,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+---
 # Combine several test tasks into a single playbook
 # to minimize Zuul node consumption
 
 - hosts: primary
   tasks:
-    - name: Execute Go tests for baclient
+    - name: Execute the make target for running the Drydock Docker image
       shell: |
-        make test_baclient
+        #/bin/bash
+        set -ex
+        make run_drydock
       args:
         chdir: "{{ zuul.project.src_dir }}"
+      become: true
 

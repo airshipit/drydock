@@ -48,7 +48,7 @@ coverage_test: build_drydock
 
 # Run just unit tests
 unit_tests:
-	tox -re py38 $(TESTS)
+	tox -re py310 $(TESTS)
 
 # Run just DB integration tests
 db_integration_tests:

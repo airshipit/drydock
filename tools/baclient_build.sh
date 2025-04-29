@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install golang-go package, and build the baclient library
-set -x
+set -ex
 
 if $(uname -a | grep -q Ubuntu); then
   GOPATH=$1

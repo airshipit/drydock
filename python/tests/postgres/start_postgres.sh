@@ -1,11 +1,13 @@
 #!/bin/bash
 set -x
 
+env
+echo "DISTRO is set to: $DISTRO"
 DOCKER_REGISTRY=${DOCKER_REGISTRY:-"quay.io"}
 IMAGE_PREFIX=${IMAGE_PREFIX:-"airshipit"}
 IMAGE_NAME=${IMAGE_NAME:-"drydock"}
 IMAGE_TAG=${IMAGE_TAG:-"latest"}
-DISTRO=${DISTRO:-"ubuntu_focal"}
+DISTRO=${DISTRO:-"ubuntu_jammy"}
 
 
 IMAGE="${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO}"

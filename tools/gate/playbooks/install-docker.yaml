@@ -18,11 +18,22 @@
     - bindep
     - clear-firewall
     - ensure-docker
+    - ensure-python
+    - ensure-pip
+    - ensure-tox
+
   tasks:
+
+    - name: Install tox python module
+      block:
+        - pip:
+            name: tox
+            executable: pip3
+      become: True
+
     - name: Build images
       shell: |
         make images
       args:
         chdir: "{{ zuul.project.src_dir }}"
         executable: /bin/bash
-      become: True

@@ -10,6 +10,11 @@ function start_db {
     then
       sudo docker stop "${PSQL_CONTAINER_NAME}"
     fi
+    if [[ ! -z $(docker ps | grep "${DRYDOCK_CONTAINER_NAME}" ) ]]
+    then
+      sudo docker stop "${DRYDOCK_CONTAINER_NAME}"
+    fi
+
 
     docker run --rm -dp 5432:5432 --name "${PSQL_CONTAINER_NAME}" -e POSTGRES_HOST_AUTH_METHOD=trust quay.io/airshipit/postgres:14.8
     sleep 15
@@ -49,6 +54,7 @@ function init_db {
 function test_drydock {
     TMPETC=$1
     docker run \
+      --rm \
       -d --name "${DRYDOCK_CONTAINER_NAME}" --net host \
       -v ${TMPETC}:/etc/drydock \
       ${IMAGE}
@@ -78,7 +84,6 @@ function cleanup {
     TMPDIR=$1
     docker stop "${PSQL_CONTAINER_NAME}"
     docker stop "${DRYDOCK_CONTAINER_NAME}"
-    docker rm "${DRYDOCK_CONTAINER_NAME}"
    rm -rf $TMPDIR
 }
 
