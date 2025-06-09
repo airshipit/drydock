@@ -93,7 +93,7 @@ PyYAML==6.0.2
 redfish==3.2.6
 referencing==0.35.1
 repoze.lru==0.7
-requests==2.32.3
+requests==2.32.4
 requests-toolbelt==1.0.0
 requests-unixsocket==0.3.0
 responses==0.25.3
