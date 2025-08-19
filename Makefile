@@ -29,7 +29,7 @@ PUSH_IMAGE      	?= false
 LABEL           	?= org.airshipit.build=community
 COMMIT          	?= $(shell git rev-parse HEAD)
 IMAGE           	?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO}
-IMAGE_ALIAS              := ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO_ALIAS}
+IMAGE_ALIAS         ?= ${DOCKER_REGISTRY}/${IMAGE_PREFIX}/${IMAGE_NAME}:${IMAGE_TAG}-${DISTRO_ALIAS}
 
 export
 

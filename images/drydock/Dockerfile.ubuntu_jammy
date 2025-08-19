@@ -20,7 +20,7 @@
 #   You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
 ARG FROM=quay.io/airshipit/ubuntu:jammy
 
-FROM quay.io/airshipit/golang:1.23.8-bullseye  as baclient_builder
+FROM quay.io/airshipit/golang:1.24.6-bullseye AS baclient_builder
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
@@ -44,10 +44,10 @@ ARG ALLOW_UNAUTHENTICATED=false
 ARG PIP_TRUSTED_HOST=foo.com
 ARG PIP_INDEX_URL=https://pypi.org/simple
 ARG BUILD_DIR
-ENV container docker
-ENV PORT 9000
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
+ENV container=docker
+ENV PORT=9000
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 
 # COPY ./bindep-python.txt /tmp/drydock/

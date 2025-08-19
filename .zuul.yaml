@@ -27,6 +27,7 @@
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
         - airship-drydock-docker-build-gate-ubuntu_jammy
+        - drydock-airskiff-deployment-jammy-kubeadm
 
     gate:
       jobs:
@@ -113,6 +114,28 @@
     nodeset: airship-drydock-single-node-jammy
     vars:
       HTK_COMMIT: 49c117443391cec75e0bd52bb4a9d033325927ad
+
+- job:
+    name: drydock-airskiff-deployment-jammy-kubeadm
+    # Pinned for now due to Ansible 11 stopped verbosive output.
+    ansible-version: 9
+    description: |
+      Deploy drydock using Airskiff and submitted Shipyard changes.
+    parent: treasuremap-airskiff-deploy-maas-drydock-base
+    nodeset: treasuremap-airskiff-1node-32GB-ubuntu_jammy
+    required-projects:
+      - name: airship/treasuremap
+        override-checkout: v1.9
+    roles:
+      - zuul: airship/treasuremap
+    vars:
+      treasuremap_ref: v1.9
+      CLONE_DRYDOCK: false
+      MAKE_DRYDOCK_IMAGES: true
+      MAKE_MAAS_IMAGES: false
+      DOCKER_REGISTRY: localhost:5000
+      gate_scripts_relative_path: ../../airship/treasuremap
+      zuul_treasuremap_relative_path: ../../airship/treasuremap
 
 - job:
     name: airship-drydock-chart-build-latest-htk
