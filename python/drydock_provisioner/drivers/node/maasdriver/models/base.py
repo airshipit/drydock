@@ -157,9 +157,17 @@ class ResourceBase(object):
 
     @classmethod
     def from_dict(cls, api_client, obj_dict):
+        """
+        Create an instance of this resource class based on a dict
+        of MaaS type attributes.
+        """
         refined_dict = {k: obj_dict.get(k, None) for k in cls.fields}
         if 'id' in obj_dict.keys():
-            refined_dict['resource_id'] = obj_dict.get('id')
+            refined_dict['resource_id'] = obj_dict.get('id')  # Map 'id' to 'resource_id'
+
+        # Ensure 'resource_id' is set correctly
+        if refined_dict.get('resource_id') is None:
+            raise ValueError("Missing 'resource_id' in object dictionary.")
 
         i = cls(api_client, **refined_dict)
         return i

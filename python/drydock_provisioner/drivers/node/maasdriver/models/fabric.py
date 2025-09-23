@@ -25,9 +25,13 @@ class Fabric(model_base.ResourceBase):
 
     def __init__(self, api_client, **kwargs):
         super(Fabric, self).__init__(api_client, **kwargs)
+        self.logger.debug(f"Initializing Fabric with resource_id: {self.resource_id}")
 
-        if getattr(self, 'resource_id', None):
+        # Explicitly check if resource_id is not None
+        if getattr(self, 'resource_id', None) is not None:
             self.refresh_vlans()
+        else:
+            self.logger.warning("Cannot refresh VLANs for Fabric without resource_id.")
 
     def refresh(self):
         super(Fabric, self).refresh()

@@ -123,6 +123,19 @@ class DrydockConfig(object):
                    default='http://localhost:9000/api/v1.0/bootactions/')
     ]
 
+    # Options for the apply network configuration framework
+    networkconfig_options = [
+        cfg.IntOpt('max_retries',
+                   default=10,
+                   help='Maximum number of retries for network configuration'),
+        cfg.IntOpt('retry_min_delay',
+                   default=10,
+                   help='Minimum delay between retries in seconds'),
+        cfg.IntOpt('retry_max_delay',
+                   default=60,
+                   help='Maximum delay between retries in seconds')
+    ]
+
     # Options for network traffic
     network_options = [
         cfg.IntOpt(
@@ -228,6 +241,8 @@ class DrydockConfig(object):
 
     def register_options(self, enable_keystone=True):
         self.conf.register_opts(DrydockConfig.options)
+        self.conf.register_opts(DrydockConfig.networkconfig_options,
+                                group='networkconfig')
         self.conf.register_opts(DrydockConfig.bootactions_options,
                                 group='bootactions')
         self.conf.register_opts(DrydockConfig.logging_options, group='logging')
@@ -254,6 +269,7 @@ def list_opts():
         'timeouts': DrydockConfig.timeout_options,
         'database': DrydockConfig.database_options,
         'network': DrydockConfig.network_options,
+        'networkconfig': DrydockConfig.networkconfig_options,
     }
 
     package_path = os.path.dirname(os.path.abspath(__file__))

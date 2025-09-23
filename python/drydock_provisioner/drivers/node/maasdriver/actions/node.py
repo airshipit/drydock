@@ -14,6 +14,7 @@
 """Task driver for completing node provisioning with Canonical MaaS 2.2+."""
 
 import time
+import secrets  # Use secrets for cryptographic random numbers
 import logging
 import re
 import math
@@ -44,7 +45,6 @@ import drydock_provisioner.drivers.node.maasdriver.models.partition as maas_part
 import drydock_provisioner.drivers.node.maasdriver.models.volumegroup as maas_vg
 import drydock_provisioner.drivers.node.maasdriver.models.repository as maas_repo
 import drydock_provisioner.drivers.node.maasdriver.models.domain as maas_domain
-
 
 class BaseMaasAction(BaseAction):
 
@@ -1375,6 +1375,9 @@ class ApplyNodeNetworking(BaseMaasAction):
     """Action to configure networking on a node."""
 
     def start(self):
+        MAX_RETRIES = config.config_mgr.conf.networkconfig.max_retries
+        RETRY_MIN_DELAY = config.config_mgr.conf.networkconfig.retry_min_delay
+        RETRY_MAX_DELAY = config.config_mgr.conf.networkconfig.retry_max_delay
         try:
             maas_machine.Machines(self.maas_client).empty_refresh()
 
@@ -1461,233 +1464,311 @@ class ApplyNodeNetworking(BaseMaasAction):
                                                  ctx_type='node')
 
                     if machine.status_name == 'Ready':
-                        msg = "Located node %s in MaaS, starting interface configuration" % (
-                            n.name)
-                        self.logger.debug(msg)
-                        self.task.add_status_msg(msg=msg,
-                                                 error=False,
-                                                 ctx=n.name,
-                                                 ctx_type='node')
-
-                        machine.reset_network_config()
-                        machine.refresh()
-
-                        for i in n.interfaces:
-                            if not i.network_link:
+                        for attempt in range(MAX_RETRIES):
+                            try:
                                 self.logger.debug(
-                                    "Interface %s has no network link, skipping configuration."
-                                    % (i.device_name))
-                                continue
+                                    "Attempting to configure networking for node %s (Attempt %d)" % (
+                                        n.name, attempt + 1))
 
-                            nl = site_design.get_network_link(i.network_link)
-
-                            if nl.metalabels is not None:
-                                if 'noconfig' in nl.metalabels:
-                                    self.logger.info(
-                                        "Interface %s connected to NetworkLink %s marked 'noconfig', skipping."
-                                        % (i.device_name, nl.name))
-                                    continue
-
-                            fabric = fabrics.singleton({'name': nl.name})
-
-                            if fabric is None:
-                                msg = "No fabric found for NetworkLink %s" % (
-                                    nl.name)
-                                self.logger.error(msg)
+                                msg = "Located node %s in MaaS, starting interface configuration" % (
+                                    n.name)
+                                self.logger.debug(msg)
                                 self.task.add_status_msg(msg=msg,
-                                                         error=True,
+                                                         error=False,
                                                          ctx=n.name,
                                                          ctx_type='node')
-                                self.task.failure(focus=n.name)
-                                continue
 
-                            if nl.bonding_mode != hd_fields.NetworkLinkBondingMode.Disabled:
-                                if len(i.get_hw_slaves()) >= 1:
-                                    msg = "Building node %s interface %s as a bond." % (
-                                        n.name, i.device_name)
-                                    self.logger.debug(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=False,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
-                                    hw_iface_list = i.get_hw_slaves()
-                                    hw_iface_logicalname_list = []
-                                    for hw_iface in hw_iface_list:
-                                        hw_iface_logicalname_list.append(
-                                            n.get_logicalname(hw_iface))
-                                    iface = machine.interfaces.create_bond(
-                                        device_name=i.device_name,
-                                        parent_names=hw_iface_logicalname_list,
-                                        mtu=nl.mtu,
-                                        fabric=fabric.resource_id,
-                                        mode=nl.bonding_mode,
-                                        monitor_interval=nl.bonding_mon_rate,
-                                        downdelay=nl.bonding_down_delay,
-                                        updelay=nl.bonding_up_delay,
-                                        lacp_rate=nl.bonding_peer_rate,
-                                        hash_policy=nl.bonding_xmit_hash)
-                                else:
-                                    msg = "Network link %s indicates bonding, " \
-                                          "interface %s has less than 2 slaves." % \
-                                          (nl.name, i.device_name)
-                                    self.logger.warning(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=True,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
-                                    self.task.failure(focus=n.name)
-                                    continue
-                            else:
-                                if len(i.get_hw_slaves()) > 1:
-                                    msg = "Network link %s disables bonding, interface %s has multiple slaves." % \
-                                          (nl.name, i.device_name)
-                                    self.logger.warning(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=True,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
-                                    self.task.failure(n.name)
-                                    continue
-                                elif len(i.get_hw_slaves()) == 0:
-                                    msg = "Interface %s has 0 slaves." % (
-                                        i.device_name)
-                                    self.logger.warning(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=True,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
-                                    self.task.failure(focus=n.name)
-                                else:
-                                    msg = "Configuring interface %s on node %s" % (
-                                        i.device_name, n.name)
-                                    self.logger.debug(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=False,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
-                                    hw_iface = i.get_hw_slaves()[0]
-                                    # TODO(sh8121att): HardwareProfile device alias integration
-                                    iface = machine.get_network_interface(
-                                        n.get_logicalname(hw_iface))
-
-                            if iface is None:
-                                msg = "Interface %s not found on node %s, skipping configuration" % (
-                                    i.device_name, machine.resource_id)
-                                self.logger.warning(msg)
-                                self.task.add_status_msg(msg=msg,
-                                                         error=True,
-                                                         ctx=n.name,
-                                                         ctx_type='node')
-                                self.task.failure(focus=n.name)
-                                continue
-
-                            if iface.fabric_id == fabric.resource_id:
-                                self.logger.debug(
-                                    "Interface %s already attached to fabric_id %s"
-                                    % (i.device_name, fabric.resource_id))
-                            else:
-                                self.logger.debug(
-                                    "Attaching node %s interface %s to fabric_id %s"
-                                    % (n.name, i.device_name,
-                                       fabric.resource_id))
-                                iface.attach_fabric(
-                                    fabric_id=fabric.resource_id)
-
-                            if iface.effective_mtu != nl.mtu:
-                                self.logger.debug(
-                                    "Updating interface %s MTU to %s" %
-                                    (i.device_name, nl.mtu))
-                                iface.set_mtu(nl.mtu)
-
-                            for iface_net in getattr(i, 'networks', []):
-                                dd_net = site_design.get_network(iface_net)
-
-                                if dd_net is not None:
-                                    link_iface = None
-                                    if iface_net == getattr(
-                                            nl, 'native_network', None):
-                                        # If a node interface is attached to the native network for a link
-                                        # then the interface itself should be linked to network, not a VLAN
-                                        # tagged interface
+                                self.logger.debug("Reset network config for node %s." % (n.name))
+                                machine.reset_network_config()
+                                self.logger.debug("Refreshing machine %s." % (n.name))
+                                machine.refresh()
+                                self.logger.debug("Refreshing fabric and subnets list.")
+                                fabrics.refresh()
+                                subnets.refresh()
+                                for i in n.interfaces:
+                                    if not i.network_link:
                                         self.logger.debug(
-                                            "Attaching node %s interface %s to untagged VLAN on fabric %s"
-                                            % (n.name, i.device_name,
-                                               fabric.resource_id))
-                                        link_iface = iface
-                                    else:
-                                        # For non-native networks, we create VLAN tagged interfaces as children
-                                        # of this interface
-                                        vlan_options = {
-                                            'vlan_tag': dd_net.vlan_id,
-                                            'parent_name': iface.name,
-                                        }
+                                            "Interface %s has no network link, skipping configuration."
+                                            % (i.device_name))
+                                        continue
 
-                                        if dd_net.mtu is not None:
-                                            vlan_options['mtu'] = dd_net.mtu
+                                    nl = site_design.get_network_link(i.network_link)
 
-                                        self.logger.debug(
-                                            "Creating tagged interface for VLAN %s on system %s interface %s"
-                                            % (dd_net.vlan_id, n.name,
-                                               i.device_name))
-
-                                        try:
-                                            link_iface = machine.interfaces.create_vlan(
-                                                **vlan_options)
-                                        except errors.DriverError as ex:
-                                            msg = "Error creating interface: %s" % str(
-                                                ex)
-                                            self.logger.info(msg)
-                                            self.task.add_status_msg(
-                                                msg=msg,
-                                                error=True,
-                                                ctx=n.name,
-                                                ctx_type='node')
-                                            self.task.failure(focus=n.name)
+                                    if nl.metalabels is not None:
+                                        if 'noconfig' in nl.metalabels:
+                                            self.logger.info(
+                                                "Interface %s connected to NetworkLink %s marked 'noconfig', skipping."
+                                                % (i.device_name, nl.name))
                                             continue
 
-                                    link_options = {}
-                                    link_options[
-                                        'primary'] = True if iface_net == getattr(
-                                            n, 'primary_network',
-                                            None) else False
-                                    link_options['subnet_cidr'] = dd_net.cidr
+                                    self.logger.debug("Refreshing fabric list.")
+                                    fabrics.refresh()
+                                    fabric = fabrics.singleton({'name': nl.name})
 
-                                    found = False
-                                    for a in getattr(n, 'addressing', []):
-                                        if a.network == iface_net:
+                                    if fabric is None:
+                                        msg = "No fabric found for NetworkLink %s" % (
+                                            nl.name)
+                                        self.logger.error(msg)
+                                        self.task.add_status_msg(msg=msg,
+                                                                 error=True,
+                                                                 ctx=n.name,
+                                                                 ctx_type='node')
+                                        self.task.failure(focus=n.name)
+                                        continue
+
+                                    if nl.bonding_mode != hd_fields.NetworkLinkBondingMode.Disabled:
+                                        if len(i.get_hw_slaves()) >= 1:
+                                            msg = "Building node %s interface %s as a bond." % (
+                                                n.name, i.device_name)
+                                            self.logger.debug(msg)
+                                            self.logger.debug(
+                                                "Adding status message for node %s: %s" % (n.name, msg))
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=False,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                            self.logger.debug(
+                                                "Fetching hardware slaves for interface %s on node %s." % (
+                                                    i.device_name, n.name))
+                                            hw_iface_list = i.get_hw_slaves()
+                                            self.logger.debug("Hardware slaves fetched: %s" % hw_iface_list)
+
+                                            hw_iface_logicalname_list = []
+                                            for hw_iface in hw_iface_list:
+                                                logical_name = n.get_logicalname(hw_iface)
+                                                self.logger.debug(
+                                                    "Mapping hardware slave %s to logical name %s." % (
+                                                        hw_iface, logical_name))
+                                                hw_iface_logicalname_list.append(logical_name)
+
+                                            msg = """Creating bond interface with parameters:
+                                                        device_name=%s,
+                                                        parent_names=%s,
+                                                        mtu=%s,
+                                                        fabric=%s,
+                                                        mode=%s,
+                                                        monitor_interval=%s,
+                                                        downdelay=%s,
+                                                        updelay=%s,
+                                                        lacp_rate=%s,
+                                                        hash_policy=%s""" % (
+                                                    i.device_name,
+                                                    hw_iface_logicalname_list,
+                                                    nl.mtu,
+                                                    fabric.resource_id,
+                                                    nl.bonding_mode,
+                                                    nl.bonding_mon_rate,
+                                                    nl.bonding_down_delay,
+                                                    nl.bonding_up_delay,
+                                                    nl.bonding_peer_rate,
+                                                    nl.bonding_xmit_hash)
+                                            self.logger.debug(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=False,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+
+                                            iface = machine.interfaces.create_bond(
+                                                device_name=i.device_name,
+                                                parent_names=hw_iface_logicalname_list,
+                                                mtu=nl.mtu,
+                                                fabric=fabric.resource_id,
+                                                mode=nl.bonding_mode,
+                                                monitor_interval=nl.bonding_mon_rate,
+                                                downdelay=nl.bonding_down_delay,
+                                                updelay=nl.bonding_up_delay,
+                                                lacp_rate=nl.bonding_peer_rate,
+                                                hash_policy=nl.bonding_xmit_hash)
+                                        else:
+                                            msg = "Network link %s indicates bonding, " \
+                                                "interface %s has less than 2 slaves." % \
+                                                (nl.name, i.device_name)
+                                            self.logger.warning(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=True,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                            self.task.failure(focus=n.name)
+                                            continue
+                                    else:
+                                        if len(i.get_hw_slaves()) > 1:
+                                            msg = """Network link %s disables bonding,
+                                                interface %s has multiple slaves.""" % \
+                                                (nl.name, i.device_name)
+                                            self.logger.warning(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=True,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                            self.task.failure(n.name)
+                                            continue
+                                        elif len(i.get_hw_slaves()) == 0:
+                                            msg = "Interface %s has 0 slaves." % (
+                                                i.device_name)
+                                            self.logger.warning(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=True,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                            self.task.failure(focus=n.name)
+                                        else:
+                                            msg = "Configuring interface %s on node %s" % (
+                                                i.device_name, n.name)
+                                            self.logger.debug(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=False,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                            hw_iface = i.get_hw_slaves()[0]
+                                            # TODO(sh8121att): HardwareProfile device alias integration
+                                            iface = machine.get_network_interface(
+                                                n.get_logicalname(hw_iface))
+
+                                    if iface is None:
+                                        msg = "Interface %s not found on node %s, skipping configuration" % (
+                                            i.device_name, machine.resource_id)
+                                        self.logger.warning(msg)
+                                        self.task.add_status_msg(msg=msg,
+                                                                 error=True,
+                                                                 ctx=n.name,
+                                                                 ctx_type='node')
+                                        self.task.failure(focus=n.name)
+                                        continue
+
+                                    if iface.fabric_id == fabric.resource_id:
+                                        self.logger.debug(
+                                            "Interface %s already attached to fabric_id %s"
+                                            % (i.device_name, fabric.resource_id))
+                                    else:
+                                        # Refresh the list of fabrics
+                                        self.logger.debug("Refreshing fabric list before attaching fabric.")
+                                        fabrics.refresh()
+
+                                        # Validate the fabric_id
+                                        if not fabrics.contains(fabric.resource_id):
+                                            msg = "Fabric ID %s does not exist "
+                                            "in the refreshed list of fabrics." % fabric.resource_id
+                                            self.logger.error(msg)
+                                            raise errors.DriverError(msg)
+
+                                        # Proceed with attaching the fabric
+                                        self.logger.debug(
+                                            "Attaching node %s interface %s to fabric_id %s" % (
+                                                n.name, i.device_name, fabric.resource_id))
+                                        iface.attach_fabric(fabric_id=fabric.resource_id)
+
+                                    if iface.effective_mtu != nl.mtu:
+                                        self.logger.debug(
+                                            "Updating interface %s MTU to %s" %
+                                            (i.device_name, nl.mtu))
+                                        iface.set_mtu(nl.mtu)
+
+                                    for iface_net in getattr(i, 'networks', []):
+                                        dd_net = site_design.get_network(iface_net)
+
+                                        if dd_net is not None:
+                                            link_iface = None
+                                            if iface_net == getattr(
+                                                    nl, 'native_network', None):
+                                                # If a node interface is attached to the native network for a link
+                                                # then the interface itself should be linked to network, not a VLAN
+                                                # tagged interface
+                                                self.logger.debug(
+                                                    "Attaching node %s interface %s to untagged VLAN on fabric %s" % (
+                                                        n.name,
+                                                        i.device_name,
+                                                        fabric.resource_id))
+                                                link_iface = iface
+                                            else:
+                                                # For non-native networks, we create VLAN tagged interfaces as children
+                                                # of this interface
+                                                vlan_options = {
+                                                    'vlan_tag': dd_net.vlan_id,
+                                                    'parent_name': iface.name,
+                                                }
+
+                                                if dd_net.mtu is not None:
+                                                    vlan_options['mtu'] = dd_net.mtu
+
+                                                self.logger.debug(
+                                                    """Creating tagged interface for
+                                                    VLAN %s on system %s interface %s""" % (
+                                                        dd_net.vlan_id,
+                                                        n.name,
+                                                        i.device_name))
+
+                                                try:
+                                                    link_iface = machine.interfaces.create_vlan(
+                                                        **vlan_options)
+                                                except errors.DriverError as ex:
+                                                    msg = "Error creating interface: %s" % str(
+                                                        ex)
+                                                    self.logger.info(msg)
+                                                    self.task.add_status_msg(
+                                                        msg=msg,
+                                                        error=True,
+                                                        ctx=n.name,
+                                                        ctx_type='node')
+                                                    self.task.failure(focus=n.name)
+                                                    continue
+
+                                            link_options = {}
                                             link_options[
-                                                'ip_address'] = 'dhcp' if a.type == 'dhcp' else a.address
-                                            found = True
+                                                'primary'] = True if iface_net == getattr(
+                                                    n, 'primary_network',
+                                                    None) else False
+                                            link_options['subnet_cidr'] = dd_net.cidr
 
-                                    if not found:
-                                        msg = "No addressed assigned to network %s for node %s, link is L2 only." % (
-                                            iface_net, n.name)
-                                        self.logger.info(msg)
-                                        self.task.add_status_msg(
-                                            msg=msg,
-                                            error=False,
-                                            ctx=n.name,
-                                            ctx_type='node')
-                                        link_options['ip_address'] = None
+                                            found = False
+                                            for a in getattr(n, 'addressing', []):
+                                                if a.network == iface_net:
+                                                    link_options[
+                                                        'ip_address'] = 'dhcp' if a.type == 'dhcp' else a.address
+                                                    found = True
 
-                                    msg = "Linking system %s interface %s to subnet %s" % (
-                                        n.name, i.device_name, dd_net.cidr)
-                                    self.logger.info(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=False,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
+                                            if not found:
+                                                msg = """No addressed assigned to network %s
+                                                    for node %s, link is L2 only.""" % (
+                                                    iface_net, n.name)
+                                                self.logger.info(msg)
+                                                self.task.add_status_msg(
+                                                    msg=msg,
+                                                    error=False,
+                                                    ctx=n.name,
+                                                    ctx_type='node')
+                                                link_options['ip_address'] = None
 
-                                    link_iface.link_subnet(**link_options)
-                                    self.task.success(focus=n.name)
-                                else:
-                                    self.task.failure(focus=n.name)
-                                    msg = "Did not find a defined Network %s to attach to interface" % iface_net
-                                    self.logger.error(msg)
-                                    self.task.add_status_msg(msg=msg,
-                                                             error=True,
-                                                             ctx=n.name,
-                                                             ctx_type='node')
+                                            msg = "Linking system %s interface %s to subnet %s" % (
+                                                n.name, i.device_name, dd_net.cidr)
+                                            self.logger.info(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=False,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+
+                                            link_iface.link_subnet(**link_options)
+                                            self.task.success(focus=n.name)
+                                        else:
+                                            self.task.failure(focus=n.name)
+                                            msg = """Did not find a defined
+                                                Network %s to attach to interface""" % iface_net
+                                            self.logger.error(msg)
+                                            self.task.add_status_msg(msg=msg,
+                                                                     error=True,
+                                                                     ctx=n.name,
+                                                                     ctx_type='node')
+                                break  # Exit retry loop if successful
+                            except Exception as ex:
+                                self.logger.warning(
+                                    "Attempt %d failed for node %s: %s" % (attempt + 1, n.name, str(ex)))
+                                if attempt < MAX_RETRIES - 1:
+                                    # Wait for a random time between 10 and 300 seconds
+                                    random_delay = RETRY_MIN_DELAY + \
+                                        secrets.randbelow(
+                                            RETRY_MAX_DELAY - RETRY_MIN_DELAY + 1)
+                                    self.logger.debug(
+                                        f"Waiting for {random_delay} seconds before retrying...")
+                                    time.sleep(random_delay)
                     elif machine.status_name == 'Broken':
                         msg = (
                             "Located node %s in MaaS, status broken. Run "
@@ -1727,7 +1808,7 @@ class ApplyNodeNetworking(BaseMaasAction):
                                              error=True,
                                              ctx=n.name,
                                              ctx_type='node')
-                    self.task.failure()
+                    self.task.failure(focus=n.name)
             except Exception as ex:
                 msg = "Error configuring network for node %s: %s" % (n.name,
                                                                      str(ex))

@@ -60,14 +60,21 @@ class Interface(model_base.ResourceBase):
         :param fabric_id: The MaaS resource ID of a network Fabric to connect to
         :param fabric_name: The name of a MaaS fabric to connect to
         """
+        self.logger.debug(
+            "Starting attach_fabric with parameters: fabric_id=%s, fabric_name=%s" % (
+                fabric_id, fabric_name))
+
         fabric = None
 
         fabrics = maas_fabric.Fabrics(self.api_client)
+        self.logger.debug("Refreshing fabric list.")
         fabrics.refresh()
 
         if fabric_id is not None:
+            self.logger.debug("Looking for fabric with ID: %s" % fabric_id)
             fabric = fabrics.select(fabric_id)
         elif fabric_name is not None:
+            self.logger.debug("Looking for fabric with name: %s" % fabric_name)
             fabric = fabrics.singleton({'name': fabric_name})
         else:
             self.logger.warning("Must specify fabric_id or fabric_name")
@@ -81,21 +88,38 @@ class Interface(model_base.ResourceBase):
                 "Fabric not found in MaaS for fabric_id %s, fabric_name %s" %
                 (fabric_id, fabric_name))
 
+        self.logger.debug("Found fabric: %s" % fabric.resource_id)
+
+        self.logger.debug("Refreshing VLAN list for fabric %s." % fabric.resource_id)
+        if hasattr(fabric, 'vlans'):
+            fabric.vlans.refresh()
+        else:
+            self.logger.error(
+                "Fabric object has no attribute 'vlans'. Type: %s, value: %s" % (
+                    type(fabric), str(fabric)))
+            raise errors.DriverError("Fabric object has no attribute 'vlans'")
+
         # Locate the untagged VLAN for this fabric.
+        self.logger.debug("Looking for untagged VLAN (vid=0) on fabric %s" % fabric.resource_id)
         fabric_vlan = fabric.vlans.singleton({'vid': 0})
 
         if fabric_vlan is None:
             self.logger.warning("Cannot locate untagged VLAN on fabric %s" %
-                                (fabric_id))
+                                (fabric.resource_id))
             raise errors.DriverError(
-                "Cannot locate untagged VLAN on fabric %s" % (fabric_id))
+                "Cannot locate untagged VLAN on fabric %s" % (fabric.resource_id))
+
+        self.logger.debug("Found untagged VLAN: %s" % fabric_vlan.resource_id)
 
         self.vlan = fabric_vlan.resource_id
         self.logger.info(
             "Attaching interface %s on system %s to VLAN %s on fabric %s" %
             (self.resource_id, self.system_id, fabric_vlan.resource_id,
              fabric.resource_id))
+
+        self.logger.debug("Updating interface with new VLAN configuration.")
         self.update()
+        self.logger.debug("Interface %s successfully attached to fabric %s." % (self.resource_id, fabric.resource_id))
 
     def is_linked(self, subnet_id):
         """Check if this interface is linked to the given subnet.

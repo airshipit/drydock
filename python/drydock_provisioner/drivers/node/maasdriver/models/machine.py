@@ -47,7 +47,7 @@ class Machine(model_base.ResourceBase):
         super(Machine, self).__init__(api_client, **kwargs)
 
         # Replace generic dicts with interface collection model
-        if getattr(self, 'resource_id', None):
+        if getattr(self, 'resource_id', None) is not None:
             self.interfaces = maas_interface.Interfaces(
                 api_client, system_id=self.resource_id)
             self.interfaces.refresh()

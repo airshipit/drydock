@@ -384,6 +384,20 @@ conf:
     threads: 1
     workers: 1
   drydock:
+    networkconfig:
+      # Controls ApplyNetworkConfig subtask, which applies network
+      # configuration to nodes after they reach the Ready state.
+      # ApplyNetworkConfig must succeed before MAAS deployment starts.
+      # In MAAS 3.5, fabrics may intermittently disappear, causing
+      # minor discrepancies in this process.
+      # To work around this, ApplyNetworkConfig retries up to
+      # 'max_retries' times, with random delays between 'retry_min_delay'
+      # and 'retry_max_delay' seconds.
+      # This increases the chance of successful network config
+      # application despite transient MAAS fabric issues.
+      max_retries: 10
+      retry_min_delay: 10
+      retry_max_delay: 60
     logging:
       log_level: 'DEBUG'
       global_logger_name: 'drydock'
