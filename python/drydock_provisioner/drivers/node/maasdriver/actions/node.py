@@ -1646,8 +1646,8 @@ class ApplyNodeNetworking(BaseMaasAction):
 
                                         # Validate the fabric_id
                                         if not fabrics.contains(fabric.resource_id):
-                                            msg = "Fabric ID %s does not exist "
-                                            "in the refreshed list of fabrics." % fabric.resource_id
+                                            msg = ("Fabric ID %s does not exist in the refreshed list of fabrics."
+                                                   % fabric.resource_id)
                                             self.logger.error(msg)
                                             raise errors.DriverError(msg)
 
@@ -1762,13 +1762,19 @@ class ApplyNodeNetworking(BaseMaasAction):
                                 self.logger.warning(
                                     "Attempt %d failed for node %s: %s" % (attempt + 1, n.name, str(ex)))
                                 if attempt < MAX_RETRIES - 1:
-                                    # Wait for a random time between 10 and 300 seconds
+                                    # Wait for a random time between RETRY_MIN_DELAY and RETRY_MAX_DELAY seconds
                                     random_delay = RETRY_MIN_DELAY + \
                                         secrets.randbelow(
                                             RETRY_MAX_DELAY - RETRY_MIN_DELAY + 1)
                                     self.logger.debug(
                                         f"Waiting for {random_delay} seconds before retrying...")
                                     time.sleep(random_delay)
+                                else:
+                                    # Exhausted all retries without success -> raise
+                                    msg = ("Failed to configure networking for node %s after %d attempts. "
+                                           "Last error: %s") % (n.name, MAX_RETRIES, str(ex))
+                                    self.logger.error(msg)
+                                    raise errors.DriverError(msg)
                     elif machine.status_name == 'Broken':
                         msg = (
                             "Located node %s in MaaS, status broken. Run "
