@@ -20,7 +20,7 @@
 #   You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
 ARG FROM=quay.io/airshipit/ubuntu:jammy
 
-FROM quay.io/airshipit/golang:1.24.6-bullseye AS baclient_builder
+FROM quay.io/airshipit/golang:1.25.5-trixie AS baclient_builder
 
 COPY ./tools/baclient_build.sh /tmp/drydock/
 COPY ./go /tmp/drydock/go
