@@ -102,7 +102,7 @@ rich==13.9.4
 rich-argparse==1.7.1
 Routes==2.5.1
 rpds-py==0.28.0
-setuptools==75.8.0
+setuptools==78.1.1
 six==1.17.0
 SQLAlchemy==1.4.54
 statsd==4.0.1
