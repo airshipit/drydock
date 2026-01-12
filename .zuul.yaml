@@ -171,7 +171,7 @@
     run: tools/gate/playbooks/docker-image-build.yaml
     nodeset: airship-drydock-single-node-jammy
     secrets:
-      - airship_drydock_quay_creds
+      - airship_drydock_quay_creds_2026
     irrelevant-files:
       - '^doc/.*'
       - '^charts/.*'
@@ -212,6 +212,33 @@
           aknseZhtmaqM+ttv2bUL23uzYEkupY3foEUa3ILYs2qx5sofi6CBAOWd2c3t3d34Kn5ya
           B1qsfXoY9lVL59lCl4jYLqyGA99Oybi5YKTP8O+IH5Xo7XLOje7K0Vfvh7v8Mcja8pZRG
           sgRbPr/10a2g6+s37XofkFEeba7B8fV5h6v/A3tMy7U01rZ2qLBC/4hxrikXT8=
+
+- secret:
+    name: airship_drydock_quay_creds_2026
+    data:
+      username: !encrypted/pkcs1-oaep
+        - Krh7mBGG95zoz2q2ru/KwvHb00kpv/nuvqr6HYJ0MAdcPH3X+5ZCO29gv1kxZ/2VJabdL
+          LfxorTKADEvGB49WK3PRb29PgBDZNJIM9OnWxvS34flCDKHi8qEMpsv/9RPHcxLTz7Tpy
+          qBQ12QFdaeh9dp4iBKtor8SOCqyDcKb/+uC9yxhGvCRV8IQxIyV6oL21qL8Py3/nQgHMY
+          B6AHjb5qDn8BXtCo3/o+Ax683til5o/83oX1tTtLBrIU2Gl15wJd9ZviyHEiniD7e5ZYB
+          gnK+4TArhSWVAA+B8KeA+oewCJDH7Mtj4c3HAC9v2FfHGQtqhHGsTo4H3sojZGvv4ReoX
+          GSbobRmMqF4fD3nFlC/I+EwTDTWQKmLD2lFtId2DCbsc52cbEOnktSeB8Av+N6vnBrETp
+          1dzccLWb1wIhS07wep1HmI1xjPO5lFdzk4qleeEsa1XfUjX6yj9dGhJZZlEsjcuHA+ytn
+          H9zU89d3Ibzq/EXKhOlo+Ls395vfeBO3I5iCSAEvIecpqQJDCgDN1EukqhuStcaMj4ikQ
+          VNAe5r2sufUfh/yJslEs0f1PRRGRStIzXZX1R4TqJa1wqZTSLisV9GGb2xEUXi0kyPurS
+          yGgRl/HzgAz1xqP9DTK92HcB8pvLfobooIL19UvBB9cctNQd/Zn+cnhLe76UNg=
+      password: !encrypted/pkcs1-oaep
+        - eSJXvZg2P3/T9Psvf+Q32CpAaiFTPTAY13I20rcxn3Aa1jApLkG2JIeXHwzKKHH5fH+1+
+          09a6ctTbUsH7K1duZ8+5QYlHB/cKzV+rjjdmS1JM8eKFMH1vJhFsOHG0NRw1b1x6bEnda
+          r3dgYDUUrZ1l861f8bVy5+W2OcHBvqFLE7If9JJfXvlNOGbHTitfkXgoEm9h/Pgn+P3rn
+          HQeZjAXwWIWNveFBUW4Wt4YGv/kEg6KYU5dDI4HFaLjz0deTML5scOCp3kMIY1Yn8s8Fp
+          TppE3Mo+/SohGfcbBX3jV8tUkZb0a6e5cuYgrNyn3X+INqDds/7brSTXOwhUPTUj47w1O
+          ej80/HSd4KapM3sKdHprYzULepykzF4554QNkLNygL2knPjhRNOR7Nbf2re90qnZKePeW
+          vWoHFJgfz1s7rGEVRha/KARF0cX38jDN0IlWYZchm5eaNEuRFYP8SdNPbmS5iworh7ZZH
+          DcGjc8kolM8IL0eFGfUo8PcHAgqq0fKksifJKYeFv/XpfpbJlMn3r5FG3eBufw6WchEEy
+          gdaHRUQeu+8LG3nd/Ok/A1BzuLrbRp+lR2tecoILzK6b/STAz8+o/p4m5MCCrnyEPiwVU
+          7pl9LEfyjdY1dHhBevoo6L1gCzpt2sERQhNXrWnVREl6Mea3G9epoKKYjIEv8A=
+
 
 - job:
     name: drydock-upload-git-mirror

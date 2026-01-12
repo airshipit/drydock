@@ -85,8 +85,8 @@
             name: requests
             executable: pip3
         - docker_login:
-            username: "{{ airship_drydock_quay_creds.username }}"
-            password: "{{ airship_drydock_quay_creds.password }}"
+            username: "{{ airship_drydock_quay_creds_2026.username }}"
+            password: "{{ airship_drydock_quay_creds_2026.password }}"
             registry_url: "https://quay.io/api/v1/"
             api_version: "1.45"
 
