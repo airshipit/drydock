@@ -248,7 +248,7 @@
       git_mirror_repository: airshipit/drydock
     secrets:
       - name: git_mirror_credentials
-        secret: drydock-airshipit-github-secret-2023-03-23
+        secret: drydock-airshipit-github-ed25519-secret-2026-01-13
         pass-to-parent: true
 
 - secret:
@@ -298,3 +298,21 @@
           NZzyHEOns+0FGdxZd6wQ+MdMIRzZg7niV///U1m3zPMu4Dt9I/i8+oYStR+XpYC8j0O+o
           vYLx9cw7r6xRxpeSnrLJ5hm8J1ob3JYCB93NW++eRWqYb93ySFnQYixYfrmcWNlynL4mw
           fS53h9N5esBqnjXyy787xx9GXhEZzE5joLPBiv3dmzsCZaAyVNvkQEADql5Ds4=
+
+- secret:
+    name: drydock-airshipit-github-ed25519-secret-2026-01-13
+    data:
+      user: git
+      host: github.com
+      host_key: github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+      ssh_key: !encrypted/pkcs1-oaep
+        - TdSQdGw/0LYVAIEQ5whmxRtpFFs11ID6kYXZNAKUtdZE6vgRYrlCYs5Eo4QzYUgChkbdt
+          xIcRGmrreTFhtSLYAsf6VMaJ0Yr5C2fe0SCMlnAljVA1O6urWOfWQ9UEbyZVV21yysNeZ
+          EHzvzoGjGwlwZrBMqn0AVdixQ1ZMsK1TzgPOAkTMpuuibrahiG5ZmjhZun4XHUl4EP5Pn
+          u+HpT6vyDZY94ukdFddQEOtBY/hyjx4j7gLUz3ORx3f338AKYa3TkHv5la5H58aviB3vq
+          kaUs2k7P/IYc6eRnVJYos7irCZ8UroKORpIy1hkq3afH/pcJKFfz0AwJtQRgmSLHJNj7w
+          Z2NHLy1P7/PCkj0Xyf9+Iw1HgkSblE1MQ5P6NQkL7ZSJYz+38WC6hFQbvOkBY/6nms7K0
+          JVCWuG1avDw+lBZ1ZywsPWAf7TzZbcJWXVr+sLul6TzRHmZ4SiHlMvWMuHtTnLpbNzy3q
+          L/hjpw0Av1t8Uqtw9plbc89sL20AvllwQ0c8ucXPNPF2Y1ZD3QlozfHyRbvvjrpJB6p+R
+          m7auA5EMOKRKjNkHdkkLTNLwzhSIF81QnKUVmibCryaBIgbpUiXstPZF81+wGDdLVhOQS
+          fZt05oTNER9ZLd9hU/UmBqeLR++cpnmVtdTNS7pbolzuN+HKKpddva5XRbOLms=
