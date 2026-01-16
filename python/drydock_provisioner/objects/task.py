@@ -19,7 +19,7 @@ import time
 import logging
 import copy
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 from drydock_provisioner import objects
 
@@ -62,7 +62,7 @@ class Task(object):
         self.design_ref = design_ref
         self.retry = retry
         self.parent_task_id = parent_task_id
-        self.created = datetime.utcnow()
+        self.created = datetime.now(UTC)
         self.node_filter = copy.deepcopy(node_filter)
         self.created_by = None
         self.updated = None
@@ -118,7 +118,7 @@ class Task(object):
         terminating and let the orchestrator manage completing termination.
         """
         self.terminate = True
-        self.terminated = datetime.utcnow()
+        self.terminated = datetime.now(UTC)
         self.terminated_by = terminated_by
         self.save()
 
@@ -201,7 +201,7 @@ class Task(object):
         ]:
             self.set_status(chk_task.status)
 
-        self.updated = datetime.utcnow()
+        self.updated = datetime.now(UTC)
         if not self.statemgr.put_task(self):
             raise errors.OrchestratorError("Error saving task.")
 
@@ -619,7 +619,7 @@ class TaskStatusMessage(object):
         self.ctx_type = ctx_type
         self.ctx = ctx
         if 'ts' not in kwargs:
-            self.ts = datetime.utcnow()
+            self.ts = datetime.now(UTC)
         else:
             self.ts = kwargs.pop('ts')
         self.extra = kwargs

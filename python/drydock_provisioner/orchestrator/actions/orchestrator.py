@@ -1102,12 +1102,12 @@ class BootactionReport(BaseAction):
         self.task.set_status(hd_fields.TaskStatus.Running)
         self.task.save()
 
-        poll_start = datetime.datetime.utcnow()
+        poll_start = datetime.datetime.now(datetime.UTC)
 
         still_running = True
         timeout = datetime.timedelta(
             minutes=config.config_mgr.conf.timeouts.bootaction_final_status)
-        running_time = datetime.datetime.utcnow() - poll_start
+        running_time = datetime.datetime.now(datetime.UTC) - poll_start
         nodelist = [
             n.get_id() for n in self.orchestrator.get_target_nodes(self.task)
         ]
@@ -1130,7 +1130,7 @@ class BootactionReport(BaseAction):
                 self.logger.debug("Still waiting on %d running bootactions." %
                                   len(running_bas))
                 time.sleep(config.config_mgr.conf.poll_interval)
-                running_time = datetime.datetime.utcnow() - poll_start
+                running_time = datetime.datetime.now(datetime.UTC) - poll_start
             else:
                 break
 

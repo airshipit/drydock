@@ -15,7 +15,7 @@
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 import ulid2
 
 from sqlalchemy import create_engine
@@ -418,7 +418,7 @@ class DrydockState(object):
             with self.db_engine.connect() as conn:
                 query = self.active_instance_tbl.update().where(
                     self.active_instance_tbl.c.identity
-                    == leader_id.bytes).values(last_ping=datetime.utcnow())
+                    == leader_id.bytes).values(last_ping=datetime.now(UTC))
                 rs = conn.execute(query)
                 rc = rs.rowcount
 

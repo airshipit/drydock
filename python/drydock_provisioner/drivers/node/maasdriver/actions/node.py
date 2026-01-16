@@ -20,7 +20,7 @@ import re
 import math
 import yaml
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 import drydock_provisioner.error as errors
 import drydock_provisioner.config as config
@@ -1355,7 +1355,7 @@ class ConfigureHardware(BaseMaasAction):
                     bd = objects.BuildData(node_name=machine.hostname,
                                            task_id=self.task.get_id(),
                                            generator=t,
-                                           collected_date=datetime.utcnow(),
+                                           collected_date=datetime.now(UTC),
                                            data_format=df,
                                            data_element=d.decode())
                     self.logger.debug("Saving build data from generator %s" %

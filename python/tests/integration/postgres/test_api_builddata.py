@@ -110,8 +110,8 @@ class TestNodeBuildDataApi():
             for n in nodelist:
                 for i in range(count):
                     if random_dates:
-                        collected_date = datetime.datetime.utcnow(
-                        ) - datetime.timedelta(days=random.randint(1, 180))
+                        collected_date = datetime.datetime.now(datetime.UTC) - datetime.timedelta(
+                            days=random.randint(1, 180))
                     else:
                         collected_date = None
                     if tasklist:

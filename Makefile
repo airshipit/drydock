@@ -19,7 +19,7 @@ IMAGE_PREFIX    	?= airshipit
 IMAGE_TAG       	?= latest
 HELM            	:= $(shell realpath $(BUILD_DIR))/helm
 UBUNTU_BASE_IMAGE	?=
-DISTRO				?= ubuntu_jammy
+DISTRO				?= ubuntu_noble
 DISTRO_ALIAS		?= ubuntu_jammy
 PROXY           	?= http://proxy.foo.com:8000
 NO_PROXY        	?= localhost,127.0.0.1,.svc.cluster.local
@@ -48,7 +48,7 @@ coverage_test: build_drydock
 
 # Run just unit tests
 unit_tests:
-	tox -re py310 $(TESTS)
+	tox -re py312 $(TESTS)
 
 # Run just DB integration tests
 db_integration_tests:

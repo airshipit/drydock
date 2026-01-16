@@ -16,7 +16,7 @@
 import uuid
 import copy
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from drydock_provisioner import objects
 
@@ -64,7 +64,7 @@ class TestBuildData(object):
             'data_format': 'text/plain',
             'data_element': 'Hello World!',
             'task_id': uuid.uuid4(),
-            'collected_date': datetime.utcnow(),
+            'collected_date': datetime.now(UTC),
         }
 
         build_data = objects.BuildData(**build_data_fields)
@@ -87,7 +87,7 @@ class TestBuildData(object):
             'data_format': 'text/plain',
             'data_element': 'Hello World!',
             'task_id': uuid.uuid4(),
-            'collected_date': datetime.utcnow(),
+            'collected_date': datetime.now(UTC),
         }
 
         build_data_old = copy.deepcopy(build_data_latest)

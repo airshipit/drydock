@@ -13,7 +13,7 @@
 # limitations under the License.
 """Models for representing asynchronous tasks."""
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 import oslo_versionedobjects.fields as ovo_fields
 
@@ -72,7 +72,7 @@ class ValidationMessage(TaskStatusMessage):
         self.error = error
         self.level = level
         self.diagnostic = diagnostic
-        self.ts = datetime.utcnow()
+        self.ts = datetime.now(UTC)
         self.docs = docs
 
     def to_dict(self):

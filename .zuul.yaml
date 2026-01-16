@@ -18,38 +18,38 @@
       rtd_project_name: 'airship-drydock'
     check:
       jobs:
-        - openstack-tox-py310
-        - airship-drydock-openstack-tox-cover-jammy
-        - airship-drydock-openstack-tox-pep8-jammy
+        - openstack-tox-py312
+        - airship-drydock-openstack-tox-cover-noble
+        - airship-drydock-openstack-tox-pep8-noble
         - airship-drydock-baclient-test
         - airship-drydock-run-test
         - airship-drydock-integration-test
         - airship-drydock-chart-build-gate
         - airship-drydock-chart-build-latest-htk
-        - airship-drydock-docker-build-gate-ubuntu_jammy
-        - drydock-airskiff-deployment-jammy-kubeadm
+        - airship-drydock-docker-build-gate-ubuntu_noble
+        - drydock-airskiff-deployment-noble-kubeadm
 
     gate:
       jobs:
-        - openstack-tox-py310
-        - airship-drydock-openstack-tox-cover-jammy
-        - airship-drydock-openstack-tox-pep8-jammy
+        - openstack-tox-py312
+        - airship-drydock-openstack-tox-cover-noble
+        - airship-drydock-openstack-tox-pep8-noble
         - airship-drydock-baclient-test
         - airship-drydock-run-test
         - airship-drydock-integration-test
         - airship-drydock-chart-build-gate
-        - airship-drydock-docker-build-gate-ubuntu_jammy
+        - airship-drydock-docker-build-gate-ubuntu_noble
 
     post:
       jobs:
-        - airship-drydock-docker-publish-ubuntu_jammy
+        - airship-drydock-docker-publish-ubuntu_noble
         - drydock-upload-git-mirror
 
 - nodeset:
-    name: airship-drydock-single-node
+    name: airship-drydock-single-node-noble
     nodes:
       - name: primary
-        label: ubuntu-bionic
+        label: ubuntu-noble
 
 - nodeset:
     name: airship-drydock-single-node-jammy
@@ -58,20 +58,20 @@
         label: ubuntu-jammy
 
 - job:
-    name: airship-drydock-openstack-tox-cover-jammy
+    name: airship-drydock-openstack-tox-cover-noble
     parent: openstack-tox-cover
-    description: Runs cover job on jammy
-    nodeset: airship-drydock-single-node-jammy
+    description: Runs cover job on noble
+    nodeset: airship-drydock-single-node-noble
     pre-run: tools/gate/playbooks/install-docker.yaml
     vars:
       tox_environment:
-        DISTRO: ubuntu_jammy
+        DISTRO: ubuntu_noble
 
 - job:
-    name: airship-drydock-openstack-tox-pep8-jammy
+    name: airship-drydock-openstack-tox-pep8-noble
     parent: openstack-tox-pep8
-    description: Runs pep8 job on jammy
-    nodeset: airship-drydock-single-node-jammy
+    description: Runs pep8 job on noble
+    nodeset: airship-drydock-single-node-noble
     pre-run: tools/gate/playbooks/install-docker.yaml
 
 - job:
@@ -80,7 +80,7 @@
       Run a bootaction drydock client test
     run: tools/gate/playbooks/baclient_test.yaml
     timeout: 3600
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     pre-run: tools/gate/playbooks/install-docker.yaml
 
 - job:
@@ -89,10 +89,10 @@
       Run a bootaction drydock client test
     run: tools/gate/playbooks/run_drydock.yaml
     timeout: 3600
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     pre-run: tools/gate/playbooks/install-docker.yaml
     vars:
-      distro: ubuntu_jammy
+      distro: ubuntu_noble
 
 - job:
     name: airship-drydock-integration-test
@@ -100,10 +100,10 @@
       Run a bootaction drydock client test
     run: tools/gate/playbooks/integration_test.yaml
     timeout: 3600
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     pre-run: tools/gate/playbooks/install-docker.yaml
     vars:
-      distro: ubuntu_jammy
+      distro: ubuntu_noble
 
 - job:
     name: airship-drydock-chart-build-gate
@@ -111,18 +111,18 @@
       Builds charts using pinned Helm toolkit.
     timeout: 900
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     vars:
       HTK_COMMIT: 49c117443391cec75e0bd52bb4a9d033325927ad
 
 - job:
-    name: drydock-airskiff-deployment-jammy-kubeadm
+    name: drydock-airskiff-deployment-noble-kubeadm
     # Pinned for now due to Ansible 11 stopped verbosive output.
     ansible-version: 9
     description: |
       Deploy drydock using Airskiff and submitted Shipyard changes.
     parent: treasuremap-airskiff-deploy-maas-drydock-base
-    nodeset: treasuremap-airskiff-1node-32GB-ubuntu_jammy
+    nodeset: treasuremap-airskiff-1node-32GB-ubuntu_noble
     required-projects:
       - name: airship/treasuremap
         override-checkout: v1.9
@@ -144,21 +144,21 @@
     timeout: 900
     voting: false
     run: tools/gate/playbooks/build-charts.yaml
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     vars:
       HTK_COMMIT: master
 
 - job:
-    name: airship-drydock-docker-build-gate-ubuntu_jammy
+    name: airship-drydock-docker-build-gate-ubuntu_noble
     timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     irrelevant-files:
       - '^doc/.*'
       - '^charts/.*'
     vars:
       publish: false
-      distro: ubuntu_jammy
+      distro: ubuntu_noble
       tags:
         dynamic:
           patch_set: true
@@ -166,10 +166,10 @@
 
 
 - job:
-    name: airship-drydock-docker-publish-ubuntu_jammy
+    name: airship-drydock-docker-publish-ubuntu_noble
     timeout: 3600
     run: tools/gate/playbooks/docker-image-build.yaml
-    nodeset: airship-drydock-single-node-jammy
+    nodeset: airship-drydock-single-node-noble
     secrets:
       - airship_drydock_quay_creds_2026
     irrelevant-files:
@@ -177,7 +177,7 @@
       - '^charts/.*'
     vars:
       publish: true
-      distro: ubuntu_jammy
+      distro: ubuntu_noble
       tags:
         dynamic:
           branch: true
@@ -185,33 +185,6 @@
         static:
           - latest
           - airflow_3.1.5
-
-
-- secret:
-    name: airship_drydock_quay_creds
-    data:
-      username: !encrypted/pkcs1-oaep
-        - La6hrlZZdII5Vj994+Z1jULfO2/+fsbYjiF2PU5Cka9lsg7VksIPhuCXxSZVwLBoLphhb
-          ErNe3kvoPB8Sx1VBhkua7OOEjYVZZjJziadxwZfuvTcrOInGAM7XdK7Bks17v4HaL1dyz
-          6ccMuLrXJeE708ts8jaKMmyKaS8wb2A4KiBVLZQP89gS8EFvVSzxK3DWXHdAP7IezQyk4
-          Fi4MsNnOSEJY45Fy+ibZ07bDxYEQHL6hpBhQYht1DUQkeqAiDSnShBMb1+G3HGk3SMjae
-          PDGtL3fz4zixok+jU3BDbvPKoEFEz45AoQHILTL+KoPPQbRQOmrGXOh7nmEtGyFZar6be
-          wy+rYisXdJVaoqCGPMRPkBSkohgl/80Ary1d0U+k9vlDnFjpw62svDJ1cuAoKXKOlUWgF
-          qs6+GaN5ltnmYfakpgo4vrkbuXw2DdKAio3cDW+PA0O4aV9yCvDtbeFY2SfQX6WExxk25
-          CIu0UbL/eB/lRrb3PMElJbF7RmRrX5mf4k11YhnslHATzGMzGkQ1VkZQH/C+Q2xx5XSGP
-          ZFJCLNYvY/hF6IyrCx6lpsCThfRYxQd3jy1Du1qjv23mUnDueTzGvz7somBazB/ceom4z
-          v0T98h7JHDZhfq/HiGyliRwCh4R7J/xxf4xjLScoBwfGDZp1gPcCMAQC8NtAE8=
-      password: !encrypted/pkcs1-oaep
-        - Ae8OFJse6u76Vw6p6LqWwgFOWTdb4ACZktK9mbhUA4GSSdEOUKbDoEyuo5I9qFPLHeLA8
-          fK7RjUoC+gItAiWZjQQxrDoqeuqykHRLnjo2p+yd3hDTVmHXYkEw1jmMb0iP+DNNMl2qh
-          3beL1C6fyzjFcer+sdg7xk3vVetbHP7b8iIh6b6A6Oau1V+wQOOLYsU7gSuzxQBEbyj0/
-          IZFKjaedsahgPEE4XU2Qf9/aGe463u+OgJ+6tBj2I7GcDGqQlvAzDud+Z6Mbs2W1fjR9i
-          026rE4k5UWVZAmz0ySh8zdR4aV46+rEBV4jXKimCD+P0DAfbusG0plQGqODlJGdQ2rikK
-          4Gmu9XlG7j7Qm3GddPLLRkSfetn4oisI/zbKcPy1kz1tWQ3OqRmdxExJH5TiZMbo/7u4B
-          7X6sKjrQvwSPRH8BDdwtS4iECsJvyO1pwWar4WfApBXo73RaaERzNcq3gLR64JFmc8IMF
-          aknseZhtmaqM+ttv2bUL23uzYEkupY3foEUa3ILYs2qx5sofi6CBAOWd2c3t3d34Kn5ya
-          B1qsfXoY9lVL59lCl4jYLqyGA99Oybi5YKTP8O+IH5Xo7XLOje7K0Vfvh7v8Mcja8pZRG
-          sgRbPr/10a2g6+s37XofkFEeba7B8fV5h6v/A3tMy7U01rZ2qLBC/4hxrikXT8=
 
 - secret:
     name: airship_drydock_quay_creds_2026
@@ -250,54 +223,6 @@
       - name: git_mirror_credentials
         secret: drydock-airshipit-github-ed25519-secret-2026-01-13
         pass-to-parent: true
-
-- secret:
-    name: drydock-airshipit-github-secret-2023-03-23
-    data:
-      user: git
-      host: github.com
-      host_key: github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
-      ssh_key: !encrypted/pkcs1-oaep
-        - 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
 
 - secret:
     name: drydock-airshipit-github-ed25519-secret-2026-01-13

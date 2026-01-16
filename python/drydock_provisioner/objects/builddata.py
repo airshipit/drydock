@@ -14,7 +14,7 @@
 """Models for representing build data."""
 import uuid
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 from drydock_provisioner import objects
 
@@ -55,7 +55,7 @@ class BuildData(object):
 
         self.node_name = node_name
         self.task_id = task_id
-        self.collected_date = collected_date or datetime.utcnow()
+        self.collected_date = collected_date or datetime.now(UTC)
         self.generator = generator
         self.data_format = data_format
         self.data_element = data_element
@@ -122,6 +122,10 @@ class BuildData(object):
         :param d: Dictionary of instance data
         """
         d['task_id'] = uuid.UUID(bytes=bytes(d.get('task_id')))
+
+        # Ensure collected_date is timezone-aware
+        if d.get('collected_date') and d['collected_date'].tzinfo is None:
+            d['collected_date'] = d['collected_date'].replace(tzinfo=UTC)
 
         i = BuildData(**d)
 
