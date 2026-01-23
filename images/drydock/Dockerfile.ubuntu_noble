@@ -90,8 +90,6 @@ RUN set -ex \
         && apt-get install -y $buildDeps git --no-install-recommends \
         && pip3 install -r /tmp/drydock/requirements-frozen.txt --no-cache-dir --break-system-packages
 
-
-
 COPY ./python /tmp/drydock/python
 WORKDIR /tmp/drydock/python
 RUN cd /tmp/drydock/python \
