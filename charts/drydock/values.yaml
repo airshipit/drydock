@@ -444,3 +444,6 @@ conf:
     override:
     append:
 # end policy.yaml
+
+# List of extra manifests to deploy
+extraObjects: []
