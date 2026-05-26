@@ -109,11 +109,14 @@
     name: airship-drydock-chart-build-gate
     description: |
       Builds charts using pinned Helm toolkit.
-    timeout: 900
-    run: tools/gate/playbooks/build-charts.yaml
+    timeout: 3600
+    parent: airship-chart-build-base
     nodeset: airship-drydock-single-node-noble
+    required-projects:
+      - name: airship/treasuremap
+        override-checkout: v1.9
     vars:
-      HTK_COMMIT: 49c117443391cec75e0bd52bb4a9d033325927ad
+      HTK_COMMIT: d89bc42b57f8c2898520181550b5019dcf31c06f
 
 - job:
     name: drydock-airskiff-deployment-noble-kubeadm
@@ -122,7 +125,7 @@
     description: |
       Deploy drydock using Airskiff and submitted Shipyard changes.
     parent: treasuremap-airskiff-deploy-maas-drydock-base
-    nodeset: treasuremap-airskiff-1node-32GB-ubuntu_noble
+    nodeset: treasuremap-airskiff-5nodes-ubuntu_noble
     required-projects:
       - name: airship/treasuremap
         override-checkout: v1.9
@@ -133,7 +136,9 @@
       CLONE_DRYDOCK: false
       MAKE_DRYDOCK_IMAGES: true
       MAKE_MAAS_IMAGES: false
-      DOCKER_REGISTRY: localhost:5000
+      ENABLE_SLEEP: false
+      ENABLE_MAAS_UPGRADE: false
+      DOCKER_REGISTRY: "control-plane.minikube.internal:5000"
       gate_scripts_relative_path: ../../airship/treasuremap
       zuul_treasuremap_relative_path: ../../airship/treasuremap
 
@@ -141,24 +146,31 @@
     name: airship-drydock-chart-build-latest-htk
     description: |
       Builds charts using latest Helm toolkit.
-    timeout: 900
+    timeout: 3600
     voting: false
-    run: tools/gate/playbooks/build-charts.yaml
+    parent: airship-chart-build-base
     nodeset: airship-drydock-single-node-noble
+    required-projects:
+      - name: airship/treasuremap
+        override-checkout: v1.9
     vars:
       HTK_COMMIT: master
 
 - job:
     name: airship-drydock-docker-build-gate-ubuntu_noble
     timeout: 3600
-    run: tools/gate/playbooks/docker-image-build.yaml
+    voting: false
+    parent: airship-docker-build-gate-base
     nodeset: airship-drydock-single-node-noble
-    irrelevant-files:
-      - '^doc/.*'
-      - '^charts/.*'
+    required-projects:
+      - name: airship/treasuremap
+        override-checkout: v1.9
     vars:
       publish: false
       distro: ubuntu_noble
+      run_verbose_build: true
+      trivy_fail_on_vulns: true
+      trivy_severity: CRITICAL,HIGH
       tags:
         dynamic:
           patch_set: true
@@ -168,13 +180,15 @@
 - job:
     name: airship-drydock-docker-publish-ubuntu_noble
     timeout: 3600
-    run: tools/gate/playbooks/docker-image-build.yaml
+    parent: airship-docker-build-gate-base
     nodeset: airship-drydock-single-node-noble
+    required-projects:
+      - name: airship/treasuremap
+        override-checkout: v1.9
     secrets:
-      - airship_drydock_quay_creds_2026
-    irrelevant-files:
-      - '^doc/.*'
-      - '^charts/.*'
+      - name: quay_creds
+        secret: airship_drydock_quay_creds_2026
+        pass-to-parent: true
     vars:
       publish: true
       distro: ubuntu_noble

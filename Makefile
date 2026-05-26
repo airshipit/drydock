@@ -93,11 +93,11 @@ build_drydock:
 
 ifneq ($(DISTRO), $(DISTRO_ALIAS))
 	docker tag $(IMAGE) $(IMAGE_ALIAS)
-ifeq ($(DOCKER_REGISTRY), localhost:5000)
+ifeq (,$(findstring quay.io,$(DOCKER_REGISTRY)))
 	docker push $(IMAGE_ALIAS)
 endif
 endif
-ifeq ($(DOCKER_REGISTRY), localhost:5000)
+ifeq (,$(findstring quay.io,$(DOCKER_REGISTRY)))
 	docker push $(IMAGE)
 endif
 ifeq ($(PUSH_IMAGE), true)
