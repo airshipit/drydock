@@ -138,6 +138,9 @@
       MAKE_MAAS_IMAGES: false
       ENABLE_SLEEP: false
       ENABLE_MAAS_UPGRADE: false
+      helm_version: 4.2.0
+      HELM_ARTIFACT_URL: https://get.helm.sh/helm-v4.2.0-linux-amd64.tar.gz
+      DISTRO: ubuntu_noble
       DOCKER_REGISTRY: "control-plane.minikube.internal:5000"
       gate_scripts_relative_path: ../../airship/treasuremap
       zuul_treasuremap_relative_path: ../../airship/treasuremap
