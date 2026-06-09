@@ -26,6 +26,11 @@ class ExtendTable(Table):
                                *cls.__schema__)
         return self
 
+    def __init__(self, *args, **kwargs):
+        if '_no_init' in kwargs:
+            # Called internally by SQLAlchemy 2.x with (name, metadata, ..., _no_init=False)
+            super().__init__(*args, **kwargs)
+
 
 class Tasks(ExtendTable):
     """Table for persisting Tasks."""

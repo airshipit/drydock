@@ -18,8 +18,8 @@ Based on Openstack Ironic Pyghmi driver.
 
 import time
 
-from pyghmi.ipmi.command import Command
-from pyghmi.exceptions import IpmiException
+from pyghmi.ipmi.command import Command  # nosec B415 IPMI is intentional for OOB driver
+from pyghmi.exceptions import IpmiException  # nosec B415
 
 from drydock_provisioner.orchestrator.actions.orchestrator import BaseAction
 

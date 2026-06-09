@@ -73,10 +73,9 @@ class DrydockState(object):
             'build_data',
         ]
 
-        with self.db_engine.connect() as conn:
+        with self.db_engine.begin() as conn:
             for t in table_names:
-                query_text = sql.text("TRUNCATE TABLE %s" %
-                                      t).execution_options(autocommit=True)
+                query_text = sql.text("TRUNCATE TABLE %s" % t)
                 conn.execute(query_text)
 
     def get_design_documents(self, design_ref):
@@ -86,10 +85,10 @@ class DrydockState(object):
         """Get all tasks in the database."""
         try:
             with self.db_engine.connect() as conn:
-                query = sql.select([self.tasks_tbl])
+                query = sql.select(self.tasks_tbl)
                 rs = conn.execute(query)
 
-                task_list = [objects.Task.from_db(dict(r)) for r in rs]
+                task_list = [objects.Task.from_db(dict(r._mapping)) for r in rs]
 
                 self._assemble_tasks(task_list=task_list)
 
@@ -147,8 +146,9 @@ class DrydockState(object):
     def _query_subtasks(self, task_id, query_text, error):
         try:
             with self.db_engine.connect() as conn:
-                rs = conn.execute(query_text, parent_task_id=task_id.bytes)
-                task_list = [objects.Task.from_db(dict(r)) for r in rs]
+                rs = conn.execute(query_text,
+                                  {"parent_task_id": task_id.bytes})
+                task_list = [objects.Task.from_db(dict(r._mapping)) for r in rs]
 
                 self._assemble_tasks(task_list=task_list)
                 for t in task_list:
@@ -180,14 +180,15 @@ class DrydockState(object):
                                      "action = ANY(:actions) "
                                      "ORDER BY created ASC")
                     rs = conn.execute(
-                        query,
-                        queued_status=hd_fields.TaskStatus.Queued,
-                        actions=allowed_actions)
+                        query, {
+                            "queued_status": hd_fields.TaskStatus.Queued,
+                            "actions": allowed_actions
+                        })
 
                 r = rs.first()
 
             if r is not None:
-                task = objects.Task.from_db(dict(r))
+                task = objects.Task.from_db(dict(r._mapping))
                 self._assemble_tasks(task_list=[task])
                 task.statemgr = self
                 return task
@@ -211,7 +212,10 @@ class DrydockState(object):
                 rs = conn.execute(query)
                 r = rs.fetchone()
 
-            task = objects.Task.from_db(dict(r))
+            if r is None:
+                return None
+
+            task = objects.Task.from_db(dict(r._mapping))
 
             self.logger.debug("Assembling result messages for task %s." %
                               str(task.task_id))
@@ -233,7 +237,7 @@ class DrydockState(object):
         :param msg: instance of objects.TaskStatusMessage
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.result_message_tbl.insert().values(
                     task_id=task_id.bytes, **(msg.to_db()))
                 conn.execute(query)
@@ -251,7 +255,7 @@ class DrydockState(object):
         :param msg: instance of objects.TaskStatusMessage
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.result_message_tbl.delete().values(
                     task_id=task_id.bytes, **(msg.to_db()))
                 conn.execute(query)
@@ -270,17 +274,17 @@ class DrydockState(object):
             return None
 
         with self.db_engine.connect() as conn:
-            query = sql.select([
-                self.result_message_tbl
-            ]).where(self.result_message_tbl.c.task_id == sql.bindparam(
-                'task_id')).order_by(self.result_message_tbl.c.sequence.asc())
+            query = sql.select(self.result_message_tbl).where(
+                self.result_message_tbl.c.task_id == sql.bindparam(
+                    'task_id')).order_by(
+                        self.result_message_tbl.c.sequence.asc())
             query.compile(self.db_engine)
 
             for t in task_list:
-                rs = conn.execute(query, task_id=t.task_id.bytes)
+                rs = conn.execute(query, {"task_id": t.task_id.bytes})
                 error_count = 0
                 for r in rs:
-                    msg = objects.TaskStatusMessage.from_db(dict(r))
+                    msg = objects.TaskStatusMessage.from_db(dict(r._mapping))
                     if msg.error:
                         error_count = error_count + 1
                     t.result.message_list.append(msg)
@@ -294,7 +298,7 @@ class DrydockState(object):
         :param task: instance of objects.Task to insert into the database.
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.tasks_tbl.insert().values(**(task.to_db(
                     include_id=True)))
                 conn.execute(query)
@@ -310,7 +314,7 @@ class DrydockState(object):
         :param task: objects.Task instance to reference for update values
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.tasks_tbl.update().where(
                     self.tasks_tbl.c.task_id == task.task_id.bytes).values(
                         **(task.to_db(include_id=False)))
@@ -329,31 +333,28 @@ class DrydockState(object):
 
         :param days: number of days to keep tasks
         """
-        with self.db_engine.connect() as conn:
+        with self.db_engine.begin() as conn:
             try:
                 query_tasks_text = sql.text(
-                    "DELETE FROM tasks WHERE created < now() - interval '"
-                    + retain_days
-                    + " days'").execution_options(autocommit=True)
+                    "DELETE FROM tasks WHERE created < now() - interval '"  # nosec B608
+                    + retain_days + " days'")
                 conn.execute(query_tasks_text)
-                conn.close()
             except Exception as ex:
                 self.logger.error("Error deleting tasks: %s" % str(ex))
                 return False
 
-        with self.db_engine.connect() as conn:
+        with self.db_engine.begin() as conn:
             try:
                 query_subtasks_text = ("DELETE FROM tasks "
                                        "WHERE parent_task_id IS NOT NULL AND "
                                        "parent_task_id NOT IN "
                                        "(SELECT task_id FROM tasks);")
                 conn.execute(sql.text(query_subtasks_text))
-                conn.close()
             except Exception as ex:
                 self.logger.error("Error deleting subtasks: %s" % str(ex))
                 return False
 
-        with self.db_engine.connect() as conn:
+        with self.db_engine.begin() as conn:
             try:
                 query_result_message_text = (
                     "DELETE FROM result_message WHERE ts IN "
@@ -362,7 +363,6 @@ class DrydockState(object):
                     "result_message.task_id=tasks.task_id "
                     "WHERE tasks.task_id IS NULL);")
                 conn.execute(sql.text(query_result_message_text))
-                conn.close()
             except Exception as ex:
                 self.logger.error("Error deleting result messages: %s" %
                                   str(ex))
@@ -392,13 +392,14 @@ class DrydockState(object):
         query_string = sql.text(
             "UPDATE tasks "
             "SET subtask_id_list = array_append(subtask_id_list, :new_subtask) "
-            "WHERE task_id = :task_id").execution_options(autocommit=True)
+            "WHERE task_id = :task_id")
 
         try:
-            with self.db_engine.connect() as conn:
-                rs = conn.execute(query_string,
-                                  new_subtask=subtask_id.bytes,
-                                  task_id=task_id.bytes)
+            with self.db_engine.begin() as conn:
+                rs = conn.execute(query_string, {
+                    "new_subtask": subtask_id.bytes,
+                    "task_id": task_id.bytes
+                })
                 rc = rs.rowcount
                 if rc == 1:
                     return True
@@ -415,7 +416,7 @@ class DrydockState(object):
         :param leader_id: uuid.UUID ID of the leader
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.active_instance_tbl.update().where(
                     self.active_instance_tbl.c.identity
                     == leader_id.bytes).values(last_ping=datetime.now(UTC))
@@ -442,18 +443,17 @@ class DrydockState(object):
 
         :param leader_id: a uuid.UUID instance identifying the instance to be considered active
         """
-        query_string = sql.text(  # nosec no strings are user-sourced
-            "INSERT INTO active_instance (dummy_key, identity, last_ping) "
+        query_string = sql.text(
+            "INSERT INTO active_instance (dummy_key, identity, last_ping) "  # nosec B608 no strings are user-sourced
             "VALUES (1, :instance_id, timezone('UTC', now())) "
             "ON CONFLICT (dummy_key) DO UPDATE SET "
             "identity = :instance_id, last_ping = timezone('UTC', now()) "
             "WHERE active_instance.last_ping < (now() - interval '%d seconds')"
-            % (config.config_mgr.conf.leader_grace_period)).execution_options(
-                autocommit=True)
+            % (config.config_mgr.conf.leader_grace_period))
 
         try:
-            with self.db_engine.connect() as conn:
-                conn.execute(query_string, instance_id=leader_id.bytes)
+            with self.db_engine.begin() as conn:
+                conn.execute(query_string, {"instance_id": leader_id.bytes})
                 check_query = self.active_instance_tbl.select().where(
                     self.active_instance_tbl.c.identity == leader_id.bytes)
                 rs = conn.execute(check_query)
@@ -472,7 +472,7 @@ class DrydockState(object):
         :param leader_id: a uuid.UUID instance identifying the instance giving up leadership
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.active_instance_tbl.delete().where(
                     self.active_instance_tbl.c.identity == leader_id.bytes)
                 rs = conn.execute(query)
@@ -498,19 +498,19 @@ class DrydockState(object):
                          header when accessing the boot action API
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = sql.text(
                     "INSERT INTO boot_action AS ba1 (node_name, task_id, identity_key) "
                     "VALUES (:node, :task_id, :identity) "
                     "ON CONFLICT (node_name) DO UPDATE SET "
                     "task_id = :task_id, identity_key = :identity "
-                    "WHERE ba1.node_name = :node").execution_options(
-                        autocommit=True)
+                    "WHERE ba1.node_name = :node")
 
-                conn.execute(query,
-                             node=nodename,
-                             task_id=task_id.bytes,
-                             identity=identity)
+                conn.execute(query, {
+                    "node": nodename,
+                    "task_id": task_id.bytes,
+                    "identity": identity
+                })
 
             return True
         except Exception as ex:
@@ -533,7 +533,7 @@ class DrydockState(object):
                 rs = conn.execute(query)
                 r = rs.fetchone()
                 if r is not None:
-                    result_dict = dict(r)
+                    result_dict = dict(r._mapping)
                     result_dict['task_id'] = uuid.UUID(
                         bytes=bytes(result_dict['task_id']))
                     result_dict['identity_key'] = bytes(
@@ -562,7 +562,7 @@ class DrydockState(object):
         :param action_status: The status of the action.
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.ba_status_tbl.insert().values(
                     node_name=nodename,
                     action_id=action_id,
@@ -586,7 +586,7 @@ class DrydockState(object):
         :param action_status: The string statu to set for the boot action
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.ba_status_tbl.update().where(
                     self.ba_status_tbl.c.action_id == ulid2.decode_ulid_base32(
                         action_id)).values(action_status=action_status)
@@ -613,7 +613,7 @@ class DrydockState(object):
                 rs = conn.execute(query)
                 actions = dict()
                 for r in rs:
-                    ba_dict = dict(r)
+                    ba_dict = dict(r._mapping)
                     ba_dict['action_id'] = bytes(ba_dict['action_id'])
                     ba_dict['identity_key'] = bytes(ba_dict['identity_key'])
                     ba_dict['task_id'] = uuid.UUID(bytes=ba_dict['task_id'])
@@ -638,7 +638,7 @@ class DrydockState(object):
                 rs = conn.execute(query)
                 r = rs.fetchone()
                 if r is not None:
-                    ba_dict = dict(r)
+                    ba_dict = dict(r._mapping)
                     ba_dict['action_id'] = bytes(ba_dict['action_id'])
                     ba_dict['identity_key'] = bytes(ba_dict['identity_key'])
                     ba_dict['task_id'] = uuid.UUID(bytes=ba_dict['task_id'])
@@ -655,7 +655,7 @@ class DrydockState(object):
         :param build_data: objects.BuildData instance to write
         """
         try:
-            with self.db_engine.connect() as conn:
+            with self.db_engine.begin() as conn:
                 query = self.build_data_tbl.insert().values(
                     **build_data.to_db())
                 conn.execute(query)
@@ -704,7 +704,7 @@ class DrydockState(object):
                             'WHERE build_data.node_name = :nodename '
                             'ORDER BY generator, build_data.collected_date DESC'
                         )
-                        rs = conn.execute(query, nodename=node_name)
+                        rs = conn.execute(query, {"nodename": node_name})
                     else:
                         query = self.build_data_tbl.select().where(
                             self.build_data_tbl.c.node_name == node_name)
@@ -727,7 +727,7 @@ class DrydockState(object):
 
                 result_data = rs.fetchall()
 
-            return [objects.BuildData.from_db(dict(r)) for r in result_data]
+            return [objects.BuildData.from_db(dict(r._mapping)) for r in result_data]
         except Exception as ex:
             self.logger.error("Error selecting build data.", exc_info=ex)
             raise errors.BuildDataError("Error selecting build data.")

@@ -30,7 +30,7 @@ class MaasOauth(req_auth.AuthBase):
     def __init__(self, apikey):
         self.consumer_key, self.token_key, self.token_secret = apikey.split(
             ':')
-        self.consumer_secret = ""
+        self.consumer_secret = ""  # nosec B105 empty OAuth consumer secret is per-spec
         self.realm = "OAuth"
 
         self.oauth_client = oauth1.Client(

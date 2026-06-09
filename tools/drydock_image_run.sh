@@ -16,11 +16,11 @@ function start_db {
     fi
 
 
-    docker run --rm -dp 5432:5432 --name "${PSQL_CONTAINER_NAME}" -e POSTGRES_HOST_AUTH_METHOD=trust quay.io/airshipit/postgres:14.8
+    docker run --rm -dp 5432:5432 --name "${PSQL_CONTAINER_NAME}" -e POSTGRES_HOST_AUTH_METHOD=trust quay.io/airshipit/postgres:17.5
     sleep 15
 
-    docker run --rm --net host quay.io/airshipit/postgres:14.8 psql -h localhost -c "create user drydock with password 'drydock';" postgres postgres
-    docker run --rm --net host quay.io/airshipit/postgres:14.8 psql -h localhost -c "create database drydock;" postgres postgres
+    docker run --rm --net host quay.io/airshipit/postgres:17.5 psql -h localhost -c "create user drydock with password 'drydock';" postgres postgres
+    docker run --rm --net host quay.io/airshipit/postgres:17.5 psql -h localhost -c "create database drydock;" postgres postgres
 }
 
 function customize_conf {

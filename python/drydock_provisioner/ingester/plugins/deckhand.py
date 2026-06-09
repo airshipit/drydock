@@ -64,7 +64,7 @@ class DeckhandIngester(IngesterPlugin):
             try:
                 # Hash the input to use as the cache key. This is not a security
                 # related hash, so use cheap and fast MD5
-                hv = hashlib.md5(kwargs.get('content', b'')).hexdigest()
+                hv = hashlib.md5(kwargs.get('content', b'')).hexdigest()  # nosec B324 not security-related
                 local_cache = cache.get_cache('parsed_docs')
                 results = local_cache.get(key=hv, createfunc=local_parse)
                 parse_status, models = results
