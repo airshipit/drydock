@@ -50,14 +50,6 @@ network:
   api:
     nodeport:
       enabled: false
-    ingress:
-      public: true
-      classes:
-        namespace: "nginx"
-        cluster: "nginx-cluster"
-      annotations:
-        nginx.ingress.kubernetes.io/rewrite-target: /
-
 pod:
   security_context:
     drydock:
@@ -194,11 +186,11 @@ manifests:
   secret_keystone: true
   secret_database: true
   secret_ssh_key: true
-  secret_tls: true
+  secret_tls: false
   configmap_etc: true
   configmap_bin: true
   service_drydock: true
-  ingress_drydock: true
+  ingress_drydock: false
   deployment_drydock: true
   test_drydock_api: true
   test_drydock_auth: true
