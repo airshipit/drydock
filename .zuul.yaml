@@ -123,7 +123,7 @@
     # Pinned for now due to Ansible 11 stopped verbosive output.
     ansible-version: 9
     description: |
-      Deploy drydock using Airskiff and submitted Shipyard changes.
+      Deploy drydock using Airskiff and submitted Drydock changes.
     parent: treasuremap-airskiff-deploy-maas-drydock-base
     nodeset: treasuremap-airskiff-5nodes-ubuntu_noble
     required-projects:
@@ -138,10 +138,9 @@
       MAKE_MAAS_IMAGES: false
       ENABLE_SLEEP: false
       ENABLE_MAAS_UPGRADE: false
-      helm_version: 4.2.0
+      helm_version: 4.2.2
       HELM_ARTIFACT_URL: https://get.helm.sh/helm-v4.2.2-linux-amd64.tar.gz
       DISTRO: ubuntu_noble
-      DOCKER_REGISTRY: "control-plane.minikube.internal:5000"
       gate_scripts_relative_path: ../../airship/treasuremap
       zuul_treasuremap_relative_path: ../../airship/treasuremap
 
