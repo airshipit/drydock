@@ -15,6 +15,7 @@
 from unittest.mock import Mock
 
 import drydock_provisioner.objects as objects
+import xml.etree.ElementTree as ET
 
 
 class TestClass(object):
@@ -299,3 +300,30 @@ class TestClass(object):
         # Logicalname is not found, returns the alias
         assert nodes[0].logicalnames['prim_nic03'] == 'prim_nic03'
         assert nodes[0].get_logicalname('prim_nic03') == 'prim_nic03'
+
+    def test_apply_logicalname_scsi_regexp(self):
+        """Test regexp alias resolution for scsi devices with a varying host"""
+        xml_example = """<list><node id="sys" class="system">
+<node id="disk:0" class="disk"><businfo>scsi@6:2.0.0</businfo>
+<logicalname>/dev/sdb</logicalname></node>
+<node id="disk:9" class="disk"><businfo>scsi@6:2.9.0</businfo>
+<logicalname>/dev/sdk</logicalname></node>
+<node id="disk:u" class="disk"><businfo>scsi@0:0.0.0</businfo>
+<logicalname>/dev/sda</logicalname></node>
+<node id="net:0" class="network"><businfo>pci@0000:01:00.1</businfo>
+<logicalname>eno2</logicalname></node>
+</node></list>"""
+        xml_root = ET.fromstring(xml_example)
+        node = objects.BaremetalNode()
+        node.name = "controller01"
+
+        assert node._apply_logicalname(xml_root, 'bootdisk', 'scsi',
+                                       r'regexp:^[0-9]+:2\.0\.0$') == 'sdb'
+        assert node._apply_logicalname(xml_root, 'ephemeral', 'scsi',
+                                       r'regexp:^[0-9]+:2\.9\.0$') == 'sdk'
+        # No match returns the alias
+        assert node._apply_logicalname(xml_root, 'missing', 'scsi',
+                                       r'regexp:^[0-9]+:5\.0\.0$') == 'missing'
+        # Network regexp behaviour is unchanged
+        assert node._apply_logicalname(xml_root, 'pxe', 'pci',
+                                       r'regexp:0000:(01|19):00\.1') == 'eno2'

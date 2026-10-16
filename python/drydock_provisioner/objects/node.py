@@ -266,7 +266,25 @@ class BaremetalNode(drydock_provisioner.objects.hostprofile.HostProfile):
             nodes = xml_root.findall(".//node")
             logicalnames = []
             addresses = []
+            bus_prefix = "%s@" % bus_type
             for node in nodes:
+                if bus_type != "pci":
+                    # Non-PCI devices (e.g. scsi disks): match by businfo
+                    # of the given bus type, e.g. scsi@6:2.0.0
+                    businfo = node.find('businfo')
+                    lname = node.find('logicalname')
+                    if (businfo is None or lname is None
+                            or not businfo.text
+                            or not businfo.text.startswith(bus_prefix)):
+                        continue
+                    address = businfo.text[len(bus_prefix):]
+                    self.logger.debug(
+                        "A %s device address found. Address=%s. Checking for regexp %s match..."
+                        % (bus_type, address, address_regexp))
+                    if re.match(address_regexp, address):
+                        logicalnames.append(lname.text)
+                        addresses.append(address)
+                    continue
                 if 'class' in node.attrib:
                     if node.get('class') == "network":
                         address = node.find('businfo').text.replace("pci@", "")
