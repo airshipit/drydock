@@ -80,7 +80,7 @@ pyghmi==1.6.16
 Pygments==2.20.0
 PyJWT==2.13.0
 pylibyaml==0.1.0
-pymongo==4.17.0
+pymongo==4.18.3
 pyparsing==3.3.2
 pyperclip==1.11.0
 python-barbicanclient==7.3.0
